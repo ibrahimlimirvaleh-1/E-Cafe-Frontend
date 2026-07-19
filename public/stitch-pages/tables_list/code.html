@@ -1,0 +1,471 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe Admin - Masalar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#edeeef",
+                    "on-tertiary-container": "#009668",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-error-container": "#93000a",
+                    "outline-variant": "#c6c6cd",
+                    "tertiary-container": "#002113",
+                    "surface": "#f8f9fa",
+                    "surface-bright": "#f8f9fa",
+                    "surface-variant": "#e1e3e4",
+                    "on-surface": "#191c1d",
+                    "primary": "#000000",
+                    "on-primary-fixed": "#151b2b",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "on-secondary-fixed": "#2a1700",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#76777d",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-container": "#684000",
+                    "primary-container": "#151b2b",
+                    "surface-container-low": "#f3f4f5",
+                    "error": "#ba1a1a",
+                    "background": "#f8f9fa",
+                    "surface-tint": "#585e70",
+                    "on-tertiary-fixed": "#002113",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d9dadb",
+                    "primary-fixed": "#dde2f8",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "on-background": "#191c1d",
+                    "inverse-primary": "#c1c6db",
+                    "secondary-fixed": "#ffddb8",
+                    "secondary": "#855300",
+                    "secondary-container": "#fea619",
+                    "on-primary-fixed-variant": "#414658",
+                    "on-primary-container": "#7e8397",
+                    "primary-fixed-dim": "#c1c6db",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-surface-variant": "#45464c",
+                    "tertiary-fixed": "#6ffbbe",
+                    "inverse-surface": "#2e3132",
+                    "inverse-on-surface": "#f0f1f2",
+                    "tertiary": "#000000"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sm": "12px",
+                    "xl": "32px",
+                    "gutter": "24px",
+                    "lg": "24px",
+                    "container-max": "1280px",
+                    "xs": "8px",
+                    "base": "4px",
+                    "2xl": "48px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Navigation Drawer (SideNav) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col z-40 hidden md:flex">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">
+            ECafe Admin
+        </div>
+<nav class="flex flex-col h-full overflow-y-auto">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="http://127.0.0.1:5173/admin/restaurants">
+<span class="material-symbols-outlined mr-md">storefront</span>
+<span class="font-body-md text-body-md">Restaurants</span>
+</a>
+<a class="flex items-center text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">table_restaurant</span>
+<span class="font-body-md text-body-md">Tables</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">group</span>
+<span class="font-body-md text-body-md">Staff</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">restaurant_menu</span>
+<span class="font-body-md text-body-md">Menu</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">book_online</span>
+<span class="font-body-md text-body-md">Reservations</span>
+</a>
+<div class="mt-auto border-t border-outline-variant">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer pb-xl" href="#">
+<span class="material-symbols-outlined mr-md text-error">logout</span>
+<span class="font-body-md text-body-md text-error">Logout</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 min-h-screen">
+<!-- Top App Bar (Mobile & Header Context) -->
+<header class="sticky top-0 z-30 bg-surface-container-low shadow-sm w-full">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+<button class="md:hidden p-base">
+<span class="material-symbols-outlined text-primary">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary">Masalar</h1>
+</div>
+<div class="flex items-center gap-md">
+<button class="bg-primary text-on-primary px-lg py-xs rounded-lg font-body-sm text-body-sm flex items-center gap-xs hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        Yeni Masa
+                    </button>
+<div class="hidden sm:flex items-center gap-xs">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined">person</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<div class="p-gutter max-w-container-max mx-auto space-y-lg">
+<!-- Filters & Search Section -->
+<section class="bg-surface-container-lowest rounded-xl p-lg shadow-sm space-y-md">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+<!-- Search -->
+<div class="md:col-span-6 relative">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-[48px] pr-md py-md bg-surface border border-outline-variant rounded-lg focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all font-body-md text-body-md" placeholder="Masa nömrəsi və ya adı ilə axtar..." type="text">
+</div>
+<!-- Capacity Filter -->
+<div class="md:col-span-3">
+<select class="w-full px-md py-md bg-surface border border-outline-variant rounded-lg focus:outline-none focus:border-secondary font-body-md text-body-md appearance-none cursor-pointer">
+<option value="">Tutuma görə filtrlə</option>
+<option value="2">2 nəfərlik</option>
+<option value="4">4 nəfərlik</option>
+<option value="6">6 nəfərlik</option>
+<option value="8+">8+ nəfərlik</option>
+</select>
+</div>
+<!-- Status Filter -->
+<div class="md:col-span-3">
+<select class="w-full px-md py-md bg-surface border border-outline-variant rounded-lg focus:outline-none focus:border-secondary font-body-md text-body-md appearance-none cursor-pointer">
+<option value="">Vəziyyətə görə filtrlə</option>
+<option value="active">Aktiv</option>
+<option value="inactive">Deaktiv</option>
+<option value="occupied">Dolu</option>
+<option value="empty">Boş</option>
+</select>
+</div>
+</div>
+<div class="flex flex-wrap gap-xs pt-xs">
+<span class="px-sm py-1 bg-secondary-container text-on-secondary-container rounded-full text-label-md font-label-md flex items-center gap-xs">
+                        Aktiv <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<button class="text-secondary text-label-md font-label-md hover:underline px-sm">Filtrləri təmizlə</button>
+</div>
+</section>
+<!-- Data Table Card -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container border-b border-outline-variant">
+<th class="px-lg py-md text-label-md font-label-md text-outline uppercase tracking-wider">Masa No</th>
+<th class="px-lg py-md text-label-md font-label-md text-outline uppercase tracking-wider">Ad / Zona</th>
+<th class="px-lg py-md text-label-md font-label-md text-outline uppercase tracking-wider text-center">Tutum</th>
+<th class="px-lg py-md text-label-md font-label-md text-outline uppercase tracking-wider">Sistem Statusu</th>
+<th class="px-lg py-md text-label-md font-label-md text-outline uppercase tracking-wider">Rezervasiya</th>
+<th class="px-lg py-md text-label-md font-label-md text-outline uppercase tracking-wider">Fiziki Status</th>
+<th class="px-lg py-md text-label-md font-label-md text-outline uppercase tracking-wider text-right">Əməliyyatlar</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Table Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-body-md text-body-md font-bold">T-101</td>
+<td class="px-lg py-md font-body-md text-body-md">VİP Zal / Pəncərə önü</td>
+<td class="px-lg py-md text-center">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-container text-primary text-body-sm font-bold">4</span>
+</td>
+<td class="px-lg py-md">
+<span class="px-sm py-1 bg-green-100 text-green-700 rounded-full text-label-md font-label-md border border-green-200">Aktiv</span>
+</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center gap-xs text-on-tertiary-container font-body-sm">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        Açıq
+                                    </span>
+</td>
+<td class="px-lg py-md">
+<span class="px-sm py-1 bg-surface-container-high text-on-surface-variant rounded-full text-label-md font-label-md flex w-fit items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-outline"></span> Boş
+                                    </span>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs">
+<button class="p-xs text-on-surface-variant hover:text-primary hover:bg-surface-variant rounded transition-all" title="Bax">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-secondary hover:bg-surface-variant rounded transition-all" title="Düzəliş et">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded transition-all" title="Deaktiv et">
+<span class="material-symbols-outlined">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Table Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-body-md text-body-md font-bold">T-102</td>
+<td class="px-lg py-md font-body-md text-body-md">Əsas Zal / Mərkəz</td>
+<td class="px-lg py-md text-center">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-container text-primary text-body-sm font-bold">6</span>
+</td>
+<td class="px-lg py-md">
+<span class="px-sm py-1 bg-green-100 text-green-700 rounded-full text-label-md font-label-md border border-green-200">Aktiv</span>
+</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center gap-xs text-on-tertiary-container font-body-sm">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        Açıq
+                                    </span>
+</td>
+<td class="px-lg py-md">
+<span class="px-sm py-1 bg-secondary-container/20 text-secondary rounded-full text-label-md font-label-md flex w-fit items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Dolu
+                                    </span>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs">
+<button class="p-xs text-on-surface-variant hover:text-primary hover:bg-surface-variant rounded transition-all">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-secondary hover:bg-surface-variant rounded transition-all">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded transition-all">
+<span class="material-symbols-outlined">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Table Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group bg-error-container/5">
+<td class="px-lg py-md font-body-md text-body-md font-bold text-error">T-204</td>
+<td class="px-lg py-md font-body-md text-body-md">Teras / Künc</td>
+<td class="px-lg py-md text-center">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-container text-primary text-body-sm font-bold">2</span>
+</td>
+<td class="px-lg py-md">
+<span class="px-sm py-1 bg-error-container text-on-error-container rounded-full text-label-md font-label-md border border-error-container">Deaktiv</span>
+</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center gap-xs text-error font-body-sm">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+                                        Bağlı
+                                    </span>
+</td>
+<td class="px-lg py-md">
+<span class="px-sm py-1 bg-surface-container-high text-on-surface-variant rounded-full text-label-md font-label-md flex w-fit items-center gap-xs opacity-50">
+<span class="w-2 h-2 rounded-full bg-outline"></span> N/A
+                                    </span>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs">
+<button class="p-xs text-on-surface-variant hover:text-primary hover:bg-surface-variant rounded transition-all">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-secondary hover:bg-surface-variant rounded transition-all">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-xs text-secondary hover:bg-secondary-container/20 rounded transition-all" title="Aktivləşdir">
+<span class="material-symbols-outlined">check_circle</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Additional Rows -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md font-body-md text-body-md font-bold">T-105</td>
+<td class="px-lg py-md font-body-md text-body-md">Əsas Zal / Bar yanı</td>
+<td class="px-lg py-md text-center">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-container text-primary text-body-sm font-bold">2</span>
+</td>
+<td class="px-lg py-md">
+<span class="px-sm py-1 bg-green-100 text-green-700 rounded-full text-label-md font-label-md border border-green-200">Aktiv</span>
+</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center gap-xs text-on-tertiary-container font-body-sm">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        Açıq
+                                    </span>
+</td>
+<td class="px-lg py-md">
+<span class="px-sm py-1 bg-secondary-container/20 text-secondary rounded-full text-label-md font-label-md flex w-fit items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Dolu
+                                    </span>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs">
+<button class="p-xs text-on-surface-variant hover:text-primary hover:bg-surface-variant rounded transition-all">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-secondary hover:bg-surface-variant rounded transition-all">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded transition-all">
+<span class="material-symbols-outlined">block</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination & Stats Footer -->
+<div class="px-lg py-md bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-md">
+<div class="text-body-sm text-on-surface-variant">
+                        Cəmi <span class="font-bold text-primary">24</span> masa göstərilir
+                    </div>
+<div class="flex items-center gap-base">
+<button class="p-xs text-outline hover:text-primary disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded bg-primary text-on-primary font-body-sm">1</button>
+<button class="w-8 h-8 rounded hover:bg-surface-variant font-body-sm">2</button>
+<button class="w-8 h-8 rounded hover:bg-surface-variant font-body-sm">3</button>
+<span class="px-xs text-outline">...</span>
+<button class="w-8 h-8 rounded hover:bg-surface-variant font-body-sm">6</button>
+<button class="p-xs text-outline hover:text-primary">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Quick Metrics Grid (Bento Style) -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col justify-between">
+<span class="text-label-md font-label-md text-outline uppercase">Ümumi Masalar</span>
+<div class="flex items-end justify-between mt-md">
+<span class="font-headline-lg text-headline-lg text-primary">48</span>
+<div class="text-on-tertiary-container flex items-center text-body-sm font-bold">
+<span class="material-symbols-outlined text-[18px]">trending_up</span> 12%
+                        </div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col justify-between">
+<span class="text-label-md font-label-md text-outline uppercase">Hazırda Dolu</span>
+<div class="flex items-end justify-between mt-md">
+<span class="font-headline-lg text-headline-lg text-secondary">18</span>
+<span class="text-body-sm text-outline">37% doluluq</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col justify-between">
+<span class="text-label-md font-label-md text-outline uppercase">Rezerv olunub</span>
+<div class="flex items-end justify-between mt-md">
+<span class="font-headline-lg text-headline-lg text-primary">12</span>
+<span class="text-body-sm text-on-tertiary-container">Bugün üçün</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col justify-between">
+<span class="text-label-md font-label-md text-outline uppercase">Xidmət Gözləyən</span>
+<div class="flex items-end justify-between mt-md">
+<span class="font-headline-lg text-headline-lg text-error">3</span>
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Mobile Bottom NavBar -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] flex justify-around items-center px-sm pb-xs pt-base">
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">event_available</span>
+<span class="font-label-md text-label-md">Rezerv</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for rows
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                // Ignore if clicking a button
+                if (e.target.closest('button')) return;
+                
+                // Add a visual select state
+                document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('bg-surface-container'));
+                row.classList.add('bg-surface-container');
+            });
+        });
+    </script>
+</body></html>

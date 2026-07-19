@@ -1,0 +1,415 @@
+<!DOCTYPE html><html class="light" lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe - İdarəetmə Paneli</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#f8f9fa",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-variant": "#e1e3e4",
+                        "on-primary-container": "#7e8397",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "primary-fixed": "#dde2f8",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#151b2b",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "tertiary-container": "#002113",
+                        "on-primary-fixed-variant": "#414658",
+                        "background": "#f8f9fa",
+                        "primary-fixed-dim": "#c1c6db",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-surface-variant": "#45464c",
+                        "secondary": "#855300",
+                        "surface-container-highest": "#e1e3e4",
+                        "outline-variant": "#c6c6cd",
+                        "primary": "#000000",
+                        "primary-container": "#151b2b",
+                        "on-tertiary-container": "#009668",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-low": "#f3f4f5",
+                        "tertiary": "#000000",
+                        "on-background": "#191c1d",
+                        "secondary-fixed": "#ffddb8",
+                        "error-container": "#ffdad6",
+                        "outline": "#76777d",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#edeeef",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-fixed": "#2a1700",
+                        "on-surface": "#191c1d",
+                        "surface-tint": "#585e70",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-fixed": "#002113",
+                        "inverse-primary": "#c1c6db",
+                        "on-secondary-container": "#684000",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "secondary-container": "#fea619"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "md": "16px",
+                        "base": "4px",
+                        "xs": "8px",
+                        "container-max": "1280px",
+                        "lg": "24px",
+                        "sm": "12px",
+                        "2xl": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-active {
+            border-left-width: 4px;
+            border-color: #fea619;
+            background-color: #e7e8e9;
+            color: #000000;
+            font-weight: 600;
+        }
+        .metric-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="text-on-surface bg-background">
+<!-- Desktop Sidebar (NavigationDrawer) -->
+<aside class="hidden md:flex fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex-col z-40">
+<div class="py-xl px-lg flex items-center gap-md">
+<img alt="ECafe Logo" class="h-10 w-10 rounded-lg object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSBQBCS2QIuOcmeZk154AjTgPTszQLDfuMx88AA1XwzCLDRoSqLxG4jpajFkDmH3-dySSXOyxAtCUSGbgpkfxkueKTSSbL3ntgGEIqGWL86nyAcasb-5UDsYX76k1VptZMWY_1L5fxUbrQ8Wnax2kM6AhHmtV9UEKi9jI2igLRhF4y3a1vgHeVIMgZMnlofBNM2FkwfCvFbJla4CXhkCzx7mdm96LOwg9iQLMRyAMoa30os4ZIOETux_wx95-mdB9uPwc">
+<h1 class="text-headline-sm font-headline-sm text-primary">ECafe Admin</h1>
+</div>
+<nav class="flex flex-col h-full overflow-y-auto"><div class="sidebar-active px-lg py-md flex items-center gap-md cursor-pointer transition-all"><span class="material-symbols-outlined">dashboard</span><span class="font-body-md text-body-md">İdarəetmə Paneli</span></div><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">storefront</span><span class="font-body-md text-body-md">Restoranlar</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">description</span><span class="font-body-md text-body-md">Müqavilələr</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">table_restaurant</span><span class="font-body-md text-body-md">Masalar</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">group</span><span class="font-body-md text-body-md">Personal</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="{{DATA:SCREEN:SCREEN_74}}"><span class="material-symbols-outlined">category</span><span class="font-body-md text-body-md">Kateqoriyalar</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">restaurant_menu</span><span class="font-body-md text-body-md">Menyu</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">book_online</span><span class="font-body-md text-body-md">Rezervasiyalar</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">receipt_long</span><span class="font-body-md text-body-md">Sifarişlər</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">payments</span><span class="font-body-md text-body-md">Ödənişlər</span></a><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">notifications</span><span class="font-body-md text-body-md">Bildirişlər</span></a><div class="mt-auto border-t border-outline-variant"><a class="text-on-surface-variant hover:bg-surface-variant hover:text-primary transition-all px-lg py-md flex items-center gap-md cursor-pointer" href="#"><span class="material-symbols-outlined">settings</span><span class="font-body-md text-body-md">Ayarlar</span></a><div class="text-on-surface-variant hover:bg-error/10 hover:text-error transition-all px-lg py-md flex items-center gap-md cursor-pointer"><span class="material-symbols-outlined">logout</span><span class="font-body-md text-body-md">Çıxış</span></div></div></nav>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen pb-2xl">
+<!-- Top Header (TopAppBar) -->
+<header class="sticky top-0 bg-surface/80 backdrop-blur-md z-30 shadow-sm">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+<button class="md:hidden p-xs">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="font-headline-md text-headline-md text-primary tracking-tight">İdarəetmə Paneli</h2>
+</div>
+<div class="flex items-center gap-lg">
+<div class="hidden sm:flex items-center bg-surface-container rounded-full px-md py-xs border border-outline-variant">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-48" placeholder="Axtar..." type="text">
+</div>
+<div class="relative cursor-pointer group">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute -top-1 -right-1 bg-secondary-container w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-on-secondary-container">3</span>
+</div>
+<div class="flex items-center gap-sm cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold">EM</div>
+<div class="hidden lg:block">
+<p class="text-body-sm font-bold leading-none">Elvin Məmmədov</p>
+<p class="text-label-md text-on-surface-variant">Menecer</p>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Body -->
+<div class="px-gutter py-xl max-w-container-max mx-auto">
+<!-- Metric Cards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-xl">
+<!-- Daily Reservations -->
+<div class="metric-card bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<div class="bg-primary-fixed p-sm rounded-lg">
+<span class="material-symbols-outlined text-primary">event_available</span>
+</div>
+<span class="text-on-tertiary-container bg-tertiary-fixed/20 px-xs py-0.5 rounded-full text-label-md">+12%</span>
+</div>
+<div class="mt-md">
+<p class="text-on-surface-variant text-label-md">Günlük Rezervasiyalar</p>
+<h3 class="text-headline-md font-headline-md mt-base">124</h3>
+</div>
+</div>
+<!-- Table Occupancy -->
+<a class="metric-card bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col justify-between hover:border-secondary transition-all" href="{{DATA:SCREEN:SCREEN_74}}">
+<div class="flex justify-between items-start">
+<div class="bg-secondary-fixed p-sm rounded-lg">
+<span class="material-symbols-outlined text-secondary">category</span>
+</div>
+<span class="text-on-surface-variant bg-surface-variant px-xs py-0.5 rounded-full text-label-md">Bax</span>
+</div>
+<div class="mt-md">
+<p class="text-on-surface-variant text-label-md">Kateqoriyalar</p>
+<h3 class="text-headline-md font-headline-md mt-base">24</h3>
+</div>
+</a>
+<!-- No-Shows -->
+<div class="metric-card bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<div class="bg-error-container p-sm rounded-lg">
+<span class="material-symbols-outlined text-error">event_busy</span>
+</div>
+<span class="text-error bg-error-container/20 px-xs py-0.5 rounded-full text-label-md">-3%</span>
+</div>
+<div class="mt-md">
+<p class="text-on-surface-variant text-label-md">Gəlməyənlər (No-Shows)</p>
+<h3 class="text-headline-md font-headline-md mt-base">8</h3>
+</div>
+</div>
+<!-- Total Revenue -->
+<div class="metric-card bg-primary text-on-primary p-lg rounded-xl shadow-lg border border-primary flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<div class="bg-white/20 p-sm rounded-lg backdrop-blur-sm">
+<span class="material-symbols-outlined text-white">payments</span>
+</div>
+<span class="text-tertiary-fixed bg-white/10 px-xs py-0.5 rounded-full text-label-md">+24%</span>
+</div>
+<div class="mt-md">
+<p class="text-on-primary/70 text-label-md">Ümumi Gəlir (Bugün)</p>
+<h3 class="text-headline-md font-headline-md mt-base">4,280 ₼</h3>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Recent Reservations Table (Bento Left) -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<div class="px-lg py-md border-b border-outline-variant flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm">Son Rezervasiyalar</h4>
+<button class="text-primary font-bold text-label-md hover:underline">Hamısına bax</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-lg py-md text-label-md text-on-surface-variant">MÜŞTƏRİ</th>
+<th class="px-lg py-md text-label-md text-on-surface-variant">MASA</th>
+<th class="px-lg py-md text-label-md text-on-surface-variant">VAXT</th>
+<th class="px-lg py-md text-label-md text-on-surface-variant">SAY</th>
+<th class="px-lg py-md text-label-md text-on-surface-variant">STATUS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-lg py-md font-body-md">Aysel Əliyeva</td>
+<td class="px-lg py-md font-body-md text-on-surface-variant">Masa 14 (VİP)</td>
+<td class="px-lg py-md font-body-md text-on-surface-variant">19:30</td>
+<td class="px-lg py-md font-body-md">4 nəfər</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center px-xs py-0.5 rounded-full text-label-md bg-tertiary-fixed/20 text-on-tertiary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container mr-1.5"></span>
+                                            Təsdiqləndi
+                                        </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-lg py-md font-body-md">Murad Qasımov</td>
+<td class="px-lg py-md font-body-md text-on-surface-variant">Masa 08</td>
+<td class="px-lg py-md font-body-md text-on-surface-variant">20:00</td>
+<td class="px-lg py-md font-body-md">2 nəfər</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center px-xs py-0.5 rounded-full text-label-md bg-secondary-fixed/30 text-on-secondary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary mr-1.5"></span>
+                                            Gözləmədə
+                                        </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-lg py-md font-body-md">Nigar Həsənova</td>
+<td class="px-lg py-md font-body-md text-on-surface-variant">Masa 22 (Teras)</td>
+<td class="px-lg py-md font-body-md text-on-surface-variant">18:45</td>
+<td class="px-lg py-md font-body-md">6 nəfər</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center px-xs py-0.5 rounded-full text-label-md bg-tertiary-fixed/20 text-on-tertiary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container mr-1.5"></span>
+                                            Tamamlandı
+                                        </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-lg py-md font-body-md">Kənan İsmayılov</td>
+<td class="px-lg py-md font-body-md text-on-surface-variant">Masa 02</td>
+<td class="px-lg py-md font-body-md text-on-surface-variant">21:15</td>
+<td class="px-lg py-md font-body-md">2 nəfər</td>
+<td class="px-lg py-md">
+<span class="inline-flex items-center px-xs py-0.5 rounded-full text-label-md bg-error-container/40 text-error">
+<span class="w-1.5 h-1.5 rounded-full bg-error mr-1.5"></span>
+                                            Ləğv edilib
+                                        </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Notifications Panel (Bento Right) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant flex flex-col">
+<div class="px-lg py-md border-b border-outline-variant flex justify-between items-center">
+<h4 class="font-headline-sm text-headline-sm">Bildirişlər</h4>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">more_horiz</span>
+</div>
+<div class="p-lg space-y-md flex-grow overflow-y-auto">
+<div class="flex gap-md p-md bg-surface-container-low rounded-lg border-l-4 border-secondary">
+<span class="material-symbols-outlined text-secondary shrink-0">priority_high</span>
+<div>
+<p class="text-body-sm font-bold">Yeni Rezervasiya Tələbi</p>
+<p class="text-label-md text-on-surface-variant mt-1">Sərxan R. - 10 nəfərlik korporativ görüş üçün tələb göndərib.</p>
+<p class="text-[10px] text-outline mt-2">2 dəqiqə əvvəl</p>
+</div>
+</div>
+<div class="flex gap-md p-md hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-on-tertiary-container shrink-0">check_circle</span>
+<div>
+<p class="text-body-sm font-bold">Mətbəx Hazırdır</p>
+<p class="text-label-md text-on-surface-variant mt-1">Bütün səhər hazırlıqları tamamlandı, personal iş başındadır.</p>
+<p class="text-[10px] text-outline mt-2">1 saat əvvəl</p>
+</div>
+</div>
+<div class="flex gap-md p-md hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-error shrink-0">warning</span>
+<div>
+<p class="text-body-sm font-bold">Stok Xəbərdarlığı</p>
+<p class="text-label-md text-on-surface-variant mt-1"> "Angus Steak" ehtiyatı kritik səviyyəyə düşüb (son 3 porsiya).</p>
+<p class="text-[10px] text-outline mt-2">3 saat əvvəl</p>
+</div>
+</div>
+<div class="flex gap-md p-md hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer opacity-70">
+<span class="material-symbols-outlined text-outline shrink-0">inventory</span>
+<div>
+<p class="text-body-sm font-bold">Həftəlik Hesabat</p>
+<p class="text-label-md text-on-surface-variant mt-1">Ötən həftənin maliyyə hesabatı generasiya edildi.</p>
+<p class="text-[10px] text-outline mt-2">Dünən</p>
+</div>
+</div>
+</div>
+<div class="p-lg border-t border-outline-variant">
+<button class="w-full py-sm bg-surface-container text-primary font-bold rounded-lg hover:bg-surface-variant transition-colors flex items-center justify-center gap-xs">
+                            Bütün bildirişlərə keç
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Operational Insights (Glassmorphism Section) -->
+<div class="mt-xl grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="relative h-64 rounded-2xl overflow-hidden shadow-lg group">
+<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700" data-alt="A high-end, professionally photographed restaurant interior at golden hour, featuring luxurious leather seating, minimalist decor, and warm ambient lighting. The atmosphere is sophisticated and quiet, embodying a premium SaaS management platform's focus on elegance and order. The color palette is composed of rich blacks, warm ambers, and clean whites." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB_gXD3eZmN-S-5LxJylScas9dt5KmT_MLoFqpilC9VJNEFFYGfNE4CQ86hVzUXiptla-Uzu8-hskgiyjbihDIJr5fg_n73iFbGDmTDMHE97p0grrwKI5ljU-_3mFZVkQzGEaXFBuzJIvZAosuFC_n5z2ayb03eBS9vQWmW_uo5G1ctzy058JmhjKGhZkRejP5E0uKY3Fv4-iMd7GonepQWzNdbvsi3NdzJu76QSS5jLYwWrv2lp27uqQ')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg text-white">
+<h5 class="text-headline-sm font-bold">Premium Analitika</h5>
+<p class="text-body-sm opacity-80 mt-xs">Müştəri davranışlarını və ən çox sifariş edilən təamları izləyin.</p>
+<button class="mt-md px-md py-xs bg-secondary-container text-on-secondary-container rounded-full font-bold text-label-md">Detallara bax</button>
+</div>
+</div>
+<div class="bg-surface-container-highest/30 backdrop-blur-md rounded-2xl p-xl border border-white/20 flex flex-col justify-center items-center text-center">
+<div class="w-16 h-16 rounded-full bg-secondary-container/20 flex items-center justify-center mb-md">
+<span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<h5 class="text-headline-sm font-bold text-primary">Aİ Tövsiyələri</h5>
+<p class="text-body-md text-on-surface-variant mt-xs max-w-sm">Həftəsonu üçün gözlənilən 15% artımı qarşılamaq üçün əlavə 2 personal təyin etməyiniz tövsiyə olunur.</p>
+<div class="mt-lg flex gap-md">
+<button class="px-lg py-sm bg-primary text-on-primary rounded-lg font-bold shadow-md hover:opacity-90 transition-opacity">Tətbiq et</button>
+<button class="px-lg py-sm border border-outline text-on-surface-variant rounded-lg font-bold hover:bg-surface transition-colors">İndi yox</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Navigation Bar (BottomNavBar) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] flex justify-around items-center px-sm pb-xs pt-base rounded-t-xl border-t border-outline-variant">
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">event_available</span>
+<span class="font-label-md text-label-md">Reservations</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</div>
+</nav>
+<!-- FAB for Adding Reservation (Contextual) -->
+<div class="fixed bottom-24 right-gutter md:bottom-xl md:right-xl z-40">
+<button class="w-14 h-14 bg-secondary-container text-on-secondary-container rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-transform group">
+<span class="material-symbols-outlined text-3xl">add</span>
+<span class="absolute right-full mr-md bg-primary text-on-primary px-md py-xs rounded-lg text-label-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">Yeni Rezervasiya</span>
+</button>
+</div>
+<script>
+        // Simple micro-interaction for sidebar toggle (mobile)
+        const menuBtn = document.querySelector('button.md\\:hidden');
+        if(menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                alert('Mobil menyu tezliklə aktiv olacaq. SaaS interfeysi mobil optimallaşdırılmışdır.');
+            });
+        }
+
+        // Search bar interaction
+        const searchInput = document.querySelector('input[type="text"]');
+        if(searchInput) {
+            searchInput.addEventListener('focus', () => {
+                searchInput.parentElement.classList.add('ring-2', 'ring-secondary-container/50');
+            });
+            searchInput.addEventListener('blur', () => {
+                searchInput.parentElement.classList.remove('ring-2', 'ring-secondary-container/50');
+            });
+        }
+    </script>
+
+
+</body></html>

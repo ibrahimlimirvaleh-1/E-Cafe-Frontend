@@ -1,0 +1,271 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe Admin - Masanı Deaktiv Et</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#000000",
+                    "tertiary-fixed": "#6ffbbe",
+                    "secondary-fixed": "#ffddb8",
+                    "outline": "#76777d",
+                    "on-primary-fixed": "#151b2b",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-tertiary-fixed": "#002113",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#2e3132",
+                    "primary-fixed-dim": "#c1c6db",
+                    "tertiary": "#000000",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "on-tertiary-container": "#009668",
+                    "primary-fixed": "#dde2f8",
+                    "surface-container": "#edeeef",
+                    "secondary": "#855300",
+                    "on-background": "#191c1d",
+                    "surface-variant": "#e1e3e4",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "surface-container-high": "#e7e8e9",
+                    "on-surface": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "error": "#ba1a1a",
+                    "on-error": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-container": "#002113",
+                    "on-primary-container": "#7e8397",
+                    "surface-container-low": "#f3f4f5",
+                    "on-surface-variant": "#45464c",
+                    "on-primary-fixed-variant": "#414658",
+                    "background": "#f8f9fa",
+                    "surface-bright": "#f8f9fa",
+                    "surface": "#f8f9fa",
+                    "on-secondary-container": "#684000",
+                    "surface-dim": "#d9dadb",
+                    "surface-tint": "#585e70",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-secondary-fixed": "#2a1700",
+                    "secondary-container": "#fea619",
+                    "inverse-on-surface": "#f0f1f2",
+                    "primary-container": "#151b2b",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "inverse-primary": "#c1c6db",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "outline-variant": "#c6c6cd"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "sm": "12px",
+                    "xs": "8px",
+                    "md": "16px",
+                    "container-max": "1280px",
+                    "lg": "24px",
+                    "gutter": "24px",
+                    "base": "4px",
+                    "2xl": "48px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-sm": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex overflow-hidden">
+<!-- Navigation Drawer (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col h-full overflow-y-auto hidden md:flex z-40">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">ECafe Admin</div>
+<nav class="flex-1">
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-sm">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-sm">
+<span class="material-symbols-outlined">storefront</span>
+<span class="font-body-md text-body-md">Restaurants</span>
+</div>
+<div class="text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md cursor-pointer flex items-center gap-sm">
+<span class="material-symbols-outlined">table_restaurant</span>
+<span class="font-body-md text-body-md">Tables</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-sm">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md text-body-md">Staff</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-sm">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="font-body-md text-body-md">Menu</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-sm">
+<span class="material-symbols-outlined">book_online</span>
+<span class="font-body-md text-body-md">Reservations</span>
+</div>
+</nav>
+<div class="mt-auto border-t border-outline-variant">
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-sm">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-sm mb-xl">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 p-gutter max-w-container-max mx-auto w-full">
+<!-- Header -->
+<header class="flex justify-between items-center mb-xl">
+<h1 class="font-headline-lg text-headline-lg tracking-tight">Masa İdarəetməsi</h1>
+<button class="bg-primary text-on-primary px-lg py-md rounded-lg font-label-md text-label-md flex items-center gap-xs shadow-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add</span> Yeni Masa
+            </button>
+</header>
+<!-- Table Management View (Contextual Background) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Sample Table Card -->
+<div class="bg-surface-container-lowest border border-outline-variant p-lg rounded-xl shadow-sm opacity-60">
+<div class="flex justify-between items-start mb-md">
+<div class="bg-surface-container-high p-md rounded-lg">
+<span class="material-symbols-outlined text-primary">table_restaurant</span>
+</div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-sm py-xs rounded-full text-label-md font-label-md">Aktiv</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm mb-xs">Masa 12</h3>
+<p class="text-on-surface-variant font-body-sm text-body-sm mb-lg">4 Nəfərlik • Terras zonası</p>
+<div class="flex gap-sm">
+<button class="flex-1 py-xs border border-outline text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">Düzəliş et</button>
+<button class="flex-1 py-xs bg-error-container text-on-error-container rounded-lg font-label-md text-label-md">Deaktiv et</button>
+</div>
+</div>
+<!-- Bento Layout Card for Stats -->
+<div class="lg:col-span-1 bg-primary text-on-primary p-lg rounded-xl shadow-lg flex flex-col justify-between">
+<div>
+<p class="text-on-primary-container font-label-md text-label-md uppercase tracking-widest mb-xs">Ümumi Rezervasiyalar</p>
+<h2 class="font-headline-lg text-headline-lg">124</h2>
+</div>
+<div class="mt-xl">
+<div class="h-1 w-full bg-white/20 rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container w-[75%]"></div>
+</div>
+<p class="mt-xs text-body-sm font-body-sm text-on-primary-container">75% doluluq nisbəti</p>
+</div>
+</div>
+<!-- More Table Cards -->
+<div class="bg-surface-container-lowest border border-outline-variant p-lg rounded-xl shadow-sm opacity-60">
+<div class="flex justify-between items-start mb-md">
+<div class="bg-surface-container-high p-md rounded-lg">
+<span class="material-symbols-outlined text-primary">table_restaurant</span>
+</div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-sm py-xs rounded-full text-label-md font-label-md">Aktiv</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm mb-xs">Masa 14</h3>
+<p class="text-on-surface-variant font-body-sm text-body-sm mb-lg">2 Nəfərlik • VIP zonası</p>
+<div class="flex gap-sm">
+<button class="flex-1 py-xs border border-outline text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">Düzəliş et</button>
+<button class="flex-1 py-xs bg-error-container text-on-error-container rounded-lg font-label-md text-label-md">Deaktiv et</button>
+</div>
+</div>
+</div>
+</main>
+<!-- CONFIRMATION MODAL OVERLAY -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-md" id="deactivate-modal">
+<!-- Modal Backdrop with Blur -->
+<div class="absolute inset-0 bg-primary/40 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+<!-- Modal Container -->
+<div class="relative bg-surface-container-lowest w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+<!-- Header/Icon -->
+<div class="bg-error-container/30 p-xl flex flex-col items-center justify-center">
+<div class="w-16 h-16 bg-error-container rounded-full flex items-center justify-center mb-md shadow-inner">
+<span class="material-symbols-outlined text-error text-[32px]">warning</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface text-center px-sm">Təsdiqləmə lazımdır</h2>
+</div>
+<!-- Body Content -->
+<div class="p-xl">
+<p class="text-on-surface-variant font-body-md text-body-md text-center leading-relaxed">
+                    Masasın statusunu dəyişmək rezervasiya imkanlarına təsir edəcək. Bu masanı deaktiv etmək istədiyinizə əminsiniz?
+                </p>
+<!-- Information Badge -->
+<div class="mt-lg bg-surface-container p-md rounded-xl flex items-start gap-sm border border-outline-variant/30">
+<span class="material-symbols-outlined text-on-surface-variant text-body-md" style="font-variation-settings: 'FILL' 1;">info</span>
+<p class="text-on-surface-variant font-body-sm text-body-sm">Deaktiv edilmiş masalar yeni rezervasiyalar üçün görünməyəcək.</p>
+</div>
+</div>
+<!-- Actions -->
+<div class="px-xl pb-xl flex flex-col sm:flex-row gap-md">
+<button class="flex-1 py-md rounded-xl font-label-md text-label-md text-on-surface-variant border border-outline-variant hover:bg-surface-variant transition-all active:scale-95" onclick="closeModal()">
+                    Ləğv et
+                </button>
+<button class="flex-1 py-md rounded-xl font-label-md text-label-md bg-error text-on-error shadow-md hover:bg-error/90 transition-all active:scale-95" onclick="confirmDeactivate()">
+                    Deaktiv et
+                </button>
+</div>
+</div>
+</div>
+<!-- UI Interaction Script -->
+<script>
+        function closeModal() {
+            const modal = document.getElementById('deactivate-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.querySelector('div:last-child').classList.add('scale-95');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        function confirmDeactivate() {
+            // Logically handling the action
+            console.log('Table deactivated');
+            const confirmBtn = event.target;
+            confirmBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span>';
+            setTimeout(() => {
+                closeModal();
+                alert('Masa uğurla deaktiv edildi.');
+            }, 800);
+        }
+
+        // Show modal animation on load for demo
+        window.onload = () => {
+            const modal = document.getElementById('deactivate-modal');
+            modal.style.display = 'flex';
+        }
+    </script>
+</body></html>

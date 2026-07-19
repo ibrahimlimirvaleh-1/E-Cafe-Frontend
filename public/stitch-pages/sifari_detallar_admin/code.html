@@ -1,0 +1,410 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .timeline-step::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            width: 100%;
+            height: 2px;
+            background: #e1e3e4;
+            z-index: -1;
+        }
+        .timeline-step:last-child::after {
+            display: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#c1c6db",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-primary-container": "#7e8397",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface": "#f8f9fa",
+                        "outline-variant": "#c6c6cd",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d9dadb",
+                        "surface-tint": "#585e70",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#e7e8e9",
+                        "on-primary-fixed-variant": "#414658",
+                        "secondary": "#855300",
+                        "on-surface": "#191c1d",
+                        "on-secondary-fixed": "#2a1700",
+                        "tertiary": "#000000",
+                        "on-error": "#ffffff",
+                        "primary": "#000000",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#009668",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-background": "#191c1d",
+                        "surface-container": "#edeeef",
+                        "inverse-surface": "#2e3132",
+                        "tertiary-container": "#002113",
+                        "secondary-fixed": "#ffddb8",
+                        "on-secondary-container": "#684000",
+                        "surface-variant": "#e1e3e4",
+                        "on-surface-variant": "#45464c",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "secondary-container": "#fea619",
+                        "primary-fixed": "#dde2f8",
+                        "on-primary-fixed": "#151b2b",
+                        "on-tertiary-fixed": "#002113",
+                        "inverse-primary": "#c1c6db",
+                        "tertiary-fixed": "#6ffbbe",
+                        "primary-container": "#151b2b",
+                        "background": "#f8f9fa",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "outline": "#76777d",
+                        "on-secondary-fixed-variant": "#653e00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "xs": "8px",
+                        "xl": "32px",
+                        "2xl": "48px",
+                        "container-max": "1280px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Side Navigation Bar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface shadow-sm border-r border-outline-variant flex flex-col z-50">
+<div class="p-lg flex flex-col gap-xs">
+<span class="font-headline-md text-headline-md font-bold text-primary">ECafe Admin</span>
+<span class="font-label-md text-label-md text-on-surface-variant">İdarəetmə Portalı</span>
+</div>
+<nav class="flex-1 px-sm py-md overflow-y-auto">
+<ul class="flex flex-col gap-xs"><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">dashboard</span>Panel</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">storefront</span>Restoranlar</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">description</span>Müqavilələr</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">table_restaurant</span>Masalar</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">badge</span>Personal</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">category</span>Kateqoriyalar</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">restaurant_menu</span>Menyu</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">event</span>Rezervasiyalar</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-primary font-bold border-r-4 border-primary bg-surface-container-low transition-all" href="#"><span class="material-symbols-outlined">receipt_long</span>Sifarişlər</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">payments</span>Ödənişlər</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">notifications</span>Bildirişlər</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#"><span class="material-symbols-outlined">settings</span>Ayarlar</a></li></ul>
+</nav>
+<div class="p-md border-t border-outline-variant">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<img class="w-full h-full rounded-full object-cover" alt="Admin User" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqCKg64lECXqJNgkBKagu14tgfBmpk50jB_DPqsXbmI3WMwxLGFggfNhf1FFLSif3MG-L7Yf6W99a6wcL6pk3ewPStyAEftTPAGgHvoPzwx8IPerdWUxw922RkaJCJ6Hm5B1CNoK1Y6KvQUDa71Md8GCH038VCXUPrw4xagdyCyk-sHPOH7DWReLTYZpQEGp8lTuaStF0sedmUe90HlXnJXqXeXjITKz6XqBgAM1rjb8veeq42WUI1YA">
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">Admin İstifadəçi</span>
+<span class="text-[10px] text-on-surface-variant">Super Admin</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- Top Nav Bar -->
+<header class="flex justify-between items-center px-lg py-sm w-full bg-surface-bright shadow-sm sticky top-0 z-40">
+<div class="flex items-center gap-xl flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container border-none rounded-full font-body-sm text-body-sm focus:ring-2 focus:ring-primary" placeholder="Sifariş nömrəsi və ya müştəri axtar..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-xs hover:bg-surface-container-highest rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-xs hover:bg-surface-container-highest rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="h-6 w-[1px] bg-outline-variant mx-sm"></div>
+<button class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">Çıxış</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-lg max-w-[1200px] mx-auto">
+<!-- Breadcrumbs & Header -->
+<div class="mb-xl flex flex-col gap-xs">
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md">
+<a class="hover:text-primary" href="#">Panel</a>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+<a class="hover:text-primary" href="#">Sifarişlər</a>
+<span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-primary font-bold">Sifariş Detalları</span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg mb-base">Sifariş #8821</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">14 May 2024, 19:45 tarixində yaradıldı</p>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-xs px-md py-sm bg-surface-container-high rounded-lg font-label-md text-label-md hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined" data-icon="print">print</span>
+                            Çap et
+                        </button>
+<button class="flex items-center gap-xs px-md py-sm bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-all">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+                            Redaktə et
+                        </button>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- Status Timeline (Full Width top) -->
+<div class="col-span-12 bg-surface-container-low rounded-xl p-xl shadow-sm border border-outline-variant overflow-hidden relative">
+<div class="flex justify-between items-center mb-xl">
+<h3 class="font-headline-sm text-headline-sm">Mətbəx Statusu</h3>
+<span class="px-sm py-1 bg-secondary-container text-on-secondary-container rounded-full font-label-md text-label-md">Hazırlanır</span>
+</div>
+<div class="flex justify-between relative z-10"><div class="flex flex-col items-center gap-sm flex-1 relative timeline-step"><div class="w-10 h-10 rounded-full bg-on-tertiary-container text-white flex items-center justify-center shadow-md"><span class="material-symbols-outlined">check</span></div><div class="text-center"><p class="font-label-md text-label-md font-bold">Gözləmədə</p><p class="text-[10px] text-on-surface-variant">19:45</p></div></div><div class="flex flex-col items-center gap-sm flex-1 relative timeline-step"><div class="w-10 h-10 rounded-full bg-on-tertiary-container text-white flex items-center justify-center shadow-md"><span class="material-symbols-outlined">check</span></div><div class="text-center"><p class="font-label-md text-label-md font-bold">Qəbul edildi</p><p class="text-[10px] text-on-surface-variant">19:47</p></div></div><div class="flex flex-col items-center gap-sm flex-1 relative timeline-step"><div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shadow-lg border-4 border-white"><span class="material-symbols-outlined">restaurant</span></div><div class="text-center"><p class="font-label-md text-label-md font-bold text-secondary">Hazırlanır</p><p class="text-[10px] text-on-surface-variant">19:55-dən bəri</p></div></div><div class="flex flex-col items-center gap-sm flex-1 relative timeline-step"><div class="w-10 h-10 rounded-full bg-surface-container-highest text-outline flex items-center justify-center"><span class="material-symbols-outlined">notifications_active</span></div><div class="text-center"><p class="font-label-md text-label-md text-on-surface-variant">Hazırdır</p></div></div><div class="flex flex-col items-center gap-sm flex-1 relative timeline-step"><div class="w-10 h-10 rounded-full bg-surface-container-highest text-outline flex items-center justify-center"><span class="material-symbols-outlined">done_all</span></div><div class="text-center"><p class="font-label-md text-label-md text-on-surface-variant">Təqdim edildi</p></div></div></div>
+</div>
+<!-- Info Cards Left Col -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-lg">
+<!-- Items Table -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm">Sifariş tərkibi</h3>
+<span class="text-on-surface-variant font-label-md text-label-md">4 element</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant">Məhsul</th>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant">Qiymət</th>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant">Say</th>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant text-right">Cəmi</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Item 1 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" alt="Qızıl balıq Steyk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEBios_zB4Fk7T6Va0W7trNFTNUs5Qs_BgwSMEPg23tomAnJAZ9iyQiBFgNzwgBnOE2yriV6rgZK7IB2t83mu3QSUCfgUtQC9Lk1UrctypmrNt-dR5Vgyo5yQM9vucw6sqQlYhKZb4-eyK9exTfpsox7xWWIueqixE9wCHGWc2XSgmWYAHu9ugoIfPnQQlQubavhG0f5EIFP_Fm6QmAj_QkrxdDqEFG_m3SAUV1RhB_b6AaIkeevIBWA">
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold">Qızıl balıq Steyk</p>
+<p class="font-label-md text-label-md text-on-tertiary-container">Qeyd: Limon az olsun</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md font-body-md">24.00 ₼</td>
+<td class="px-lg py-md font-body-md">2</td>
+<td class="px-lg py-md font-body-md font-bold text-right">48.00 ₼</td>
+</tr>
+<!-- Item 2 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" alt="Təzə sıxılmış Portağal şirəsi" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjMmTZcG3o2CUH_fubmFXEI9NQn2ASSQzDxHOZ0iDb2QJqC8_eMObVEcQ7B9u1mh2YH31EEiI1L0QzU8poL35eAxIOgZaWV9hEg2qqgefPUe1Yc2g7d-sZYGmyVyxBYDwcKbiVi_MTCstqRZVqiFALITzU190Ps_u8_dTEt9knvxHnZpT2Cl6tu4BlHPJSr2j-7ghQF9d87k9Vee-fwP_8v1aNGVS0w4TQKkhMBTqixwmaIdEppuIfpw">
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold">Təzə sıxılmış Portağal şirəsi</p>
+<p class="font-label-md text-label-md text-on-surface-variant italic">Qeyd yoxdur</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md font-body-md">6.50 ₼</td>
+<td class="px-lg py-md font-body-md">1</td>
+<td class="px-lg py-md font-body-md font-bold text-right">6.50 ₼</td>
+</tr>
+<!-- Item 3 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" alt="Tiramisu" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ8yvHTVqokZ8S5wbhlAwNujhuX5ygj4M1XwAsIs-3aq1-X8qqftZg9-_vsoelxSRhv-2WqIqK-jV_IqkrSElpEs9tKFlqUuSMADFlEG3gENCF3Sbshg-pKD2pTz96-UqX4D8-e8Cbswww6Mwihwvkp3kduWRwS0NU6RUksfSyYTWrm3Orf3A76e3iOVZzzcUmbhksaBPGcLzhUC0khx1zwNvDVLC0gweiZq5vG2XvsafB15YEj8vyRw">
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold">Tiramisu</p>
+<p class="font-label-md text-label-md text-error">Qeyd: Şəkərsiz olsun</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md font-body-md">12.00 ₼</td>
+<td class="px-lg py-md font-body-md">1</td>
+<td class="px-lg py-md font-body-md font-bold text-right">12.00 ₼</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Summary / Totals -->
+<div class="bg-surface-container-low rounded-xl p-lg flex flex-col gap-md border border-outline-variant">
+<div class="flex justify-between items-center text-on-surface-variant font-body-md">
+<span class="">Ara Cəmi</span>
+<span class="">66.50 ₼</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-body-md">
+<span class="">Xidmət haqqı (10%)</span>
+<span class="">6.65 ₼</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-body-md">
+<span class="">Endirim (Promo: ECafe10)</span>
+<span class="text-error">-5.00 ₼</span>
+</div>
+<div class="h-[1px] bg-outline-variant my-xs"></div>
+<div class="flex justify-between items-center font-headline-md text-headline-md font-bold text-primary">
+<span class="">Ümumi Cəmi</span>
+<span class="">68.15 ₼</span>
+</div>
+</div>
+</div>
+<!-- Detail Cards Right Col -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-lg">
+<!-- Customer & Reservation Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-lg">
+<h3 class="font-headline-sm text-headline-sm mb-lg">Müştəri Məlumatı</h3>
+<div class="flex items-center gap-md mb-lg">
+<div class="w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center font-bold text-primary">AY</div>
+<div>
+<p class="font-body-lg text-body-lg font-bold">Anar Yusifov</p>
+<p class="font-label-md text-label-md text-on-surface-variant">+994 50 123 45 67</p>
+</div>
+</div>
+<div class="space-y-md">
+<div class="flex items-center justify-between p-sm bg-surface-container rounded-lg">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="deck">deck</span>
+<span class="font-label-md text-label-md">Masa</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">VİP-04</span>
+</div>
+<div class="flex items-center justify-between p-sm bg-surface-container rounded-lg">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Ofisiant</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">Leyla Ə.</span>
+</div>
+<div class="flex items-center justify-between p-sm bg-surface-container rounded-lg">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="confirmation_number">confirmation_number</span>
+<span class="font-label-md text-label-md">Rezervasiya ID</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">#R-1092</span>
+</div>
+</div>
+</div>
+<!-- Payment Status Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-lg">
+<h3 class="font-headline-sm text-headline-sm mb-lg">Ödəniş Statusu</h3>
+<div class="p-lg bg-on-tertiary-container/10 border border-on-tertiary-container/20 rounded-xl flex flex-col items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-on-tertiary-container text-white flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="credit_score">credit_score</span>
+</div>
+<div class="text-center">
+<p class="font-headline-sm text-headline-sm text-on-tertiary-container">Ödənilib (Online)</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Tranzaksiya: #TXN-99210-234</p>
+</div>
+</div>
+<div class="mt-lg pt-lg border-t border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">Metod:</span>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary" data-icon="credit_card">credit_card</span>
+<span class="font-label-md text-label-md font-bold">Visa **** 4421</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Admin Quick Actions -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-lg">
+<h3 class="font-headline-sm text-headline-sm mb-lg">Sürətli Əməliyyatlar</h3>
+<div class="grid grid-cols-2 gap-md">
+<button class="flex flex-col items-center gap-sm p-md rounded-xl bg-surface-container hover:bg-surface-container-high transition-all text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined" data-icon="cancel">cancel</span>
+<span class="font-label-md text-label-md">Ləğv et</span>
+</button>
+<button class="flex flex-col items-center gap-sm p-md rounded-xl bg-surface-container hover:bg-surface-container-high transition-all text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">Tarixçə</span>
+</button>
+<button class="flex flex-col items-center gap-sm p-md rounded-xl bg-surface-container hover:bg-surface-container-high transition-all text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined" data-icon="forward_to_inbox">forward_to_inbox</span>
+<span class="font-label-md text-label-md">Email göndər</span>
+</button>
+<button class="flex flex-col items-center gap-sm p-md rounded-xl bg-surface-container hover:bg-surface-container-high transition-all text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined" data-icon="flag">flag</span>
+<span class="font-label-md text-label-md">Prioritet</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+
+</main>
+<!-- Mobile Navigation (Visible only on small screens) -->
+<nav class="fixed bottom-0 w-full flex justify-around items-center p-xs bg-surface-container shadow-lg md:hidden z-50 rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-md text-label-md">Sifarişlər</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="deck">deck</span>
+<span class="font-label-md text-label-md">Masalar</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+<span class="font-label-md text-label-md">Menyu</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Hesab</span>
+</a>
+</nav>
+
+</body></html>

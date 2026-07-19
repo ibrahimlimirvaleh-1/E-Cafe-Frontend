@@ -1,0 +1,421 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe | Customer Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#e7e8e9",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed-variant": "#414658",
+                    "secondary": "#855300",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-primary-container": "#7e8397",
+                    "inverse-on-surface": "#f0f1f2",
+                    "primary-fixed-dim": "#c1c6db",
+                    "on-error-container": "#93000a",
+                    "surface": "#f8f9fa",
+                    "outline-variant": "#c6c6cd",
+                    "surface-tint": "#585e70",
+                    "surface-dim": "#d9dadb",
+                    "surface-bright": "#f8f9fa",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-tertiary-container": "#009668",
+                    "surface-container": "#edeeef",
+                    "on-background": "#191c1d",
+                    "inverse-surface": "#2e3132",
+                    "on-surface": "#191c1d",
+                    "on-secondary-fixed": "#2a1700",
+                    "tertiary": "#000000",
+                    "on-error": "#ffffff",
+                    "primary": "#000000",
+                    "surface-container-low": "#f3f4f5",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "secondary-container": "#fea619",
+                    "primary-fixed": "#dde2f8",
+                    "on-primary-fixed": "#151b2b",
+                    "surface-variant": "#e1e3e4",
+                    "on-surface-variant": "#45464c",
+                    "tertiary-container": "#002113",
+                    "secondary-fixed": "#ffddb8",
+                    "on-secondary-container": "#684000",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "outline": "#76777d",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-primary": "#c1c6db",
+                    "tertiary-fixed": "#6ffbbe",
+                    "primary-container": "#151b2b",
+                    "on-tertiary": "#ffffff",
+                    "background": "#f8f9fa"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "sm": "12px",
+                    "gutter": "24px",
+                    "xs": "8px",
+                    "xl": "32px",
+                    "2xl": "48px",
+                    "container-max": "1280px",
+                    "base": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav-link {
+            border-bottom: 2px solid #855300;
+            color: #855300;
+            font-weight: 700;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface flex flex-col min-h-screen">
+<!-- TopNavBar Header -->
+<header class="docked full-width top-0 sticky z-50 bg-surface border-b border-outline-variant">
+<div class="flex justify-between items-center px-gutter py-sm w-full max-w-container-max mx-auto h-16">
+<!-- Brand Logo -->
+<div class="flex items-center gap-4">
+<button class="md:hidden text-primary" id="mobileMenuToggle">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-headline-sm text-headline-sm font-black text-primary">ECafe</span>
+</div>
+<!-- Search Bar (on_left logic - placed near center-left) -->
+<div class="hidden md:flex flex-1 max-w-md mx-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-secondary/20 focus:bg-surface-container" placeholder="Search restaurants or cuisines..." type="text">
+</div>
+</div>
+<!-- Desktop Navigation Links -->
+<nav class="hidden md:flex items-center gap-lg">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors pb-1" href="#">Restoranlar</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors pb-1" href="#">Rezervasiyalar</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors pb-1" href="#">Sifarişlər</a>
+<a class="font-label-md text-label-md text-secondary font-bold border-b-2 border-secondary pb-1" href="#">Profil</a>
+</nav>
+<!-- Trailing Icons/Actions -->
+<div class="flex items-center gap-sm md:gap-md ml-lg">
+<button class="text-on-surface-variant hover:text-secondary transition-colors active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hidden sm:block text-on-surface-variant hover:text-secondary transition-colors active:opacity-80">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="relative group cursor-pointer">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A sophisticated headshot of a professional customer for a luxury hospitality brand. The subject is smiling warmly against a blurred interior of a high-end, modern restaurant with warm ambient lighting. The aesthetic is clean, professional, and follows a light-mode color palette with neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqDfCIF8xgd0Nr4BvuZQt17unYCLheuSVvQbt5hr2yG9E-BmWXIOxfUut8ouZswdw2f5zIdw7N94QjnwLBbVJizQgwyyvDBlZARcJI-1sOPdwlLmvlH2YyrVccDvki5WNdZeWdmXTe3tUZfKi_KnQ3f3F7-WvdyhFetKhmI_QFZnGzvY_2Pl81Nr3UHbfbqoTJcXXiF50o8CFXYKubq9gfAY6v297xudt6-pUCv3jtHy1ZyyGmID-riw">
+</div>
+<!-- Dropdown Mock -->
+<div class="absolute right-0 top-full mt-2 w-48 bg-surface-container-lowest shadow-lg rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all py-2 border border-outline-variant">
+<a class="block px-4 py-2 text-body-sm hover:bg-surface-container" href="#">Sign Out</a>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Mobile Nav Overlay -->
+<div class="fixed inset-0 bg-primary/40 z-[60] hidden" id="mobileMenu">
+<div class="bg-surface w-4/5 h-full p-gutter">
+<div class="flex justify-between items-center mb-xl">
+<span class="font-headline-sm text-headline-sm font-black text-primary">ECafe</span>
+<button class="text-primary" id="mobileMenuClose"><span class="material-symbols-outlined">close</span></button>
+</div>
+<nav class="flex flex-col gap-md">
+<a class="flex items-center gap-md p-md rounded-xl bg-surface-container" href="#">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="font-body-md text-body-md">Restoranlar</span>
+</a>
+<a class="flex items-center gap-md p-md" href="#">
+<span class="material-symbols-outlined">event_seat</span>
+<span class="font-body-md text-body-md">Rezervasiyalar</span>
+</a>
+<a class="flex items-center gap-md p-md" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-body-md text-body-md">Sifarişlər</span>
+</a>
+<a class="flex items-center gap-md p-md" href="#"><span class="material-symbols-outlined">notifications</span><span class="font-body-md text-body-md">Bildirişlər</span></a><a class="flex items-center gap-md p-md" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-md text-body-md font-bold text-secondary">Profil</span>
+</a>
+</nav>
+</div>
+</div>
+<!-- Main Content Area with Desktop Sidebar -->
+<main class="flex-1 w-full max-w-container-max mx-auto px-gutter py-xl">
+<div class="flex flex-col md:flex-row gap-gutter">
+<!-- Account Sidebar (Desktop Only) -->
+<aside class="hidden md:flex flex-col w-64 gap-xs">
+<h2 class="px-4 mb-4 font-headline-sm text-headline-sm">Settings</h2>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-secondary-fixed bg-on-primary-fixed-variant transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-md text-body-md">Personal Info</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">credit_card</span>
+<span class="font-body-md text-body-md">Payment Methods</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-body-md text-body-md">Order History</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">location_on</span>
+<span class="font-body-md text-body-md">Saved Addresses</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-body-md text-body-md">Security</span>
+</a>
+<hr class="my-4 border-outline-variant">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-error hover:bg-error-container/10 transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md">Sign Out</span>
+</a>
+</aside>
+<!-- Responsive Content Canvas -->
+<section class="flex-1 space-y-xl">
+<!-- User Profile Header Bento -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Main Profile Card -->
+<div class="lg:col-span-2 bg-surface-container-lowest p-xl rounded-2xl shadow-sm border border-outline-variant flex flex-col sm:flex-row items-center gap-xl relative overflow-hidden group">
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-secondary/5 rounded-full blur-3xl group-hover:bg-secondary/10 transition-colors"></div>
+<div class="w-32 h-32 rounded-full ring-4 ring-surface-container border-4 border-white overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A detailed, premium quality portrait of a young professional customer in a stylish, minimal setting. Bright, natural daylight floods through large windows in the background, creating soft highlights on the face. The mood is sophisticated and reliable, reflecting high-end hospitality services." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF3JKyDAW0R8l9daDtqSdNBHe5q20hs6CKOn_Nme_mS6zL-D4ofiCsPEi5YjdXGJv-RI2Th0cAV2ZwmxF9fWQDsDcaBfBhbBKEqGJlEuzSRRQxr7vZA3MimbcP3eH_K6VBdLSvVlzvy2ZxxIjDgLvwemuxMYJnRBGrn0gj9Qe88YtcuUYO6ggmbV3eb1HfVjsB8TQnXmu7yCaCLd-Bqwi3NftwuHYRCDuOKXI9pT4PzaHCNTRyX5CJDA">
+</div>
+<div class="text-center sm:text-left z-10">
+<div class="flex items-center justify-center sm:justify-start gap-xs mb-xs">
+<h1 class="font-headline-lg text-headline-lg">Julian Alexander</h1>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Premium Member since Oct 2023</p>
+<div class="flex flex-wrap justify-center sm:justify-start gap-xs">
+<span class="px-3 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed text-label-md font-label-md uppercase tracking-wider">Gold Tier</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-label-md font-label-md">1,240 Points</span>
+</div>
+</div>
+</div>
+<!-- Quick Action Card -->
+<div class="bg-primary-container p-xl rounded-2xl shadow-md border border-on-primary-fixed-variant flex flex-col justify-between text-on-primary">
+<div>
+<span class="material-symbols-outlined text-secondary-container mb-md scale-125">auto_awesome</span>
+<h3 class="font-headline-sm text-headline-sm text-surface-container-lowest">Reserve Now</h3>
+<p class="font-body-sm text-body-sm text-on-primary-container mt-xs">Get priority seating at top-rated cafes and restaurants nearby.</p>
+</div>
+<button class="mt-xl w-full py-3 bg-secondary text-on-secondary rounded-xl font-label-md text-label-md uppercase tracking-widest active:scale-95 transition-transform">Book a Table</button>
+</div>
+</div>
+<!-- Account Management Bento Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+<!-- Bento Item: Active Orders -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl shadow-sm border border-outline-variant hover:shadow-md transition-shadow cursor-pointer">
+<div class="flex justify-between items-start mb-md">
+<span class="material-symbols-outlined text-secondary p-2 bg-secondary/10 rounded-lg">shopping_bag</span>
+<span class="text-on-tertiary-container bg-tertiary-fixed-dim/20 px-2 py-0.5 rounded text-[10px] font-bold">1 ACTIVE</span>
+</div>
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase">Current Order</h4>
+<p class="font-headline-sm text-headline-sm mt-1">Gourmet Bistro</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">Arriving in 15 mins</p>
+</div>
+<!-- Bento Item: Recent Activity -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl shadow-sm border border-outline-variant hover:shadow-md transition-shadow cursor-pointer sm:col-span-2">
+<div class="flex justify-between items-center mb-md">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase">Recent Reservations</h4>
+<span class="material-symbols-outlined text-on-surface-variant">arrow_forward</span>
+</div>
+<div class="space-y-sm">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A macro close-up of a perfectly plated gourmet appetizer in a high-end restaurant. The lighting is focused and warm, highlighting the texture of the dish. Professional food photography style with shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCE5vFKomHX-IWnXjFckBLl3P4_Ksa4glwfvlKsYoZKfdw0aJbn7S9yH_0JtBSxtT3Vve_SNSSL6bG9aKpNGQ_heSoxBfEt859cRb6slCMErzZ_NsUFUdlZJlW7Pm-0zAudIG_JQZpQ_LpNv9Z5N6rkJL6815rgErn17ItA7uchVQ7VFWHJU_5smxZJn7V5uQ7uA9K31YpI4dwKor6rAmlJiFt-TBidDglV_PjVkyWtx1-13hidLj1kww">
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md font-bold">The Silk Road</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Table for 2 • Dec 12</p>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container text-body-sm">Past</span>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Vibrant cocktail and dim sum in a trendy, urban bar setting at night. Cool neon highlights and warm interior lighting create a sophisticated atmosphere for a professional dining portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcuSLNQzu6i6luU1G0F9_PhTgbZ940OKlhCCfZ5hleaKvD-daYR3t-85tcYemy2tVk60iactb_3GsdBuFAGUycUmnLsuosgmFifFJifoDyUJ_U6bo5b3gButdtYmJ4SgsNHMBm4FL21fxmfWWjLN2whot_v84RHvRP3h_c0OFvah4X8QrvBOZoXDOAIraglcdVcFc5md9owjEukLvQ9AarRZj3YrfZBrEMoSuIo0rjcnF1WGgoMjX7IA">
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md font-bold">Neon Noodle Bar</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Table for 4 • Dec 20</p>
+</div>
+<span class="px-2 py-1 rounded bg-secondary/10 text-secondary text-body-sm font-bold">Upcoming</span>
+</div>
+</div>
+</div>
+<!-- Bento Item: Loyalty Status -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl shadow-sm border border-outline-variant hover:shadow-md transition-shadow cursor-pointer">
+<span class="material-symbols-outlined text-amber-500 mb-md scale-110">stars</span>
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase">Rewards</h4>
+<p class="font-headline-md text-headline-md mt-1">$45.00</p>
+<p class="font-body-sm text-body-sm text-on-tertiary-container mt-2">Available Credit</p>
+</div>
+</div>
+<!-- Section: Personalized Recommendations -->
+<div class="mt-2xl">
+<div class="flex justify-between items-center mb-lg">
+<h2 class="font-headline-md text-headline-md">Recommended for You</h2>
+<a class="text-secondary font-label-md text-label-md flex items-center gap-1 hover:underline" href="#">View All <span class="material-symbols-outlined text-sm">open_in_new</span></a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg">
+<!-- Recommendation Card 1 -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden group">
+<div class="h-48 w-full relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A wide architectural shot of a modern minimalist restaurant interior. High ceilings, clean lines, plenty of plants, and warm wood accents. The lighting is soft and natural, perfect for a high-end hospitality portal website." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDToDKQEL7loRU3pvCX6BR4YditEvYv6tMGmWNM2AP-N_hvrVKSHQ8-iaRAiGFZ6ekOtGpXijY_b4fLsj-IjIBBKEpnlWV1kMoAT_FdizowKKCw4s9XeID3v7bC-jdDw15MFUmJqT3o99B0SfzxEv23etVoKpVZKVVq6zGp-idmPpLviCvuYZswA5Z-JnutVBx6pQCwwK8DENd0QpF0CDC0-VE68UZ-uvJjldkoJAzxBdDj-QMxkLMpwg">
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-label-md font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-amber-500 text-sm" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
+                                </div>
+</div>
+<div class="p-lg">
+<h3 class="font-headline-sm text-headline-sm mb-1">Amber &amp; Oak</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Artisanal European Cuisine • $$$</p>
+<div class="flex items-center gap-2 text-on-tertiary-container font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">schedule</span> Available tonight at 7:30 PM
+                                </div>
+</div>
+</div>
+<!-- Recommendation Card 2 -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden group">
+<div class="h-48 w-full relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Interior of a luxury sushi bar with dark marble counters and warm spotlighting. The chef is visible in the background preparing food. Sophisticated, dark, and exclusive atmosphere for a premium reservation app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvVo32JQW__1G58F7L2ZApAE2eJ_I4i5UtQfw8Zqs6YyBR0bq-7fjH06io3JDQHJzP5JdfirIfsXj4YR_b6vzPgIWgiTCgfDIl1aXZGGi7EVZuTUa4RVvqWLVuVlj7ihaw6ZIWlipXZTbxiFInJxqJXVnNXsFHGdFMI7OzVuk10EmIh1lQL3Gy06dfl5akd-wlEP2tuGOduj1HQ1MSbULPcwfSLYwmrkm8ddjG3nzOnzUrkZGQIHccYA">
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-label-md font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-amber-500 text-sm" style="font-variation-settings: 'FILL' 1;">star</span> 4.8
+                                </div>
+</div>
+<div class="p-lg">
+<h3 class="font-headline-sm text-headline-sm mb-1">Tsuki Omakese</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Japanese Fine Dining • $$$$</p>
+<div class="flex items-center gap-2 text-on-tertiary-container font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">schedule</span> Limited seating available
+                                </div>
+</div>
+</div>
+<!-- Recommendation Card 3 -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden group">
+<div class="h-48 w-full relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A cozy, high-end bakery and cafe with marble tables and velvet seating. Soft afternoon sun creates long shadows. Display cases show colorful pastries and cakes in a clean, professional hospitality setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlOERA8t1OXYHl3-wMz3_jh5VHnAiG_5Mi9iYitZiInsbzR1S1WQSHb2k4kcqQx0StQ2oTOpvyL4HHw-Qh6UnyyhNQbgMs80c_LZjBRxHjxdjN3ixn3jCitpYjhivZ5dhxomZBBHNhE69uOv4mIRjzW3TKGskar57Rwtk13TodPEQ_FMmjvIU6JOlRxFexdpTJfrzwWuotMFxkprgP3k-OJ1A-VjDdw1mfaepni3Wl6c30AuVKcYoKeQ">
+<div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-label-md font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-amber-500 text-sm" style="font-variation-settings: 'FILL' 1;">star</span> 4.7
+                                </div>
+</div>
+<div class="p-lg">
+<h3 class="font-headline-sm text-headline-sm mb-1">Velvet Crumb</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Patisserie &amp; Coffee • $$</p>
+<div class="flex items-center gap-2 text-on-tertiary-container font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm">schedule</span> Open until 10:00 PM
+                                </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer Section -->
+<footer class="bg-surface-container-low border-t border-outline-variant mt-2xl">
+<div class="w-full max-w-container-max mx-auto px-gutter py-xl flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="flex flex-col items-center md:items-start">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">ECafe</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 ECafe Hospitality Management. All rights reserved.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-lg">
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Privacy Policy</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Terms of Service</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Contact Support</a>
+</div>
+</div>
+</footer>
+<script>
+        // Basic Interaction Script
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenuClose = document.getElementById('mobileMenuClose');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+
+        mobileMenuClose.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            document.body.style.overflow = '';
+        });
+
+        // Close mobile menu on background click
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target === mobileMenu) {
+                mobileMenu.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Interaction for side nav items
+        document.querySelectorAll('aside a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                // In a real app this would navigate. For now, just a visual toggle.
+                document.querySelectorAll('aside a').forEach(l => {
+                    l.classList.remove('text-secondary-fixed', 'bg-on-primary-fixed-variant');
+                    l.classList.add('text-on-surface-variant');
+                });
+                link.classList.remove('text-on-surface-variant');
+                link.classList.add('text-secondary-fixed', 'bg-on-primary-fixed-variant');
+            });
+        });
+    </script>
+
+
+</body></html>

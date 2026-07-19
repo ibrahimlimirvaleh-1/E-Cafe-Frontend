@@ -1,0 +1,366 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe Admin - Məhsul Detalları</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-surface": "#2e3132",
+                    "surface-variant": "#e1e3e4",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#191c1d",
+                    "on-tertiary-fixed": "#002113",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "surface-container": "#edeeef",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#000000",
+                    "surface": "#f8f9fa",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "surface-container-high": "#e7e8e9",
+                    "on-tertiary-container": "#009668",
+                    "on-primary": "#ffffff",
+                    "on-secondary-container": "#684000",
+                    "surface-container-highest": "#e1e3e4",
+                    "primary-fixed-dim": "#c1c6db",
+                    "background": "#f8f9fa",
+                    "error": "#ba1a1a",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "primary-container": "#151b2b",
+                    "outline-variant": "#c6c6cd",
+                    "secondary-fixed": "#ffddb8",
+                    "secondary-container": "#fea619",
+                    "outline": "#76777d",
+                    "on-secondary-fixed": "#2a1700",
+                    "on-primary-container": "#7e8397",
+                    "on-primary-fixed": "#151b2b",
+                    "inverse-primary": "#c1c6db",
+                    "surface-bright": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#855300",
+                    "primary-fixed": "#dde2f8",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-dim": "#d9dadb",
+                    "on-surface-variant": "#45464c",
+                    "primary": "#000000",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "lg": "24px",
+                    "xs": "8px",
+                    "md": "16px",
+                    "xl": "32px",
+                    "base": "4px",
+                    "2xl": "48px",
+                    "gutter": "24px",
+                    "sm": "12px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- Navigation Drawer (Shared Component Logic) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant z-40 hidden md:flex flex-col overflow-y-auto">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">
+            ECafe Admin
+        </div>
+<nav class="flex-1">
+<!-- Navigation Items Mapping from JSON Logic -->
+<div class="flex flex-col">
+<a class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+                </a>
+<a class="text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span> Menu
+                </a>
+<a class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">storefront</span> Restaurants
+                </a>
+<a class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">table_restaurant</span> Tables
+                </a>
+<a class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">book_online</span> Reservations
+                </a>
+<a class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">group</span> Staff
+                </a>
+<a class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">payments</span> Payments
+                </a>
+<div class="mt-auto border-t border-outline-variant pt-md">
+<a class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all flex items-center gap-md" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+                    </a>
+<a class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all flex items-center gap-md mb-xl" href="#">
+<span class="material-symbols-outlined">logout</span> Logout
+                    </a>
+</div>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen">
+<!-- TopAppBar (Shared Component Logic) -->
+<header class="bg-surface-container-low shadow-sm sticky top-0 z-30 w-full">
+<div class="flex justify-between items-center px-gutter py-md max-w-container-max mx-auto">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="restaurant">restaurant</span>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">Menu Detalları</h1>
+</div>
+<div class="flex items-center gap-md">
+<button class="bg-surface hover:bg-surface-variant transition-colors border border-outline px-md py-sm rounded-lg font-label-md text-label-md text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">print</span> Çap et
+                    </button>
+<button class="bg-primary text-on-primary hover:opacity-90 transition-opacity px-lg py-sm rounded-lg font-label-md text-label-md shadow-sm">
+                        Login
+                    </button>
+</div>
+</div>
+</header>
+<div class="p-gutter max-w-container-max mx-auto">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-xs mb-lg text-on-surface-variant font-label-md text-label-md">
+<span>Admin</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span>Menu</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-primary">Quzu Qovurması</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Left Side: Product Hero -->
+<section class="lg:col-span-8 flex flex-col gap-xl">
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm flex flex-col md:flex-row min-h-[420px]">
+<!-- Product Image -->
+<div class="md:w-1/2 relative overflow-hidden group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A professional, high-end culinary photograph of traditional Azerbaijani Quzu Qovurması. Succulent pieces of lamb sautéed with golden onions, fresh herbs, and vibrant pomegranate seeds. The dish is presented in a rustic copper pan resting on a dark marble surface. Cinematic soft side lighting highlights the steam and textures of the meat. Luxury hospitality aesthetic with deep shadows and warm highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbB0r2MDHF714D2GQn33RiSt8SNmNhac6ooODRvd2S9hXq9Ex5mfiKfB-332yxiU-AEOt5tkk0f2Pj1rNBxcLIv4nutevW-PTGKocXk0F3OE_v1K9STT7R7FB8J0ejvOjI4tVVgWYJhGzaP04QGNadZJKrlfMPWJyKG5QMMFl2Npig4v-ENWKQvEHkdIPzdv45IEeBcd_UQPj3OwmzwTzZV8Q_gtwWykh3esD-qswN7BWhNK5wPTEyuQ">
+<div class="absolute top-md left-md">
+<span class="bg-on-tertiary-container text-on-tertiary px-md py-xs rounded-full font-label-md text-label-md shadow-lg flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> Aktiv
+                                </span>
+</div>
+</div>
+<!-- Right Side: Header Info -->
+<div class="md:w-1/2 p-xl flex flex-col justify-center">
+<span class="text-secondary font-label-md text-label-md uppercase tracking-widest mb-xs">Ana Yeməklər</span>
+<h2 class="text-primary font-headline-lg text-headline-lg mb-md leading-tight">Quzu Qovurması</h2>
+<div class="flex items-center gap-sm mb-lg">
+<span class="text-primary font-display-lg text-display-lg">42.00</span>
+<span class="text-on-surface-variant font-headline-sm text-headline-sm mt-base">AZN</span>
+</div>
+<p class="text-on-surface-variant font-body-md text-body-md mb-xl leading-relaxed">
+                                Ən təmiz dağ quzusu əti, zərif quyruq yağı və yerli kərə yağında qovrulmuş soğanla hazırlanan, xüsusi ədviyyatlarla zənginləşdirilmiş klassik Azərbaycan yeməyi. Təzə kəklikotu və nar dənələri ilə servis olunur.
+                            </p>
+<!-- Action Buttons -->
+<div class="flex flex-wrap gap-md">
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md px-xl py-md rounded-lg flex items-center justify-center gap-sm hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">edit</span> Redaktə et
+                                </button>
+<button class="flex-1 border border-error text-error font-label-md text-label-md px-xl py-md rounded-lg flex items-center justify-center gap-sm hover:bg-error-container/10 active:scale-95 transition-all">
+<span class="material-symbols-outlined">block</span> Deaktiv et
+                                </button>
+</div>
+</div>
+</div>
+<!-- Details Grid (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<!-- İnqrediyentlər -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">nutrition</span> İnqrediyentlər
+                                </h3>
+<button class="text-secondary font-label-md text-label-md hover:underline">Hamısı</button>
+</div>
+<ul class="space-y-sm">
+<li class="flex items-center justify-between font-body-md text-body-md p-sm bg-surface rounded-lg">
+<span class="text-on-surface">Quzu əti (Bud)</span>
+<span class="text-on-surface-variant">350 q</span>
+</li>
+<li class="flex items-center justify-between font-body-md text-body-md p-sm bg-surface rounded-lg">
+<span class="text-on-surface">Baş soğan</span>
+<span class="text-on-surface-variant">100 q</span>
+</li>
+<li class="flex items-center justify-between font-body-md text-body-md p-sm bg-surface rounded-lg">
+<span class="text-on-surface">Kərə yağı</span>
+<span class="text-on-surface-variant">40 q</span>
+</li>
+<li class="flex items-center justify-between font-body-md text-body-md p-sm bg-surface rounded-lg">
+<span class="text-on-surface">Nar dənələri</span>
+<span class="text-on-surface-variant">20 q</span>
+</li>
+</ul>
+</div>
+<!-- Anbar Statusu -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-secondary">inventory_2</span> Anbar Statusu
+                            </h3>
+<div class="flex flex-col items-center justify-center h-40">
+<div class="relative flex items-center justify-center">
+<svg class="w-32 h-32 transform -rotate-90">
+<circle class="text-surface-variant" cx="64" cy="64" fill="transparent" r="56" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-secondary transition-all duration-1000" cx="64" cy="64" fill="transparent" r="56" stroke="currentColor" stroke-dasharray="351.85" stroke-dashoffset="105.5" stroke-width="8"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="font-headline-lg text-headline-lg text-primary">45+</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Porsiya</span>
+</div>
+</div>
+<p class="mt-md text-on-tertiary-container font-label-md text-label-md bg-tertiary-fixed/10 px-md py-xs rounded-full">
+                                    Kifayət qədər ehtiyat var
+                                </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Side: Sidebar Audit History -->
+<aside class="lg:col-span-4 flex flex-col gap-lg">
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30 sticky top-24">
+<h3 class="font-headline-sm text-headline-sm text-primary mb-xl flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">history</span> Audit Tarixçəsi
+                        </h3>
+<div class="space-y-xl relative before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-surface-variant">
+<!-- History Item 1 -->
+<div class="relative pl-xl">
+<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-4 border-surface-container-lowest z-10"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary">Bugün, 14:20</span>
+<p class="font-body-md text-body-md text-primary mt-base font-semibold">Qiymət yeniləndi</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Əli Məmmədov tərəfindən 38 AZN -&gt; 42 AZN dəyişdirildi.</p>
+</div>
+</div>
+<!-- History Item 2 -->
+<div class="relative pl-xl">
+<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-outline flex items-center justify-center border-4 border-surface-container-lowest z-10"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Dünən, 09:15</span>
+<p class="font-body-md text-body-md text-primary mt-base">Kateqoriya dəyişdirildi</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">"İsti yeməklər" -&gt; "Ana Yeməklər".</p>
+</div>
+</div>
+<!-- History Item 3 -->
+<div class="relative pl-xl">
+<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-outline flex items-center justify-center border-4 border-surface-container-lowest z-10"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">12 Oktyabr, 18:30</span>
+<p class="font-body-md text-body-md text-primary mt-base">Təsvir redaktə edildi</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Məhsulun tərkibi və hazırlanma qaydası yeniləndi.</p>
+</div>
+</div>
+<!-- History Item 4 -->
+<div class="relative pl-xl">
+<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-secondary flex items-center justify-center border-4 border-surface-container-lowest z-10"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">01 Oktyabr, 10:00</span>
+<p class="font-body-md text-body-md text-primary mt-base">Məhsul yaradıldı</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sistemə yeni məhsul əlavə edildi.</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-xl py-md border border-outline-variant text-primary font-label-md text-label-md rounded-lg hover:bg-surface-variant transition-colors">
+                            Tam tarixçəni gör
+                        </button>
+</div>
+<!-- Metrics Card -->
+<div class="bg-primary-container text-on-primary-container p-lg rounded-xl shadow-lg border-l-8 border-secondary">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-label-md text-label-md text-on-primary-fixed-variant uppercase mb-xs">Aylıq Satış</p>
+<h4 class="font-headline-md text-headline-md text-white">248 Sifariş</h4>
+</div>
+<div class="bg-on-tertiary-container/20 text-on-tertiary-container px-sm py-base rounded flex items-center gap-xs font-label-md">
+<span class="material-symbols-outlined text-sm">trending_up</span> +12%
+                            </div>
+</div>
+<p class="mt-md font-body-sm text-body-sm text-on-primary-container/70">Ötən aya nisbətən daha yüksək tələbat var.</p>
+</div>
+</aside>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full flex justify-around items-center px-sm pb-xs pt-base bg-surface border-t border-outline-variant shadow-lg z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-2" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-label-md font-label-md">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-2" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-label-md font-label-md">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="text-label-md font-label-md">Menu</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant py-2" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-label-md font-label-md">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction: Update inventory ring based on a fake percentage
+        window.addEventListener('DOMContentLoaded', () => {
+            const circle = document.querySelector('circle.text-secondary');
+            if (circle) {
+                // Example: 70% inventory health
+                const percent = 70;
+                const circumference = 2 * Math.PI * 56;
+                const offset = circumference - (percent / 100 * circumference);
+                circle.style.strokeDashoffset = offset;
+            }
+        });
+    </script>
+</body></html>

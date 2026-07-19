@@ -1,0 +1,405 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe Admin - Kateqoriyalar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#2e3132",
+                        "surface-variant": "#e1e3e4",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "on-tertiary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "surface-container": "#edeeef",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#000000",
+                        "surface": "#f8f9fa",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-high": "#e7e8e9",
+                        "on-tertiary-container": "#009668",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#684000",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-fixed-dim": "#c1c6db",
+                        "background": "#f8f9fa",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "primary-container": "#151b2b",
+                        "outline-variant": "#c6c6cd",
+                        "secondary-fixed": "#ffddb8",
+                        "secondary-container": "#fea619",
+                        "outline": "#76777d",
+                        "on-secondary-fixed": "#2a1700",
+                        "on-primary-fixed": "#151b2b",
+                        "inverse-primary": "#c1c6db",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#855300",
+                        "primary-fixed": "#dde2f8",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-dim": "#d9dadb",
+                        "on-surface-variant": "#45464c",
+                        "primary": "#000000",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "lg": "24px",
+                        "xs": "8px",
+                        "md": "16px",
+                        "xl": "32px",
+                        "base": "4px",
+                        "2xl": "48px",
+                        "gutter": "24px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e1e3e4; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c6c6cd; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen overflow-hidden">
+<!-- NavigationDrawer (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col z-40 hidden md:flex">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">ECafe Admin</div>
+<nav class="flex flex-col h-full overflow-y-auto">
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</div>
+<!-- Active State: Menu maps closest to Categories -->
+<div class="text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md flex items-center gap-md cursor-pointer">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="font-body-md text-body-md">Menu</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">storefront</span>
+<span class="font-body-md text-body-md">Restaurants</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">table_restaurant</span>
+<span class="font-body-md text-body-md">Tables</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md text-body-md">Staff</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">book_online</span>
+<span class="font-body-md text-body-md">Reservations</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-body-md">Payments</span>
+</div>
+<div class="mt-auto">
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md mb-xl">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</div>
+</div>
+</nav>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 md:ml-64 flex flex-col h-screen">
+<!-- TopAppBar (Shared Component) -->
+<header class="bg-surface-container-low shadow-sm z-30 sticky top-0">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary" data-icon="restaurant">restaurant</span>
+<h1 class="text-headline-lg font-headline-lg text-primary tracking-tight">ECafe</h1>
+</div>
+<div class="flex items-center gap-xl">
+<div class="hidden lg:flex items-center gap-lg">
+<span class="text-primary font-bold font-label-md text-label-md cursor-pointer">Kateqoriyalar</span>
+<span class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md cursor-pointer">Məhsullar</span>
+<span class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md cursor-pointer">Sifarişlər</span>
+</div>
+<div class="bg-primary text-on-primary px-lg py-sm rounded-full cursor-pointer active:opacity-80 transition-all font-label-md text-label-md">
+                        Login
+                    </div>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 overflow-y-auto px-gutter py-xl">
+<div class="max-w-container-max mx-auto space-y-xl">
+<!-- Page Title & Stats (Bento-ish Summary) -->
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-lg">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Kateqoriyaların İdarə Edilməsi</h2>
+<p class="text-on-surface-variant font-body-sm text-body-sm">Menyunuzdakı bütün kateqoriyaları buradan izləyə və idarə edə bilərsiniz.</p>
+</div>
+<button class="bg-secondary-container text-on-secondary-container px-xl py-md rounded-xl font-label-md text-label-md flex items-center gap-xs hover:shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined">add</span>
+                        Yeni Kateqoriya
+                    </button>
+</div>
+<!-- Stats Summary Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant flex flex-col">
+<span class="text-on-surface-variant font-label-md text-label-md uppercase">Ümumi Kateqoriya</span>
+<span class="text-headline-lg font-headline-lg text-primary mt-base">24</span>
+</div>
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant flex flex-col">
+<span class="text-on-surface-variant font-label-md text-label-md uppercase">Aktiv Kateqoriyalar</span>
+<div class="flex items-center gap-xs">
+<span class="text-headline-lg font-headline-lg text-on-tertiary-container mt-base">21</span>
+<span class="text-on-tertiary-container bg-tertiary-fixed-dim/20 px-sm rounded-full text-label-md font-label-md">87%</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant flex flex-col">
+<span class="text-on-surface-variant font-label-md text-label-md uppercase">Ümumi Məhsul</span>
+<span class="text-headline-lg font-headline-lg text-primary mt-base">142</span>
+</div>
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant flex flex-col">
+<span class="text-on-surface-variant font-label-md text-label-md uppercase">Populyar</span>
+<span class="text-headline-sm font-headline-sm text-secondary mt-base">İsti Yeməklər</span>
+</div>
+</div>
+<!-- Table Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<!-- Filters & Search Header -->
+<div class="p-lg flex flex-col md:flex-row justify-between items-center gap-lg bg-surface-container-low/30">
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-xl pr-md py-md bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all outline-none text-body-md font-body-md" placeholder="Kateqoriya adı ilə axtar..." type="text">
+</div>
+<div class="flex items-center gap-md w-full md:w-auto">
+<select class="w-full md:w-48 bg-surface border border-outline-variant rounded-lg py-md px-md text-body-md font-body-md focus:ring-2 focus:ring-secondary outline-none">
+<option>Bütün Statuslar</option>
+<option>Aktiv</option>
+<option>Deaktiv</option>
+</select>
+<button class="bg-surface-container-high text-on-surface p-md rounded-lg hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-xl py-lg font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Kateqoriya Adı</th>
+<th class="px-xl py-lg font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Məhsul Sayı</th>
+<th class="px-xl py-lg font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">Status</th>
+<th class="px-xl py-lg font-label-md text-label-md text-on-surface-variant border-b border-outline-variant text-right">Əməliyyatlar</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-xl py-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro overhead high-end photography of gourmet Azerbaijani hot dishes like dolma and kebab on a minimalist white ceramic plate. Soft cinematic lighting with deep shadows, premium hospitality aesthetic, warm and inviting atmosphere with subtle steam rising." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFnsp8xuXEeWHv4BgtLs14SnEstKpsqxYis4wKWK0mwGyzHEgSOo9iJiqBzlifn5PPMpRWer2KYWmBUt77Qhn6FwKWhLglOa4IwSl51RYuOWfxRP6_1fLB6BoA9IuTELs5DdFO3LiskmjE3m89AxuAzLxK9xrrQ8MrT6PDwJAPU5A4LsRNeXKhnAqX-wjRHUTTnp4U40ZN4jvboIfpLykyWokD21dKYCDQmYffda_rnxydXvOhUIvRJA">
+</div>
+<span class="font-body-md text-body-md font-semibold text-primary">İsti Yeməklər</span>
+</div>
+</td>
+<td class="px-xl py-lg font-body-md text-body-md text-on-surface-variant">42 məhsul</td>
+<td class="px-xl py-lg">
+<span class="bg-on-tertiary-container/10 text-on-tertiary-container px-md py-xs rounded-full font-label-md text-label-md inline-flex items-center gap-xs">
+<span class="w-1.5 h-1.5 bg-on-tertiary-container rounded-full"></span>
+                                            Aktiv
+                                        </span>
+</td>
+<td class="px-xl py-lg text-right">
+<div class="flex items-center justify-end gap-md opacity-60 group-hover:opacity-100 transition-opacity">
+<button class="p-sm text-outline hover:text-primary transition-colors" title="Bax"><span class="material-symbols-outlined">visibility</span></button>
+<button class="p-sm text-outline hover:text-secondary transition-colors" title="Redaktə et"><span class="material-symbols-outlined">edit</span></button>
+<button class="p-sm text-outline hover:text-error transition-colors" title="Deaktiv et"><span class="material-symbols-outlined">block</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-xl py-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio product shot of crystal clear designer cocktail glasses filled with artisanal drinks. One glass has a fresh mint garnish, another has an orange zest. Luxury hospitality lighting with elegant glass reflections against a neutral gray background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1uzX7vtG97zBIVtC1v8iDyQHFezKnjKy06COPD-ZYCe6qRsisQCEbV_eEjEzSx9HZxyL6KfJ78RRG15y0DtV0EnycegLAG-c543nzYtW5J-oTCcEUkZHnse29fLj7OpScb24A10ih4QZB6Mwaxg_QsqVy_jKs5IuAn4GJ3Uw6M-qGwU0SiaXy4bRnXzr4lFLm11UPiwv6yamar4T6_DfIc_pxapYN8R_n8Gk9fxZN1OaFyVi0-KEabQ">
+</div>
+<span class="font-body-md text-body-md font-semibold text-primary">İçkilər</span>
+</div>
+</td>
+<td class="px-xl py-lg font-body-md text-body-md text-on-surface-variant">28 məhsul</td>
+<td class="px-xl py-lg">
+<span class="bg-on-tertiary-container/10 text-on-tertiary-container px-md py-xs rounded-full font-label-md text-label-md inline-flex items-center gap-xs">
+<span class="w-1.5 h-1.5 bg-on-tertiary-container rounded-full"></span>
+                                            Aktiv
+                                        </span>
+</td>
+<td class="px-xl py-lg text-right">
+<div class="flex items-center justify-end gap-md opacity-60 group-hover:opacity-100 transition-opacity">
+<button class="p-sm text-outline hover:text-primary transition-colors" title="Bax"><span class="material-symbols-outlined">visibility</span></button>
+<button class="p-sm text-outline hover:text-secondary transition-colors" title="Redaktə et"><span class="material-symbols-outlined">edit</span></button>
+<button class="p-sm text-outline hover:text-error transition-colors" title="Deaktiv et"><span class="material-symbols-outlined">block</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-xl py-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Exquisite pastry shop display featuring French macarons and delicate chocolate cakes. High-key bright lighting, soft pastel tones, premium bakery aesthetic with emphasis on texture and fine sugar decorations. Minimalist and elegant composition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ttgxSYQ0e48fkKGEJd3dXa8_J4XIiGUId3pnnBL8Qfu0ZO_wmh-D2WE01xukyrfOAkKUsDt59zjvIDH6Ayxm1EsVwfED1_LXBvGVnuJ1WUsOUtyFyjU0MVdvAsRbH0vWIGb-sj3VSVr5SBLnt0ShVaaa_L0W2JKqNN1dKDcmjCo5AmRCCTv0FvsoxV0A-nccXe_E5M-DLWsa5s_Vd3msnFz573rti12-JG0r4K1dDZeiSvtD3bh0cg">
+</div>
+<span class="font-body-md text-body-md font-semibold text-primary">Şirniyyatlar</span>
+</div>
+</td>
+<td class="px-xl py-lg font-body-md text-body-md text-on-surface-variant">15 məhsul</td>
+<td class="px-xl py-lg">
+<span class="bg-error-container text-on-error-container px-md py-xs rounded-full font-label-md text-label-md inline-flex items-center gap-xs">
+<span class="w-1.5 h-1.5 bg-error rounded-full"></span>
+                                            Deaktiv
+                                        </span>
+</td>
+<td class="px-xl py-lg text-right">
+<div class="flex items-center justify-end gap-md opacity-60 group-hover:opacity-100 transition-opacity">
+<button class="p-sm text-outline hover:text-primary transition-colors" title="Bax"><span class="material-symbols-outlined">visibility</span></button>
+<button class="p-sm text-outline hover:text-secondary transition-colors" title="Redaktə et"><span class="material-symbols-outlined">edit</span></button>
+<button class="p-sm text-outline hover:text-on-tertiary-container transition-colors" title="Aktiv et"><span class="material-symbols-outlined">check_circle</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4 (Example of more data) -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-xl py-lg">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center overflow-hidden text-outline">
+<span class="material-symbols-outlined">image</span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-primary">Səhər Yeməkləri</span>
+</div>
+</td>
+<td class="px-xl py-lg font-body-md text-body-md text-on-surface-variant">12 məhsul</td>
+<td class="px-xl py-lg">
+<span class="bg-on-tertiary-container/10 text-on-tertiary-container px-md py-xs rounded-full font-label-md text-label-md inline-flex items-center gap-xs">
+<span class="w-1.5 h-1.5 bg-on-tertiary-container rounded-full"></span>
+                                            Aktiv
+                                        </span>
+</td>
+<td class="px-xl py-lg text-right">
+<div class="flex items-center justify-end gap-md opacity-60 group-hover:opacity-100 transition-opacity">
+<button class="p-sm text-outline hover:text-primary transition-colors" title="Bax"><span class="material-symbols-outlined">visibility</span></button>
+<button class="p-sm text-outline hover:text-secondary transition-colors" title="Redaktə et"><span class="material-symbols-outlined">edit</span></button>
+<button class="p-sm text-outline hover:text-error transition-colors" title="Deaktiv et"><span class="material-symbols-outlined">block</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-lg border-t border-outline-variant bg-surface-container-low/30 flex flex-col sm:flex-row justify-between items-center gap-md">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Cəmi 24 kateqoriyadan 1-4 arası göstərilir</span>
+<div class="flex items-center gap-base">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-label-md text-label-md">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors font-label-md text-label-md">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors font-label-md text-label-md">3</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- BottomNavBar (Shared Component for Mobile) -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl md:hidden bg-surface shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] flex justify-around items-center px-sm pb-xs pt-base">
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform py-1">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform py-1">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">event_available</span>
+<span class="font-label-md text-label-md">Reservations</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform py-1">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</div>
+</nav>
+</main>
+<script>
+        // Simple interactive micro-interactions
+        document.querySelectorAll('button, tr').forEach(el => {
+            el.addEventListener('click', function(e) {
+                // Potential ripples or interaction feedback
+            });
+        });
+
+        // Hover animations for metric cards
+        const metricCards = document.querySelectorAll('.grid > div');
+        metricCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('translate-y-[-4px]', 'transition-transform', 'duration-300');
+            });
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('translate-y-[-4px]');
+            });
+        });
+    </script>
+</body></html>

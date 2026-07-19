@@ -1,0 +1,434 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-header {
+            backdrop-filter: blur(8px);
+            background: rgba(248, 249, 250, 0.85);
+        }
+        .sidebar-transition { transition: width 0.3s ease; }
+        .hover-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -10px rgba(0,0,0,0.1); }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#edeeef",
+                        "on-tertiary-container": "#009668",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary-container": "#002113",
+                        "surface": "#f8f9fa",
+                        "surface-bright": "#f8f9fa",
+                        "surface-variant": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "primary": "#000000",
+                        "on-primary-fixed": "#151b2b",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "on-secondary-fixed": "#2a1700",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#76777d",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#684000",
+                        "primary-container": "#151b2b",
+                        "surface-container-low": "#f3f4f5",
+                        "error": "#ba1a1a",
+                        "background": "#f8f9fa",
+                        "surface-tint": "#585e70",
+                        "on-tertiary-fixed": "#002113",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d9dadb",
+                        "primary-fixed": "#dde2f8",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-background": "#191c1d",
+                        "inverse-primary": "#c1c6db",
+                        "secondary-fixed": "#ffddb8",
+                        "secondary": "#855300",
+                        "secondary-container": "#fea619",
+                        "on-primary-fixed-variant": "#414658",
+                        "on-primary-container": "#7e8397",
+                        "primary-fixed-dim": "#c1c6db",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-surface-variant": "#45464c",
+                        "tertiary-fixed": "#6ffbbe",
+                        "inverse-surface": "#2e3132",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary": "#000000"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "lg": "24px",
+                        "container-max": "1280px",
+                        "xs": "8px",
+                        "base": "4px",
+                        "2xl": "48px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Navigation Drawer -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col z-40 hidden md:flex">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">
+            ECafe Admin
+        </div>
+<nav class="flex flex-col h-full overflow-y-auto">
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+            </div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">storefront</span> Restaurants
+            </div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">table_restaurant</span> Tables
+            </div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">group</span> Staff
+            </div>
+<div class="text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md flex items-center gap-md">
+<span class="material-symbols-outlined">restaurant_menu</span> Menu
+            </div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">book_online</span> Reservations
+            </div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">payments</span> Payments
+            </div>
+<div class="mt-auto">
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md">
+<span class="material-symbols-outlined">settings</span> Settings
+                </div>
+<div class="text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer flex items-center gap-md mb-md">
+<span class="material-symbols-outlined">logout</span> Logout
+                </div>
+</div>
+</nav>
+</aside>
+<!-- Main Content Shell -->
+<main class="md:ml-64 min-h-screen flex flex-col pb-2xl md:pb-0">
+<!-- TopAppBar -->
+<header class="bg-surface shadow-sm sticky top-0 z-30">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary text-headline-md md:hidden">menu</span>
+<h1 class="font-headline-md text-headline-md text-primary">Menyu Siyahısı</h1>
+</div>
+<div class="flex items-center gap-md">
+<div class="hidden md:flex bg-surface-container rounded-full px-md py-xs items-center gap-sm border border-outline-variant">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md w-48" placeholder="Yemək axtar..." type="text">
+</div>
+<button class="bg-primary text-on-primary px-lg py-xs rounded-full font-label-md flex items-center gap-xs hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span> Yeni Yemək
+                    </button>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<div class="flex-1 p-gutter max-w-container-max w-full mx-auto space-y-lg">
+<!-- Filters & Controls -->
+<div class="flex flex-col lg:flex-row gap-md justify-between items-start lg:items-center">
+<div class="flex flex-wrap gap-sm">
+<select class="bg-white border-outline-variant rounded-lg px-md py-xs text-body-sm focus:ring-secondary focus:border-secondary transition-all">
+<option>Bütün Kateqoriyalar</option>
+<option>Əsas Yeməklər</option>
+<option>İçkilər</option>
+<option>Desertlər</option>
+<option>Qəlyanaltılar</option>
+</select>
+<select class="bg-white border-outline-variant rounded-lg px-md py-xs text-body-sm focus:ring-secondary focus:border-secondary transition-all">
+<option>Bütün Statuslar</option>
+<option>Aktiv</option>
+<option>Gizli</option>
+</select>
+<button class="bg-surface-container px-md py-xs rounded-lg text-body-sm font-semibold flex items-center gap-xs hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-[18px]">filter_list</span> Filterləri Təmizlə
+                    </button>
+</div>
+<div class="text-on-surface-variant font-label-md">
+                    Cəmi: <span class="text-primary font-bold">24 ədəd</span>
+</div>
+</div>
+<!-- Bento Layout / Data Grid -->
+<div class="grid grid-cols-1 @container gap-lg">
+<!-- Table Container -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-lg py-md font-label-md text-on-surface-variant uppercase tracking-wider">Şəkil &amp; Ad</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant uppercase tracking-wider hidden md:table-cell">Kateqoriya</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant uppercase tracking-wider hidden lg:table-cell">Təsvir</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant uppercase tracking-wider">Qiymət</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant uppercase tracking-wider">Status</th>
+<th class="px-lg py-md font-label-md text-on-surface-variant uppercase tracking-wider text-right">Əməliyyatlar</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shrink-0 border border-outline-variant" data-alt="A high-quality studio photograph of a premium Wagyu beef burger topped with melted aged cheddar, caramelized onions, and gourmet sauce, served on a toasted brioche bun. The lighting is moody and dramatic with soft highlights on the glossy bun. The color palette features rich browns and deep yellows, reflecting a luxury dining atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA0RGiI8BNZZCTKgK3AadNfCcXxazTq6xTwX4poBf2Mrk1eO8P2SYizkn0G6vLbt1TyegdLVX0y8EtPPtS-BFAMGcWrtqWhZ8neFDYTonG838mLk_pUGMcXnR7k6gQ79gMzxKToCX_OOP6r0hPtVP5BGq5jQ9aqGuF1YMFObl42mL173gnS4R5Vu19neZyG0HAAGCG9bPY-EKh4ISQ15CpnjY5v_4oTwKvuZjp5hrHRE_P3bxSVqR9njw')"></div>
+<div>
+<div class="font-headline-sm text-primary">Premium Vaqyu Burger</div>
+<div class="text-body-sm text-on-surface-variant md:hidden">Əsas Yeməklər</div>
+</div>
+</div>
+</td>
+<td class="px-lg py-md hidden md:table-cell">
+<span class="px-sm py-1 bg-surface-container text-on-surface rounded-full text-label-md">Əsas Yeməklər</span>
+</td>
+<td class="px-lg py-md hidden lg:table-cell">
+<div class="text-body-sm text-on-surface-variant line-clamp-2 max-w-xs">Xüsusi reseptlə hazırlanmış, ləzzətli ət və təzə tərəvəzlərlə.</div>
+</td>
+<td class="px-lg py-md">
+<div class="font-bold text-primary">24.00 AZN</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-on-tertiary-container"></div>
+<span class="text-on-tertiary-container font-label-md">Aktiv</span>
+</div>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shrink-0 border border-outline-variant" data-alt="A vibrant and fresh summer salad in a white ceramic bowl, featuring ripe heirloom tomatoes, buffalo mozzarella, fresh basil leaves, and a drizzle of balsamic glaze. The scene is bright and airy with natural sunlight streaming from a window, creating a fresh and healthy vibe. The dominant colors are bright red, creamy white, and vivid green." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDlyx2jz1qBJ70HliGCgVFzMHFlXq9gePOIj9rOCP1tQkj_UFIi3zZd1rqlGa8jAwozzdga4C7FPzLLmX7cecGC4mLu_4HnaOKm-OVIm1hPCQgwXACuKZViPsyeWrw_TF_NxvEL2AwnEvcFcNU5JOxbJtNLgmxgtU-i_Z4QD1LS9l8T4_LtEA6ZZZjq3kofgYJYPikdJnIgO_yr7oK6WF_qExGJyqiLNXTGJ8Yt9rHOaYHf8CmPf-5xOA')"></div>
+<div>
+<div class="font-headline-sm text-primary">Kapreze Salatı</div>
+<div class="text-body-sm text-on-surface-variant md:hidden">Qəlyanaltılar</div>
+</div>
+</div>
+</td>
+<td class="px-lg py-md hidden md:table-cell">
+<span class="px-sm py-1 bg-surface-container text-on-surface rounded-full text-label-md">Qəlyanaltılar</span>
+</td>
+<td class="px-lg py-md hidden lg:table-cell">
+<div class="text-body-sm text-on-surface-variant line-clamp-2 max-w-xs">İtalyan üsulu təzə mozzarella və pomidor dilimləri.</div>
+</td>
+<td class="px-lg py-md">
+<div class="font-bold text-primary">12.50 AZN</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<span class="text-on-surface-variant font-label-md">Gizli</span>
+</div>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shrink-0 border border-outline-variant" data-alt="A decadent lava cake with a molten chocolate center flowing out onto a dark slate plate, dusted with powdered sugar and served with a scoop of vanilla bean ice cream. The lighting is warm and candlelit, emphasizing the rich textures and deep chocolate browns. A very elegant and sophisticated dessert presentation." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDn44ojjVzZdxPUs_Rj_MNdJ0bEixsKfqOmtDRqt1AKFPFVaQY8GAaGuImXZ3Dz3iLvzgzHfm5wcsU-opxxiGkJqB_IDRNgQi5BjbuegPToOobkbb4WE-qyzIihYe3-zLA37vZbpwrMWVGiFjWvSzOYmybeWEX1j5NopioJU1iVy5cDoMCBFRqHcCOOUTw8d5V4C4bTsWaigQpqaPMMRpWtqGq1QDiuL6w_PtZw-KQg3d95oG4mJ7r6JQ')"></div>
+<div>
+<div class="font-headline-sm text-primary">Şokoladlı Fondan</div>
+<div class="text-body-sm text-on-surface-variant md:hidden">Desertlər</div>
+</div>
+</div>
+</td>
+<td class="px-lg py-md hidden md:table-cell">
+<span class="px-sm py-1 bg-surface-container text-on-surface rounded-full text-label-md">Desertlər</span>
+</td>
+<td class="px-lg py-md hidden lg:table-cell">
+<div class="text-body-sm text-on-surface-variant line-clamp-2 max-w-xs">İsti axan şokolad və vanilli dondurma ilə.</div>
+</td>
+<td class="px-lg py-md">
+<div class="font-bold text-primary">9.00 AZN</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-on-tertiary-container"></div>
+<span class="text-on-tertiary-container font-label-md">Aktiv</span>
+</div>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shrink-0 border border-outline-variant" data-alt="An artisanal Iced Matcha Latte in a tall minimalist glass, showing beautiful layers of vibrant green matcha concentrate and creamy white milk over crystal clear ice cubes. The background is a clean white marble countertop with soft morning light. The aesthetic is clean, minimalist, and very modern-corporate." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDCIOdRGpU0iL1Nc0oQ9Aa7o5VTl2_FkoPfQ2PI2tieVCJTVn3FmWlfJSE2FU3XnASTX-3ox7b72sRq14CQBZPLTRa1QpF5eQVQV5Hys25wM6QgnUaYSTxuEqwSegCM47aO-X8HjKIX5wNOdWiudD2tlXsqJGISb_-zqlzjXNx-aGLsQyz1vuXhhOfhdFcZK2QClQhdTKDUsMwurSc8ulCvaP-RsMnzcKg1NjSXOB-zTqoT2EIa1N6xyQ')"></div>
+<div>
+<div class="font-headline-sm text-primary">Maça Latte</div>
+<div class="text-body-sm text-on-surface-variant md:hidden">İçkilər</div>
+</div>
+</div>
+</td>
+<td class="px-lg py-md hidden md:table-cell">
+<span class="px-sm py-1 bg-surface-container text-on-surface rounded-full text-label-md">İçkilər</span>
+</td>
+<td class="px-lg py-md hidden lg:table-cell">
+<div class="text-body-sm text-on-surface-variant line-clamp-2 max-w-xs">Üzvi maça tozu və təbii süd ilə soyuq içki.</div>
+</td>
+<td class="px-lg py-md">
+<div class="font-bold text-primary">7.00 AZN</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<span class="text-error font-label-md">Bitib</span>
+</div>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-lg py-md bg-surface-container-low flex justify-between items-center border-t border-outline-variant">
+<div class="text-body-sm text-on-surface-variant">
+                            1-4 / 24 göstərilir
+                        </div>
+<div class="flex gap-xs">
+<button class="p-xs rounded hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="px-md py-xs bg-primary text-on-primary rounded font-label-md">1</button>
+<button class="px-md py-xs hover:bg-surface-container-high rounded font-label-md">2</button>
+<button class="px-md py-xs hover:bg-surface-container-high rounded font-label-md">3</button>
+<button class="p-xs rounded hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+</div>
+<!-- Stats Summary Bento Section -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<div class="bg-secondary-container p-lg rounded-xl flex flex-col justify-between shadow-sm">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-on-secondary-container">trending_up</span>
+<span class="text-label-md bg-white/20 px-xs py-base rounded">Bu ay</span>
+</div>
+<div class="mt-lg">
+<div class="text-label-md text-on-secondary-container uppercase">Ən çox satılan</div>
+<div class="text-headline-md font-bold text-on-secondary-container">Premium Vaqyu Burger</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant shadow-sm">
+<div class="text-label-md text-on-surface-variant uppercase">Kateqoriya bölgüsü</div>
+<div class="mt-md space-y-sm">
+<div class="flex justify-between items-center">
+<span class="text-body-sm">Əsas Yeməklər</span>
+<span class="font-bold text-primary">12</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 50%"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm">İçkilər</span>
+<span class="font-bold text-primary">8</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5">
+<div class="bg-secondary-container h-1.5 rounded-full" style="width: 33%"></div>
+</div>
+</div>
+</div>
+<div class="bg-primary p-lg rounded-xl flex flex-col justify-center items-center text-center text-on-primary shadow-sm">
+<div class="text-headline-lg font-display-lg">94%</div>
+<div class="text-body-sm opacity-80">Menyu Doluluğu</div>
+<button class="mt-md text-label-md underline">Hesabata bax</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] md:hidden flex justify-around items-center px-sm pb-xs pt-base">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-transform active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-transform active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 transition-transform active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="font-label-md text-label-md">Menu</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-transform active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</div>
+</nav>
+<script>
+        // Simple Interaction logic
+        document.querySelectorAll('button, .cursor-pointer').forEach(el => {
+            el.addEventListener('click', () => {
+                // Add ripple or haptic feedback feel if needed
+            });
+        });
+    </script>
+</body></html>

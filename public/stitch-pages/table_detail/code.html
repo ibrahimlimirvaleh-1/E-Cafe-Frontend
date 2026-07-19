@@ -1,0 +1,400 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Masa Detalları - ECafe Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#000000",
+                        "tertiary-fixed": "#6ffbbe",
+                        "secondary-fixed": "#ffddb8",
+                        "outline": "#76777d",
+                        "on-primary-fixed": "#151b2b",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary-fixed": "#002113",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#2e3132",
+                        "primary-fixed-dim": "#c1c6db",
+                        "tertiary": "#000000",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-tertiary-container": "#009668",
+                        "primary-fixed": "#dde2f8",
+                        "surface-container": "#edeeef",
+                        "secondary": "#855300",
+                        "on-background": "#191c1d",
+                        "surface-variant": "#e1e3e4",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "surface-container-high": "#e7e8e9",
+                        "on-surface": "#191c1d",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#002113",
+                        "on-primary-container": "#7e8397",
+                        "surface-container-low": "#f3f4f5",
+                        "on-surface-variant": "#45464c",
+                        "on-primary-fixed-variant": "#414658",
+                        "background": "#f8f9fa",
+                        "surface-bright": "#f8f9fa",
+                        "surface": "#f8f9fa",
+                        "on-secondary-container": "#684000",
+                        "surface-dim": "#d9dadb",
+                        "surface-tint": "#585e70",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-secondary-fixed": "#2a1700",
+                        "secondary-container": "#fea619",
+                        "inverse-on-surface": "#f0f1f2",
+                        "primary-primary": "#151b2b",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#c1c6db",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "outline-variant": "#c6c6cd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "sm": "12px",
+                        "xs": "8px",
+                        "md": "16px",
+                        "container-max": "1280px",
+                        "lg": "24px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "2xl": "48px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col overflow-y-auto z-50">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">
+            ECafe Admin
+        </div>
+<nav class="flex-1">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">storefront</span>
+<span class="font-body-md text-body-md">Restaurants</span>
+</a>
+<!-- Active State: Tables -->
+<a class="flex items-center text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md transition-all" href="#">
+<span class="material-symbols-outlined mr-md">table_restaurant</span>
+<span class="font-body-md text-body-md">Tables</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">group</span>
+<span class="font-body-md text-body-md">Staff</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">restaurant_menu</span>
+<span class="font-body-md text-body-md">Menu</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">book_online</span>
+<span class="font-body-md text-body-md">Reservations</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">payments</span>
+<span class="font-body-md text-body-md">Payments</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 p-gutter max-w-container-max mx-auto">
+<!-- Top App Bar / Header -->
+<header class="flex justify-between items-center mb-xl">
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">arrow_back</button>
+<div>
+<h1 class="font-headline-lg text-headline-lg tracking-tight">Masa Detalları</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Admin Paneli / Masalar / Masa #24</p>
+</div>
+</div>
+<div class="flex gap-md">
+<button class="flex items-center px-lg py-md bg-surface-container-high text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-variant transition-colors active:scale-95">
+<span class="material-symbols-outlined mr-xs">edit</span>
+                    Redaktə et
+                </button>
+<button class="flex items-center px-lg py-md bg-error text-on-error font-label-md text-label-md rounded-lg hover:opacity-90 transition-all active:scale-95 shadow-sm">
+<span class="material-symbols-outlined mr-xs">block</span>
+                    Deaktiv et
+                </button>
+</div>
+</header>
+<!-- Content Grid (Bento Style) -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- Table Status & Basic Info -->
+<div class="col-span-12 lg:col-span-4 space-y-lg">
+<!-- Info Card -->
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-surface-container-high">
+<div class="flex justify-between items-start mb-lg">
+<div class="bg-primary text-on-primary w-16 h-16 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">table_bar</span>
+</div>
+<div class="px-md py-xs bg-tertiary-fixed text-on-tertiary-fixed rounded-full font-label-md text-label-md flex items-center">
+<span class="w-2 h-2 bg-on-tertiary-container rounded-full mr-xs"></span>
+                            Boş
+                        </div>
+</div>
+<div class="space-y-md">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Masa ID</span>
+<p class="font-headline-sm text-headline-sm">#24 - VIP</p>
+</div>
+<div class="grid grid-cols-2 gap-md pt-md border-t border-surface-container-high">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant">Zona</span>
+<p class="font-body-md text-body-md font-semibold">Teras - Şəhər mənzərəsi</p>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant">Tutum</span>
+<p class="font-body-md text-body-md font-semibold">6 Nəfərlik</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Photo / Preview placeholder -->
+<div class="relative group h-64 rounded-xl overflow-hidden shadow-lg">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A luxury restaurant terrace setting at dusk with elegant black wooden tables and amber ambient lighting. The atmosphere is sophisticated and modern, reflecting a high-end corporate dining environment with a clear view of a metropolitan skyline in the background. The aesthetic is clean, minimalist, and premium." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBF2g2FbB-AEQ7aMGFxhfgegfk23h0PxSBpntoP_ZC1uydCftWsCZOTUUX5Jic--009ruSX8wUJha8W8RN8abUSEV2KG9aqZ_OlbugWUCnTUb1PKZYtejaiwT592kpMVhwSQgivy91iXXdr0rGCGmM3dRme5NFBo-31Pdd-2YjDGuzi8ejj4hrxdhxfRviqyYWSlDfP7sebG7a00vu2cVIFzcjpadvkEITJmxviIbTvglZwauaABiL61A')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-lg">
+<span class="text-white font-label-md text-label-md flex items-center">
+<span class="material-symbols-outlined mr-xs">photo_camera</span>
+                            Zonanın hazırki görünüşü
+                        </span>
+</div>
+</div>
+</div>
+<!-- Upcoming Reservations -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest p-xl rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-surface-container-high flex flex-col">
+<div class="flex justify-between items-center mb-xl">
+<h2 class="font-headline-sm text-headline-sm flex items-center">
+<span class="material-symbols-outlined mr-md text-secondary">event_available</span>
+                        Qarşıdakı Rezervasiyalar
+                    </h2>
+<button class="text-secondary font-label-md text-label-md hover:underline">Hamısına bax</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="border-b border-surface-container-high">
+<th class="pb-md font-label-md text-label-md text-on-surface-variant">QONAĞIN ADI</th>
+<th class="pb-md font-label-md text-label-md text-on-surface-variant">VAXT</th>
+<th class="pb-md font-label-md text-label-md text-on-surface-variant">ADAM SAYI</th>
+<th class="pb-md font-label-md text-label-md text-on-surface-variant">STATUS</th>
+<th class="pb-md"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<!-- Reservation Row -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-md">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center font-bold text-primary">
+                                            A.M
+                                        </div>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Anar Məmmədov</span>
+</div>
+</td>
+<td class="py-md font-body-md text-body-md">Bu gün, 19:30</td>
+<td class="py-md font-body-md text-body-md text-center">4</td>
+<td class="py-md">
+<span class="px-md py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-[12px] font-bold">Təsdiqləndi</span>
+</td>
+<td class="py-md text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">more_vert</button>
+</td>
+</tr>
+<!-- Reservation Row -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-md">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center font-bold text-primary">
+                                            S.Q
+                                        </div>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Səbinə Quliyeva</span>
+</div>
+</td>
+<td class="py-md font-body-md text-body-md">Bu gün, 21:00</td>
+<td class="py-md font-body-md text-body-md text-center">2</td>
+<td class="py-md">
+<span class="px-md py-1 bg-surface-container-highest text-on-surface-variant rounded-full text-[12px] font-bold">Gözləyir</span>
+</td>
+<td class="py-md text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">more_vert</button>
+</td>
+</tr>
+<!-- Reservation Row -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-md">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center font-bold text-primary">
+                                            V.A
+                                        </div>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Vüsal Abbasov</span>
+</div>
+</td>
+<td class="py-md font-body-md text-body-md">Sabah, 14:00</td>
+<td class="py-md font-body-md text-body-md text-center">6</td>
+<td class="py-md">
+<span class="px-md py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-[12px] font-bold">Təsdiqləndi</span>
+</td>
+<td class="py-md text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-auto pt-lg">
+<button class="w-full py-md border-2 border-dashed border-outline-variant rounded-xl text-on-surface-variant font-label-md text-label-md hover:border-primary hover:text-primary transition-all flex items-center justify-center">
+<span class="material-symbols-outlined mr-xs">add_circle</span>
+                        Yeni Rezervasiya Əlavə Et
+                    </button>
+</div>
+</div>
+<!-- Related Order History -->
+<div class="col-span-12 bg-surface-container-lowest p-xl rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-surface-container-high">
+<div class="flex justify-between items-center mb-xl">
+<h2 class="font-headline-sm text-headline-sm flex items-center">
+<span class="material-symbols-outlined mr-md text-primary">history</span>
+                        Əlaqəli Sifariş Tarixçəsi
+                    </h2>
+<div class="flex items-center gap-sm">
+<span class="text-body-sm text-on-surface-variant">Filtrlə:</span>
+<select class="bg-surface-container-low border-none rounded-lg text-body-sm focus:ring-secondary">
+<option>Son 30 gün</option>
+<option>Bu ay</option>
+<option>Bu il</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md">
+<!-- Order Card 1 -->
+<div class="p-lg border border-surface-container-high rounded-xl hover:shadow-md transition-all group">
+<div class="flex justify-between mb-md">
+<span class="font-label-md text-label-md text-on-surface-variant">Sifariş #8921</span>
+<span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+</div>
+<div class="mb-lg">
+<p class="font-headline-sm text-headline-sm">145.00 AZN</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">12 Oktyabr, 2023</p>
+</div>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-primary text-[10px] flex items-center justify-center text-white">🥗</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-primary text-[10px] flex items-center justify-center text-white">🥩</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-primary text-[10px] flex items-center justify-center text-white">🍷</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-surface-container-highest text-[10px] flex items-center justify-center text-on-surface-variant font-bold">+2</div>
+</div>
+</div>
+<!-- Order Card 2 -->
+<div class="p-lg border border-surface-container-high rounded-xl hover:shadow-md transition-all group">
+<div class="flex justify-between mb-md">
+<span class="font-label-md text-label-md text-on-surface-variant">Sifariş #8854</span>
+<span class="material-symbols-outlined text-on-tertiary-container">check_circle</span>
+</div>
+<div class="mb-lg">
+<p class="font-headline-sm text-headline-sm">82.50 AZN</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">10 Oktyabr, 2023</p>
+</div>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-primary text-[10px] flex items-center justify-center text-white">🍵</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-primary text-[10px] flex items-center justify-center text-white">🍰</div>
+</div>
+</div>
+<!-- Order Card 3 -->
+<div class="p-lg border border-surface-container-high rounded-xl hover:shadow-md transition-all group">
+<div class="flex justify-between mb-md">
+<span class="font-label-md text-label-md text-on-surface-variant">Sifariş #8799</span>
+<span class="material-symbols-outlined text-error">cancel</span>
+</div>
+<div class="mb-lg">
+<p class="font-headline-sm text-headline-sm">0.00 AZN</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">08 Oktyabr, 2023</p>
+</div>
+<div class="text-error font-label-md text-label-md">Ləğv edildi</div>
+</div>
+<!-- Order Card 4 (Metrika) -->
+<div class="p-lg bg-primary text-on-primary rounded-xl flex flex-col justify-between">
+<div>
+<span class="font-label-md text-label-md opacity-70">ÜMUMİ DÖVRİYYƏ</span>
+<p class="text-[28px] font-bold mt-xs">3,450 AZN</p>
+</div>
+<div class="flex items-center text-tertiary-fixed font-label-md text-label-md">
+<span class="material-symbols-outlined mr-xs">trending_up</span>
+                            +12% Keçən aya nisbətən
+                        </div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB for quick action -->
+<button class="fixed bottom-xl right-xl w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<script>
+        // Micro-interactions and subtle effects
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.group');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    // Visual feedback logic if needed
+                });
+            });
+        });
+    </script>
+</body></html>

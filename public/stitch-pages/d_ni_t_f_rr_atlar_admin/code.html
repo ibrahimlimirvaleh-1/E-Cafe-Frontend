@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+<html class="light" lang="az"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ECafe Admin - Ödəniş Təfərrüatları</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed-variant": "#005236",
+                    "secondary-container": "#fea619",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#dde2f8",
+                    "on-tertiary-container": "#009668",
+                    "error-container": "#ffdad6",
+                    "background": "#f8f9fa",
+                    "surface-tint": "#585e70",
+                    "surface-bright": "#f8f9fa",
+                    "outline": "#76777d",
+                    "on-secondary-fixed": "#2a1700",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-container": "#684000",
+                    "surface": "#f8f9fa",
+                    "inverse-surface": "#2e3132",
+                    "primary": "#000000",
+                    "primary-container": "#ffffff",
+                    "surface-container-low": "#f3f4f5",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-primary-fixed-variant": "#414658",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#ffddb8",
+                    "secondary": "#855300",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "on-surface": "#191c1d",
+                    "tertiary-container": "#002113",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "inverse-primary": "#c1c6db",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c6c6cd",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#002113",
+                    "on-background": "#191c1d",
+                    "surface-variant": "#e1e3e4",
+                    "surface-dim": "#d9dadb",
+                    "error": "#ba1a1a",
+                    "primary-fixed-dim": "#c1c6db",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#000000",
+                    "on-primary-fixed": "#151b2b",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-primary-container": "#45464c",
+                    "surface-container-high": "#e7e8e9",
+                    "surface-container": "#edeeef",
+                    "on-surface-variant": "#45464c",
+                    "inverse-on-surface": "#f0f1f2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "lg": "24px",
+                    "2xl": "48px",
+                    "xl": "32px",
+                    "container-max": "1280px",
+                    "md": "16px",
+                    "xs": "8px",
+                    "base": "4px",
+                    "sm": "12px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "label-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+<!-- SideNavBar (Light Theme) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface border-r border-outline-variant flex flex-col py-md z-50">
+<div class="px-md mb-xl">
+<h1 class="font-headline-md text-headline-md font-bold text-secondary">ECafe Admin</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">İdarəetmə Paneli</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container-high rounded-xl mx-2 px-4 py-3 transition-colors active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-body-md text-body-md">Panel</span>
+</a>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container-high rounded-xl mx-2 px-4 py-3 transition-colors active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mr-3">description</span>
+<span class="font-body-md text-body-md">Müqavilələr</span>
+</a>
+<a class="flex items-center text-primary bg-secondary-container/20 rounded-xl mx-2 px-4 py-3 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mr-3 text-secondary">payments</span>
+<span class="font-body-md text-body-md font-bold">Ödənişlər</span>
+</a>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container-high rounded-xl mx-2 px-4 py-3 transition-colors active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mr-3">event_seat</span>
+<span class="font-body-md text-body-md">Rezervasiyalar</span>
+</a>
+<a class="flex items-center text-on-surface-variant hover:bg-surface-container-high rounded-xl mx-2 px-4 py-3 transition-colors active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+<span class="font-body-md text-body-md">Analitika</span>
+</a>
+</nav>
+<div class="px-md mt-auto pt-md">
+<button class="w-full bg-primary text-on-primary rounded-xl py-3 font-label-md text-label-md flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">add</span>
+                Yeni Rezervasiya
+            </button>
+<div class="flex items-center gap-3 mt-xl p-xs border-t border-outline-variant">
+<img class="w-10 h-10 rounded-full object-cover border-2 border-secondary" data-alt="Admin headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIVcT6qpJQzN_bCnCJDOvHBDybD7CUzaiO_qVxaUOtdbtx56GFBGv32AdDr2beZYFNZr0hWuRP31TeFwlbglRCwD6WGJE03anWhuyRhAwQStS1FxjofFB6xTSUJUmVbmLbZq1vkWW1ATb32s9rINOROV5MwrwtcIBrZVVopprY_5x_p3dCj7A2VND412cG1RHIUQFa5QXeiFWfSeQfXKYuCoOe8zCBHxbS0mv9NxJow_y1tJ8Iw_K_4w"/>
+<div>
+<p class="font-label-md text-label-md text-primary font-bold">Admin Profili</p>
+<p class="text-[10px] text-on-surface-variant">Baş İstifadəçi</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 flex flex-col min-h-screen bg-surface">
+<!-- TopNavBar (Simplified) -->
+<header class="sticky top-0 z-40 bg-surface border-b border-outline-variant flex justify-between items-center px-gutter py-sm w-full">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface hover:bg-surface-container rounded-full p-2">arrow_back</button>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<h2 class="font-headline-sm text-headline-sm text-primary">Ödəniş Təfərrüatları</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-secondary cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-secondary cursor-pointer">settings</span>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-gutter max-w-container-max mx-auto w-full space-y-gutter">
+<!-- Summary Header -->
+<section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+<div>
+<div class="flex items-center gap-xs mb-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Tranzaksiya ID:</span>
+<span class="font-body-md text-body-md font-bold text-primary">TRX-94827103-CAFE</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Ödəniş Uğurludur
+                        </span>
+<span class="bg-secondary-container/10 text-secondary px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+                            Yalnız Onlayn Ödəniş
+                        </span>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-2 border border-outline px-4 py-2 rounded-xl text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">print</span>
+                        Qəbzi Çap Et
+                    </button>
+<button class="flex items-center gap-2 border border-error text-error px-4 py-2 rounded-xl font-label-md text-label-md hover:bg-error/5 transition-colors">
+<span class="material-symbols-outlined">refresh</span>
+                        Geri Ödəniş Başlat
+                    </button>
+</div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Main Details Card -->
+<div class="col-span-12 lg:col-span-8 space-y-gutter">
+<!-- Linked Info Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Restaurant Card -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">storefront</span>
+                                Restoran Məlumatı
+                            </h3>
+<div class="flex items-center gap-md">
+<div class="w-16 h-16 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[32px] text-secondary">restaurant</span>
+</div>
+<div>
+<p class="font-headline-sm text-headline-sm text-primary">ECafe Downtown</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tacir ID: M-7291-NY</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">New York, NY 10001</p>
+</div>
+</div>
+</div>
+<!-- Customer Card -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">person</span>
+                                Müştəri Məlumatı
+                            </h3>
+<div class="flex items-center gap-md">
+<img class="w-16 h-16 rounded-full object-cover grayscale-[0.2]" data-alt="Customer portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG0cPkMAhsDg9a5jz89P-XeSLHhU2HrmPflO4OxEfd6_J7Z76ywKUengzMOUdBVON1qJDwpPtrJc-UQJ2uu7uzYaNNyaKpUOMAM10ixltxYQNEMLZIKRUphBtCzUImcf883A7Q64qTpckqmCY9l3veI6B7eXcrTyJfcvxLcyA3cD-yOPSTXfXcFI_5qhlsoy6MmsDG3Vsk3L890j_eQWQZfs8I7zEmAABZ6Cz3pTcEAjAUZYh_DoU5FQ"/>
+<div>
+<p class="font-headline-sm text-headline-sm text-primary">Eleanor Vance</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">eleanor.v@provider.com</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">+1 (555) 234-5678</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Linked Activity -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">link</span>
+                            Əlaqəli Sifariş və Rezervasiya
+                        </h3>
+<div class="flex flex-col md:flex-row gap-gutter">
+<div class="flex-1 flex items-center justify-between p-md bg-surface rounded-lg border border-outline-variant/20 hover:border-secondary transition-colors cursor-pointer group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-secondary bg-secondary/10 p-2 rounded-lg">shopping_bag</span>
+<div>
+<p class="font-label-md text-label-md text-primary font-bold">Sifariş #ORD-2024-4412</p>
+<p class="text-[12px] text-on-surface-variant">3 Məhsul • 12 Okt, 19:45</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-colors">chevron_right</span>
+</div>
+<div class="flex-1 flex items-center justify-between p-md bg-surface rounded-lg border border-outline-variant/20 hover:border-secondary transition-colors cursor-pointer group">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-secondary bg-secondary/10 p-2 rounded-lg">calendar_today</span>
+<div>
+<p class="font-label-md text-label-md text-primary font-bold">Rezervasiya #RES-9932</p>
+<p class="text-[12px] text-on-surface-variant">Masa 14 • 4 Qonaq • Təsdiqlənib</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-colors">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Payment Timeline -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-lg">Emal Zaman Qrafiki</h3>
+<div class="relative">
+<div class="absolute left-4 top-0 h-full w-[2px] bg-surface-container-high"></div>
+<div class="relative pl-12 pb-8">
+<div class="absolute left-3 top-1 w-3 h-3 rounded-full bg-on-tertiary-container ring-4 ring-tertiary-fixed"></div>
+<p class="font-label-md text-label-md text-primary">Ödəniş Tamamlandı</p>
+<p class="text-[12px] text-on-surface-variant">12 Okt 2024 • 19:48:22</p>
+</div>
+<div class="relative pl-12 pb-8">
+<div class="absolute left-3 top-1 w-3 h-3 rounded-full bg-outline ring-4 ring-surface"></div>
+<p class="font-label-md text-label-md text-primary">3D Secure Təsdiqləndi</p>
+<p class="text-[12px] text-on-surface-variant">12 Okt 2024 • 19:47:55</p>
+</div>
+<div class="relative pl-12">
+<div class="absolute left-3 top-1 w-3 h-3 rounded-full bg-outline ring-4 ring-surface"></div>
+<p class="font-label-md text-label-md text-primary">Avtorizasiya Başladıldı</p>
+<p class="text-[12px] text-on-surface-variant">12 Okt 2024 • 19:47:12</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Financial Breakdown Sidebar -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Amount Breakdown -->
+<div class="bg-primary text-on-primary p-lg rounded-xl shadow-xl overflow-hidden relative">
+<div class="relative z-10">
+<h3 class="font-label-md text-label-md uppercase tracking-widest opacity-70 mb-md">Ümumi Məbləğ</h3>
+<div class="flex items-baseline gap-xs">
+<span class="font-display-lg text-display-lg text-secondary-fixed">$</span>
+<span class="font-display-lg text-display-lg text-on-primary font-black">248.50</span>
+</div>
+<div class="mt-xl space-y-sm border-t border-on-primary/10 pt-md">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="opacity-70">Subtotal</span>
+<span class="text-on-primary font-bold">$215.00</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="opacity-70">ƏDV / Xidmət Haqqı (12%)</span>
+<span class="text-on-primary font-bold">$25.80</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="opacity-70">Emal Haqqı</span>
+<span class="text-on-primary font-bold">$7.70</span>
+</div>
+</div>
+</div>
+<div class="absolute -right-12 -bottom-12 w-48 h-48 bg-secondary opacity-20 rounded-full blur-3xl"></div>
+</div>
+<!-- Payment Method Info -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-md">Ödəniş Üsulu</h3>
+<div class="flex items-center gap-md p-md bg-surface rounded-lg">
+<div class="w-12 h-8 rounded bg-on-background flex items-center justify-center">
+<span class="text-[10px] text-white font-bold tracking-tighter">VISA</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary font-bold">Visa Platinum •••• 8812</p>
+<p class="text-[12px] text-on-surface-variant">Bitmə tarixi 08/27</p>
+</div>
+</div>
+<div class="mt-md p-sm bg-secondary-container/10 border border-secondary/20 rounded-lg">
+<div class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<p class="text-[11px] text-secondary leading-relaxed">Bu ödəniş 3D Secure 2.0 vasitəsilə təsdiqlənib və şifrəli şlüz vasitəsilə emal edilib.</p>
+</div>
+</div>
+</div>
+<!-- Digital Receipt Preview -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30 border-dashed">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-label-md text-label-md text-on-surface-variant">Faktura Önizləmə</h3>
+<button class="text-secondary hover:underline font-label-md text-label-md">PDF Yüklə</button>
+</div>
+<div class="bg-surface border border-outline-variant/20 p-md rounded-lg text-center space-y-sm">
+<div class="h-1 bg-surface-container-high w-full"></div>
+<h4 class="font-label-md text-label-md text-primary">ECafe Hospitality Group</h4>
+<div class="flex flex-col gap-xs py-xs text-[10px] text-on-surface-variant">
+<div class="flex justify-between border-b border-dotted pb-1">
+<span>Ribeye Steyk x2</span>
+<span>$120.00</span>
+</div>
+<div class="flex justify-between border-b border-dotted pb-1">
+<span>Vintage Qırmızı Şərab</span>
+<span>$95.00</span>
+</div>
+<div class="pt-1 flex justify-between font-bold text-primary">
+<span>YEKUN CƏM</span>
+<span>$248.50</span>
+</div>
+</div>
+<div class="pt-sm">
+<div class="inline-block px-4 py-1 bg-surface-container-high rounded text-[10px] font-mono">INV-2024-X9827</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Caution Zone -->
+<div class="bg-error-container/20 border border-error/20 p-lg rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-error text-[32px]">warning</span>
+<div>
+<p class="font-headline-sm text-headline-sm text-on-error-container">İnzibati Əməliyyatlar</p>
+<p class="font-body-sm text-body-sm text-on-error-container opacity-80">Bu tranzaksiyanın geri ödənilməsi daimidir və geri qaytarıla bilməz.</p>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-md text-label-md hover:opacity-90 active:scale-95 transition-all shadow-lg">
+                    Tam Geri Ödəniş Prosesi
+                </button>
+</div>
+</div>
+<!-- Footer -->
+<footer class="flex flex-col md:flex-row justify-between items-center px-gutter py-xl mt-auto w-full bg-surface-container-low">
+<div class="mb-md md:mb-0 text-center md:text-left">
+<h2 class="font-headline-sm text-headline-sm text-primary">ECafe</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant opacity-70">© 2024 ECafe Hospitality Management. Bütün hüquqlar qorunur.</p>
+</div>
+<div class="flex gap-lg">
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary underline cursor-pointer" href="#">Məxfilik Siyasəti</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary underline cursor-pointer" href="#">İstifadə Şərtləri</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary underline cursor-pointer" href="#">Dəstək</a>
+</div>
+</footer>
+</main>
+<script>
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                btn.style.filter = 'brightness(1.05)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.filter = 'brightness(1)';
+            });
+        });
+    </script>
+</body></html>

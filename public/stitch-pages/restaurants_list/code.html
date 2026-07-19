@@ -1,0 +1,484 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe Admin - Restoranlar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-variant": "#e1e3e4",
+                    "on-primary-container": "#7e8397",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d9dadb",
+                    "primary-fixed": "#dde2f8",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#151b2b",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "tertiary-container": "#002113",
+                    "on-primary-fixed-variant": "#414658",
+                    "background": "#f8f9fa",
+                    "primary-fixed-dim": "#c1c6db",
+                    "surface-bright": "#f8f9fa",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-surface-variant": "#45464c",
+                    "secondary": "#855300",
+                    "surface-container-highest": "#e1e3e4",
+                    "outline-variant": "#c6c6cd",
+                    "primary": "#000000",
+                    "primary-container": "#151b2b",
+                    "on-tertiary-container": "#009668",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-container-low": "#f3f4f5",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-background": "#191c1d",
+                    "secondary-fixed": "#ffddb8",
+                    "error-container": "#ffdad6",
+                    "outline": "#76777d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#edeeef",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed": "#2a1700",
+                    "on-surface": "#191c1d",
+                    "surface-tint": "#585e70",
+                    "inverse-surface": "#2e3132",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-primary": "#c1c6db",
+                    "on-secondary-container": "#684000",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "secondary-container": "#fea619"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "container-max": "1280px",
+                    "lg": "24px",
+                    "sm": "12px",
+                    "2xl": "48px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .active-status { background-color: rgba(0, 150, 104, 0.15); color: #009668; }
+        .inactive-status { background-color: rgba(186, 26, 26, 0.15); color: #ba1a1a; }
+        
+        /* Custom scrollbar for drawer */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e1e3e4; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Sidebar Navigation Drawer -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant flex flex-col z-40 hidden md:flex">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">
+            ECafe Admin
+        </div>
+<nav class="flex flex-col h-full overflow-y-auto custom-scrollbar">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="storefront">storefront</span>
+<span class="font-body-md text-body-md">Restaurants</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="table_restaurant">table_restaurant</span>
+<span class="font-body-md text-body-md">Tables</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="group">group</span>
+<span class="font-body-md text-body-md">Staff</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="restaurant_menu">restaurant_menu</span>
+<span class="font-body-md text-body-md">Menu</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="book_online">book_online</span>
+<span class="font-body-md text-body-md">Reservations</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="payments">payments</span>
+<span class="font-body-md text-body-md">Payments</span>
+</a>
+<div class="mt-auto border-t border-outline-variant pt-md mb-md">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer text-error" href="#">
+<span class="material-symbols-outlined mr-md" data-icon="logout">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen flex flex-col">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-30 bg-surface dark:bg-surface-container-highest shadow-sm">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+
+<h1 class="text-headline-md font-headline-md text-primary">Restoranlar</h1>
+</div>
+<div class="flex items-center gap-md">
+<div class="hidden sm:flex items-center bg-surface-container-low rounded-full px-md py-xs border border-outline-variant focus-within:border-primary transition-all">
+<span class="material-symbols-outlined text-outline text-body-md" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-48 lg:w-64" placeholder="Restoran axtar..." type="text">
+</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-lg py-md rounded-lg hover:opacity-90 transition-opacity flex items-center gap-xs shadow-sm">
+<span class="material-symbols-outlined !text-[18px]" data-icon="add">add</span>
+                        Yeni Restoran
+                    </button>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-gutter max-w-container-max w-full mx-auto space-y-lg">
+<!-- Filters & Stats Section -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-lg">
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant text-label-md font-label-md uppercase tracking-wider mb-xs">Ümumi</p>
+<h3 class="text-headline-lg font-headline-lg text-primary">24</h3>
+</div>
+<div class="w-12 h-12 bg-primary-fixed rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant text-label-md font-label-md uppercase tracking-wider mb-xs">Aktiv</p>
+<h3 class="text-headline-lg font-headline-lg text-primary">21</h3>
+</div>
+<div class="w-12 h-12 bg-tertiary-fixed rounded-full flex items-center justify-center text-on-tertiary-container">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant text-label-md font-label-md uppercase tracking-wider mb-xs">Deaktiv</p>
+<h3 class="text-headline-lg font-headline-lg text-primary">3</h3>
+</div>
+<div class="w-12 h-12 bg-error-container rounded-full flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined" data-icon="cancel">cancel</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant text-label-md font-label-md uppercase tracking-wider mb-xs">Yeni (Bu ay)</p>
+<h3 class="text-headline-lg font-headline-lg text-primary">4</h3>
+</div>
+<div class="w-12 h-12 bg-secondary-fixed rounded-full flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="fiber_new">fiber_new</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant text-label-md font-label-md uppercase tracking-wider mb-xs">Müqaviləsiz</p>
+<h3 class="text-headline-lg font-headline-lg text-primary">2</h3>
+</div>
+<div class="w-12 h-12 bg-secondary-container rounded-full flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+</div></div>
+<!-- Table Actions Row -->
+<div class="flex flex-wrap items-center justify-between gap-md">
+<div class="flex gap-xs"><button class="bg-primary text-on-primary px-md py-xs rounded-full text-label-md font-label-md">Hamısı</button>
+<button class="bg-surface-container-high text-on-surface-variant px-md py-xs rounded-full text-label-md font-label-md hover:bg-outline-variant transition-colors">Aktiv Müqavilə</button>
+<button class="bg-surface-container-high text-on-surface-variant px-md py-xs rounded-full text-label-md font-label-md hover:bg-outline-variant transition-colors">Müqavilə Yoxdur</button>
+<button class="bg-surface-container-high text-on-surface-variant px-md py-xs rounded-full text-label-md font-label-md hover:bg-outline-variant transition-colors">Müddəti Bitən</button></div>
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+                    Filtrlər
+                </button>
+</div>
+<!-- Restaurants Data Table -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Restoran</th>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Məkan</th>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Reytinq</th>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Status</th><th class="px-lg py-md font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Müqavilə Statusu</th>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Telefon</th>
+<th class="px-lg py-md font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Əməliyyatlar</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A professional, high-end photography of a luxury restaurant facade with gold signage, warm interior lighting visible through large glass windows, set against a clean urban backdrop. The lighting is soft and cinematic, emphasizing a premium hospitality brand aesthetic with deep navy and amber tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_31FL4htnGI6UuUiZI__qng2vLUTWGdKBgpAb2bvoiR1ngMiK1KHXfNbozZPY1T6n5lU7wqmUHafNWK8GVVYwgkgZ0_MQjvFI90Xec5JBLXbO0NmrMMESdxyUvB-lqGfRryO9R7J3X3mPA8ekdYC2xgYVfQ0m4k7CerB65pE4_mvm9FDCw_3dKcQpMjxfgI1sxq54vX76DT3st_tOTyeM9CuEFGjl3ON1SpQ5Qq1nKN44-V4hHfThpw">
+</div>
+<div>
+<p class="font-headline-sm text-body-md font-semibold text-primary">Saffron Garden</p>
+<p class="text-body-sm text-on-surface-variant">Fine Dining</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined !text-[18px]" data-icon="location_on">location_on</span>
+<span class="text-body-md">Bakı, Nizami küç. 45</span>
+</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-secondary">
+<span class="material-symbols-outlined !text-[18px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-body-md font-semibold">4.8</span>
+<span class="text-body-sm text-on-surface-variant">(124)</span>
+</div>
+</td>
+<td class="px-lg py-md">
+<span class="status-badge active-status">Aktiv</span>
+</td><td class="px-lg py-md">
+<span class="status-badge active-status">Aktiv Müqavilə</span>
+</td>
+<td class="px-lg py-md">
+<span class="text-body-md">+994 50 123 45 67</span>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs">
+<button class="p-xs hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-primary transition-all" title="Detallar">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</button>
+<button class="p-xs hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-primary transition-all" title="Redaktə">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-xs hover:bg-error-container/20 rounded-lg text-error transition-all" title="Deaktiv et">
+<span class="material-symbols-outlined" data-icon="block">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A modern steakhouse interior with dark wood textures, leather booths, and industrial-chic lighting fixtures. The atmosphere is sophisticated and masculine, featuring a palette of charcoal grays and warm copper accents. High-quality professional interior design photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBarTFrr8xAoGC4Lg0K4Y3ULJ7RlCA2AllQIq6tiLtunnQ3iTrZ4IMRb4x5vRBKSg0_3U5ak4WsGcbI0oEZBFWuZKPhZIxkhYEZ3Jo28qsEO52png22B27S05-m_ci_Ji4TtDavI6HNmzCDrMtNQIwerstchPp_CtGsDzXG9OTpReBDr1bsInC8Y94aQBFkXh2qHeaHob0GrIH6AJoDHUmatSyqOL028YlEAwjS-nOocunmyTWFHUZI3g">
+</div>
+<div>
+<p class="font-headline-sm text-body-md font-semibold text-primary">Steak &amp; Wine</p>
+<p class="text-body-sm text-on-surface-variant">Steakhouse</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined !text-[18px]" data-icon="location_on">location_on</span>
+<span class="text-body-md">Bakı, İçərişəhər</span>
+</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-secondary">
+<span class="material-symbols-outlined !text-[18px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-body-md font-semibold">4.9</span>
+<span class="text-body-sm text-on-surface-variant">(89)</span>
+</div>
+</td>
+<td class="px-lg py-md">
+<span class="status-badge active-status">Aktiv</span>
+</td><td class="px-lg py-md">
+<span class="status-badge active-status">Vaxtı Bitir</span>
+</td>
+<td class="px-lg py-md">
+<span class="text-body-md">+994 55 987 65 43</span>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs">
+<button class="p-xs hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-primary transition-all" title="Detallar">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</button>
+<button class="p-xs hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-primary transition-all" title="Redaktə">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-xs hover:bg-error-container/20 rounded-lg text-error transition-all" title="Deaktiv et">
+<span class="material-symbols-outlined" data-icon="block">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 (Inactive) -->
+<tr class="hover:bg-surface-container transition-colors group opacity-75">
+<td class="px-lg py-md">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 grayscale">
+<img class="w-full h-full object-cover" data-alt="A brightly lit, minimalist organic cafe interior with lots of indoor plants, light oak wood furniture, and large windows bringing in natural daylight. The design is airy and fresh, focusing on a sustainable and healthy lifestyle aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_HjMOnDpNH7Pe_oO_-Gzmtzss0KFCL38NPEiLWjgmrMnuTBBLQRmaknNHlDbT8z0Z4xycOFEaVZpEGRl9O-DEM8POweRhRcqrKSU3Amrvx-kUyBqEmP1pl331VMs2qf4BFT6u_qbxUbGx_2bHWLQGNxQOcKUBptTwkoY0sKVukFGXoi75zQvtwFedXy1cQv4BeXiArc6ZIMSOgVwlkuFNYDqaQ57oIr_6XHJ_LPtK0mcKcIhh2lh07g">
+</div>
+<div>
+<p class="font-headline-sm text-body-md font-semibold text-primary">Green Leaf Cafe</p>
+<p class="text-body-sm text-on-surface-variant">Organic Cafe</p>
+</div>
+</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined !text-[18px]" data-icon="location_on">location_on</span>
+<span class="text-body-md">Sumqayıt, Sülh pr.</span>
+</div>
+</td>
+<td class="px-lg py-md">
+<div class="flex items-center gap-xs text-secondary/50">
+<span class="material-symbols-outlined !text-[18px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-body-md font-semibold">4.2</span>
+<span class="text-body-sm text-on-surface-variant">(45)</span>
+</div>
+</td>
+<td class="px-lg py-md">
+<span class="status-badge inactive-status">Deaktiv</span>
+</td><td class="px-lg py-md">
+<span class="status-badge bg-error-container text-on-error-container">Müştərilərdən gizlədilib</span>
+</td>
+<td class="px-lg py-md">
+<span class="text-body-md">+994 18 642 11 22</span>
+</td>
+<td class="px-lg py-md text-right">
+<div class="flex justify-end gap-xs">
+<button class="p-xs hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-primary transition-all" title="Detallar">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</button>
+<button class="p-xs hover:bg-surface-container-high rounded-lg text-on-surface-variant hover:text-primary transition-all" title="Redaktə">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+<button class="p-xs hover:bg-tertiary-fixed/20 rounded-lg text-on-tertiary-container transition-all" title="Aktivləşdir">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-lg py-md bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
+<p class="text-body-sm text-on-surface-variant">Göstərilir: 1 - 3 (Cəmi 24 restoran)</p>
+<div class="flex gap-xs">
+<button class="p-xs rounded-lg border border-outline-variant hover:bg-surface-container-high disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-primary text-on-primary text-label-md font-label-md flex items-center justify-center">1</button>
+<button class="w-8 h-8 rounded-lg border border-outline-variant hover:bg-surface-container-high text-label-md font-label-md flex items-center justify-center">2</button>
+<button class="w-8 h-8 rounded-lg border border-outline-variant hover:bg-surface-container-high text-label-md font-label-md flex items-center justify-center">Müddəti Bitən</button>
+<button class="p-xs rounded-lg border border-outline-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Bento Info Section (Additional Value) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<div class="lg:col-span-2 bg-primary text-on-primary p-xl rounded-2xl relative overflow-hidden flex flex-col justify-between h-64">
+<div class="z-10">
+<h2 class="text-headline-md font-headline-md mb-xs">Restoran Şəbəkəsini Genişləndir</h2>
+<p class="text-body-md opacity-80 max-w-md">Yeni müqavilələr və restoran inteqrasiyaları üçün analiz panelini yoxlayın. Bu ay 15% artım müşahidə olunur.</p>
+</div>
+<button class="bg-secondary text-on-secondary w-fit px-lg py-md rounded-lg font-label-md text-label-md z-10 hover:brightness-110 transition-all">Hesabatlara bax</button>
+<!-- Abstract Background Pattern -->
+<div class="absolute right-[-20px] bottom-[-20px] opacity-20 transform rotate-12 pointer-events-none">
+<span class="material-symbols-outlined !text-[240px]" data-icon="analytics">analytics</span>
+</div>
+</div>
+<div class="bg-secondary-container text-on-secondary-container p-xl rounded-2xl flex flex-col justify-center items-center text-center space-y-md">
+<span class="material-symbols-outlined !text-[48px]" data-icon="verified_user">verified_user</span>
+<h3 class="text-headline-sm font-headline-sm">Təhlükəsizlik Mərkəzi</h3>
+<p class="text-body-sm">Bütün restoran statusları və giriş icazələri yoxlanılıb. Heç bir risk aşkar edilməyib.</p>
+</div>
+</div>
+</div>
+<!-- Spacer for Bottom Nav on Mobile -->
+
+<!-- Bottom Navigation Bar (Mobile only) -->
+
+</main>
+<script>
+        // Simple Micro-interaction: Table Row Hover State and Row Actions
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.classList.add('shadow-inner');
+            });
+            row.addEventListener('mouseleave', () => {
+                row.classList.remove('shadow-inner');
+            });
+        });
+
+        // Search Input Glow Effect
+        const searchInput = document.querySelector('input[type="text"]');
+        const searchContainer = searchInput?.parentElement;
+        if(searchInput && searchContainer) {
+            searchInput.addEventListener('focus', () => {
+                searchContainer.classList.add('shadow-[0_0_15px_rgba(0,0,0,0.05)]');
+                searchContainer.classList.add('scale-[1.02]');
+            });
+            searchInput.addEventListener('blur', () => {
+                searchContainer.classList.remove('shadow-[0_0_15px_rgba(0,0,0,0.05)]');
+                searchContainer.classList.remove('scale-[1.02]');
+            });
+        }
+    </script>
+
+
+
+
+</body></html>

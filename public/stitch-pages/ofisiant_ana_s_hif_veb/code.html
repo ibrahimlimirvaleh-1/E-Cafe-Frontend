@@ -1,0 +1,354 @@
+<!DOCTYPE html><html lang="az" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#c1c6db",
+                        "secondary-fixed": "#ffddb8",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-primary-fixed": "#151b2b",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#76777d",
+                        "primary-container": "#151b2b",
+                        "on-tertiary-container": "#009668",
+                        "surface-dim": "#d9dadb",
+                        "surface-container": "#edeeef",
+                        "background": "#f8f9fa",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-variant": "#e1e3e4",
+                        "secondary-container": "#fea619",
+                        "primary": "#000000",
+                        "on-secondary-fixed": "#2a1700",
+                        "surface": "#f8f9fa",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#414658",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#191c1d",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary": "#855300",
+                        "inverse-surface": "#2e3132",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "primary-fixed": "#dde2f8",
+                        "primary-fixed-dim": "#c1c6db",
+                        "on-surface": "#191c1d",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c6c6cd",
+                        "surface-tint": "#585e70",
+                        "on-secondary-container": "#684000",
+                        "error": "#ba1a1a",
+                        "tertiary": "#000000",
+                        "on-primary-container": "#7e8397",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface-variant": "#45464c",
+                        "surface-bright": "#f8f9fa",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "2xl": "48px",
+                        "lg": "24px",
+                        "base": "4px",
+                        "md": "16px",
+                        "container-max": "1280px",
+                        "sm": "12px",
+                        "xs": "8px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    }catch(_e){}</script></head><body class="bg-background text-on-surface min-h-screen">
+<!-- Responsive Header -->
+<header class="bg-surface shadow-sm sticky top-0 z-50" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);">
+<div class="max-w-container-max mx-auto px-gutter py-md flex justify-between items-center">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-headline-lg" data-icon="restaurant" data-original-icon="restaurant">restaurant</span>
+<h1 class="text-headline-lg font-headline-lg text-primary tracking-tight">ECafe</h1>
+</div>
+<!-- Desktop Navigation -->
+<nav class="hidden md:flex items-center gap-lg">
+<a href="#" class="text-body-md font-semibold text-primary border-b-2 border-primary px-1">Ana Səhifə</a>
+<a href="#" class="text-body-md text-on-surface-variant hover:text-primary transition-colors">Rezervasiyalar</a>
+<a href="#" class="text-body-md text-on-surface-variant hover:text-primary transition-colors">Profil</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="relative p-base hover:bg-surface-variant rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container hidden sm:block">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a young waiter" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0dLXSwj4Rm5eHzzVC4l7PQUvJozbQcsUtq37CWgX4uXYdbFio6qT8U3GEm-Difus1g7rQun3cvuCTxHEouW5z8YYFSPdIFvGLWNo2ZgZQTmUdEvk66ku-pNqZUWDsEApGIVBl5MiZQw_33KnajJ2_GdPPlBva2z0CmnjhOOUh_-thf0tLta-SWEOOEoB2mPSz6yAFeKFWsLtxW-FiiqVK--LHoZvhqw0EzY12nSYwjR1_VKoUHEO1oA">
+</div>
+<!-- Hamburger Menu Button -->
+<button id="menu-toggle" class="md:hidden p-base hover:bg-surface-variant rounded-full transition-colors flex">
+<span class="material-symbols-outlined text-on-surface" data-icon="menu">menu</span>
+</button>
+</div>
+</div><div id="mobile-menu" class="md:hidden hidden bg-surface border-b border-outline-variant px-gutter py-md flex-col gap-md" style="display: none;"><a href="#" class="text-body-md font-semibold text-primary py-sm">Ana Səhifə</a><a href="#" class="text-body-md text-on-surface-variant hover:text-primary py-sm transition-colors">Rezervasiyalar</a><a href="#" class="text-body-md text-on-surface-variant hover:text-primary py-sm transition-colors">Profil</a></div>
+<!-- Mobile Menu -->
+
+</header>
+<main class="max-w-container-max mx-auto px-gutter py-lg">
+<!-- Welcome & Status Bento -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-2xl">
+<!-- Service Status Card -->
+<div class="md:col-span-2 bg-primary-container text-on-primary p-lg rounded-xl shadow-lg flex flex-col justify-between overflow-hidden relative group" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);">
+<div class="absolute -right-4 -top-4 opacity-10 group-hover:rotate-12 transition-transform duration-500">
+<span class="material-symbols-outlined text-[120px]" data-icon="timer">timer</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm mb-xs">Salam, Elnur!</h2>
+<p class="font-body-md text-body-md text-on-primary-container opacity-90">Bu gün 6 masa sizə təhkim edilib.</p>
+</div>
+<div class="mt-xl flex flex-wrap gap-md items-center">
+<button class="bg-secondary-container text-on-secondary-container px-lg py-md rounded-lg font-label-md text-label-md flex items-center gap-xs hover:bg-opacity-90 transition-all active:scale-95" id="serviceToggle"><span class="material-symbols-outlined" data-icon="play_circle">play_circle</span><span class="">XİDMƏTƏ BAŞLA</span></button>
+<div class="flex items-center gap-xs px-md py-base bg-white/10 rounded-full">
+<div class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></div>
+<span id="serviceStatusText" class="text-label-md">Status: Hazırda aktiv deyil</span>
+</div>
+</div>
+</div>
+<!-- Wallet Summary -->
+<div class="bg-surface p-lg rounded-xl shadow-sm border border-outline-variant flex flex-col justify-between" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);">
+<div class="flex justify-between items-start">
+<span class="text-label-md text-on-surface-variant uppercase tracking-widest">Cari Balans</span>
+<span class="material-symbols-outlined text-secondary" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="mt-md">
+<span class="font-display-lg text-display-lg">142.50</span>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant">AZN</span>
+</div>
+<div class="mt-lg pt-md border-t border-outline-variant flex justify-between items-center">
+<span class="text-body-sm text-on-tertiary-container font-semibold">+12.40 AZN (Bu gün)</span>
+<button class="text-primary hover:underline text-label-md">Detallar</button>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+<!-- Today's Reservations List -->
+<div class="lg:col-span-8">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-md text-headline-md">Bugünkü Rezervasiyalar</h3>
+<div class="flex gap-xs">
+<span class="px-md py-xs bg-surface-container-high rounded-full text-label-md font-semibold">Cəmi: 8</span>
+</div>
+</div>
+<div class="space-y-md">
+<!-- Reservation Item 1 -->
+<div class="bg-surface hover:bg-surface-container-low border border-outline-variant rounded-xl p-md flex flex-col sm:flex-row items-center gap-lg transition-all group" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);">
+<div class="w-16 h-16 bg-surface-container-highest rounded-lg flex flex-col items-center justify-center border border-outline-variant">
+<span class="text-label-md text-on-surface-variant">SAAT</span>
+<span class="text-headline-sm font-bold">19:30</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-sm mb-base">
+<h4 class="font-headline-sm text-headline-sm">Rövşən Əliyev</h4>
+<span class="bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold px-sm py-0.5 rounded uppercase">Masa 12</span>
+</div>
+<div class="flex flex-wrap gap-md text-on-surface-variant">
+<span class="flex items-center gap-xs text-body-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="group">group</span> 4 nəfər
+                                </span>
+<span class="flex items-center gap-xs text-body-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="description">description</span> Ad günü qeyd olunur
+                                </span>
+</div>
+</div>
+<div class="flex gap-sm w-full sm:w-auto">
+<button class="flex-1 sm:flex-none border border-outline px-lg py-sm rounded-lg text-label-md font-bold hover:bg-surface-variant transition-colors">LƏĞV ET</button>
+<button class="flex-1 sm:flex-none bg-primary text-on-primary px-lg py-sm rounded-lg text-label-md font-bold hover:opacity-90 transition-all">QƏBUL ET</button>
+</div>
+</div>
+<!-- Reservation Item 2 -->
+<div class="bg-surface hover:bg-surface-container-low border border-outline-variant rounded-xl p-md flex flex-col sm:flex-row items-center gap-lg transition-all" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);">
+<div class="w-16 h-16 bg-surface-container-highest rounded-lg flex flex-col items-center justify-center border border-outline-variant">
+<span class="text-label-md text-on-surface-variant">SAAT</span>
+<span class="text-headline-sm font-bold">20:15</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-sm mb-base">
+<h4 class="font-headline-sm text-headline-sm">Leyla Məmmədova</h4>
+<span class="bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold px-sm py-0.5 rounded uppercase">Masa 05</span>
+</div>
+<div class="flex flex-wrap gap-md text-on-surface-variant">
+<span class="flex items-center gap-xs text-body-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="group">group</span> 2 nəfər
+                                </span>
+<span class="flex items-center gap-xs text-body-sm text-on-tertiary-container font-semibold italic">
+<span class="material-symbols-outlined text-[18px]" data-icon="shopping_cart">shopping_cart</span> İlkin sifariş var
+                                </span>
+</div>
+</div>
+<div class="flex gap-sm w-full sm:w-auto">
+<button class="flex-1 sm:flex-none bg-primary text-on-primary px-xl py-sm rounded-lg text-label-md font-bold">QƏBUL ET</button>
+</div>
+</div>
+<!-- Reservation Item 3 (Checked in) -->
+<div class="bg-surface-container-low border border-outline-variant opacity-80 rounded-xl p-md flex flex-col sm:flex-row items-center gap-lg transition-all">
+<div class="w-16 h-16 bg-tertiary-fixed/20 rounded-lg flex flex-col items-center justify-center border border-tertiary-fixed">
+<span class="material-symbols-outlined text-on-tertiary-container" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-sm mb-base">
+<h4 class="font-headline-sm text-headline-sm line-through decoration-on-surface-variant">Kamran Vəliyev</h4>
+<span class="bg-surface-container-highest text-on-surface-variant text-[10px] font-bold px-sm py-0.5 rounded uppercase">Xidmət Edilir</span>
+</div>
+<p class="text-body-sm text-on-surface-variant">Masa 21 • 6 nəfər • 18:00-dan başlayıb</p>
+</div>
+<button class="w-full sm:w-auto border border-outline px-lg py-sm rounded-lg text-label-md font-bold">HESAB</button>
+</div>
+</div>
+</div>
+<!-- Pre-order Items Summary -->
+<aside class="lg:col-span-4">
+<div class="bg-white rounded-xl shadow-sm border border-outline-variant p-lg sticky top-[100px]" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);">
+<div class="flex items-center justify-between mb-lg border-b border-outline-variant pb-md">
+<h3 class="font-headline-sm text-headline-sm">İlkin Sifarişlər</h3>
+<span class="material-symbols-outlined text-secondary" data-icon="restaurant_menu">restaurant_menu</span>
+</div>
+<div class="space-y-lg">
+<!-- Pre-order Item 1 -->
+<div class="flex gap-md items-start">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Shah Plov" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkJiB2ejS8u0ilLPL-GUN1zQ05NOM4h5bCqFYy7KfH0Ht_TBG0ncyQYRtJ8XfP3qNKePUI_-wfTNx0lb86nrzNczc0cunvdZ80drE3JRclr9RveK-JOHgUdCFyY7nU7mqLBLVgx3ac9It34Kkuay1pH3nzKuomoouRRAZVCQWeCMmHyufxRl2BEEtujRw3BReUEyD9j2cky-ciAcxiAfVVdsljQ1eYliwfzC-NC4ethcHlTYK8EDS_tg">
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<span class="font-body-md font-bold">Şah Plov (4 nəfərlik)</span>
+<span class="text-label-md bg-error-container text-on-error-container px-xs rounded">x1</span>
+</div>
+<p class="text-label-md text-on-surface-variant">Masa 12 • 19:30 üçün</p>
+</div>
+</div>
+<!-- Pre-order Item 2 -->
+<div class="flex gap-md items-start">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Kebab Assorti" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAI7May6umu2DDnM9BDE7lltg9H7uUxnMvbUlvfI4rBrX68tMdpQG9MN1COcD8FqWpzFAENVQ76rFJ1E1WG_JaiIjJ3k2edYWyp_xE_70TFXnqha2GTffgoKEEnb9KL2RUZuQjBY9b9k-7vPCWMZJ4fYzqY0R_zoKO4L6eIFknZ1uppKAgnvXBckt0uDas-fWJIBDM2T81bI45qnMp6RwC9zlTHhzOalrKGfcpc8Ouzk-ilDqqEpuUpA">
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<span class="font-body-md font-bold">Kabab Assorti</span>
+<span class="text-label-md bg-error-container text-on-error-container px-xs rounded">x2</span>
+</div>
+<p class="text-label-md text-on-surface-variant">Masa 05 • 20:15 üçün</p>
+</div>
+</div>
+<!-- Pre-order Item 3 -->
+<div class="flex gap-md items-start">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Tea Set" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDo7CKTrRrimD1KEur7OQ9OCt3JTFpe2KFMad2msLLugcyKfCr8fwiQcShLwVZXLrM-fFesQ4Z0IylBvSg9jtb_5x9FvwCeAwipsUAvmsRLjfSyw-JIc7Xam744CtpqB3YdZYWgF-ROkDiL1KHY16Rk0LQxMYDszI7CcL4CzXmNq8JpSDuI6AjXAbfvpvbyomqpqjpPMhDZoun47EGXKsqjwNfpl7yAc2-EpQogMrXn7Q7btCtekz4ow">
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<span class="font-body-md font-bold">Çay dəstgahı</span>
+<span class="text-label-md bg-error-container text-on-error-container px-xs rounded">x3</span>
+</div>
+<p class="text-label-md text-on-surface-variant">Masa 08 • 21:00 üçün</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-xl py-md bg-primary text-on-primary font-bold rounded-lg text-label-md hover:bg-opacity-90 transition-colors">MƏTBƏXƏ GÖNDƏR</button>
+</div>
+</aside>
+</div>
+</main>
+<footer class="mt-2xl border-t border-outline-variant bg-surface py-lg" style="opacity: 1; transform: translateY(0px); transition: 0.6s cubic-bezier(0.2, 1, 0.3, 1);">
+<div class="max-w-container-max mx-auto px-gutter text-center">
+<p class="text-body-sm text-on-surface-variant">© 2024 ECafe. Bütün hüquqlar qorunur.</p>
+</div>
+</footer>
+<!-- Micro-interactions Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Service Toggle logic
+            const toggleBtn = document.getElementById('serviceToggle');
+            let isActive = false;
+
+            toggleBtn.addEventListener('click', () => {
+                isActive = !isActive;
+                const icon = toggleBtn.querySelector('.material-symbols-outlined');
+                const text = toggleBtn.querySelector('span:not(.material-symbols-outlined)');
+                const statusContainer = toggleBtn.nextElementSibling;
+                const statusDot = statusContainer.querySelector('div');
+                const statusText = statusContainer.querySelector('span');
+
+                if (isActive) {
+                    toggleBtn.classList.replace('bg-secondary-container', 'bg-error');
+                    toggleBtn.classList.replace('text-on-secondary-container', 'text-on-error');
+                    icon.textContent = 'pause_circle';
+                    text.textContent = 'XİDMƏTİ DAYANDIR';
+                    statusDot.classList.replace('bg-tertiary-fixed-dim', 'bg-tertiary-fixed');
+                    statusText.textContent = 'Status: Hazırda xidmətdə';
+                } else {
+                    toggleBtn.classList.replace('bg-error', 'bg-secondary-container');
+                    toggleBtn.classList.replace('text-on-error', 'text-on-secondary-container');
+                    icon.textContent = 'play_circle';
+                    text.textContent = 'XİDMƏTƏ BAŞLA';
+                    statusDot.classList.replace('bg-tertiary-fixed', 'bg-tertiary-fixed-dim');
+                    statusText.textContent = 'Status: Hazırda aktiv deyil';
+                }
+            });
+
+            // Hamburger menu logic
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('active');
+                const icon = menuToggle.querySelector('.material-symbols-outlined');
+                icon.textContent = mobileMenu.classList.contains('active') ? 'close' : 'menu';
+            });
+
+            // Smooth entrance animations
+            const cards = document.querySelectorAll('.bg-surface, .bg-primary-container, .bg-white');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.2, 1, 0.3, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 80);
+            });
+        });
+    </script>
+
+
+
+
+</body></html>

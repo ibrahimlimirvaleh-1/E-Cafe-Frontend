@@ -1,0 +1,309 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Kateqoriyanı Redaktə Et | ECafe Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .toggle-checkbox:checked {
+            right: 0;
+            background-color: #ffffff;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #fea619;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#2e3132",
+                      "surface-variant": "#e1e3e4",
+                      "on-tertiary": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "on-tertiary-fixed": "#002113",
+                      "on-secondary-fixed-variant": "#653e00",
+                      "surface-container": "#edeeef",
+                      "error-container": "#ffdad6",
+                      "tertiary": "#000000",
+                      "surface": "#f8f9fa",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "surface-container-high": "#e7e8e9",
+                      "on-tertiary-container": "#009668",
+                      "on-primary": "#ffffff",
+                      "on-secondary-container": "#684000",
+                      "surface-container-highest": "#e1e3e4",
+                      "primary-fixed-dim": "#c1c6db",
+                      "background": "#f8f9fa",
+                      "error": "#ba1a1a",
+                      "on-secondary": "#ffffff",
+                      "tertiary-fixed": "#6ffbbe",
+                      "primary-container": "#151b2b",
+                      "outline-variant": "#c6c6cd",
+                      "secondary-fixed": "#ffddb8",
+                      "secondary-container": "#fea619",
+                      "outline": "#76777d",
+                      "on-secondary-fixed": "#2a1700",
+                      "on-primary-container": "#7e8397",
+                      "on-primary-fixed": "#151b2b",
+                      "inverse-primary": "#c1c6db",
+                      "surface-bright": "#f8f9fa",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#855300",
+                      "primary-fixed": "#dde2f8",
+                      "on-error-container": "#93000a",
+                      "secondary-fixed-dim": "#ffb95f",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-dim": "#d9dadb",
+                      "on-surface-variant": "#45464c",
+                      "primary": "#000000",
+                      "on-error": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-max": "1280px",
+                      "lg": "24px",
+                      "xs": "8px",
+                      "md": "16px",
+                      "xl": "32px",
+                      "base": "4px",
+                      "2xl": "48px",
+                      "gutter": "24px",
+                      "sm": "12px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "display-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant flex flex-col hidden md:flex">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">
+            ECafe Admin
+        </div>
+<nav class="flex flex-col h-full overflow-y-auto">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">dashboard</span> Dashboard
+            </a>
+<a class="flex items-center text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md" href="#">
+<span class="material-symbols-outlined mr-md">restaurant_menu</span> Menu
+            </a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">table_restaurant</span> Tables
+            </a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">group</span> Staff
+            </a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">book_online</span> Reservations
+            </a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">payments</span> Payments
+            </a>
+<div class="mt-auto border-t border-outline-variant pt-md">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">settings</span> Settings
+                </a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mr-md">logout</span> Logout
+                </a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 min-h-screen">
+<!-- Top App Bar -->
+<header class="bg-surface-container-low shadow-sm sticky top-0 z-40">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+<button class="md:hidden p-base text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary">Kateqoriyanı Redaktə Et</h1>
+</div>
+<div class="flex items-center gap-sm">
+<div class="hidden sm:flex flex-col text-right mr-sm">
+<span class="font-label-md text-label-md text-on-surface">Admin Panel</span>
+<span class="text-body-sm text-on-surface-variant">Xoş gəldiniz</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold">
+                        A
+                    </div>
+</div>
+</div>
+</header>
+<section class="p-gutter max-w-4xl mx-auto space-y-xl">
+<!-- Breadcrumbs -->
+<nav class="flex text-on-surface-variant font-label-md text-label-md">
+<a class="hover:text-primary transition-colors" href="#">Menyu</a>
+<span class="mx-xs">/</span>
+<a class="hover:text-primary transition-colors" href="{{DATA:SCREEN:SCREEN_74}}">Kateqoriyalar</a>
+<span class="mx-xs">/</span>
+<span class="text-primary font-bold">Desertlər</span>
+</nav>
+<!-- Main Form Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+<div class="p-xl border-b border-outline-variant bg-surface-container-low">
+<h2 class="font-headline-sm text-headline-sm text-primary">Ümumi Məlumat</h2>
+<p class="text-body-sm text-on-surface-variant mt-base">Kateqoriya detallarını və görünüşünü buradan idarə edin.</p>
+</div>
+<form class="p-xl space-y-xl">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl">
+<!-- Category Name -->
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface uppercase tracking-wider" for="cat_name">Kateqoriya Adı</label>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-md py-sm focus:ring-2 focus:ring-secondary focus:border-transparent outline-none transition-all font-body-md text-body-md" id="cat_name" type="text" value="Desertlər">
+</div>
+<!-- Status Toggle -->
+<div class="flex flex-col justify-end space-y-xs">
+<label class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Status</label>
+<div class="flex items-center gap-md py-sm">
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-transparent appearance-none cursor-pointer right-6 transition-all duration-300" id="toggle" name="toggle" type="checkbox">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-300" for="toggle"></label>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Aktiv</span>
+</div>
+</div>
+</div>
+<!-- Category Image Section -->
+<div class="pt-xl border-t border-outline-variant">
+<label class="font-label-md text-label-md text-on-surface uppercase tracking-wider block mb-md">Kateqoriya Şəkli</label>
+<div class="flex flex-col md:flex-row items-start md:items-center gap-xl">
+<div class="relative group">
+<div class="w-48 h-48 rounded-xl overflow-hidden border-2 border-secondary shadow-lg">
+<img class="w-full h-full object-cover" data-alt="A gourmet chocolate lava cake on a minimalist matte black ceramic plate. The cake has a dusting of gold leaf and is set against a dark, atmospheric background with soft, golden warm lighting typical of a premium luxury hospitality environment. Minimalist and elegant high-end food photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdWiuZ8HIZv5yBnxUhnM2NUyu6sTAz8Kj9DnRa5bFZKa1ai86XUR8GatjtM8uVM8bhoYcqDrBTkcz94LZT9JwRkxb063qBu-CY0wDaiSYQXhSlzT4FZkcoCcY4wbXwVRbPYgq1l7q0Z-yf5jJfdzaxG83WQ5dMMAOisPykbquFovlg4AHVpeEJFN5xI71XBb7U1_q15Xsh4JplzcO2rsgQREQtuy9V1xTMNe2LW3dwB0_tdz1KUbQc1Q">
+</div>
+<button class="absolute -top-3 -right-3 w-8 h-8 bg-error text-on-error rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform active:scale-95" title="Şəkli Sil" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+<div class="flex-1 space-y-md">
+<div class="flex flex-wrap gap-md">
+<button class="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md text-label-md flex items-center gap-sm hover:opacity-90 transition-opacity" type="button">
+<span class="material-symbols-outlined">upload</span>
+                                        Yeni Şəkil Yüklə
+                                    </button>
+<button class="bg-surface-container-high text-on-surface-variant px-lg py-sm rounded-lg font-label-md text-label-md hover:text-error transition-colors" type="button">
+                                        Şəkli Sil
+                                    </button>
+</div>
+<p class="text-body-sm text-on-surface-variant italic">Məsləhət görülən ölçü: 800x800px. Maksimum 5MB (JPG, PNG).</p>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="pt-xl flex flex-wrap gap-md justify-end">
+<a href="{{DATA:SCREEN:SCREEN_74}}" class="px-xl py-md text-on-surface-variant font-label-md text-label-md hover:bg-surface-variant rounded-lg transition-colors inline-block">Ləğv Et</a>
+<a href="{{DATA:SCREEN:SCREEN_74}}" class="bg-secondary-container text-on-secondary-container px-2xl py-md rounded-lg font-headline-sm text-headline-sm shadow-md active:scale-95 transition-transform inline-block text-center">Yadda Saxla</a>
+</div>
+</form>
+</div>
+<!-- Danger Zone Section -->
+<div class="bg-error-container/20 border border-error/20 rounded-xl p-xl">
+<div class="flex items-center gap-md mb-md">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<h3 class="font-headline-sm text-headline-sm text-error">Təhlükəli Zona</h3>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+<div class="max-w-xl">
+<p class="text-on-surface-variant text-body-md">Bu kateqoriyanı silmək bütün əlaqəli menyu elementlərinin kateqoriyasız qalmasına səbəb olacaq. Bu hərəkət geri qaytarıla bilməz.</p>
+</div>
+<button class="border-2 border-error text-error px-xl py-sm rounded-lg font-label-md text-label-md hover:bg-error hover:text-on-error transition-all flex items-center gap-xs" type="button">
+<span class="material-symbols-outlined text-[20px]">delete_forever</span>
+                        Kateqoriyanı Sil
+                    </button>
+</div>
+</div>
+</section>
+<!-- Footer for Context -->
+<footer class="mt-2xl py-xl border-t border-outline-variant text-center">
+<p class="text-body-sm text-on-surface-variant">© 2024 ECafe Premium Hospitality Suite. Bütün hüquqlar qorunur.</p>
+</footer>
+</main>
+<!-- Bottom Nav for Mobile -->
+<nav class="md:hidden fixed bottom-0 w-full bg-surface border-t border-outline-variant flex justify-around items-center px-sm pb-xs pt-base z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-label-md">Ana Səhifə</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="text-label-md">Menyu</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">event_available</span>
+<span class="text-label-md">Sifarişlər</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-label-md">Profil</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for toggle
+        const toggleInput = document.getElementById('toggle');
+        const statusText = toggleInput.nextElementSibling.nextElementSibling;
+        
+        toggleInput.addEventListener('change', function() {
+            if(this.checked) {
+                statusText.innerText = 'Aktiv';
+            } else {
+                statusText.innerText = 'Deaktiv';
+            }
+        });
+
+        // Form submission prevent default for demo
+        document.querySelector('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Dəyişikliklər uğurla yadda saxlanıldı!');
+        });
+    </script>
+
+
+
+</body></html>

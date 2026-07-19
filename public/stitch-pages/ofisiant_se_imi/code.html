@@ -1,0 +1,358 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe - Ofisiant Seçimi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-variant": "#e1e3e4",
+                    "on-primary-container": "#7e8397",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d9dadb",
+                    "primary-fixed": "#dde2f8",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#151b2b",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "tertiary-container": "#002113",
+                    "on-primary-fixed-variant": "#414658",
+                    "background": "#f8f9fa",
+                    "primary-fixed-dim": "#c1c6db",
+                    "surface-bright": "#f8f9fa",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-surface-variant": "#45464c",
+                    "secondary": "#855300",
+                    "surface-container-highest": "#e1e3e4",
+                    "outline-variant": "#c6c6cd",
+                    "primary": "#000000",
+                    "primary-container": "#151b2b",
+                    "on-tertiary-container": "#009668",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-container-low": "#f3f4f5",
+                    "tertiary": "#000000",
+                    "on-background": "#191c1d",
+                    "secondary-fixed": "#ffddb8",
+                    "error-container": "#ffdad6",
+                    "outline": "#76777d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#edeeef",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed": "#2a1700",
+                    "on-surface": "#191c1d",
+                    "surface-tint": "#585e70",
+                    "inverse-surface": "#2e3132",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-primary": "#c1c6db",
+                    "on-secondary-container": "#684000",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "secondary-container": "#fea619"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "container-max": "1280px",
+                    "lg": "24px",
+                    "sm": "12px",
+                    "2xl": "48px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .staff-card-active {
+            border: 2px solid theme('colors.secondary-container');
+            background-color: theme('colors.surface-container-high');
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- TopAppBar (Predicted from JSON) -->
+<header class="bg-surface-container-low dark:bg-surface-container shadow-sm docked full-width top-0 z-50">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-xs cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined text-primary" data-icon="restaurant">restaurant</span>
+<span class="text-headline-lg font-headline-lg text-primary tracking-tight">ECafe</span>
+</div>
+<div class="hidden md:flex gap-lg items-center">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary transition-colors" href="#">Home</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary transition-colors" href="#">Search</a>
+<a class="text-primary font-bold font-label-md text-label-md hover:text-secondary transition-colors" href="#">Reservations</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary transition-colors" href="#">Profile</a>
+</div>
+<button class="bg-primary text-on-primary px-lg py-xs rounded-full font-label-md text-label-md active:scale-95 transition-transform">Giriş</button>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-gutter mt-xl">
+<!-- Progress Stepper -->
+<div class="flex items-center justify-center mb-xl">
+<div class="flex items-center w-full max-w-2xl">
+<div class="flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold mb-xs">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Masa</span>
+</div>
+<div class="h-[2px] flex-1 bg-secondary-container mx-base"></div>
+<div class="flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold mb-xs">2</div>
+<span class="font-label-md text-label-md text-primary">Personal</span>
+</div>
+<div class="h-[2px] flex-1 bg-surface-variant mx-base"></div>
+<div class="flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold mb-xs">3</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Təsdiq</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Left Side: Staff Selection -->
+<div class="lg:col-span-8">
+<div class="mb-lg">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-xs">Ofisiant Seçin</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Sizə xidmət edəcək peşəkar əməkdaşımızı seçməklə təcrübənizi fərdiləşdirin.</p>
+</div>
+<!-- Bento Grid Layout for Staff -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Staff Card 1 (Active/Selected) -->
+<div class="group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer border-2 border-transparent staff-card-active" onclick="selectStaff(this)">
+<div class="flex p-md gap-md">
+<div class="w-24 h-24 rounded-lg overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A professional male waiter with a warm smile, wearing a clean, modern dark navy vest over a crisp white shirt. He stands in a high-end, luxury restaurant setting with soft golden bokeh lighting in the background. The aesthetic is professional, modern, and corporate, featuring rich textures and a minimalist vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCci5UzKqasR4PEIoIYrShdCZosIIgwvWb37Uty_TuyYti1gEksawkyuH_Kvb7G58ki9uTr8K0ErX_0td_XwUJdYA7EDiceyWnAXoYJGdab5qfA62zLJYkVYLPz4KirA2Ci9LyIY1N_Vje_e4oqoQSffX_GwxCVXjaE5SLDW5LvQgeowssdLeFyKokXnxpC__iEX5Cco03uSrNPNaeSNNP1vBhXFQkPd9Wa9qRD5ZhVBnkm6LxlPSYA_A">
+</div>
+<div class="flex flex-col justify-center flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-primary">Anar Məmmədov</h3>
+<div class="flex items-center gap-[2px] text-secondary">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.9</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-xs">Premium Xidmət Mütəxəssisi</p>
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span>
+<span class="font-label-md text-label-md text-on-tertiary-container uppercase tracking-wider">Mövcuddur</span>
+</div>
+</div>
+</div>
+<div class="absolute top-2 right-2 bg-secondary-container text-on-secondary-container rounded-full p-1 opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+</div>
+<!-- Staff Card 2 -->
+<div class="group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer border-2 border-transparent" onclick="selectStaff(this)">
+<div class="flex p-md gap-md">
+<div class="w-24 h-24 rounded-lg overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A sophisticated female waitress with an elegant hairstyle, wearing a sleek black uniform vest. She is positioned in a modern, luxury café environment with clean lines and marble surfaces. The lighting is bright and airy, reflecting a high-end corporate aesthetic with a professional and welcoming mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrvGm7WjcDitOvoN8D30H8LyUNxtPHXerkBCiTrd4gXWCHCxs49DOCm9bVQT3q9tPRD-3w5zuFlc8GXeWVfF7cYniIRDHSUfNLnJSNJRIjTyceHacWqKHHuOaOnOAUnc93M2VvtF4dSKVR3rkconhcnObsMEvhjwTVsXtEgixW9exQ1qSo63cRmuue0w3FxCiPxzLL5S7IgfQMm4Qr7xIUB53qk7kTJp39xh8MPONcLZCawxI62GGvDw">
+</div>
+<div class="flex flex-col justify-center flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-primary">Leyla Əliyeva</h3>
+<div class="flex items-center gap-[2px] text-secondary">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.8</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-xs">Şərab və Desert üzrə Ekspert</p>
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span>
+<span class="font-label-md text-label-md text-on-tertiary-container uppercase tracking-wider">Mövcuddur</span>
+</div>
+</div>
+</div>
+<div class="absolute top-2 right-2 bg-secondary-container text-on-secondary-container rounded-full p-1 opacity-0 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+</div>
+<!-- Staff Card 3 -->
+<div class="group relative overflow-hidden bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer border-2 border-transparent" onclick="selectStaff(this)">
+<div class="flex p-md gap-md">
+<div class="w-24 h-24 rounded-lg overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A friendly young male waiter with short groomed hair, wearing a professional uniform in a minimalist high-tech restaurant setting. The background shows blurred modern art and sleek furniture. The lighting is soft and professional, using a neutral color palette with clean, sharp focus on the subject's face." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_nmqsLlSoq5HkPxLkvWy30iA9Luw0xOs6Z4Ope8IBNEcO0_KiehfSatDsQnEABNVIyQlRPeEEusAoeUHs0R-7cdfReFOj2obu0HneBFGvW0mbZ2qAAD8QUsQWnz101FiCJ-25tZo_OciD_k8soi6hyqGmV4o6Gopg5pqNc8WQWDsiUn4bSU2jyRmvC6N4FYdt4Sq-9M2ZiXJA_NjYmt_CHnNbp8107C9Kj5kvqly6MsPxIm3cAf1_IQ">
+</div>
+<div class="flex flex-col justify-center flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-primary">Ramil Qasımov</h3>
+<div class="flex items-center gap-[2px] text-secondary">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.7</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-xs">Banquet və Tədbir Xidməti</p>
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span>
+<span class="font-label-md text-label-md text-on-tertiary-container uppercase tracking-wider">Mövcuddur</span>
+</div>
+</div>
+</div>
+<div class="absolute top-2 right-2 bg-secondary-container text-on-secondary-container rounded-full p-1 opacity-0 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+</div>
+<!-- Staff Card 4 (Busy State) -->
+<div class="group relative overflow-hidden bg-surface-container-low/50 rounded-xl border border-outline-variant grayscale cursor-not-allowed">
+<div class="flex p-md gap-md">
+<div class="w-24 h-24 rounded-lg overflow-hidden shrink-0 opacity-60">
+<img class="w-full h-full object-cover" data-alt="A professional male waiter in a formal suit, standing in a dim, upscale restaurant corridor. The lighting is dramatic and moody, emphasizing a premium atmosphere. The image is presented with a slight desaturation to indicate unavailability, maintaining a clean, high-end corporate feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8dzo1in_cu_ZjwA_VhjW_6kUQGZHJ35d7Ekjf9zYX8d97RjsznLQWIvcRGfpjAi3BqBDXZn1nHVwV9PZy6MHbhHKZzWMggnXLCn3NdSuuMbtKeUPjYJrbyTT9wYPK7w0P-OAClE3Qor1pYxu8iHhfYUYaVxj9WKS5_UEMtnjIi6s6RV6U0gXqmQkIvLB40uTFnnRP4p6QYGHE-FK8W2kirnoeSYevzvKy3nQ8gZG8ufJhtbUPThuBnw">
+</div>
+<div class="flex flex-col justify-center flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-on-surface-variant">Elvin Nuru</h3>
+<div class="flex items-center gap-[2px] text-outline">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.9</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-outline mb-xs">Baş Ofisiant</p>
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-label-md text-label-md text-error uppercase tracking-wider">Məşğuldur</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-lg p-md bg-surface-container rounded-xl flex items-start gap-md">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">info</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Əgər xüsusi seçiminiz yoxdursa, "Hər hansı biri" düyməsini sıxaraq sistemi sizə ən uyğun əməkdaşı təyin etməyə icazə verə bilərsiniz.</p>
+</div>
+</div>
+<!-- Right Side: Booking Summary -->
+<div class="lg:col-span-4">
+<div class="sticky top-gutter bg-surface-container-lowest rounded-xl shadow-lg p-lg border border-outline-variant">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-lg border-b border-outline-variant pb-xs">Sifariş Xülasəsi</h2>
+<div class="space-y-md mb-xl">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Masa:</span>
+<span class="font-label-md text-label-md text-primary bg-surface-container px-xs py-[2px] rounded">VIP 12 (4 nəfərlik)</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Tarix:</span>
+<span class="font-label-md text-label-md text-primary">15 Oktyabr, 2023</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Saat:</span>
+<span class="font-label-md text-label-md text-primary">19:30</span>
+</div>
+<div class="flex justify-between items-center pt-xs border-t border-outline-variant">
+<span class="font-body-md text-body-md text-on-surface-variant">Seçilmiş Personal:</span>
+<span class="font-label-md text-label-md text-secondary" id="selected-staff-name">Anar Məmmədov</span>
+</div>
+</div>
+<div class="space-y-xs">
+<button class="w-full bg-primary text-on-primary py-md rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-xs">
+                            Növbəti Adım
+                            <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<button class="w-full bg-transparent text-on-surface-variant py-md rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">
+                            Geri Qayıt
+                        </button>
+</div>
+<div class="mt-xl flex items-center justify-center gap-xs text-outline">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+<span class="text-[12px] font-label-md">Təhlükəsiz Ödəniş və Məlumat Qoruması</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Predicted from JSON) -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] md:hidden">
+<div class="fixed bottom-0 w-full flex justify-around items-center px-sm pb-xs pt-base">
+<div class="flex flex-col items-center justify-center text-on-surface-variant cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">event_available</span>
+<span class="font-label-md text-label-md">Reservations</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</div>
+</div>
+</nav>
+<script>
+        function selectStaff(element) {
+            // Remove active class from all staff cards
+            const allCards = document.querySelectorAll('.staff-card-active');
+            allCards.forEach(card => {
+                card.classList.remove('staff-card-active');
+                card.querySelector('.bg-secondary-container').classList.add('opacity-0');
+                card.querySelector('.bg-secondary-container').classList.remove('opacity-100');
+            });
+
+            // Add active class to clicked card
+            element.classList.add('staff-card-active');
+            const checkIcon = element.querySelector('.bg-secondary-container');
+            checkIcon.classList.remove('opacity-0');
+            checkIcon.classList.add('opacity-100');
+
+            // Update Summary
+            const staffName = element.querySelector('h3').innerText;
+            document.getElementById('selected-staff-name').innerText = staffName;
+            
+            // Interaction feedback
+            element.classList.add('scale-[0.98]');
+            setTimeout(() => element.classList.remove('scale-[0.98]'), 100);
+        }
+    </script>
+</body></html>

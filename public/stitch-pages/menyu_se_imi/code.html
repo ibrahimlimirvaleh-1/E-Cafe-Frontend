@@ -1,0 +1,365 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-variant": "#e1e3e4",
+                    "on-primary-container": "#7e8397",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d9dadb",
+                    "primary-fixed": "#dde2f8",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#151b2b",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "tertiary-container": "#002113",
+                    "on-primary-fixed-variant": "#414658",
+                    "background": "#f8f9fa",
+                    "primary-fixed-dim": "#c1c6db",
+                    "surface-bright": "#f8f9fa",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-surface-variant": "#45464c",
+                    "secondary": "#855300",
+                    "surface-container-highest": "#e1e3e4",
+                    "outline-variant": "#c6c6cd",
+                    "primary": "#000000",
+                    "primary-container": "#151b2b",
+                    "on-tertiary-container": "#009668",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-container-low": "#f3f4f5",
+                    "tertiary": "#000000",
+                    "on-background": "#191c1d",
+                    "secondary-fixed": "#ffddb8",
+                    "error-container": "#ffdad6",
+                    "outline": "#76777d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#edeeef",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed": "#2a1700",
+                    "on-surface": "#191c1d",
+                    "surface-tint": "#585e70",
+                    "inverse-surface": "#2e3132",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-primary": "#c1c6db",
+                    "on-secondary-container": "#684000",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "secondary-container": "#fea619"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "container-max": "1280px",
+                    "lg": "24px",
+                    "sm": "12px",
+                    "2xl": "48px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-effect {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-container-highest docked full-width top-0 z-40 sticky shadow-sm">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-xs cursor-pointer active:opacity-80">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA95uh8gzCfWO3SfVv7QEHMps8ihvdr5AmOr_duJ-80lYVAcy_g-arcyX82ySU1baJwXZcD5wZhOWA5N6oBMAA7-B9znXQeexU7OqgA8KicwBnuXSAaFRh7QHMvCEYxcUoIEbTq9ggKybjjv27EggHm3zdHuIOuzeqcgZnrObXssd7XEhJy4gUtPXt7yn8irLvV_D-4FQPC6wMEeTleBnxwQlSXdZpPU6_lQDyvPDi5VZHkvKnQMWv1mxdOW4SkIGaqRFk" alt="ECafe Logo" class="h-8 w-8 object-contain">
+<span class="text-headline-lg font-headline-lg text-primary dark:text-on-primary tracking-tight">ECafe</span>
+</div>
+<nav class="md:flex gap-lg flex"><a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="#">Ana Səhifə</a><a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="#">Axtarış</a><a class="text-primary font-bold hover:text-secondary transition-colors font-label-md text-label-md" href="#">Rezervasiyalar</a><a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="#">Profil</a></nav>
+<button class="bg-primary text-on-primary px-xl py-md rounded-xl font-label-md text-label-md hover:opacity-90 transition-opacity">Daxil ol</button>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-gutter py-xl">
+<!-- Progress Stepper -->
+<div class="flex items-center justify-center mb-2xl">
+<div class="flex items-center w-full max-w-3xl">
+<div class="flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold">1</div>
+<span class="text-label-md font-label-md mt-xs text-on-surface">Məlumatlar</span>
+</div>
+<div class="h-1 flex-1 bg-secondary-container"></div>
+<div class="flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold">2</div>
+<span class="text-label-md font-label-md mt-xs text-on-surface">Masa seçimi</span>
+</div>
+<div class="h-1 flex-1 bg-secondary-container"></div>
+<div class="flex flex-col items-center flex-1">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">3</div>
+<span class="text-label-md font-label-md mt-xs text-primary">Menyu</span>
+</div>
+<div class="h-1 flex-1 bg-surface-container-high"></div>
+<div class="flex flex-col items-center flex-1 opacity-50">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold">4</div>
+<span class="text-label-md font-label-md mt-xs text-on-surface-variant">Təsdiq</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Side: Menu Selection -->
+<div class="lg:col-span-8 space-y-xl">
+<div class="flex flex-col gap-sm">
+<h1 class="font-headline-lg text-headline-lg text-primary">Öncədən sifariş</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Gəlişinizdən əvvəl sevdiyiniz təamları seçin, vaxtınıza qənaət edin.</p>
+</div>
+<!-- Category Tabs -->
+<div class="flex gap-sm overflow-x-auto hide-scrollbar pb-xs">
+<button class="px-xl py-md rounded-xl bg-primary text-on-primary font-label-md text-label-md whitespace-nowrap shadow-md">Hamısı</button>
+<button class="px-xl py-md rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-surface-variant transition-colors font-label-md text-label-md whitespace-nowrap">Soyuq qəlyanaltılar</button>
+<button class="px-xl py-md rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-surface-variant transition-colors font-label-md text-label-md whitespace-nowrap">Əsas yeməklər</button>
+<button class="px-xl py-md rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-surface-variant transition-colors font-label-md text-label-md whitespace-nowrap">İçkilər</button>
+<button class="px-xl py-md rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-surface-variant transition-colors font-label-md text-label-md whitespace-nowrap">Şirniyyatlar</button>
+</div>
+<!-- Menu Items Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Item 1 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+<div class="h-48 overflow-hidden relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A gourmet presentation of traditional Azerbaijani cold appetizers including fresh seasonal vegetables, herbs, and local cheeses like Motal and Shore. The lighting is soft and cinematic, emphasizing the textures of the fresh greens and the artisanal cheese on a dark ceramic platter. Minimalist and luxury aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAo7W5uOjH_9uHf-Xh0xBc5tahwC8r4q0DKl4j_ABObfXUrNceQnfJ-EVTH-69cLlI2zd-EaPjVjfiRRM3_-qJDqw8TUfPZBfWb9NlyOZGhbgVM6O-ZmmRVoi6krLRqos6-7UYZuZGi8OcvoEYy672437662hAUBFcVWWFxMROxnFBUrcdSOYozbSnCTeewduzsnTW1cgZcVPyybWCDiQ-Xt-rRgcGsYIiUKOiEvXHPy4YQGod1b4M34g')"></div>
+<span class="absolute top-md right-md bg-secondary-container text-on-secondary-container px-sm py-base rounded-full font-label-md text-label-md">Soyuq qəlyanaltı</span>
+</div>
+<div class="p-md flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-primary">Tərəvəz Buketi</h3>
+<span class="font-headline-sm text-headline-sm text-secondary">12.00 ₼</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Təzə mövsüm tərəvəzləri, yerli göyərtilər və Motal pendiri ilə.</p><div class="mt-sm"><input type="text" placeholder="Item note / Qeyd" class="w-full bg-surface-container-low border-none rounded-lg px-sm py-base font-body-sm text-body-sm focus:ring-1 focus:ring-primary"></div>
+<div class="flex items-center justify-between mt-sm">
+<div class="flex items-center gap-xs">
+<button class="w-8 h-8 rounded-full border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-90" onclick="decrement('q1')">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-headline-sm text-headline-sm w-8 text-center" id="q1">0</span>
+<button class="w-8 h-8 rounded-full border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-90" onclick="increment('q1')">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<button class="text-primary hover:text-secondary flex items-center gap-base transition-colors font-label-md text-label-md">
+                                    Əlavə et <span class="material-symbols-outlined text-[18px]">shopping_basket</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+<div class="h-48 overflow-hidden relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A high-end restaurant dish of traditional Shah Plov, with its golden crispy saffron crust. The plov is served on an ornate silver plate, surrounded by dried apricots and chestnuts. Warm, inviting lighting against a dark corporate background, focusing on the luxury of the presentation. Modern hospitality style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC8fVezDl0pcb_4ihPxXRuCm75TEJuzqGPCnZYONNK3QdD_XaF5ebDPmWLoAXwZrC36WHCnyYp49atq75RU16nFSRn-IpKmlt1ZwB5b60ikyQH9u_v7gegCDcv4PZJZcIvbJjCJitvHwTg1o6z0e8ZCu9KR9d2-QlPLf2RE6vCTXzXOVo3IMd9NKHhfMDdTMASWvhSXE2NVshadSpcR_Ps5k9zn9p3NCn5olO0-0ORJnvCaL0fedRpCGQ')"></div>
+<span class="absolute top-md right-md bg-secondary-container text-on-secondary-container px-sm py-base rounded-full font-label-md text-label-md">Əsas yemək</span>
+</div>
+<div class="p-md flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-primary">Şah Plov</h3>
+<span class="font-headline-sm text-headline-sm text-secondary">45.00 ₼</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Qazmaqda bişmiş ətirli uzun düyü, quzu əti, qaysı və şabalıd ilə.</p><div class="mt-sm"><input type="text" placeholder="Item note / Qeyd" class="w-full bg-surface-container-low border-none rounded-lg px-sm py-base font-body-sm text-body-sm focus:ring-1 focus:ring-primary"></div>
+<div class="flex items-center justify-between mt-sm">
+<div class="flex items-center gap-xs">
+<button class="w-8 h-8 rounded-full border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-90" onclick="decrement('q2')">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-headline-sm text-headline-sm w-8 text-center" id="q2">1</span>
+<button class="w-8 h-8 rounded-full border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-90" onclick="increment('q2')">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<button class="text-primary hover:text-secondary flex items-center gap-base transition-colors font-label-md text-label-md">
+                                    Əlavə et <span class="material-symbols-outlined text-[18px]">shopping_basket</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+<div class="h-48 overflow-hidden relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A professional photograph of a signature cocktail in a crystal glass, garnished with a fresh sprig of mint and a slice of dried pomegranate. The drink has a rich amber glow, set against a blurred luxury lounge background. High-key lighting, bright light-mode aesthetic, corporate elegance." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDRP0HSqnlvLQpDpDAdXNtKLwxnqFDc1E-Enq5SbAJBGHJE0vtJXw10K9_cBDUBh4xUXtn8ivaAuVVXwCj0utV32oT-C8fDZyJ_XFGx1TZc5B_Q4QQGq393bEnVpyKN_ECObfUhynMfwSabmIgngoiUb5I-jl_Jf5kornX40xOAIRVahJPiruNMoML0mN6SifSKeH92hpSNviHyv430vHG7KvSsmWtu5nNlSkcKs7XyLIljOCkgzmRw1Q')"></div>
+<span class="absolute top-md right-md bg-secondary-container text-on-secondary-container px-sm py-base rounded-full font-label-md text-label-md">İçki</span>
+</div>
+<div class="p-md flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-primary">Nar Şərbəti</h3>
+<span class="font-headline-sm text-headline-sm text-secondary">8.00 ₼</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Təzə sıxılmış nar şirəsi və xüsusi ədviyyat qarışığı.</p><div class="mt-sm"><input type="text" placeholder="Item note / Qeyd" class="w-full bg-surface-container-low border-none rounded-lg px-sm py-base font-body-sm text-body-sm focus:ring-1 focus:ring-primary"></div>
+<div class="flex items-center justify-between mt-sm">
+<div class="flex items-center gap-xs">
+<button class="w-8 h-8 rounded-full border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-90" onclick="decrement('q3')">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-headline-sm text-headline-sm w-8 text-center" id="q3">2</span>
+<button class="w-8 h-8 rounded-full border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-90" onclick="increment('q3')">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<button class="text-primary hover:text-secondary flex items-center gap-base transition-colors font-label-md text-label-md">
+                                    Əlavə et <span class="material-symbols-outlined text-[18px]">shopping_basket</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+<div class="h-48 overflow-hidden relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="A minimalist presentation of Azerbaijan's famous Pakhlava, arranged in a geometric pattern on a white marble slab. The honey-glaze shines under studio lights, emphasizing the layered pastry and crushed walnuts. Modern corporate catering style, pristine whites and deep amber golds." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCKpQw6XXiuLFS40HEG07NEgFDj7mRWmXrCihFByl4iZ5GsGoA0oxR90dj75iKuMMU11LSXYkKSvIPRpFqvbXmlWDh9MtjHMSwbew0fzT6L_sq8nunh-46c_4mpzNP6EikR1JpoXZbpl9v0nCJXoKMqVcER653kmYVRV_w-2CSzszsTWX520ScgXwocn5_Yul-754mKZJauq4vXkH4GuZnfktZH4QtllIa5YtXcXF58Sa_v0MhX2XiIXQ')"></div>
+<span class="absolute top-md right-md bg-secondary-container text-on-secondary-container px-sm py-base rounded-full font-label-md text-label-md">Şirniyyat</span>
+</div>
+<div class="p-md flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-primary">Bakı Paxlavası</h3>
+<span class="font-headline-sm text-headline-sm text-secondary">15.00 ₼</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Bal ilə zənginləşdirilmiş, fındıqlı klassik Bakı paxlavası.</p><div class="mt-sm"><input type="text" placeholder="Item note / Qeyd" class="w-full bg-surface-container-low border-none rounded-lg px-sm py-base font-body-sm text-body-sm focus:ring-1 focus:ring-primary"></div>
+<div class="flex items-center justify-between mt-sm">
+<div class="flex items-center gap-xs">
+<button class="w-8 h-8 rounded-full border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-90" onclick="decrement('q4')">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-headline-sm text-headline-sm w-8 text-center" id="q4">0</span>
+<button class="w-8 h-8 rounded-full border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-90" onclick="increment('q4')">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<button class="text-primary hover:text-secondary flex items-center gap-base transition-colors font-label-md text-label-md">
+                                    Əlavə et <span class="material-symbols-outlined text-[18px]">shopping_basket</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Side: Order Summary -->
+<aside class="lg:col-span-4">
+<div class="bg-surface-container-low rounded-xl p-lg sticky top-2xl shadow-lg border border-outline-variant">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-lg flex items-center gap-xs">
+<span class="material-symbols-outlined">receipt_long</span>
+                        Sifariş Xülasəsi
+                    </h2>
+<div class="space-y-md mb-xl">
+<!-- Summary Item -->
+<div class="flex justify-between items-center pb-sm border-b border-outline-variant">
+<div>
+<p class="font-label-md text-label-md text-primary">Şah Plov</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">1 ədəd</p>
+</div>
+<span class="font-label-md text-label-md text-primary">45.00 ₼</span>
+</div>
+<!-- Summary Item -->
+<div class="flex justify-between items-center pb-sm border-b border-outline-variant">
+<div>
+<p class="font-label-md text-label-md text-primary">Nar Şərbəti</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">2 ədəd</p>
+</div>
+<span class="font-label-md text-label-md text-primary">16.00 ₼</span>
+</div>
+</div>
+<div class="space-y-sm mb-xl">
+<div class="flex justify-between font-body-md text-body-md">
+<span class="text-on-surface-variant">Cəmi:</span>
+<span class="text-on-surface">61.00 ₼</span>
+</div>
+<div class="flex justify-between font-body-md text-body-md">
+<span class="text-on-surface-variant">Xidmət haqqı (10%):</span>
+<span class="text-on-surface">6.10 ₼</span>
+</div>
+<div class="flex justify-between font-headline-md text-headline-md pt-sm border-t border-primary">
+<span class="text-primary">Yekun:</span>
+<span class="text-secondary">67.10 ₼</span>
+</div>
+</div>
+<div class="space-y-xs mb-xl"><div class="flex items-center gap-xs text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">payments</span><p class="font-body-sm text-body-sm">Ödəniş: Yalnız onlayn</p></div><div class="flex items-center gap-xs text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">restaurant</span><p class="font-body-sm text-body-sm">Sifariş ödənişdən sonra mətbəxə göndəriləcək.</p></div></div>
+<a href="#" onclick="window.location.href='{{DATA:SCREEN:SCREEN_27}}'" class="w-full bg-primary text-on-primary px-xl py-md rounded-xl font-label-md text-label-md hover:opacity-90 active:scale-[0.98] transition-all shadow-md flex justify-center items-center">
+                        Davam et
+                    </a>
+<button class="w-full mt-sm py-md text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors">
+                        Geri qayıt
+                    </button>
+</div>
+</aside>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+
+<script>
+        function increment(id) {
+            const el = document.getElementById(id);
+            el.innerText = parseInt(el.innerText) + 1;
+        }
+
+        function decrement(id) {
+            const el = document.getElementById(id);
+            const val = parseInt(el.innerText);
+            if (val > 0) {
+                el.innerText = val - 1;
+            }
+        }
+    </script>
+
+
+
+
+
+
+
+
+</body></html>

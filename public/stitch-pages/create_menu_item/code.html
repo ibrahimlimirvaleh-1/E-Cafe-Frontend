@@ -1,0 +1,337 @@
+<!DOCTYPE html><html class="light" lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe Admin - Yeni Menyu Elementi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-primary": "#c1c6db",
+                    "secondary-fixed": "#ffddb8",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-primary-fixed": "#151b2b",
+                    "inverse-on-surface": "#f0f1f2",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#76777d",
+                    "primary-container": "#151b2b",
+                    "on-tertiary-container": "#009668",
+                    "surface-dim": "#d9dadb",
+                    "surface-container": "#edeeef",
+                    "background": "#f8f9fa",
+                    "on-tertiary-fixed": "#002113",
+                    "surface-variant": "#e1e3e4",
+                    "secondary-container": "#fea619",
+                    "primary": "#000000",
+                    "on-secondary-fixed": "#2a1700",
+                    "surface": "#f8f9fa",
+                    "tertiary-container": "#002113",
+                    "surface-container-low": "#f3f4f5",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed-variant": "#414658",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "error-container": "#ffdad6",
+                    "on-tertiary": "#ffffff",
+                    "on-background": "#191c1d",
+                    "surface-container-high": "#e7e8e9",
+                    "secondary": "#855300",
+                    "inverse-surface": "#2e3132",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "primary-fixed": "#dde2f8",
+                    "primary-fixed-dim": "#c1c6db",
+                    "on-surface": "#191c1d",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c6c6cd",
+                    "surface-tint": "#585e70",
+                    "on-secondary-container": "#684000",
+                    "error": "#ba1a1a",
+                    "tertiary": "#000000",
+                    "on-primary-container": "#7e8397",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-surface-variant": "#45464c",
+                    "surface-bright": "#f8f9fa",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "2xl": "48px",
+                    "lg": "24px",
+                    "base": "4px",
+                    "md": "16px",
+                    "container-max": "1280px",
+                    "sm": "12px",
+                    "xs": "8px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .toggle-checkbox:checked { right: 0; border-color: #000000; background-color: #000000; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #fea619; }
+        
+        /* Glassmorphism utility */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex">
+<!-- NavigationDrawer (Shell Component) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col z-50 hidden md:flex">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg flex items-center gap-xs">
+<span class="material-symbols-outlined">restaurant</span>
+<span>ECafe Admin</span>
+</div>
+<nav class="flex flex-col h-full overflow-y-auto">
+<!-- Mapping exact labels from JSON -->
+<a class="flex items-center gap-md text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">storefront</span>
+<span class="font-body-md text-body-md">Restaurants</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">table_restaurant</span>
+<span class="font-body-md text-body-md">Tables</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md text-body-md">Staff</span>
+</a>
+<!-- Active State Logic: Mapping "Menu" to the current context -->
+<a class="flex items-center gap-md text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md cursor-pointer" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="font-body-md text-body-md">Menu</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">book_online</span>
+<span class="font-body-md text-body-md">Reservations</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-body-md">Payments</span>
+</a>
+<div class="mt-auto">
+<a class="flex items-center gap-md text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer mb-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 p-lg md:p-2xl max-w-5xl mx-auto w-full">
+<!-- Header -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-xl">
+<div>
+<nav class="flex items-center gap-xs text-on-surface-variant mb-xs">
+<span class="font-label-md text-label-md uppercase tracking-wider">Admin</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Menu</span>
+</nav>
+<h1 class="font-headline-lg text-headline-lg md:text-headline-lg text-primary">Yeni Menyu Elementi</h1>
+</div>
+<div class="flex gap-md">
+<button class="px-lg py-md rounded-lg font-body-md text-body-md text-on-surface-variant border border-outline-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95">Ləğv et</button>
+<button class="px-xl py-md rounded-lg font-body-md text-body-md bg-primary text-on-primary shadow-lg hover:bg-opacity-90 transition-all cursor-pointer active:scale-95">Əlavə et</button>
+</div>
+</header>
+<!-- Bento Layout for Form -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+<!-- Left Side: Core Info -->
+<div class="lg:col-span-7 flex flex-col gap-lg">
+<!-- Main Details Card -->
+<section class="bg-white p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h2 class="font-headline-sm text-headline-sm mb-lg flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary">info</span>
+                        Əsas Məlumatlar
+                    </h2>
+<div class="space-y-lg">
+<!-- Name Field -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant px-base">Elementin Adı</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-md focus:ring-2 focus:ring-secondary text-body-md font-body-md" placeholder="Məs: Şaurma Klassik" type="text">
+</div>
+<!-- Category Dropdown -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant px-base">Kateqoriya</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low border-none rounded-lg p-md appearance-none focus:ring-2 focus:ring-secondary text-body-md font-body-md">
+<option disabled="" selected="" value="">Kateqoriya seçin</option>
+<option value="hot">İsti yeməklər</option>
+<option value="cold">Soyuq qəlyanaltılar</option>
+<option value="drinks">İçkilər</option>
+<option value="dessert">Desertlər</option>
+</select>
+<span class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<!-- Description Textarea -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant px-base">Təsvir</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-lg p-md focus:ring-2 focus:ring-secondary text-body-md font-body-md resize-none" placeholder="İçindəkilər, bişirilmə tərzi və s. haqqında qısa məlumat..." rows="4"></textarea>
+</div>
+</div>
+</section>
+<!-- Pricing & Logistics Card -->
+<section class="bg-white p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant px-base">Qiymət (₼)</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-lg p-md focus:ring-2 focus:ring-secondary text-body-md font-body-md" placeholder="0.00" step="0.01" type="number">
+<span class="absolute right-md top-1/2 -translate-y-1/2 font-bold text-on-surface-variant">₼</span>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface-variant px-base">Endirimli Qiymət (Könüllü)</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-md focus:ring-2 focus:ring-secondary text-body-md font-body-md" placeholder="0.00" step="0.01" type="number">
+</div>
+</div>
+</section>
+</div>
+<!-- Right Side: Media & Settings -->
+<div class="lg:col-span-5 flex flex-col gap-lg">
+<!-- Image Upload Card -->
+<section class="bg-white p-lg rounded-xl shadow-sm border border-outline-variant/30 flex-1">
+<h2 class="font-headline-sm text-headline-sm mb-lg flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary">image</span>
+                        Vizual
+                    </h2>
+<div class="relative group h-64 md:h-80 w-full border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center gap-md hover:border-secondary transition-colors cursor-pointer overflow-hidden">
+<!-- Background Placeholder -->
+<div class="absolute inset-0 z-0 opacity-10 group-hover:opacity-20 transition-opacity" data-alt="A professional, high-resolution close-up photography of a gourmet dish, featuring vibrant colors, textures, and steam, set in a luxurious light-filled modern restaurant background. The aesthetic is clean, light, and high-end, using a professional studio lighting setup to emphasize freshness and quality of food." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCzR9i9wQlHGiM_oo0PqPBQGo4pdpuAhI3Ev62d7zcVohoL53OiIZGiidDzF9ePsJ-jKSlDIYDk7tNsejXnHYGDPCcVmIhmhYrihVtb28PL-8lF_qhU-G2VZSG9oZqXw5xYvvQPzqZQBoBf3y6vI5Yk9aBPTWajko48hgDIlbKHwFC2Vdr1A0BL26CNAHY5LSlF7edK4JTLakXU-RJmmnv6c_UPFPBB6S3LhYenn5p0Gxfl420UWvm2rw')">
+</div>
+<div class="z-10 flex flex-col items-center text-center px-lg">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-md group-hover:bg-secondary-container transition-colors">
+<span class="material-symbols-outlined text-secondary text-3xl">upload_file</span>
+</div>
+<p class="font-body-md text-body-md font-semibold text-primary">Şəkil yükləyin və ya sürüşdürün</p>
+<p class="font-label-md text-label-md text-on-surface-variant mt-base">PNG, JPG və ya WEBP (Max 5MB)</p>
+</div>
+<input class="absolute inset-0 opacity-0 cursor-pointer" type="file">
+</div>
+</section>
+<!-- Status & Availability Toggles -->
+<section class="bg-white p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h2 class="font-headline-sm text-headline-sm mb-lg flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary">tune</span>
+                        Tənzimləmələr
+                    </h2>
+<div class="space-y-lg">
+<!-- Status Toggle -->
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold">Status</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Menyuda göstərilsin</span>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant" id="status" name="status" type="checkbox">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer" for="status"></label>
+</div>
+</div>
+<!-- Availability Toggle -->
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold">Mövcudluq</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Hal-hazırda sifariş edilə bilər</span>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant" id="availability" name="availability" type="checkbox">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer" for="availability"></label>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Sticky Mobile Bottom Bar -->
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-white p-md border-t border-outline-variant flex gap-md z-50">
+<button class="flex-1 py-md rounded-lg font-body-md text-body-md text-on-surface-variant border border-outline-variant bg-white">Ləğv et</button>
+<button class="flex-1 py-md rounded-lg font-body-md text-body-md bg-primary text-on-primary">Əlavə et</button>
+</div>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('focus', () => {
+                element.parentElement.classList.add('scale-[1.01]');
+                element.parentElement.style.transition = 'transform 0.2s ease-out';
+            });
+            element.addEventListener('blur', () => {
+                element.parentElement.classList.remove('scale-[1.01]');
+            });
+        });
+
+        // Toggle visual feedback
+        const toggles = document.querySelectorAll('.toggle-checkbox');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const parent = this.closest('div.flex');
+                if(this.checked) {
+                    parent.classList.add('bg-secondary-container/10');
+                } else {
+                    parent.classList.remove('bg-secondary-container/10');
+                }
+            });
+        });
+    </script>
+</body></html>

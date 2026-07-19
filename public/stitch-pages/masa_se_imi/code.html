@@ -1,0 +1,373 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe - Rezervasiya: Masa Seçimi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-variant": "#e1e3e4",
+                    "on-primary-container": "#7e8397",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d9dadb",
+                    "primary-fixed": "#dde2f8",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#151b2b",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "tertiary-container": "#002113",
+                    "on-primary-fixed-variant": "#414658",
+                    "background": "#f8f9fa",
+                    "primary-fixed-dim": "#c1c6db",
+                    "surface-bright": "#f8f9fa",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-surface-variant": "#45464c",
+                    "secondary": "#855300",
+                    "surface-container-highest": "#e1e3e4",
+                    "outline-variant": "#c6c6cd",
+                    "primary": "#000000",
+                    "primary-container": "#151b2b",
+                    "on-tertiary-container": "#009668",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-container-low": "#f3f4f5",
+                    "tertiary": "#000000",
+                    "on-background": "#191c1d",
+                    "secondary-fixed": "#ffddb8",
+                    "error-container": "#ffdad6",
+                    "outline": "#76777d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#edeeef",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed": "#2a1700",
+                    "on-surface": "#191c1d",
+                    "surface-tint": "#585e70",
+                    "inverse-surface": "#2e3132",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-primary": "#c1c6db",
+                    "on-secondary-container": "#684000",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "secondary-container": "#fea619"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "container-max": "1280px",
+                    "lg": "24px",
+                    "sm": "12px",
+                    "2xl": "48px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .table-card-selected {
+            border: 2px solid #fea619 !important;
+            background-color: #ffffff;
+            box-shadow: 0 10px 15px -3px rgba(254, 166, 25, 0.1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar from Shared Components -->
+<header class="bg-surface-container-low dark:bg-surface-container shadow-sm docked full-width top-0 sticky z-50">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-xs cursor-pointer active:opacity-80">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu-b-sCauLOikVYLLx4bx8YmYsRuVEQT-zoDSMnlZVlMfeO61dQne9b2KUeVIpUKlEHiM46TFQOolKYQyxAFqMBChSjVsM28FGG6KTJz9ZRe8VODuRDkyRCJs9ezSfWr1iu3AmWSzrrPvn3G2jQEo37yC6kl8b4s-imKY8H64S2WfVGPDwYHhcar-wM2Q9jhVJstkrO4ecjDL4IcHX-MwGRnJM1jqkxXb6YrRYPi84CSuQCERuvIe_gi49M6S2Uf4-ucs" alt="ECafe Logo" class="w-10 h-10 object-contain">
+<span class="text-headline-lg font-headline-lg text-primary dark:text-on-primary tracking-tight">ECafe</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="px-xl py-md bg-primary text-on-primary rounded-xl font-label-md text-label-md hover:opacity-90 transition-opacity">Giriş</button>
+</div>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-gutter py-xl">
+<!-- Stepper -->
+<div class="mb-2xl">
+<div class="flex items-center justify-center space-x-4 max-w-2xl mx-auto">
+<div class="flex flex-col items-center gap-xs">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">1</div>
+<span class="font-label-md text-label-md text-primary">Masa</span>
+</div>
+<div class="h-0.5 w-16 bg-outline-variant mb-4"></div>
+<div class="flex flex-col items-center gap-xs">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold">2</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Təfərrüatlar</span>
+</div>
+<div class="h-0.5 w-16 bg-outline-variant mb-4"></div>
+<div class="flex flex-col items-center gap-xs">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold">3</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Təsdiq</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Filter Section -->
+<aside class="md:col-span-3 space-y-lg">
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
+<h3 class="font-headline-sm text-headline-sm text-primary mb-md">Seçimlər</h3>
+<div class="space-y-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Qonaq sayı</label>
+<select class="w-full bg-surface border border-outline rounded-lg py-xs px-sm focus:ring-secondary-container focus:border-secondary">
+<option>2 nəfərlik</option>
+<option>4 nəfərlik</option>
+<option>6+ nəfərlik</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Zaman aralığı</label>
+<div class="grid grid-cols-2 gap-xs">
+<button class="py-xs px-xs border border-secondary text-secondary rounded-lg font-label-md text-label-md text-center bg-secondary-fixed">18:00</button>
+<button class="py-xs px-xs border border-outline rounded-lg font-label-md text-label-md text-center hover:bg-surface-variant">19:00</button>
+<button class="py-xs px-xs border border-outline rounded-lg font-label-md text-label-md text-center hover:bg-surface-variant">20:00</button>
+<button class="py-xs px-xs border border-outline rounded-lg font-label-md text-label-md text-center hover:bg-surface-variant">21:00</button>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container shadow-sm rounded-xl overflow-hidden">
+<div class="p-md bg-primary-container">
+<p class="text-on-primary-container font-label-md text-label-md uppercase tracking-widest">Restoran Planı</p>
+</div>
+<div class="aspect-square relative flex items-center justify-center p-md bg-surface-variant">
+<div class="w-full h-full rounded-lg bg-cover bg-center opacity-80" data-alt="A sophisticated top-down vector architectural floor plan of a luxury restaurant dining room. The layout shows minimalist white tables and grey chairs arranged in a spacious bento grid pattern. The background is a clean off-white tone with subtle golden accents highlighting the VIP zones. The lighting is soft and airy, conveying a sense of premium hospitality and organized design." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCJWfouW5t9DW4392C3sC7DjM8ri4aGwb-6tDNTLfecqqpONfrLLlbBZaBp7ndC7cpmbRs94wFKzHcOR4KpNgY2w99wSTe97gvjiB0jBzlkvaKwyJzakK7UAVV-M-5IhRzXYww3LYheeEaIckj63k1QWO0X3JaUd3NBVnRukiXZuNJXeXODTOoBR2Eu8U1DJeAAQhTGHo_gHxbfSMKADDrDZ41fiSUCZn9nt-dPurWNue9Bks1TTyNFvQ')"></div>
+<span class="absolute text-center px-lg font-body-sm text-body-sm text-on-surface-variant">İnteraktiv xəritə üçün daxil olun</span>
+</div>
+</div>
+</aside>
+<!-- Table List -->
+<div class="md:col-span-9">
+<div class="flex justify-between items-end mb-lg">
+<div>
+<h1 class="font-headline-md text-headline-md text-primary">Masa Seçimi</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Zəhmət olmasa, rezervasiya etmək istədiyiniz masanı seçin.</p>
+</div>
+<span class="font-label-md text-label-md px-md py-xs bg-tertiary-fixed text-on-tertiary-fixed rounded-full">8 masa mövcuddur</span>
+</div>
+<!-- Tables Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Table Card 1 -->
+<div class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg transition-all hover:shadow-lg cursor-pointer table-card-selected" onclick="selectTable(this, 'Masa 12', '4 nəfər')">
+<div class="flex justify-between items-start mb-md">
+<div class="p-xs bg-secondary-fixed rounded-lg">
+<span class="material-symbols-outlined text-secondary">table_restaurant</span>
+</div>
+<span class="font-label-md text-label-md px-xs py-base bg-on-tertiary-container/10 text-on-tertiary-container rounded">Mövcuddur</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-primary mb-base">Masa 12</h4>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">groups</span>
+<span class="font-body-sm text-body-sm">4 nəfərlik</span>
+</div>
+<p class="mt-md font-body-sm text-body-sm text-outline">Pəncərə kənarı, mənzərəli zona.</p>
+</div>
+<!-- Table Card 2 -->
+<div class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg transition-all hover:shadow-lg cursor-pointer" onclick="selectTable(this, 'Masa 05', '2 nəfər')">
+<div class="flex justify-between items-start mb-md">
+<div class="p-xs bg-surface-container rounded-lg">
+<span class="material-symbols-outlined text-on-surface-variant">table_restaurant</span>
+</div>
+<span class="font-label-md text-label-md px-xs py-base bg-on-tertiary-container/10 text-on-tertiary-container rounded">Mövcuddur</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-primary mb-base">Masa 05</h4>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">person</span>
+<span class="font-body-sm text-body-sm">2 nəfərlik</span>
+</div>
+<p class="mt-md font-body-sm text-body-sm text-outline">Sakit künc, romantik axşamlar üçün.</p>
+</div>
+<!-- Table Card 3 -->
+<div class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg transition-all hover:shadow-lg cursor-pointer" onclick="selectTable(this, 'Masa 21', '6 nəfər')">
+<div class="flex justify-between items-start mb-md">
+<div class="p-xs bg-surface-container rounded-lg">
+<span class="material-symbols-outlined text-on-surface-variant">table_restaurant</span>
+</div>
+<span class="font-label-md text-label-md px-xs py-base bg-on-tertiary-container/10 text-on-tertiary-container rounded">Mövcuddur</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-primary mb-base">Masa 21</h4>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">group_add</span>
+<span class="font-body-sm text-body-sm">6 nəfərlik</span>
+</div>
+<p class="mt-md font-body-sm text-body-sm text-outline">Böyük ailəvi və ya iş görüşləri üçün.</p>
+</div>
+<!-- Table Card 4 (Occupied) -->
+<div class="opacity-60 grayscale bg-surface-container border border-outline-variant rounded-xl p-lg cursor-not-allowed">
+<div class="flex justify-between items-start mb-md">
+<div class="p-xs bg-surface-variant rounded-lg">
+<span class="material-symbols-outlined text-outline">table_restaurant</span>
+</div>
+<span class="font-label-md text-label-md px-xs py-base bg-error-container text-on-error-container rounded">Məşğul</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface-variant mb-base">Masa 08</h4>
+<div class="flex items-center gap-xs text-outline">
+<span class="material-symbols-outlined text-sm">groups</span>
+<span class="font-body-sm text-body-sm">4 nəfərlik</span>
+</div>
+</div>
+<!-- Table Card 5 -->
+<div class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg transition-all hover:shadow-lg cursor-pointer" onclick="selectTable(this, 'Masa 15', '4 nəfər')">
+<div class="flex justify-between items-start mb-md">
+<div class="p-xs bg-surface-container rounded-lg">
+<span class="material-symbols-outlined text-on-surface-variant">table_restaurant</span>
+</div>
+<span class="font-label-md text-label-md px-xs py-base bg-on-tertiary-container/10 text-on-tertiary-container rounded">Mövcuddur</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-primary mb-base">Masa 15</h4>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">groups</span>
+<span class="font-body-sm text-body-sm">4 nəfərlik</span>
+</div>
+<p class="mt-md font-body-sm text-body-sm text-outline">Teras girişi yanı.</p>
+</div>
+<!-- Table Card 6 (VIP) -->
+<div class="group bg-surface-container-lowest border-2 border-secondary-container rounded-xl p-lg transition-all hover:shadow-lg cursor-pointer relative overflow-hidden" onclick="selectTable(this, 'VIP Lounge', '8 nəfər')">
+<div class="absolute top-0 right-0 bg-secondary-container text-on-secondary-container px-sm py-base font-label-md text-[10px] uppercase rounded-bl-lg">Premium</div>
+<div class="flex justify-between items-start mb-md">
+<div class="p-xs bg-secondary-fixed rounded-lg">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="font-label-md text-label-md px-xs py-base bg-on-tertiary-container/10 text-on-tertiary-container rounded">Mövcuddur</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-primary mb-base">VIP Lounge</h4>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">groups</span>
+<span class="font-body-sm text-body-sm">8 nəfərlik</span>
+</div>
+<p class="mt-md font-body-sm text-body-sm text-outline">Xüsusi qulluq və təcrid olunmuş zona.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Booking Summary -->
+<div class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-outline-variant p-md md:p-lg z-40 transition-transform duration-300 transform translate-y-0 shadow-[0_-10px_25px_rgba(0,0,0,0.1)]">
+<div class="max-w-container-max mx-auto flex flex-col md:flex-row items-center justify-between gap-md">
+<div class="flex items-center gap-lg">
+<div class="hidden md:flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Seçilmiş Masa</span>
+<span class="font-headline-sm text-headline-sm text-primary" id="selected-table-name">Masa 12</span>
+</div>
+<div class="h-10 w-px bg-outline-variant hidden md:block"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Tarix və Saat</span>
+<span class="font-headline-sm text-headline-sm text-primary">Bugün, 18:00</span>
+</div>
+<div class="h-10 w-px bg-outline-variant hidden md:block"></div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Qonaq</span>
+<span class="font-headline-sm text-headline-sm text-primary" id="selected-table-capacity">4 nəfər</span>
+</div>
+</div>
+<div class="flex items-center gap-md w-full md:w-auto">
+<button class="flex-1 md:flex-none px-xl py-md bg-surface-variant text-on-surface-variant rounded-xl font-label-md text-label-md hover:bg-outline-variant transition-colors">
+                    Ləğv et
+                </button>
+<a href="#" class="flex-[2] md:flex-none px-xl py-md bg-primary text-on-primary rounded-xl font-headline-sm text-headline-sm flex items-center justify-center gap-xs hover:bg-primary-container transition-all active:scale-95 shadow-lg" onclick="window.location.href='#'">Növbəti addım <span class="material-symbols-outlined">chevron_right</span></a>
+</div>
+</div>
+</div>
+<!-- BottomNavBar from Shared Components (Mobile Only) -->
+<nav class="fixed bottom-0 w-full flex justify-around items-center px-sm pb-xs pt-base bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] z-50 md:hidden rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform hover:bg-surface-variant px-4 py-1">
+<span class="material-symbols-outlined font-label-md text-label-md">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform hover:bg-surface-variant px-4 py-1">
+<span class="material-symbols-outlined font-label-md text-label-md">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform">
+<span class="material-symbols-outlined font-label-md text-label-md">event_available</span>
+<span class="font-label-md text-label-md">Reservations</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform hover:bg-surface-variant px-4 py-1">
+<span class="material-symbols-outlined font-label-md text-label-md">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</div>
+</nav>
+<script>
+        function selectTable(element, name, capacity) {
+            // Remove selection from all cards
+            document.querySelectorAll('.table-card-selected').forEach(card => {
+                card.classList.remove('table-card-selected');
+                card.querySelector('.bg-secondary-fixed')?.classList.replace('bg-secondary-fixed', 'bg-surface-container');
+                card.querySelector('.text-secondary')?.classList.replace('text-secondary', 'text-on-surface-variant');
+            });
+
+            // Add selection to clicked card
+            element.classList.add('table-card-selected');
+            const iconContainer = element.querySelector('.material-symbols-outlined').parentElement;
+            iconContainer.classList.replace('bg-surface-container', 'bg-secondary-fixed');
+            element.querySelector('.material-symbols-outlined').classList.replace('text-on-surface-variant', 'text-secondary');
+
+            // Update summary
+            document.getElementById('selected-table-name').textContent = name;
+            document.getElementById('selected-table-capacity').textContent = capacity;
+
+            // Micro-interaction
+            element.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 100);
+        }
+    </script>
+
+
+</body></html>

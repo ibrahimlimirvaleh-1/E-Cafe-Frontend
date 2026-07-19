@@ -1,0 +1,478 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe Admin - Sifarişlər Siyahısı</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e1e3e4;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#c1c6db",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "on-primary-container": "#7e8397",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface": "#f8f9fa",
+                      "outline-variant": "#c6c6cd",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#d9dadb",
+                      "surface-tint": "#585e70",
+                      "surface-bright": "#f8f9fa",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface-container-high": "#e7e8e9",
+                      "on-primary-fixed-variant": "#414658",
+                      "secondary": "#855300",
+                      "on-surface": "#191c1d",
+                      "on-secondary-fixed": "#2a1700",
+                      "tertiary": "#000000",
+                      "on-error": "#ffffff",
+                      "primary": "#000000",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-container": "#009668",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-background": "#191c1d",
+                      "surface-container": "#edeeef",
+                      "inverse-surface": "#2e3132",
+                      "tertiary-container": "#002113",
+                      "secondary-fixed": "#ffddb8",
+                      "on-secondary-container": "#684000",
+                      "surface-variant": "#e1e3e4",
+                      "on-surface-variant": "#45464c",
+                      "error-container": "#ffdad6",
+                      "on-primary": "#ffffff",
+                      "surface-container-low": "#f3f4f5",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "secondary-container": "#fea619",
+                      "primary-fixed": "#dde2f8",
+                      "on-primary-fixed": "#151b2b",
+                      "on-tertiary-fixed": "#002113",
+                      "inverse-primary": "#c1c6db",
+                      "tertiary-fixed": "#6ffbbe",
+                      "primary-container": "#151b2b",
+                      "background": "#f8f9fa",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed-dim": "#ffb95f",
+                      "outline": "#76777d",
+                      "on-secondary-fixed-variant": "#653e00"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "xs": "8px",
+                      "xl": "32px",
+                      "2xl": "48px",
+                      "container-max": "1280px",
+                      "base": "4px",
+                      "lg": "24px",
+                      "md": "16px",
+                      "sm": "12px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-sm": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Sidebar Navigation (JSON Anchor: SideNavBar) -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-surface-container-lowest shadow-sm border-r border-outline-variant z-50 hidden md:flex">
+<div class="px-lg py-xl">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">ECafe Admin</h1>
+<p class="text-on-surface-variant font-label-md text-label-md uppercase tracking-wider mt-xs">İDARƏETMƏ PORTALI</p>
+</div>
+<nav class="flex-1 px-sm overflow-y-auto custom-scrollbar"><ul class="space-y-base"><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">store</span> Restoranlar</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">description</span> Müqavilələr</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">table_restaurant</span> Masalar</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">badge</span> Personal</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">category</span> Kateqoriyalar</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">restaurant_menu</span> Menyu</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">event</span> Rezervasiyalar</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-primary font-bold border-r-4 border-primary bg-surface-container-high transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">receipt_long</span> Sifarişlər</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">payments</span> Ödənişlər</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">notifications</span> Bildirişlər</a></li><li class=""><a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">settings</span> Ayarlar</a></li></ul></nav>
+<div class="p-lg border-t border-outline-variant mt-auto">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+<div class="overflow-hidden">
+<p class="font-label-md text-label-md font-bold truncate">Admin Profil</p>
+<p class="font-label-md text-label-md text-on-surface-variant truncate">admin@ecafe.az</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Bar (JSON Anchor: TopNavBar) -->
+<header class="fixed top-0 z-40 ml-0 md:ml-64 w-full md:w-[calc(100%-16rem)] flex justify-between items-center px-lg py-sm bg-surface-bright shadow-sm border-b border-outline-variant">
+<div class="flex items-center gap-md flex-1">
+<button class="md:hidden p-xs rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-xl pr-md py-xs bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary text-body-sm font-body-sm" placeholder="Sifariş nömrəsi və ya müştəri axtar..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-xs rounded-full hover:bg-surface-container-highest transition-transform active:scale-95 duration-150 relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<button class="p-xs rounded-full hover:bg-surface-container-highest transition-transform active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="h-6 w-[1px] bg-outline-variant mx-xs hidden sm:block"></div>
+<button class="hidden sm:flex items-center gap-xs text-primary font-bold hover:text-on-surface-variant transition-colors">
+<span class="font-label-md text-label-md">Çıxış</span>
+<span class="material-symbols-outlined text-sm">logout</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-2xl md:ml-64 p-lg min-h-screen">
+<div class="max-w-container-max mx-auto mt-xl">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
+<div>
+<nav class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md mb-xs">
+<span class="">Admin</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-primary font-bold">Sifarişlər Siyahısı</span>
+</nav>
+<h2 class="font-headline-lg text-headline-lg text-primary">Sifarişlərin İdarəedilməsi</h2>
+<p class="text-on-surface-variant font-body-md text-body-md">Bütün restoranlar üzrə aktiv və tamamlanmış sifarişlər</p>
+</div>
+<div class="flex items-center gap-sm">
+<button class="flex items-center gap-xs px-md py-sm bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md">
+<span class="material-symbols-outlined">filter_list</span>
+                        Filtrlər
+                    </button>
+<button class="flex items-center gap-xs px-md py-sm bg-primary text-on-primary rounded-lg shadow-sm hover:opacity-90 transition-all font-label-md text-label-md">
+<span class="material-symbols-outlined">add</span>
+                        Yeni Sifariş
+                    </button>
+</div>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg mb-xl">
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant font-label-md text-label-md uppercase mb-xs">Ümumi Sifarişlər</p>
+<h3 class="font-headline-md text-headline-md text-primary">1,284</h3>
+<p class="text-on-tertiary-container font-label-md text-label-md flex items-center gap-xs mt-xs">
+<span class="material-symbols-outlined text-sm">trending_up</span> +12% bu ay
+                        </p>
+</div>
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">receipt_long</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant font-label-md text-label-md uppercase mb-xs">Gözləyən (Mətbəx)</p>
+<h3 class="font-headline-md text-headline-md text-primary">24</h3>
+<p class="text-secondary font-label-md text-label-md flex items-center gap-xs mt-xs">
+<span class="material-symbols-outlined text-sm">schedule</span> Hazırda aktiv
+                        </p>
+</div>
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">skillet</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant font-label-md text-label-md uppercase mb-xs">Bugünkü Gəlir</p>
+<h3 class="font-headline-md text-headline-md text-primary">4,520 ₼</h3>
+<p class="text-on-tertiary-container font-label-md text-label-md flex items-center gap-xs mt-xs">
+<span class="material-symbols-outlined text-sm">payments</span> Tamamlanmış
+                        </p>
+</div>
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-fixed-variant">account_balance_wallet</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant font-label-md text-label-md uppercase mb-xs">Ortalama Xidmət</p>
+<h3 class="font-headline-md text-headline-md text-primary">18 dəq</h3>
+<p class="text-on-surface-variant font-label-md text-label-md flex items-center gap-xs mt-xs">
+<span class="material-symbols-outlined text-sm">speed</span> Hədəf: 15 dəq
+                        </p>
+</div>
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">timer</span>
+</div>
+</div>
+</div>
+<!-- Orders Table Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<div class="p-lg border-b border-outline-variant flex flex-wrap gap-md items-center justify-between">
+<div class="flex gap-sm">
+<button class="px-md py-xs rounded-full bg-primary text-on-primary font-label-md text-label-md transition-colors">Hamısı</button>
+<button class="px-md py-xs rounded-full hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">Aktiv</button>
+<button class="px-md py-xs rounded-full hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">Hazır</button>
+<button class="px-md py-xs rounded-full hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-colors">Ödənilmiş</button>
+</div>
+<div class="flex items-center gap-sm">
+<span class="text-on-surface-variant font-label-md text-label-md">Sırala:</span>
+<select class="bg-transparent border-none focus:ring-0 font-label-md text-label-md text-primary cursor-pointer pr-xl">
+<option>Ən yeni</option>
+<option>Ən köhnə</option>
+<option>Məbləğ (Yuxarı)</option>
+</select>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="p-lg font-label-md text-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Sifariş №</th>
+<th class="p-lg font-label-md text-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Restoran</th>
+<th class="p-lg font-label-md text-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Masa</th>
+<th class="p-lg font-label-md text-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Müştəri</th>
+<th class="p-lg font-label-md text-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Ofisiant</th>
+<th class="p-lg font-label-md text-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Mətbəx Statusu</th>
+<th class="p-lg font-label-md text-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Ödəniş Statusu</th>
+<th class="p-lg font-label-md text-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Cəmi</th>
+<th class="p-lg border-b border-outline-variant"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Table Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="p-lg font-label-md text-label-md text-primary font-bold">#ORD-2034</td>
+<td class="p-lg">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-body-sm text-body-sm font-semibold">Port Baku Grill</span>
+</div>
+</td>
+<td class="p-lg font-body-sm text-body-sm">Masa 14</td>
+<td class="p-lg font-body-sm text-body-sm">Əli Məmmədov</td>
+<td class="p-lg font-body-sm text-body-sm">Kamran H.</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-secondary-container/20 text-on-secondary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary mr-1.5 animate-pulse"></span> Hazırlanır
+                                    </span>
+</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-error-container/20 text-on-error-container">
+                                        Ödənilməyib
+                                    </span>
+</td>
+<td class="p-lg font-body-sm text-body-sm font-bold">124.50 ₼</td>
+<td class="p-lg text-right">
+<button class="p-xs rounded-full hover:bg-surface-container-high text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Table Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="p-lg font-label-md text-label-md text-primary font-bold">#ORD-2033</td>
+<td class="p-lg">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></div>
+<span class="font-body-sm text-body-sm font-semibold">Nakhchivan Rest.</span>
+</div>
+</td>
+<td class="p-lg font-body-sm text-body-sm">VIP 2</td>
+<td class="p-lg font-body-sm text-body-sm">Aysel Rzayeva</td>
+<td class="p-lg font-body-sm text-body-sm">Günel S.</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-tertiary-fixed/20 text-on-tertiary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container mr-1.5"></span> Hazırdır
+                                    </span>
+</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-tertiary-fixed/20 text-on-tertiary-container">
+                                        Ödənilib
+                                    </span>
+</td>
+<td class="p-lg font-body-sm text-body-sm font-bold">340.00 ₼</td>
+<td class="p-lg text-right">
+<button class="p-xs rounded-full hover:bg-surface-container-high text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Table Row 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="p-lg font-label-md text-label-md text-primary font-bold">#ORD-2032</td>
+<td class="p-lg">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-body-sm text-body-sm font-semibold">Port Baku Grill</span>
+</div>
+</td>
+<td class="p-lg font-body-sm text-body-sm">Masa 5</td>
+<td class="p-lg font-body-sm text-body-sm">Orxan Vəliyev</td>
+<td class="p-lg font-body-sm text-body-sm">Elvin T.</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-on-surface-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-outline mr-1.5"></span> Təqdim Edildi
+                                    </span>
+</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-tertiary-fixed/20 text-on-tertiary-container">
+                                        Ödənilib
+                                    </span>
+</td>
+<td class="p-lg font-body-sm text-body-sm font-bold">65.20 ₼</td>
+<td class="p-lg text-right">
+<button class="p-xs rounded-full hover:bg-surface-container-high text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Table Row 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="p-lg font-label-md text-label-md text-primary font-bold">#ORD-2031</td>
+<td class="p-lg">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-primary-fixed-dim"></div>
+<span class="font-body-sm text-body-sm font-semibold">Sea Breeze Art</span>
+</div>
+</td>
+<td class="p-lg font-body-sm text-body-sm">Teras 8</td>
+<td class="p-lg font-body-sm text-body-sm">Məryəm Q.</td>
+<td class="p-lg font-body-sm text-body-sm">Fidan A.</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-error-container/20 text-on-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error mr-1.5"></span> Ləğv Edildi
+                                    </span>
+</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-on-surface-variant">
+                                        Geri qaytarılıb
+                                    </span>
+</td>
+<td class="p-lg font-body-sm text-body-sm font-bold">18.00 ₼</td>
+<td class="p-lg text-right">
+<button class="p-xs rounded-full hover:bg-surface-container-high text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Additional Status Demonstration Row -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="p-lg font-label-md text-label-md text-primary font-bold">#ORD-2030</td>
+<td class="p-lg">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<span class="font-body-sm text-body-sm font-semibold">Shirvanshah Museum</span>
+</div>
+</td>
+<td class="p-lg font-body-sm text-body-sm">Masa 3</td>
+<td class="p-lg font-body-sm text-body-sm">Fuad H.</td>
+<td class="p-lg font-body-sm text-body-sm">Nərgiz K.</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-surface-container-high text-on-surface-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-outline mr-1.5"></span> Gözləyir
+                                    </span>
+</td>
+<td class="p-lg">
+<span class="inline-flex items-center px-sm py-1 rounded-full text-[10px] font-bold uppercase bg-error-container/20 text-on-error-container">
+                                        Gözləyir
+                                    </span>
+</td>
+<td class="p-lg font-body-sm text-body-sm font-bold">42.00 ₼</td>
+<td class="p-lg text-right">
+<button class="p-xs rounded-full hover:bg-surface-container-high text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-lg border-t border-outline-variant flex items-center justify-between">
+<p class="font-label-md text-label-md text-on-surface-variant">1-10 / 1,284 sifariş</p>
+<div class="flex items-center gap-xs">
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">first_page</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-on-primary font-label-md text-label-md">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high font-label-md text-label-md">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high font-label-md text-label-md">3</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">last_page</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Bottom Navigation (JSON Anchor: BottomNavBar) -->
+<nav class="fixed bottom-0 w-full flex justify-around items-center p-xs md:hidden bg-surface-container-lowest shadow-lg z-50 rounded-t-xl border-t border-outline-variant"><a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-xl px-4 py-1 transition-transform active:scale-90 duration-200" href="#"><span class="material-symbols-outlined">receipt_long</span><span class="font-label-md text-[10px]">Sifarişlər</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-transform active:scale-90 duration-200 px-4 py-1" href="#"><span class="material-symbols-outlined">table_restaurant</span><span class="font-label-md text-[10px]">Masalar</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-transform active:scale-90 duration-200 px-4 py-1" href="#"><span class="material-symbols-outlined">restaurant_menu</span><span class="font-label-md text-[10px]">Menyu</span></a><a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-transform active:scale-90 duration-200 px-4 py-1" href="#"><span class="material-symbols-outlined">person</span><span class="font-label-md text-[10px]">Hesab</span></a></nav>
+<script>
+        // Simple search interactivity
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+
+        // Toggle mobile sidebar (placeholder)
+        const menuBtn = document.querySelector('header button.md\\:hidden');
+        menuBtn.addEventListener('click', () => {
+            alert('Mobil menyu idarəetməsi burada olacaq.');
+        });
+    </script>
+
+
+</body></html>

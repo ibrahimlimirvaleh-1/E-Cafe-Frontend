@@ -1,0 +1,278 @@
+<!DOCTYPE html><html class="light" lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#684000",
+                    "error": "#ba1a1a",
+                    "tertiary": "#000000",
+                    "on-primary-container": "#7e8397",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c6c6cd",
+                    "surface-tint": "#585e70",
+                    "surface-bright": "#f8f9fa",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#45464c",
+                    "surface-variant": "#e1e3e4",
+                    "secondary-container": "#fea619",
+                    "primary": "#000000",
+                    "surface-dim": "#d9dadb",
+                    "surface-container": "#edeeef",
+                    "background": "#f8f9fa",
+                    "surface": "#f8f9fa",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#c1c6db",
+                    "on-error": "#ffffff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#76777d",
+                    "primary-container": "#151b2b"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "sm": "12px",
+                    "xs": "8px",
+                    "gutter": "24px",
+                    "xl": "32px",
+                    "2xl": "48px",
+                    "lg": "24px",
+                    "base": "4px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .unread-glow {
+            box-shadow: inset 4px 0 0 0 #000000;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md antialiased">
+<!-- Top Navigation Shell -->
+<header class="bg-surface shadow-sm sticky top-0 z-50">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+<span class="text-headline-lg-mobile font-headline-lg-mobile text-primary tracking-tight">ECafe</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface-variant cursor-pointer active:opacity-80">search</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A close-up portrait of a professional-looking young man with a friendly expression, set against a blurred background of a high-end, minimalist restaurant interior. The lighting is soft and warm, highlighting the clean and modern light-mode aesthetic of the application. The image quality is crisp, mirroring the premium and luxury branding of ECafe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApMfzMmImqioXl_uo-Sx8XgoSMczw-q7yXLjMTj4CTQy934SunkUGzEltpCMvSZT-Al7RGQ26cSPxvuzR1YT1UkFjkqlDsL4ykPq57JfHtkF4Gb9TnvL1x7tSAIMnYvczVVgvHzqE_Nv_rYbh-nytLPQXkOBrPNBzWIvLWYpoLldYhKdMBNPzMLgp039amT4KLYBGp2i0ho4c6nuiBFk5DZU3YXI2rYB7pqoUET2zlxtMJgA3Hf9IUTQ">
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="min-h-screen pb-24">
+<!-- Page Title -->
+<section class="px-gutter pt-xl pb-md">
+<h1 class="font-headline-md text-headline-md text-primary">Bildirişlər</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-base">Son yenilikləri buradan izləyin</p>
+</section>
+<!-- Notification List -->
+<div class="px-gutter space-y-sm"><!-- Notification Item: Online Payment (Unread) -->
+<div class="bg-surface-container-lowest rounded-xl p-md flex gap-md unread-glow border-l-0 shadow-sm transition-transform active:scale-95 cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-primary">Ödəniş Təsdiqi</h3>
+<span class="font-body-sm text-[10px] text-on-surface-variant uppercase tracking-wider">İndi</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Ödəniş onlayn qəbul edildi.</p>
+</div>
+</div><!-- Notification Item: Waiter Notified (Unread) -->
+<div class="bg-surface-container-lowest rounded-xl p-md flex gap-md unread-glow border-l-0 shadow-sm transition-transform active:scale-95 cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">person_alert</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-primary">Xidmət Yeniləməsi</h3>
+<span class="font-body-sm text-[10px] text-on-surface-variant uppercase tracking-wider">İndi</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Ofisiant məlumatlandırıldı.</p>
+</div>
+</div><!-- Notification Item: Kitchen Ready (Unread) -->
+<div class="bg-surface-container-lowest rounded-xl p-md flex gap-md unread-glow border-l-0 shadow-sm transition-transform active:scale-95 cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-primary">Mətbəx Bildirişi</h3>
+<span class="font-body-sm text-[10px] text-on-surface-variant uppercase tracking-wider">İndi</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sifariş #123 Masa 8 üçün hazırdır.</p>
+</div>
+</div>
+<!-- Notification Item: Reservation Success (Unread) -->
+<div class="bg-surface-container-lowest rounded-xl p-md flex gap-md unread-glow border-l-0 shadow-sm transition-transform active:scale-95 cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">event_available</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-primary">Rezervasiya Təsdiqləndi</h3>
+<span class="font-body-sm text-[10px] text-on-surface-variant uppercase tracking-wider">İndi</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Bu axşam saat 20:00 üçün olan masa rezervasiyanız uğurla təsdiq edildi.</p>
+<div class="pt-xs">
+<a class="inline-flex items-center text-secondary font-label-md text-label-md gap-1" href="#">
+                            Detallara bax
+                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Notification Item: Payment Success (Unread) -->
+<div class="bg-surface-container-lowest rounded-xl p-md flex gap-md unread-glow border-l-0 shadow-sm transition-transform active:scale-95 cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-primary">Ödəniş Uğurludur</h3>
+<span class="font-body-sm text-[10px] text-on-surface-variant uppercase tracking-wider">5 dəq əvvəl</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sifariş #12940 üçün 45.00 AZN məbləğində ödənişiniz qəbul olundu.</p>
+<div class="pt-xs">
+<a class="inline-flex items-center text-secondary font-label-md text-label-md gap-1" href="#">
+                            Qəbzə bax
+                            <span class="material-symbols-outlined text-[16px]">payments</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Notification Item: Order Update (Read) -->
+<div class="bg-surface-container-low rounded-xl p-md flex gap-md opacity-80 transition-transform active:scale-95 cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 1;">restaurant_menu</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-on-surface">Sifariş Hazırdır</h3>
+<span class="font-body-sm text-[10px] text-on-surface-variant uppercase tracking-wider">2 saat əvvəl</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sifarişiniz hazırlandı və masanıza təqdim olunur. Nuş olsun!</p>
+<div class="pt-xs">
+<a class="inline-flex items-center text-primary font-label-md text-label-md gap-1" href="#">
+                            Sifariş tarixinə bax
+                        </a>
+</div>
+</div>
+</div>
+<!-- Notification Item: System Alert (Read) -->
+<div class="bg-surface-container-low rounded-xl p-md flex gap-md opacity-80 transition-transform active:scale-95 cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 1;">stars</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-label-md text-label-md text-on-surface">Yeni Təklif</h3>
+<span class="font-body-sm text-[10px] text-on-surface-variant uppercase tracking-wider">Dünən</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sizə özəl həftəsonu endirimi! Menyuya nəzər salın və 15% endirim qazanın.</p>
+</div>
+</div>
+</div>
+<!-- Empty State (Hidden) -->
+<div class="hidden flex flex-col items-center justify-center px-gutter py-2xl text-center space-y-md" id="empty-state">
+<div class="w-24 h-24 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-[48px]">notifications_off</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-primary">Yeni bildiriş yoxdur</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xs">Bütün yenilikləri oxumusunuz. Rahatlıqla menyuya baxa bilərsiniz.</p>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 w-full bg-surface shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] z-50 rounded-t-xl px-sm pb-xs pt-base flex justify-around items-center">
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">event_available</span>
+<span class="font-label-md text-label-md">Reservations</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</button>
+</nav>
+<script>
+        // Simple Interaction to simulate reading a notification
+        document.querySelectorAll('.unread-glow').forEach(item => {
+            item.addEventListener('click', function() {
+                this.classList.remove('unread-glow', 'bg-surface-container-lowest');
+                this.classList.add('bg-surface-container-low', 'opacity-80');
+            });
+        });
+
+        // Pull-to-refresh feel with a small scroll interaction
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('shadow-md');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+        });
+    </script>
+
+
+</body></html>

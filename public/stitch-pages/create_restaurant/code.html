@@ -1,0 +1,376 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe - Restoran Qeydiyyat Formu</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .input-focus-ring:focus {
+            ring: 2px;
+            ring-color: #fea619;
+            border-color: #fea619;
+            outline: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface": "#f8f9fa",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed": "#6ffbbe",
+                      "surface-variant": "#e1e3e4",
+                      "on-primary-container": "#7e8397",
+                      "on-primary": "#ffffff",
+                      "surface-dim": "#d9dadb",
+                      "primary-fixed": "#dde2f8",
+                      "on-tertiary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-primary-fixed": "#151b2b",
+                      "secondary-fixed-dim": "#ffb95f",
+                      "tertiary-container": "#002113",
+                      "on-primary-fixed-variant": "#414658",
+                      "background": "#f8f9fa",
+                      "primary-fixed-dim": "#c1c6db",
+                      "surface-bright": "#f8f9fa",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "on-surface-variant": "#45464c",
+                      "secondary": "#855300",
+                      "surface-container-highest": "#e1e3e4",
+                      "outline-variant": "#c6c6cd",
+                      "primary": "#000000",
+                      "primary-container": "#151b2b",
+                      "on-tertiary-container": "#009668",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "surface-container-low": "#f3f4f5",
+                      "tertiary": "#000000",
+                      "on-background": "#191c1d",
+                      "secondary-fixed": "#ffddb8",
+                      "error-container": "#ffdad6",
+                      "outline": "#76777d",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-error-container": "#93000a",
+                      "surface-container": "#edeeef",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#e7e8e9",
+                      "on-secondary-fixed": "#2a1700",
+                      "on-surface": "#191c1d",
+                      "surface-tint": "#585e70",
+                      "inverse-surface": "#2e3132",
+                      "on-tertiary-fixed": "#002113",
+                      "inverse-primary": "#c1c6db",
+                      "on-secondary-container": "#684000",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#653e00",
+                      "secondary-container": "#fea619"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "32px",
+                      "gutter": "24px",
+                      "md": "16px",
+                      "base": "4px",
+                      "xs": "8px",
+                      "container-max": "1280px",
+                      "lg": "24px",
+                      "sm": "12px",
+                      "2xl": "48px"
+              },
+              "fontFamily": {
+                      "headline-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "body-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-sm": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Top Navigation -->
+<header class="bg-surface-container-low shadow-sm sticky top-0 z-50">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary text-headline-lg">restaurant</span>
+<span class="text-headline-lg font-headline-lg text-primary tracking-tight">ECafe</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="hidden md:block text-on-surface-variant font-label-md text-label-md hover:text-secondary transition-colors">Kömək</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-secondary-container">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a restaurant manager in a light-filled modern office, captured in a minimalist corporate style with neutral tones and soft shadows. The manager has a welcoming expression, reflecting premium hospitality standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeypxj3vUXIN6pp857f7b7s9XRT5_6mnVTqIpdjxcnoMYEAFo8zRUCbY0naeYGlekPb869nFdCKYC3vJLzYGJ4v6gMixGYgmxgatocjjTH5HCMEjNqWUk_FVmiuF-FVR8OBhaz7WR4v1cnnrh5oxP64KvTo6zXgv7TbFXs2WAmEEyxOEHusBBThcI5h-hHglNihBPW5bOPLAfL5msbMYfY1lF_L2R1Gieh0rw3ngFyqQFOvU9-YUH11A">
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-gutter py-xl">
+<!-- Page Header -->
+<div class="mb-xl">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-xs">Yeni Restoran Əlavə Et</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Sistemin idarəetmə panelinə yeni məkan daxil etmək üçün aşağıdakı məlumatları doldurun.</p>
+</div>
+<form class="bento-grid" id="restaurantForm">
+<!-- Left Column: Primary Details -->
+<div class="col-span-12 lg:col-span-8 space-y-gutter">
+<!-- Basic Info Card -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-lg flex items-center gap-xs">
+<span class="material-symbols-outlined">info</span>
+                        Əsas Məlumatlar
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Restoranın Adı *</label>
+<input class="w-full px-md py-sm rounded-xl border border-outline-variant bg-surface-container-low text-body-md input-focus-ring" placeholder="Məs: L'Avenue Baku" required="" type="text">
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Ünvan *</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">location_on</span>
+<input class="w-full pl-10 pr-md py-sm rounded-xl border border-outline-variant bg-surface-container-low text-body-md input-focus-ring" placeholder="Nizami küçəsi 45, Bakı" required="" type="text">
+</div>
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Telefon *</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">call</span>
+<input class="w-full pl-10 pr-md py-sm rounded-xl border border-outline-variant bg-surface-container-low text-body-md input-focus-ring" placeholder="+994 (50) 000-00-00" required="" type="tel">
+</div>
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">E-poçt *</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">mail</span>
+<input class="w-full pl-10 pr-md py-sm rounded-xl border border-outline-variant bg-surface-container-low text-body-md input-focus-ring" placeholder="contact@restaurant.az" required="" type="email">
+</div>
+</div>
+</div>
+</div>
+<!-- Financials Card -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-lg flex items-center gap-xs">
+<span class="material-symbols-outlined">payments</span>
+                        Maliyyə və Şərtlər
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Depozit Məbləği (AZN)</label>
+<input class="w-full px-md py-sm rounded-xl border border-outline-variant bg-surface-container-low text-body-md input-focus-ring" placeholder="0.00" type="number">
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Ləğv Müddəti (Saat)</label>
+<select class="w-full px-md py-sm rounded-xl border border-outline-variant bg-surface-container-low text-body-md input-focus-ring">
+<option>12 saat</option>
+<option>24 saat</option>
+<option>48 saat</option>
+</select>
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Platforma Komissiyası (%)</label>
+<input class="w-full px-md py-sm rounded-xl border border-outline-variant bg-surface-container-low text-body-md input-focus-ring" placeholder="10" type="number">
+</div>
+</div><div class="mt-md p-sm bg-surface-container-low rounded-lg border border-outline-variant/30 flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary text-sm">info</span>
+<p class="text-body-sm text-on-surface-variant">ECafe MVP-də nağd ödənişlər dəstəklənmir.</p>
+</div>
+</div>
+<!-- Working Hours Card -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-lg flex items-center gap-xs">
+<span class="material-symbols-outlined">schedule</span>
+                        İş Saatları
+                    </h2>
+<div class="space-y-sm">
+<div class="flex items-center justify-between p-sm hover:bg-surface rounded-lg transition-colors">
+<span class="font-body-md text-body-md w-32">Bazar ertəsi - Cümə</span>
+<div class="flex items-center gap-xs">
+<input class="px-xs py-base border border-outline-variant rounded-lg text-body-sm bg-surface-container-low" type="time" value="09:00">
+<span class="text-outline">-</span>
+<input class="px-xs py-base border border-outline-variant rounded-lg text-body-sm bg-surface-container-low" type="time" value="23:00">
+</div>
+<div class="flex items-center gap-xs">
+<input checked="" class="text-secondary focus:ring-secondary rounded" type="checkbox">
+<span class="text-body-sm text-on-surface-variant">Açıqdır</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-sm hover:bg-surface rounded-lg transition-colors">
+<span class="font-body-md text-body-md w-32">Şənbə - Bazar</span>
+<div class="flex items-center gap-xs">
+<input class="px-xs py-base border border-outline-variant rounded-lg text-body-sm bg-surface-container-low" type="time" value="10:00">
+<span class="text-outline">-</span>
+<input class="px-xs py-base border border-outline-variant rounded-lg text-body-sm bg-surface-container-low" type="time" value="01:00">
+</div>
+<div class="flex items-center gap-xs">
+<input checked="" class="text-secondary focus:ring-secondary rounded" type="checkbox">
+<span class="text-body-sm text-on-surface-variant">Açıqdır</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Visuals & Actions -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Logo Upload -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant/30 text-center">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-md text-left">Restoran Logosu</h3>
+<div class="relative group cursor-pointer border-2 border-dashed border-outline-variant rounded-xl p-xl hover:bg-surface-container-low transition-all">
+<input class="absolute inset-0 opacity-0 cursor-pointer z-10" type="file">
+<div class="space-y-xs">
+<span class="material-symbols-outlined text-display-lg text-outline group-hover:text-secondary transition-colors">cloud_upload</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sürüşdürüb bura atın və ya <span class="text-secondary font-bold">seçin</span></p>
+<p class="text-[10px] text-outline uppercase tracking-wider">JPG, PNG (Max. 2MB)</p>
+</div>
+</div>
+</div>
+<!-- Preview Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+<div class="h-32 bg-cover bg-center" data-alt="A luxurious interior shot of a high-end restaurant in Baku with minimalist decor, elegant gold accents, and warm ambient lighting. The scene exudes a premium corporate atmosphere suitable for a SaaS management tool interface, featuring pristine table settings and contemporary architecture." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAvGS9QwnA4zVRbY0Gj-duCFqau8Y26w8iOagfoIIpom62CRxd6kWTz55XhgnyO1pkgn6ty57M7w2MRFpDRdkol3N26x7h9nFZslBvsv6-ZvEQsgz9WIYvy4L2uGXPIGF6EN6PZnAz9FzzMGGk5S8HalWA5c5yyO2lCD6QHMKPZ-zxU9lsFT9aiL1zSEvRlNa1urgkugfF2MYy9ZEOOmo9ERaLD6qljOQh4Rh2hno5C1GcW8HUvzlqOIg')"></div>
+<div class="p-md -mt-10 flex flex-col items-center">
+<div class="w-20 h-20 rounded-xl bg-white shadow-lg flex items-center justify-center p-xs mb-sm border border-surface-variant">
+<span class="material-symbols-outlined text-outline text-headline-lg">image</span>
+</div>
+<div class="text-center">
+<h4 class="font-headline-sm text-headline-sm text-primary" id="previewName">Yeni Restoran</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                                Bakı, Azərbaycan
+                            </p>
+</div>
+<div class="w-full mt-md pt-md border-t border-outline-variant/30 flex justify-around">
+<div class="text-center">
+<span class="block font-label-md text-label-md text-secondary">0</span>
+<span class="text-[10px] text-on-surface-variant">SİFARİŞ</span>
+</div>
+<div class="text-center">
+<span class="block font-label-md text-label-md text-secondary">-%</span>
+<span class="text-[10px] text-on-surface-variant">XİDMƏT</span>
+</div>
+<div class="text-center">
+<span class="block font-label-md text-label-md text-secondary">0 AZN</span>
+<span class="text-[10px] text-on-surface-variant">DEPOZİT</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Form Actions -->
+<div class="space-y-md pt-md">
+<button class="w-full bg-primary text-on-primary font-headline-sm text-headline-sm py-md rounded-xl shadow-lg hover:bg-on-surface-variant transition-all flex items-center justify-center gap-sm active:scale-95" type="submit">
+<span class="material-symbols-outlined">save</span>
+                        Məlumatları Saxla
+                    </button>
+<button class="w-full bg-surface-container-high text-on-surface font-label-md text-label-md py-md rounded-xl hover:bg-surface-dim transition-all flex items-center justify-center gap-sm" type="button">
+<span class="material-symbols-outlined">close</span>
+                        Ləğv Et
+                    </button>
+</div>
+<!-- Validation Status (Hidden by default) -->
+<div class="hidden p-md rounded-lg flex items-start gap-sm" id="statusMessage">
+<span class="material-symbols-outlined mt-1">error</span>
+<div>
+<p class="font-label-md text-label-md font-bold">Səhv baş verdi</p>
+<p class="text-body-sm">Zəhmət olmasa bütün məcburi (*) xanaları doldurun.</p>
+</div>
+</div>
+</div>
+</form>
+</main>
+<!-- Mobile Navigation -->
+<nav class="md:hidden fixed bottom-0 w-full bg-surface-container-lowest shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] flex justify-around items-center px-sm pb-xs pt-base z-50 rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1">
+<span class="material-symbols-outlined">home</span>
+<span class="text-label-md font-label-md">Ana səhifə</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="text-label-md font-label-md">Yeni</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1">
+<span class="material-symbols-outlined">person</span>
+<span class="text-label-md font-label-md">Profil</span>
+</div>
+</nav>
+<script>
+        // Simple Interaction: Update Preview Name
+        const nameInput = document.querySelector('input[placeholder="Məs: L\'Avenue Baku"]');
+        const previewName = document.getElementById('previewName');
+        
+        nameInput.addEventListener('input', (e) => {
+            previewName.textContent = e.target.value || 'Yeni Restoran';
+        });
+
+        // Form Validation UI Mockup
+        const form = document.getElementById('restaurantForm');
+        const statusMessage = document.getElementById('statusMessage');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputs = form.querySelectorAll('input[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value) {
+                    input.classList.add('border-error');
+                    isValid = false;
+                } else {
+                    input.classList.remove('border-error');
+                }
+            });
+
+            statusMessage.classList.remove('hidden');
+            if (!isValid) {
+                statusMessage.className = 'p-md rounded-lg flex items-start gap-sm bg-error-container text-on-error-container animate-pulse';
+            } else {
+                statusMessage.className = 'p-md rounded-lg flex items-start gap-sm bg-tertiary-container text-on-tertiary-container';
+                statusMessage.querySelector('p').textContent = 'Uğurlu əməliyyat!';
+                statusMessage.querySelector('.material-symbols-outlined').textContent = 'check_circle';
+                statusMessage.querySelectorAll('p')[1].textContent = 'Restoran məlumatları uğurla yadda saxlanıldı.';
+            }
+        });
+    </script>
+
+
+
+
+</body></html>

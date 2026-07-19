@@ -1,0 +1,365 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe - Premium Restaurant Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-variant": "#e1e3e4",
+                    "on-primary-container": "#7e8397",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#d9dadb",
+                    "primary-fixed": "#dde2f8",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#151b2b",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "tertiary-container": "#002113",
+                    "on-primary-fixed-variant": "#414658",
+                    "background": "#f8f9fa",
+                    "primary-fixed-dim": "#c1c6db",
+                    "surface-bright": "#f8f9fa",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-surface-variant": "#45464c",
+                    "secondary": "#855300",
+                    "surface-container-highest": "#e1e3e4",
+                    "outline-variant": "#c6c6cd",
+                    "primary": "#000000",
+                    "primary-container": "#151b2b",
+                    "on-tertiary-container": "#009668",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-container-low": "#f3f4f5",
+                    "tertiary": "#000000",
+                    "on-background": "#191c1d",
+                    "secondary-fixed": "#ffddb8",
+                    "error-container": "#ffdad6",
+                    "outline": "#76777d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#edeeef",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed": "#2a1700",
+                    "on-surface": "#191c1d",
+                    "surface-tint": "#585e70",
+                    "inverse-surface": "#2e3132",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-primary": "#c1c6db",
+                    "on-secondary-container": "#684000",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "secondary-container": "#fea619"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "gutter": "24px",
+                    "md": "16px",
+                    "base": "4px",
+                    "xs": "8px",
+                    "container-max": "1280px",
+                    "lg": "24px",
+                    "sm": "12px",
+                    "2xl": "48px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .hero-gradient {
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-surface shadow-sm sticky top-0 z-50">
+<div class="flex justify-between items-center px-gutter py-md w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-xs cursor-pointer active:opacity-80">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbwN_7YJTxZOq-NgYP3wqXMFmkRstM6Sj5idtRSA07jjDCb6puhk8nYFA56rV8LBoiMH5Q_IwMLPAnk-KewSvqp6EHUfMKkRYSoFcbUhwnMridGHzyTwFgHfm5ZaNT9sHs2Sg5RWsG2QjiJZvNp_B6lE0BRpAJNvpA3FMqXlFMinaCMSNfr_po46KUfKJMbufQVGQFfiHAbICPMFc0-fnLnYOopw0W1FjIUiIoCxYFao1g84VJ74pWfBBMPPfX7EdknSI" alt="ECafe Logo" class="h-12 w-auto">
+<span class="text-headline-lg font-headline-lg text-primary tracking-tight">ECafe</span>
+</div>
+<nav class="hidden md:flex gap-lg items-center">
+<a class="text-primary font-bold font-body-md text-body-md" href="#">Home</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-md text-body-md" href="#">Search</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-md text-body-md" href="#">Reservations</a>
+</nav>
+<button class="bg-primary text-on-primary px-lg py-xs rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-all">
+                Login
+            </button>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-gutter py-xl space-y-2xl">
+<!-- Hero Section -->
+<section class="relative h-[500px] rounded-xl overflow-hidden shadow-lg group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" data-alt="A luxury premium restaurant interior with velvet seating, warm ambient lighting, and elegant table settings. The architecture features modern minimalist lines with marble accents and large floor-to-ceiling windows showing a blurred cityscape at twilight. The atmosphere is sophisticated and exclusive, emphasizing a high-end light-mode hospitality aesthetic with rich textures." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC5YFC5USvNTkRbEh9hIShQxOVTGtiimRF_nFGsQE0GEmw_ZGgn8_edJCfyBqKfm2wqX4PQ45VuHafY-8OtdE4P5zQWiJSjnX502GY1x0ZINyPBMabzi-ZmiQcxCEXMBUsoB1AbjURpGVQbFMMvRbW3r7hrWNJHhzLwK8Os6CCxvNijjA7oJ69WZ9UDhVYgun5ogoSX5Xf-oMnmS3qtMZoAO09yaJjdRSUFWCcYjr03uFDaD_7n7LFTJQ')">
+</div>
+<div class="absolute inset-0 hero-gradient"></div>
+<div class="absolute bottom-0 left-0 p-xl w-full flex flex-col md:flex-row justify-between items-end gap-md">
+<div class="text-on-primary space-y-xs">
+<div class="flex items-center gap-xs">
+<span class="bg-secondary-container text-on-secondary-container px-sm py-1 rounded-full font-label-md text-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                            4.9 (250+ rəy)
+                        </span>
+<span class="text-surface-variant font-body-sm text-body-sm">• Premium Mətbəx</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg md:text-[48px] md:leading-tight">The Grand Terrace</h1>
+<div class="flex flex-wrap items-center gap-md text-surface-container">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-body-md">location_on</span>
+<span class="font-body-md text-body-md">Nizami küçəsi 45, Bakı</span>
+</div>
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-body-md">schedule</span>
+<span class="font-body-md text-body-md">10:00 - 23:00</span>
+</div>
+</div>
+</div>
+<div class="hidden md:flex gap-md">
+<button class="bg-surface-container-lowest text-primary p-md rounded-full shadow-lg hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="bg-surface-container-lowest text-primary p-md rounded-full shadow-lg hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Main Content Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Left Side: Content -->
+<div class="lg:col-span-8 space-y-2xl">
+<!-- About & Amenities -->
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm space-y-lg">
+<h2 class="font-headline-md text-headline-md">Haqqımızda</h2>
+<p class="text-on-surface-variant font-body-md text-body-md leading-relaxed">
+                        The Grand Terrace, Bakının mərkəzində lüks qonaqpərvərlik və zərif dadların kəsişdiyi məkandır. Bizim aşpazlarımız yerli inqrediyentləri beynəlxalq kulinariya texnikaları ilə birləşdirərək hər bir qonağa unudulmaz təcrübə vəd edir. Modern dizayn və şəhər mənzərəsi axşam yeməklərinizə xüsusi rəng qatacaq.
+                    </p>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md pt-md">
+<div class="flex items-center gap-xs p-md bg-surface rounded-lg">
+<span class="material-symbols-outlined text-secondary">wifi</span>
+<span class="font-label-md text-label-md">Pulsuz Wi-Fi</span>
+</div>
+<div class="flex items-center gap-xs p-md bg-surface rounded-lg">
+<span class="material-symbols-outlined text-secondary">local_parking</span>
+<span class="font-label-md text-label-md">Dayanacaq</span>
+</div>
+<div class="flex items-center gap-xs p-md bg-surface rounded-lg">
+<span class="material-symbols-outlined text-secondary">music_note</span>
+<span class="font-label-md text-label-md">Canlı Musiqi</span>
+</div>
+<div class="flex items-center gap-xs p-md bg-surface rounded-lg">
+<span class="material-symbols-outlined text-secondary">deck</span>
+<span class="font-label-md text-label-md">Teras</span>
+</div>
+</div>
+</div>
+<!-- Menu Preview (Bento Style) -->
+<div class="space-y-lg">
+<div class="flex justify-between items-end">
+<h2 class="font-headline-md text-headline-md">Menyudan nümunələr</h2>
+<button class="text-secondary font-label-md text-label-md flex items-center gap-1 hover:underline">
+                            Tam menyuya bax <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Big Menu Item -->
+<div class="md:col-span-2 relative group overflow-hidden rounded-xl h-64 shadow-md">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" data-alt="A gourmet signature steak dish served on a dark ceramic plate with roasted seasonal vegetables and a rich wine reduction sauce. The lighting is dramatic and focused on the textures of the food, set in a high-end restaurant atmosphere with warm light-mode tones and blurred golden highlights in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxt3u8Qrv9FHIeNLuOrmiZuBs__TJcDAuco5tau1Lp9fNmPolqWQdlgfLDOjV3hZffi0wcbQiSIMTAI9jcQGALFzkOqPwAT2eRy4IsN3RKw0OIz7z_f5RlzdBoGEIt02WsbuxWH4cDwMwu0SsbP3v263iwlo5C-wuL5CPuKq8ml8pEgRFlkaSi6kjGfpxU3pNV6O42C5hjcxK9mVNKXyeSLJVUR5bYUc_N-VsK0__8nvYoRyGdIbRDGg">
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-md text-on-primary">
+<span class="font-headline-sm text-headline-sm">Xüsusi Steyk</span>
+<span class="font-body-sm text-body-sm opacity-80">Qara can əti, tərəvəzlər, özəl sous</span>
+<span class="mt-xs font-bold text-secondary-container">45.00 AZN</span>
+</div>
+</div>
+<!-- Small Menu Item 1 -->
+<div class="relative group overflow-hidden rounded-xl h-64 shadow-md">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" data-alt="A fresh, colorful Mediterranean seafood appetizer featuring grilled prawns and citrus salad served in a minimalist porcelain bowl. Soft natural light illuminates the vibrant colors of the seafood and greens, maintaining a clean, premium hospitality aesthetic with a light-mode color palette and high-quality food photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgOkkRtWpm6jmSSwJBTuQYsasNkooqN1zd-UurCcc_Q_ElLv-zG2Yp7atNluAWRHm-EmeU-nxkgj550jZgRY_4qeyhhQx2Q6bEAPpF4mlB2TkoeABaV3GUg4sEO_DUPNTo1FRwqsvp7GL3g2eh5pN6qZqBZzvdkJcdjOiQ71DzX5wHwud8hdFrckspGXGnbiGNlWY0tC0RGTSa_8ZH85LWbTgDSRpMwUly59Nban5NnRxrrTpzmzvhlQ">
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-md text-on-primary">
+<span class="font-label-md text-label-md font-bold">Dəniz Məhsulları</span>
+<span class="mt-xs font-bold text-secondary-container">28.00 AZN</span>
+</div>
+</div>
+<!-- Small Menu Item 2 -->
+<div class="relative group overflow-hidden rounded-xl h-64 shadow-md">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" data-alt="An exquisite designer dessert with intricate chocolate decorations and gold leaf accents served on a white marble surface. The lighting is soft and elegant, creating a luxury dessert experience. The overall visual style is minimalist and high-end, utilizing a light-mode aesthetic with creamy whites and subtle golden tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgYI7PuGiGbHqxLAQS1dQFjJieTjFVsxd8RdPvAfapHJrZ4lA3LRAM-m1bUH6HPlJNd2hgg9t8F1K4ZkwooKJL1YytzngcexKFRxhwFrw9JaROfoBRxXc8-FQ3e6IEawLheh9ZaOr-b6p0HZuZ6l2mdN1Bomlk-oY0oeMpmhTDXE-vDUBJix0QTaiGVav31MG0W7hJ-ejucsv69ulHIrNEUOKHlrixJTqmA6sQOr432I8cKv6Dc-2_yQ">
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-md text-on-primary">
+<span class="font-label-md text-label-md font-bold">Şokoladlı Sufle</span>
+<span class="mt-xs font-bold text-secondary-container">18.00 AZN</span>
+</div>
+</div>
+<!-- Small Menu Item 3 -->
+<div class="md:col-span-2 relative group overflow-hidden rounded-xl h-64 shadow-md">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" data-alt="A variety of colorful premium cocktails served in elegant glassware with artisanal garnishes on a dark wood bar counter. The background is softly blurred with warm ambient lighting. The photography style is professional and upscale, focusing on clarity, vibrant liquid colors, and a modern corporate hospitality vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgFRPsx8Phz2GFFHMxmwiMGRNLg1dml9JvkWLZCl0iMuDx3rLwSxacwndOvQhVaOLVHE8y2ndi9SH18-okf0mt70zo3raKnWGzWtkF0GcHa4ax7pQlCVqxDKfh_d5wdQbhj9BlWuOj0ALOGQtOomue2f96EMr73Ttf4fQHJsRD6GkJ0P7sIGI1ye8ATy5Rrs2uDtRAn50qqZlF-ftzbo_e5lIyXJQ9nuGHcdv08T-ahaVsmAEqVXgOnA">
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-md text-on-primary">
+<span class="font-headline-sm text-headline-sm">Kokteyllər</span>
+<span class="font-body-sm text-body-sm opacity-80">Premium içkilər kolleksiyası</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Side: Booking Panel -->
+<div class="lg:col-span-4">
+<div class="sticky top-24 bg-surface-container-lowest p-xl rounded-xl shadow-lg border border-outline-variant space-y-xl">
+<div class="space-y-base">
+<h3 class="font-headline-sm text-headline-sm">Rezervasiya et</h3>
+<p class="text-on-surface-variant font-body-sm text-body-sm">Zəhmət olmasa tarix və qonaq sayını seçin.</p>
+</div>
+<div class="space-y-md">
+<!-- Date Selection -->
+<div class="space-y-xs">
+<label class="font-label-md text-label-md block text-on-surface-variant">Tarix</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">calendar_today</span>
+<input class="w-full pl-[48px] pr-md py-md border border-outline-variant bg-surface focus:ring-2 focus:ring-secondary focus:border-secondary transition-all outline-none rounded-xl" type="date">
+</div>
+</div>
+<!-- Time Selection -->
+<div class="space-y-xs">
+<label class="font-label-md text-label-md block text-on-surface-variant">Vaxt</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline">schedule</span>
+<select class="w-full pl-[48px] pr-md py-md border border-outline-variant bg-surface appearance-none focus:ring-2 focus:ring-secondary focus:border-secondary transition-all outline-none rounded-xl">
+<option>19:00</option>
+<option>19:30</option>
+<option>20:00</option>
+<option>20:30</option>
+<option>21:00</option>
+</select>
+</div>
+</div>
+<!-- Guest Count -->
+<div class="space-y-xs">
+<label class="font-label-md text-label-md block text-on-surface-variant">Qonaq sayı</label>
+<div class="flex items-center justify-between p-base border border-outline-variant bg-surface rounded-xl">
+<button class="w-12 h-12 flex items-center justify-center hover:bg-surface-variant rounded-lg transition-colors" id="decGuests">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<span class="font-headline-sm text-headline-sm" id="guestCount">2</span>
+<button class="w-12 h-12 flex items-center justify-center hover:bg-surface-variant rounded-lg transition-colors" id="incGuests">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<div class="pt-md">
+<button class="w-full bg-primary text-on-primary py-lg rounded-xl font-headline-sm text-headline-sm hover:bg-opacity-90 active:scale-95 transition-all shadow-md" onclick="window.location.href='{{DATA:SCREEN:SCREEN_25}}'">
+                                Uyğun masalara bax
+                            </button>
+<p class="text-center text-on-surface-variant font-body-sm text-body-sm mt-md">
+<span class="material-symbols-outlined text-[14px] align-middle mr-1">info</span>
+                                Rezervasiya pulsuzdur
+                            </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] z-50 rounded-t-xl flex justify-around items-center px-sm pb-xs pt-base">
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant cursor-pointer p-xs">
+<span class="material-symbols-outlined">search</span>
+<span class="font-label-md text-label-md">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant cursor-pointer p-xs">
+<span class="material-symbols-outlined">event_available</span>
+<span class="font-label-md text-label-md">Reservations</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant cursor-pointer p-xs">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</div>
+</nav>
+<!-- Footer -->
+<footer class="bg-surface-container-low mt-2xl py-xl border-t border-outline-variant">
+<div class="max-w-container-max mx-auto px-gutter text-center space-y-md">
+<div class="flex justify-center items-center gap-xs">
+<img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdxgP-rs7PiR_q4gIeNrc0EMlNUphndSTzmG6Exvcu3J4dYAoRrHR8s-t43GL3h2HzOS34e8HBFogKzd5GgLTZmEWo7847lxnw8h1xVy6-KjRdwLehgnnH42iXI6ospedNlhJTSEBgxGz3KjwykSDIK99yCv554EBdLvOQuMOyt5OvxGDMSItjeoPiMccUnFE4-bIxItFS3qcS_dvW2zfZRpTGZ0O7zNpWHhqmXI6oM88IUD_V5m43xyrp5K8FOnCn7DI" alt="ECafe Logo" class="h-8 w-auto">
+<span class="text-headline-sm font-headline-sm text-primary tracking-tight">ECafe</span>
+</div>
+<p class="text-on-surface-variant font-body-sm text-body-sm">© 2024 ECafe Premium Hospitality. Bütün hüquqlar qorunur.</p>
+</div>
+</footer>
+<script>
+        // Micro-interactions for Guest Count
+        const guestDisplay = document.getElementById('guestCount');
+        let count = 2;
+
+        document.getElementById('incGuests').addEventListener('click', () => {
+            if (count < 20) {
+                count++;
+                guestDisplay.innerText = count;
+            }
+        });
+
+        document.getElementById('decGuests').addEventListener('click', () => {
+            if (count > 1) {
+                count--;
+                guestDisplay.innerText = count;
+            }
+        });
+    </script>
+
+
+</body></html>

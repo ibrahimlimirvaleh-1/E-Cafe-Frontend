@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html class="light" lang="az"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ECafe Admin | Rezervasiya Detalları</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#414658",
+                        "secondary": "#855300",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-primary-container": "#7e8397",
+                        "inverse-on-surface": "#f0f1f2",
+                        "primary-fixed-dim": "#c1c6db",
+                        "on-error-container": "#93000a",
+                        "surface": "#f8f9fa",
+                        "outline-variant": "#c6c6cd",
+                        "surface-tint": "#585e70",
+                        "surface-dim": "#d9dadb",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary-container": "#009668",
+                        "surface-container": "#edeeef",
+                        "on-background": "#191c1d",
+                        "inverse-surface": "#2e3132",
+                        "on-surface": "#191c1d",
+                        "on-secondary-fixed": "#2a1700",
+                        "tertiary": "#000000",
+                        "on-error": "#ffffff",
+                        "primary": "#000000",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "secondary-container": "#fea619",
+                        "primary-fixed": "#dde2f8",
+                        "on-primary-fixed": "#151b2b",
+                        "surface-variant": "#e1e3e4",
+                        "on-surface-variant": "#45464c",
+                        "tertiary-container": "#002113",
+                        "secondary-fixed": "#ffddb8",
+                        "on-secondary-container": "#684000",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "outline": "#76777d",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "on-tertiary-fixed": "#002113",
+                        "inverse-primary": "#c1c6db",
+                        "tertiary-fixed": "#6ffbbe",
+                        "primary-container": "#151b2b",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f8f9fa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "sm": "12px",
+                        "gutter": "24px",
+                        "xs": "8px",
+                        "xl": "32px",
+                        "2xl": "48px",
+                        "container-max": "1280px",
+                        "base": "4px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .bento-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .bento-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- Sidebar Navigation -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant shadow-sm flex flex-col py-md z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">ECafe Admin</h1>
+<p class="text-on-surface-variant text-xs opacity-70">İdarəetmə Paneli</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="text-on-surface-variant hover:bg-surface-container rounded-xl mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Panel</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container rounded-xl mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-body-md text-body-md">Müqavilələr</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container rounded-xl mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-body-md">Ödənişlər</span>
+</a>
+<a class="text-on-primary bg-primary rounded-xl mx-2 px-4 py-3 flex items-center gap-3 shadow-sm" href="#">
+<span class="material-symbols-outlined">event_seat</span>
+<span class="font-body-md text-body-md">Rezervasiyalar</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container rounded-xl mx-2 px-4 py-3 flex items-center gap-3 transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md text-body-md">Analitika</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary text-on-primary rounded-xl py-3 font-label-md flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">add</span>
+                Yeni Rezervasiya
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- Top Bar -->
+<header class="sticky top-0 z-40 bg-surface border-b border-outline-variant flex justify-between items-center px-gutter py-sm">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary">Rezervasiya #RSV-9821</h2>
+<p class="font-label-md text-on-surface-variant uppercase tracking-wider">Ətraflı Baxış</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant">
+<span class="material-symbols-outlined text-outline mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-48" placeholder="Sifarişlərdə axtar..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-10 w-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold shadow-sm">
+                    JD
+                </div>
+</div>
+</header>
+<!-- Content Grid -->
+<div class="p-gutter max-w-container-max mx-auto w-full space-y-lg">
+<!-- Hero Section / Status Timeline -->
+<div class="bg-surface-container-lowest rounded-xl p-xl shadow-sm border border-outline-variant flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex items-center gap-6">
+<div class="h-20 w-20 rounded-2xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" style="font-size: 40px;">calendar_month</span>
+</div>
+<div>
+<div class="flex items-center gap-3 mb-1">
+<span class="px-3 py-1 bg-on-tertiary-container/10 text-on-tertiary-container text-[10px] font-bold uppercase rounded-full tracking-widest">Təsdiqlənib</span>
+<span class="text-on-surface-variant text-body-sm italic">12 dəq əvvəl yenilənib</span>
+</div>
+<h3 class="font-headline-md text-headline-md">24 Oktyabr 2024, 19:30</h3>
+<p class="text-on-surface-variant font-body-md">Əsas Zal • 4 Nəfər</p>
+</div>
+</div>
+<!-- Timeline Visual -->
+<div class="flex items-center w-full md:w-auto px-4">
+<div class="flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-on-secondary shadow-lg">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="text-[10px] mt-1 font-bold text-secondary">GÖZLƏYİR</span>
+</div>
+<div class="h-1 w-16 bg-secondary mx-1"></div>
+<div class="flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-on-secondary shadow-lg">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="text-[10px] mt-1 font-bold text-secondary">TƏSDİQLƏNİB</span>
+</div>
+<div class="h-1 w-16 bg-surface-container-high mx-1"></div>
+<div class="flex flex-col items-center opacity-40">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">flag</span>
+</div>
+<span class="text-[10px] mt-1 font-bold">TAMAMLANDI</span>
+</div>
+</div>
+</div>
+<!-- Bento Layout Info -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Customer & Payment (2 cols) -->
+<div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-lg">
+<!-- Customer Details Card -->
+<div class="bento-card bg-surface-container-lowest p-lg rounded-xl border border-outline-variant flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<p class="font-label-md text-on-surface-variant uppercase tracking-widest">Müştəri</p>
+<button class="text-secondary hover:underline font-label-md">Profili redaktə et</button>
+</div>
+<div class="flex items-center gap-4">
+<div class="h-16 w-16 rounded-full overflow-hidden border-2 border-secondary-fixed">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a sophisticated gentleman in a dark navy tailored suit, set against a blurred high-end restaurant background. The lighting is warm and cinematic, reflecting a premium hospitality environment with soft golden highlights. The man has a welcoming yet serious expression, fitting for a VIP customer of a luxury establishment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBifZ0yKIiwT8KK0qGrnQ9rLccri0LbYjvTPkHCrOdXdEeNO62Gn61EBPJ1WkNt71f_zN_QQPPli6aq1dhcKMPnTBlUalLKQPkVpo4itz8xWLdrc1eHDJQ7aOEHveFjcx4102rE5wjXOpNpbRu93X7cB5zjLR475NKKYJzVogTm3wqJGpBUeBIbmj_8XI-t4c4iF7lBGdLW3mHu0iudO9rbJo17oZkRPphNoEJPhewmVJgkJodPV1YJDA"/>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm">Aleksander Sterlinq</h4>
+<p class="text-body-sm text-on-surface-variant">alex.sterling@corporate.com</p>
+<p class="text-body-sm text-on-surface-variant">+1 (555) 012-3456</p>
+</div>
+</div>
+<div class="mt-2 p-3 bg-surface-container rounded-lg border border-outline-variant/30">
+<p class="text-xs font-bold text-on-surface-variant uppercase mb-1">Qonaq qeydi</p>
+<p class="text-body-sm">"Pəncərə kənarı üstünlükdür. İldönümü qeyd olunur. Dəniz məhsullarına allergiyası yoxdur."</p>
+</div>
+</div>
+<!-- Restaurant & Staff Card -->
+<div class="bento-card bg-surface-container-lowest p-lg rounded-xl border border-outline-variant flex flex-col gap-4">
+<p class="font-label-md text-on-surface-variant uppercase tracking-widest">Əməliyyatlar</p>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">restaurant</span>
+<span class="text-body-md font-semibold">Restoran</span>
+</div>
+<span class="text-body-md">ECafe Downtown Loft</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">table_restaurant</span>
+<span class="text-body-md font-semibold">Masa</span>
+</div>
+<div class="relative group">
+<button class="flex items-center gap-1 bg-surface-container px-3 py-1 rounded-md hover:bg-surface-variant transition-colors border border-outline-variant/50">
+                                        Masa 14 (Pəncərə)
+                                        <span class="material-symbols-outlined text-xs">expand_more</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">person_celebrate</span>
+<span class="text-body-md font-semibold">Ofisiant</span>
+</div>
+<div class="relative group">
+<button class="flex items-center gap-1 bg-surface-container px-3 py-1 rounded-md hover:bg-surface-variant transition-colors border border-outline-variant/50">
+                                        Marko V.
+                                        <span class="material-symbols-outlined text-xs">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Payment Status Card -->
+<div class="bento-card md:col-span-2 bg-primary text-on-primary p-lg rounded-xl flex flex-col md:flex-row justify-between items-center border border-primary">
+<div class="flex items-center gap-6 mb-4 md:mb-0">
+<div class="p-4 rounded-full bg-surface-container-highest/20">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+</div>
+<div>
+<p class="text-on-primary/70 text-xs uppercase font-bold tracking-widest">Ödəniş Statusu</p>
+<h4 class="text-headline-sm text-on-primary font-bold">Onlayn Ödənilib: $50.00</h4>
+<p class="text-on-primary/70 text-body-sm">Stripe vasitəsilə 20 Oktyabr • Trans ID: 88219-X</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-4 py-1 bg-tertiary-fixed text-on-tertiary-fixed font-bold rounded-full text-xs">VERİFİKASİYA OLUNUB</span>
+<p class="text-on-primary mt-2 font-headline-md">$345.20 Təxmini Cəm</p>
+</div>
+</div>
+</div>
+<!-- Right Column: Sidebar of Details -->
+<div class="space-y-lg">
+<!-- Actions Panel -->
+<div class="bg-surface-container-highest p-lg rounded-xl border border-outline-variant space-y-4 shadow-inner">
+<p class="font-label-md text-on-surface-variant uppercase tracking-widest mb-2">İdarəetmə Əməliyyatları</p>
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 transition-all">
+<span class="material-symbols-outlined">check_circle</span>
+                            Təsdiqlə
+                        </button>
+<button class="w-full bg-surface-container-lowest text-primary py-4 rounded-xl font-bold border border-outline-variant flex items-center justify-center gap-2 hover:bg-surface transition-all">
+<span class="material-symbols-outlined">person_add</span>
+                            Ofisiant Təyin Et
+                        </button>
+<div class="pt-4 border-t border-outline-variant/30">
+<button class="w-full text-error py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-error/5 transition-all">
+<span class="material-symbols-outlined">cancel</span>
+                                Ləğv et
+                            </button>
+</div>
+</div>
+<!-- Linked Map/Location (Bento feel) -->
+<div class="h-64 rounded-xl overflow-hidden border border-outline-variant relative group">
+<div class="w-full h-full bg-cover bg-center" data-alt="A stylized, minimalist architectural map view of a city center, featuring clean lines, dark navy blocks for buildings, and golden lines for main streets. The aesthetic is ultra-modern and corporate, with no cluttered text, focusing on a luxury geographic representation of a restaurant location. High-contrast lighting highlights the premium district." data-location="Baku, Azerbaijan" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBlLXYjYEVIQK9kru200KNpcR2a1rT9u5vBdyBKOG-Uo9BhFVmuBN86tOunxU2EqsLyjLxXfrzCYLof6HzN3Il9qinGfDFlSqXSZPC5hqdh1JjbsFZgxXKlz8sbzKYvrsK6UiOogDqtU6GIWcQRExBfnZBgKYniYkq62KfQmRVM3OF_mzJXio97wir4KiqPJLKfvZ4A_Loo-iNZK2U9VJL03jw4Dwnz8a9e1v_Vlhb6fo3PMYUauqjqvQ')"></div>
+<div class="absolute bottom-4 left-4 right-4 bg-surface-container-lowest/90 backdrop-blur-md p-3 rounded-lg border border-outline-variant/30">
+<p class="text-xs font-bold uppercase text-on-surface-variant">Masa Məkanı</p>
+<p class="text-body-sm font-semibold">Zona: Pəncərə Terras (Premium)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Linked Menu Orders -->
+<section class="space-y-md">
+<div class="flex items-center justify-between px-2">
+<h3 class="font-headline-md text-headline-md">Öncədən Sifarişlər</h3>
+<button class="text-primary font-label-md flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm">add</span>
+                        Məhsul Əlavə Et
+                    </button>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+<table class="w-full text-left">
+<thead class="bg-surface-container text-on-surface-variant font-label-md border-b border-outline-variant">
+<tr>
+<th class="px-6 py-4 uppercase">Məhsul</th>
+<th class="px-6 py-4 uppercase">Say</th>
+<th class="px-6 py-4 uppercase text-right">Qiymət</th>
+<th class="px-6 py-4 uppercase">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="h-12 w-12 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="An exquisite gourmet presentation of a Wagyu beef steak, perfectly seared with a dark caramelized crust and resting on a bed of vibrant green asparagus. The dish is plated on a luxury black ceramic plate with subtle artistic sauce drizzles. The lighting is focused and warm, highlighting the rich textures and premium quality of the ingredients." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMuJuo4iil6V0wog07f-DLOfnpRzCvJPuwKsxtYJMdn-IzUjtRGJb0a4IsAbNahMJ-fOnYjZoTKMcSBTS4yRpWzjampbmvbXVbPJzxzkTJioIjmLGVsdgway7j7ZcEy-QklGKp4nV6GtrezL7BPkSyqbxuHubzWld5kgGkAl41iLGRd1Qip2eVBifiu5IIV4mQiDum0_Q6TuuEp8eRKP9pPLnVCXUC031n215PYX3HzB90Sc3j54loZQ"/>
+</div>
+<div>
+<p class="font-bold text-on-surface">Wagyu Beef Medallions</p>
+<p class="text-xs text-on-surface-variant">Az bişmiş, Yanında: Trüfel Püresi</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 font-medium text-on-surface">2</td>
+<td class="px-6 py-5 text-right font-bold text-on-surface">$144.00</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold rounded-full">MƏTBƏXDƏDİR</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-4">
+<div class="h-12 w-12 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A premium bottle of vintage red wine, elegantly placed next to two crystal wine glasses on a dark polished wood table. The wine has a deep ruby color reflecting the warm ambient candlelight of a high-end restaurant. The scene exudes luxury, sophistication, and a sense of exclusive celebration." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXnlXrCtrNYYeHSs7laNrzzYzLA4SdhVrPkQIREDPWQTaw2wjV0vR7Z2ZSXalPB9MReQuhsSj-_hZ7-mfu6PniwU8gPeQGo7qbcTMvncD4IU003P-etV3iQo3GsjfZ0C9fz7n3JRmGSDyEIZp5fhaahLxyjMu9rZAaaWU8L_TeWsGdUxxYGjnbdDk4xWdjRieXuwQ-xKfoWP3bjE8Im4qtntiONSWhuxNecSRA4z_Cg2gVltZBDr8nsg"/>
+</div>
+<div>
+<p class="font-bold text-on-surface">Château Margaux 2015</p>
+<p class="text-xs text-on-surface-variant">750ml Şüşə • Somelye Xidməti</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 font-medium text-on-surface">1</td>
+<td class="px-6 py-5 text-right font-bold text-on-surface">$185.00</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-on-tertiary-container/10 text-on-tertiary-container text-[10px] font-bold rounded-full">HAZIRDIR</span>
+</td>
+</tr>
+</tbody>
+<tfoot class="bg-surface-container-low font-bold">
+<tr>
+<td class="px-6 py-4 text-right text-on-surface-variant" colspan="2">Cəm</td>
+<td class="px-6 py-4 text-right text-on-surface text-lg">$329.00</td>
+<td></td>
+</tr>
+</tfoot>
+</table>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<footer class="flex flex-col md:flex-row justify-between items-center px-gutter py-xl mt-auto w-full bg-surface-container-low text-on-surface-variant font-body-sm border-t border-outline-variant">
+<div class="flex items-center gap-4 mb-4 md:mb-0">
+<span class="font-headline-sm text-primary">ECafe</span>
+<p>© 2024 ECafe Hospitality Management. Bütün hüquqlar qorunur.</p>
+</div>
+<div class="flex gap-6">
+<a class="hover:text-primary underline cursor-pointer" href="#">Məxfilik Siyasəti</a>
+<a class="hover:text-primary underline cursor-pointer" href="#">İstifadə Şərtləri</a>
+<a class="hover:text-primary underline cursor-pointer" href="#">Dəstək</a>
+</div>
+</footer>
+</main>
+<script>
+        // Simple Interaction: Toggle active state of sidebar buttons (UI only)
+        document.querySelectorAll('aside nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                document.querySelectorAll('aside nav a').forEach(l => {
+                    l.classList.remove('text-on-primary', 'bg-primary', 'shadow-sm');
+                    l.classList.add('text-on-surface-variant', 'hover:bg-surface-container');
+                });
+                link.classList.remove('text-on-surface-variant', 'hover:bg-surface-container');
+                link.classList.add('text-on-primary', 'bg-primary', 'shadow-sm');
+            });
+        });
+    </script>
+</body></html>

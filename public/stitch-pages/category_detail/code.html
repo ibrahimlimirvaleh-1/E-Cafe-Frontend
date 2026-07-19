@@ -1,0 +1,375 @@
+<!DOCTYPE html><html lang="az"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ECafe Admin - Kateqoriya Detalları</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-surface": "#2e3132",
+                    "surface-variant": "#e1e3e4",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#191c1d",
+                    "on-tertiary-fixed": "#002113",
+                    "on-secondary-fixed-variant": "#653e00",
+                    "surface-container": "#edeeef",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#000000",
+                    "surface": "#f8f9fa",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "surface-container-high": "#e7e8e9",
+                    "on-tertiary-container": "#009668",
+                    "on-primary": "#ffffff",
+                    "on-secondary-container": "#684000",
+                    "surface-container-highest": "#e1e3e4",
+                    "primary-fixed-dim": "#c1c6db",
+                    "background": "#f8f9fa",
+                    "error": "#ba1a1a",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "primary-container": "#151b2b",
+                    "outline-variant": "#c6c6cd",
+                    "secondary-fixed": "#ffddb8",
+                    "secondary-container": "#fea619",
+                    "outline": "#76777d",
+                    "on-secondary-fixed": "#2a1700",
+                    "on-primary-fixed": "#151b2b",
+                    "inverse-primary": "#c1c6db",
+                    "surface-bright": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#855300",
+                    "primary-fixed": "#dde2f8",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#ffb95f",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-dim": "#d9dadb",
+                    "on-surface-variant": "#45464c",
+                    "primary": "#000000",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "lg": "24px",
+                    "xs": "8px",
+                    "md": "16px",
+                    "xl": "32px",
+                    "base": "4px",
+                    "2xl": "48px",
+                    "gutter": "24px",
+                    "sm": "12px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e1e3e4; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface flex min-h-screen">
+<!-- Navigation Drawer (Admin Sidebar) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant flex flex-col z-40 hidden md:flex">
+<div class="text-headline-sm font-headline-sm text-primary py-xl px-lg">ECafe Admin</div>
+<nav class="flex flex-col flex-grow overflow-y-auto custom-scrollbar">
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">storefront</span>
+<span class="font-body-md text-body-md">Restaurants</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">table_restaurant</span>
+<span class="font-body-md text-body-md">Tables</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">group</span>
+<span class="font-body-md text-body-md">Staff</span>
+</a>
+<a class="flex items-center text-primary font-bold border-l-4 border-secondary bg-surface-container-high px-lg py-md cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">restaurant_menu</span>
+<span class="font-body-md text-body-md">Menu</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">book_online</span>
+<span class="font-body-md text-body-md">Reservations</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-md">payments</span>
+<span class="font-body-md text-body-md">Payments</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer mt-auto" href="#">
+<span class="material-symbols-outlined mr-md">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center text-on-surface-variant px-lg py-md hover:bg-surface-variant hover:text-primary transition-all cursor-pointer border-t border-outline-variant" href="#">
+<span class="material-symbols-outlined mr-md">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-grow md:ml-64 flex flex-col relative">
+<!-- Header (TopAppBar) -->
+<header class="bg-surface-container-low dark:bg-surface-container shadow-sm sticky top-0 z-30 w-full">
+<div class="flex justify-between items-center px-gutter py-md max-w-container-max mx-auto"><div class="flex flex-col"><nav class="flex items-center text-on-surface-variant text-label-md font-label-md mb-base"><span class="">Menyu</span><span class="material-symbols-outlined text-[14px] mx-xs">chevron_right</span><a href="{{DATA:SCREEN:SCREEN_74}}" class="hover:underline">Kateqoriyalar</a><span class="material-symbols-outlined text-[14px] mx-xs">chevron_right</span><span class="text-primary">Kateqoriya Detalları</span></nav><h1 class="text-headline-md font-headline-md text-primary tracking-tight">Kateqoriya Detalları</h1><p class="text-body-sm text-on-surface-variant">Kateqoriya məlumatları və aid olan menyu elementləri.</p></div><div class="flex gap-sm"><button class="flex items-center bg-surface border border-error text-error font-label-md hover:bg-error-container transition-colors active:scale-95 px-xl py-md rounded-xl"><span class="material-symbols-outlined mr-xs">block</span>Deaktiv et</button><a href="#" class="flex items-center px-xl py-md bg-primary text-on-primary font-label-md rounded-xl hover:opacity-90 transition-opacity active:scale-95 shadow-sm"><span class="material-symbols-outlined mr-xs">edit</span>Redaktə et</a></div></div>
+</header>
+<!-- Content Canvas -->
+<div class="p-gutter grid grid-cols-12 gap-lg max-w-container-max mx-auto w-full">
+<!-- Category Info & Table -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-lg">
+<!-- Main Category Card (Bento Style) -->
+<div class="bg-surface-container-lowest rounded-xl p-xl shadow-sm border border-outline-variant overflow-hidden relative group"><h3 class="text-headline-sm font-headline-sm text-primary mb-md relative z-10">Əsas Məlumatlar</h3>
+<!-- Decorative subtle background gradient -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -mr-16 -mt-16 blur-3xl transition-transform group-hover:scale-150"></div>
+<div class="flex flex-col md:flex-row justify-between gap-xl relative z-10">
+<div class="flex flex-col gap-md"><div class="flex items-center justify-between w-full"><h2 class="text-headline-lg font-headline-lg text-primary">Premium Desertlər</h2><span class="bg-secondary-container text-on-secondary-container text-label-md px-md py-base rounded-full uppercase tracking-wider">Aktiv</span></div><span class="text-on-surface-variant text-label-md">ID: CAT-DES-001</span><p class="text-body-md text-on-surface-variant max-w-md">Eksklüziv desertlər bölməsi üçün hazırlanmış xüsusi menyu qrupu. Yalnız yüksək keyfiyyətli inqrediyentlərdən hazırlanan şirniyyatlar daxildir.</p></div>
+<div class="grid grid-cols-2 gap-md min-w-[200px]">
+<div class="flex flex-col p-md bg-surface-container-low rounded-lg border border-outline-variant">
+<span class="text-label-md text-on-surface-variant uppercase">Məhsul sayı</span>
+<span class="text-headline-sm font-headline-sm text-primary">24</span>
+</div>
+<div class="flex flex-col p-md bg-surface-container-low rounded-lg border border-outline-variant">
+<span class="text-label-md text-on-surface-variant uppercase">Satış (Ay)</span>
+<span class="text-headline-sm font-headline-sm text-secondary">4.2k ₼</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Menu Items Table Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<div class="px-xl py-lg border-b border-outline-variant flex justify-between items-center">
+<h3 class="text-headline-sm font-headline-sm text-primary">Menyu Elementləri</h3>
+<button class="text-secondary font-label-md flex items-center hover:underline">
+<span class="material-symbols-outlined mr-xs">add_circle</span>
+                            Yeni element
+                        </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low text-label-md text-on-surface-variant uppercase">
+<tr>
+<th class="px-xl py-md font-semibold">Məhsul</th>
+<th class="px-xl py-md font-semibold">Qiymət</th>
+<th class="px-xl py-md font-semibold">Status</th>
+<th class="px-xl py-md font-semibold text-right">Əməliyyat</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="px-xl py-md">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center border border-outline-variant" data-alt="A luxurious close-up of a gold-leaf chocolate fondant dessert on a minimalist black ceramic plate. The lighting is moody and dramatic with soft highlights on the melting chocolate. The overall aesthetic is premium, dark navy and gold tones, reflecting a high-end restaurant experience." style="background-image: url('https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg')"></div>
+<div class="flex flex-col">
+<span class="text-body-md font-semibold text-on-surface">Qızıl Fondan</span>
+<span class="text-body-sm text-on-surface-variant">Fransız şokoladı</span>
+</div>
+</div>
+</td>
+<td class="px-xl py-md text-body-md font-medium text-primary">18.50 ₼</td>
+<td class="px-xl py-md">
+<span class="inline-flex items-center gap-xs px-sm py-xs bg-on-tertiary-container/10 text-on-tertiary-container text-label-md rounded-full">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span> Mövcuddur
+                                        </span>
+</td>
+<td class="px-xl py-md text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="px-xl py-md">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center border border-outline-variant" data-alt="A modern interpretation of a classic pavlova with fresh exotic fruits and edible flowers, arranged artistically on a white marble slab. The image is bright and airy with high-key lighting, capturing the delicate textures of the meringue and vibrant colors of the fruit. Minimalist and professional luxury style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaQ4R36anmfZvw-xj7QA2_nb4zcS31pN1VcJK-S5xFmc8iyFgIhC0skxMtbjs15iAJGXgYbNRlGAPPcW8cQNYUi8_kkVVgt58WEZhSVodeVpZ6FoKsr1AtVzCA5Of7L2CsvOv_VeUO_LP6xmBcLKismWYGhK6wiPi0phZ5g6vIu71ZwVmF0mniE-XGu5-2udu5jvRB_-VHaRrIYWuL2jPPdA_eSktRXstU28VkPx3oDDNjmHMmwdq3Vw')"></div>
+<div class="flex flex-col">
+<span class="text-body-md font-semibold text-on-surface">Ekzotik Pavlova</span>
+<span class="text-body-sm text-on-surface-variant">Manqo və ehtiras meyvəsi</span>
+</div>
+</div>
+</td>
+<td class="px-xl py-md text-body-md font-medium text-primary">14.00 ₼</td>
+<td class="px-xl py-md">
+<span class="inline-flex items-center gap-xs px-sm py-xs bg-on-tertiary-container/10 text-on-tertiary-container text-label-md rounded-full">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span> Mövcuddur
+                                        </span>
+</td>
+<td class="px-xl py-md text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-variant/30 transition-colors">
+<td class="px-xl py-md">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center border border-outline-variant" data-alt="Gourmet saffron cheesecake with a spiced honey glaze and crushed pistachios, presented in a minimalist high-end cafe setting. The lighting is warm and inviting, highlighting the rich yellow hues of the saffron. The aesthetic is modern corporate hospitality, clean and sophisticated." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuACLYW5LSD_D3hFrQJs6FjkJEStFCLDxKl_aCLZ78cSMb9QeqT4DH_FyzZLEFpj_SOrmGSy-pvpqf5cYtUqAXvizk3unPJsNZOfk0Ocl6DC-xUPZW4CyPdlDkNklLsfY5_mpWlwnwu8hku9tt2WuLMT9SDLw2qu4eeTyMlVMz0xmPnVKabaCLsN2CKZ4hvvjzVqFqWk-cP00WLf7QoVmqLzunBkzf-nWldUJnLS7pIp5WhX1UIkDxnX8A')"></div>
+<div class="flex flex-col">
+<span class="text-body-md font-semibold text-on-surface">Zəfəranlı Cheesecake</span>
+<span class="text-body-sm text-on-surface-variant">Lokal ləzzətlər</span>
+</div>
+</div>
+</td>
+<td class="px-xl py-md text-body-md font-medium text-primary">22.00 ₼</td>
+<td class="px-xl py-md">
+<span class="inline-flex items-center gap-xs px-sm py-xs bg-error-container text-error text-label-md rounded-full">
+<span class="w-2 h-2 rounded-full bg-error"></span> Bitib
+                                        </span>
+</td>
+<td class="px-xl py-md text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Sidebar Info (Audit History) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-lg">
+<!-- Metrics Grid for Sidebar -->
+<div class="bg-primary-container text-on-primary-container p-xl rounded-xl shadow-lg flex flex-col gap-md">
+<span class="text-label-md uppercase tracking-widest opacity-70">Ümumi Baxış</span>
+<div class="flex items-end justify-between">
+<div class="text-display-lg font-display-lg leading-none">84%</div>
+<div class="text-body-sm flex items-center text-tertiary-fixed-dim">
+<span class="material-symbols-outlined text-[18px] mr-xs">trending_up</span>
+                            +12%
+                        </div>
+</div>
+<p class="text-body-sm opacity-80">Ötən ayla müqayisədə bu kateqoriyaya maraq artıb.</p>
+</div>
+<!-- Audit History Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant flex flex-col flex-grow">
+<div class="px-xl py-lg border-b border-outline-variant">
+<h3 class="text-headline-sm font-headline-sm text-primary">Audit Tarixçəsi</h3>
+</div>
+<div class="p-xl flex flex-col gap-xl">
+<div class="flex gap-md relative">
+<!-- Timeline line -->
+<div class="absolute left-[11px] top-7 bottom-[-24px] w-[2px] bg-outline-variant"></div>
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-[14px] text-on-primary">history_edu</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="text-body-md font-semibold text-on-surface">Təsvir redaktə edildi</span>
+<span class="text-body-sm text-on-surface-variant">Admin: Elnur Məmmədov</span>
+<span class="text-label-md text-outline">Bugün, 14:20</span>
+</div>
+</div>
+<div class="flex gap-md relative">
+<!-- Timeline line -->
+<div class="absolute left-[11px] top-7 bottom-[-24px] w-[2px] bg-outline-variant"></div>
+<div class="w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-[14px] text-on-secondary-container">visibility</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="text-body-md font-semibold text-on-surface">Görünürlük dəyişdirildi</span>
+<span class="text-body-sm text-on-surface-variant">Menyu statusu 'Aktiv' olaraq təyin edildi</span>
+<span class="text-label-md text-outline">Dünən, 09:45</span>
+</div>
+</div>
+<div class="flex gap-md relative">
+<div class="w-6 h-6 rounded-full bg-surface-variant flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">add</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="text-body-md font-semibold text-on-surface">Kateqoriya yaradıldı</span>
+<span class="text-body-sm text-on-surface-variant">Sistem tərəfindən ilkin quraşdırma</span>
+<span class="text-label-md text-outline">12 Mart, 18:30</span>
+</div>
+</div>
+</div>
+<div class="mt-auto p-xl border-t border-outline-variant">
+<button class="w-full py-md text-primary font-label-md hover:bg-surface-container-high rounded-lg transition-colors border border-outline-variant">Bütün tarixçəyə bax</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Navigation Shell (BottomNavBar) -->
+<footer class="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface dark:bg-surface-container-highest shadow-[0_-4px_12px_0_rgba(0,0,0,0.05)] flex justify-around items-center px-sm pb-xs pt-base">
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform hover:bg-surface-variant p-2 rounded-lg">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="font-label-md text-label-md">Menu</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform hover:bg-surface-variant p-2 rounded-lg">
+<span class="material-symbols-outlined">event_available</span>
+<span class="font-label-md text-label-md">Reservations</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform hover:bg-surface-variant p-2 rounded-lg">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</div>
+</footer>
+<script>
+        // Simple micro-interaction for table rows
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('mousedown', () => {
+                row.style.transform = 'scale(0.998)';
+                row.style.transition = 'transform 0.1s';
+            });
+            row.addEventListener('mouseup', () => {
+                row.style.transform = 'scale(1)';
+            });
+        });
+
+        // Toggle active states for navigation (simulated)
+        const navItems = document.querySelectorAll('aside nav a');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                navItems.forEach(i => {
+                    i.classList.remove('text-primary', 'font-bold', 'border-l-4', 'border-secondary', 'bg-surface-container-high');
+                    i.classList.add('text-on-surface-variant');
+                });
+                item.classList.add('text-primary', 'font-bold', 'border-l-4', 'border-secondary', 'bg-surface-container-high');
+                item.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+
+
+
+</body></html>
