@@ -124,7 +124,7 @@ export function StitchPage({ pageId }: StitchPageProps) {
 
     brandContainer.style.display = 'inline-flex'
     brandContainer.style.alignItems = 'center'
-    brandContainer.style.gap = '8px'
+    brandContainer.style.gap = '3px'
 
     if (previousIcon?.classList.contains('material-symbols-outlined')) {
       previousIcon.remove()
@@ -137,6 +137,8 @@ export function StitchPage({ pageId }: StitchPageProps) {
       existingImage.style.width = existingImage.style.width || '32px'
       existingImage.style.height = existingImage.style.height || '32px'
       existingImage.style.objectFit = 'contain'
+      existingImage.style.marginRight = '0'
+      existingImage.style.paddingRight = '0'
       return
     }
 
@@ -147,6 +149,8 @@ export function StitchPage({ pageId }: StitchPageProps) {
     icon.style.width = '32px'
     icon.style.height = '32px'
     icon.style.objectFit = 'contain'
+    icon.style.marginRight = '0'
+    icon.style.paddingRight = '0'
     brand.before(icon)
   }
 
