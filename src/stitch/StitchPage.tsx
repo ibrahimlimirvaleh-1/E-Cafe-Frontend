@@ -17,8 +17,6 @@ const adminSidebarItems = [
   { label: 'Masalar', icon: 'table_restaurant', route: '/admin/tables' },
   { label: 'Kateqoriyalar', icon: 'category', route: '/admin/categories' },
   { label: 'Menyu', icon: 'restaurant_menu', route: '/admin/menu' },
-  { label: 'Mətbəx', icon: 'kitchen', route: '/kitchen' },
-  { label: 'Ofisiant', icon: 'room_service', route: '/waiter' },
 ]
 
 export function StitchPage({ pageId }: StitchPageProps) {
@@ -51,7 +49,7 @@ export function StitchPage({ pageId }: StitchPageProps) {
       if (text.includes('masalar') || text.includes('masa')) return '/admin/tables'
       if (text.includes('kateqoriya')) return '/admin/categories'
       if (text.includes('menyu')) return '/admin/menu'
-      if (text.includes('metbex')) return '/kitchen'
+
     }
 
     if (text.includes('login') || text.includes('daxil ol') || text.includes('giris')) return '/login'
