@@ -76,6 +76,7 @@ export function StitchPage({ pageId }: StitchPageProps) {
 
     normalizeFrameBrand(frameDocument)
     normalizeAdminSidebar(frameDocument)
+    wireMenuSelection(frameDocument)
 
     frameDocument.querySelectorAll<HTMLAnchorElement>('a').forEach((anchor) => {
       const href = anchor.getAttribute('href') ?? ''
@@ -150,6 +151,114 @@ export function StitchPage({ pageId }: StitchPageProps) {
 
   function normalizeRoute(route: string) {
     return route.replace(/\/$/, '')
+  }
+
+  function wireMenuSelection(frameDocument: Document) {
+    if (id !== 'menyu_se_imi') {
+      return
+    }
+
+    const categoryButtons = Array.from(frameDocument.querySelectorAll<HTMLButtonElement>('button')).filter((button) =>
+      getMenuCategory(button.textContent ?? ''),
+    )
+    const itemCards = Array.from(frameDocument.querySelectorAll<HTMLInputElement>('input')).flatMap((input) => {
+      const placeholder = input.getAttribute('placeholder') ?? ''
+      const card = input.closest<HTMLElement>('.bg-surface-container-lowest')
+
+      return placeholder.toLowerCase().includes('qeyd') || placeholder.toLowerCase().includes('note')
+        ? card
+          ? [card]
+          : []
+        : []
+    })
+
+    if (!categoryButtons.length || !itemCards.length) {
+      return
+    }
+
+    const setActiveButton = (activeButton: HTMLButtonElement) => {
+      categoryButtons.forEach((button) => {
+        button.classList.remove('bg-primary', 'text-on-primary', 'shadow-md')
+        button.classList.add('bg-surface-container-lowest', 'text-on-surface-variant')
+      })
+      activeButton.classList.remove('bg-surface-container-lowest', 'text-on-surface-variant')
+      activeButton.classList.add('bg-primary', 'text-on-primary', 'shadow-md')
+    }
+
+    const filterItems = (category: string) => {
+      itemCards.forEach((card) => {
+        const badge = Array.from(card.querySelectorAll<HTMLElement>('span')).find((span) =>
+          getMenuCategory(span.textContent ?? ''),
+        )
+        const cardCategory = getMenuCategory(badge?.textContent ?? '')
+        const shouldShow = category === 'Hamısı' || category === cardCategory
+
+        card.style.display = shouldShow ? '' : 'none'
+      })
+    }
+
+    categoryButtons.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        const category = getMenuCategory(button.textContent ?? '')
+
+        if (!category) {
+          return
+        }
+
+        event.preventDefault()
+        event.stopPropagation()
+        setActiveButton(button)
+        filterItems(category)
+      })
+    })
+
+    const quantityById = new Map<string, number>()
+    frameDocument.querySelectorAll<HTMLElement>('[id^="q"]').forEach((quantity) => {
+      quantityById.set(quantity.id, Number(quantity.textContent?.trim()) || 0)
+    })
+    frameDocument.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
+      const onclick = button.getAttribute('onclick') ?? ''
+      const match = onclick.match(/(increment|decrement)\('([^']+)'\)/)
+
+      if (!match) {
+        return
+      }
+
+      button.removeAttribute('onclick')
+      button.addEventListener('click', (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+
+        const [, action, quantityId] = match
+        const quantityElement = frameDocument.getElementById(quantityId)
+        const currentValue = quantityById.get(quantityId) ?? (Number(quantityElement?.textContent?.trim()) || 0)
+        const nextValue = Math.max(0, currentValue + (action === 'increment' ? 1 : -1))
+
+        quantityById.set(quantityId, nextValue)
+
+        if (quantityElement) {
+          quantityElement.textContent = String(nextValue)
+        }
+      })
+    })
+  }
+
+  function getMenuCategory(value: string) {
+    const text = value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    if (!text) return undefined
+    if (text.includes('hami')) return 'Hamısı'
+    if (text.includes('soyuq')) return 'Soyuq qəlyanaltılar'
+    if (text.includes('esas') || text.includes('yem')) return 'Əsas yeməklər'
+    if (text.includes('icki') || text.includes('icki') || text.includes('icgi') || text.includes('içki')) return 'İçkilər'
+    if (text.includes('sirni') || text.includes('desert') || text.includes('paxlava')) return 'Şirniyyatlar'
+
+    return undefined
   }
 
   function injectAdminSidebarStyles(frameDocument: Document) {
