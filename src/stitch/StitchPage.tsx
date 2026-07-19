@@ -75,6 +75,14 @@ export function StitchPage({ pageId }: StitchPageProps) {
 
   function normalizeFrameBrand(frameDocument: Document) {
     const brandLabel = isAdminSurface ? 'ECafe Admin' : 'ECafe'
+
+    replaceFrameLogoImages(frameDocument)
+
+    if (id === 'giri_qeydiyyat') {
+      frameDocument.querySelector('header')?.remove()
+      return
+    }
+
     const brandCandidates = Array.from(
       frameDocument.querySelectorAll<HTMLElement>('h1, h2, h3, span, div, a'),
     ).filter((element) => {
@@ -99,23 +107,46 @@ export function StitchPage({ pageId }: StitchPageProps) {
     })
   }
 
+  function replaceFrameLogoImages(frameDocument: Document) {
+    frameDocument.querySelectorAll<HTMLImageElement>('img[alt*="ECafe"], img[alt*="Logo"]').forEach((image) => {
+      image.src = '/ecafe-icon.png'
+      image.alt = 'ECafe'
+      image.style.objectFit = 'contain'
+    })
+  }
+
   function ensureBrandIcon(brand: HTMLElement) {
     const brandContainer = brand.parentElement ?? brand
-    const hasIcon =
-      brand.previousElementSibling?.classList.contains('material-symbols-outlined') ||
-      brandContainer.querySelector('img[alt*="ECafe"], img[alt*="Logo"], .ecafe-brand-icon')
+    const previousIcon = brand.previousElementSibling
+    const existingImage = brandContainer.querySelector<HTMLImageElement>(
+      'img[alt*="ECafe"], img[alt*="Logo"], .ecafe-brand-icon',
+    )
 
     brandContainer.style.display = 'inline-flex'
     brandContainer.style.alignItems = 'center'
     brandContainer.style.gap = '8px'
 
-    if (hasIcon) {
+    if (previousIcon?.classList.contains('material-symbols-outlined')) {
+      previousIcon.remove()
+    }
+
+    if (existingImage) {
+      existingImage.src = '/ecafe-icon.png'
+      existingImage.alt = 'ECafe'
+      existingImage.classList.add('ecafe-brand-icon')
+      existingImage.style.width = existingImage.style.width || '32px'
+      existingImage.style.height = existingImage.style.height || '32px'
+      existingImage.style.objectFit = 'contain'
       return
     }
 
-    const icon = brand.ownerDocument.createElement('span')
-    icon.className = 'material-symbols-outlined text-primary ecafe-brand-icon'
-    icon.textContent = 'restaurant'
+    const icon = brand.ownerDocument.createElement('img')
+    icon.className = 'ecafe-brand-icon'
+    icon.src = '/ecafe-icon.png'
+    icon.alt = 'ECafe'
+    icon.style.width = '32px'
+    icon.style.height = '32px'
+    icon.style.objectFit = 'contain'
     brand.before(icon)
   }
 
