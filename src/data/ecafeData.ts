@@ -39,6 +39,7 @@ export type MenuProduct = {
   status: string
   tone: Tone
   description: string
+  image: string
 }
 
 export type AdminRow = {
@@ -124,39 +125,69 @@ export const restaurants: Restaurant[] = [
 export const menuProducts: MenuProduct[] = [
   {
     id: 'menu-101',
-    title: 'Şah plov',
-    category: 'Əsas yemək',
-    price: '₼24',
+    title: 'Tərəvəz Buketi',
+    category: 'Soyuq qəlyanaltılar',
+    price: '₼12',
     status: 'Aktiv',
     tone: 'success',
-    description: 'Quru meyvə, quzu əti və zəfəranlı düyü ilə servis olunur.',
+    description: 'Təzə mövsüm tərəvəzləri, yerli göyərtilər və Motal pendiri ilə.',
+    image:
+      'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=900&q=80',
   },
   {
     id: 'menu-102',
+    title: 'Şah Plov',
+    category: 'Əsas yemək',
+    price: '₼45',
+    status: 'Aktiv',
+    tone: 'success',
+    description: 'Qazmaqda bişmiş ətirli uzun düyü, quzu əti, qaysı və şabalıd ilə.',
+    image:
+      'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    id: 'menu-103',
+    title: 'Nar Şərbəti',
+    category: 'İçkilər',
+    price: '₼8',
+    status: 'Aktiv',
+    tone: 'info',
+    description: 'Təzə sıxılmış nar şirəsi və xüsusi ədviyyat qarışığı.',
+    image:
+      'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    id: 'menu-104',
+    title: 'Bakı Paxlavası',
+    category: 'Şirniyyatlar',
+    price: '₼15',
+    status: 'Aktiv',
+    tone: 'warning',
+    description: 'Bal ilə zənginləşdirilmiş, fındıqlı klassik Bakı paxlavası.',
+    image:
+      'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    id: 'menu-105',
     title: 'Nar souslu quzu',
     category: 'Əsas yemək',
     price: '₼31',
     status: 'Aktiv',
     tone: 'success',
     description: 'Yavaş bişmiş quzu əti, nar sousu və tərəvəz qarniri.',
+    image:
+      'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80',
   },
   {
-    id: 'menu-103',
-    title: 'Tərəvəz buketi',
-    category: 'Salat',
-    price: '₼12',
-    status: 'Aktiv',
-    tone: 'info',
-    description: 'Mövsümi tərəvəzlər, göyərti və limon sousu.',
-  },
-  {
-    id: 'menu-104',
-    title: 'Püstəli cheesecake',
-    category: 'Desert',
+    id: 'menu-106',
+    title: 'Püstəli Cheesecake',
+    category: 'Şirniyyatlar',
     price: '₼10',
     status: 'Stok azdır',
     tone: 'warning',
     description: 'Püstə kremi və giləmeyvə sousu ilə günlük desert.',
+    image:
+      'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=900&q=80',
   },
 ]
 

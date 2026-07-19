@@ -9,14 +9,18 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  Minus,
   Plus,
+  ReceiptText,
   Search,
+  ShoppingBasket,
   Star,
   Table2,
   Trash2,
   Users,
   Utensils,
 } from 'lucide-react'
+import { useState } from 'react'
 import { Link, NavLink, Outlet, useParams } from 'react-router-dom'
 import {
   adminMetrics,
@@ -402,34 +406,129 @@ function ReservationStep({
 }
 
 export function MenuSelection() {
+  const categories = ['Hamısı', ...Array.from(new Set(menuProducts.map((item) => item.category)))]
+  const [activeCategory, setActiveCategory] = useState(categories[0])
+  const [quantities, setQuantities] = useState<Record<string, number>>({
+    'menu-102': 1,
+    'menu-103': 2,
+  })
+
+  const visibleItems =
+    activeCategory === 'Hamısı'
+      ? menuProducts
+      : menuProducts.filter((item) => item.category === activeCategory)
+  const selectedItems = menuProducts.filter((item) => (quantities[item.id] ?? 0) > 0)
+  const priceToNumber = (price: string) => Number(price.replace(/[^\d.]/g, '')) || 0
+  const total = selectedItems.reduce(
+    (sum, item) => sum + priceToNumber(item.price) * (quantities[item.id] ?? 0),
+    0,
+  )
+
+  const updateQuantity = (itemId: string, direction: 1 | -1) => {
+    setQuantities((current) => {
+      const nextValue = Math.max(0, (current[itemId] ?? 0) + direction)
+      return { ...current, [itemId]: nextValue }
+    })
+  }
+
   return (
-    <section className="rx-page">
-      <PageTitle
-        eyebrow="3 / 4"
-        title="Menyu seçimi"
-        description="Məhsullar backend-dən gələndə bu siyahı eyni strukturda API datası ilə işləyəcək."
-        action={
+    <section className="rx-page rx-menu-page">
+      <div className="rx-stepper">
+        {['Məlumatlar', 'Masa seçimi', 'Menyu', 'Təsdiq'].map((label, index) => (
+          <div className={index < 3 ? 'done' : ''} key={label}>
+            <span>{index + 1}</span>
+            <strong>{label}</strong>
+          </div>
+        ))}
+      </div>
+
+      <div className="rx-menu-layout">
+        <section className="rx-menu-main">
+          <PageTitle
+            title="Öncədən sifariş"
+            description="Gəlişinizdən əvvəl sevdiyiniz təamları kateqoriyaya görə seçin."
+          />
+
+          <div className="rx-category-tabs">
+            {categories.map((category) => (
+              <button
+                className={category === activeCategory ? 'active' : ''}
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                type="button"
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          <div className="rx-menu-grid">
+            {visibleItems.map((item) => {
+              const quantity = quantities[item.id] ?? 0
+              return (
+                <article className="rx-menu-card" key={item.id}>
+                  <div className="rx-menu-image">
+                    <img src={item.image} alt={item.title} />
+                    <span>{item.category}</span>
+                  </div>
+                  <div className="rx-menu-body">
+                    <div className="rx-menu-card-head">
+                      <h3>{item.title}</h3>
+                      <strong>{item.price}</strong>
+                    </div>
+                    <p>{item.description}</p>
+                    <input placeholder="Item note / Qeyd" />
+                    <div className="rx-menu-card-actions">
+                      <div className="rx-qty">
+                        <button onClick={() => updateQuantity(item.id, -1)} type="button">
+                          <Minus size={16} />
+                        </button>
+                        <span>{quantity}</span>
+                        <button onClick={() => updateQuantity(item.id, 1)} type="button">
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                      <button onClick={() => updateQuantity(item.id, 1)} type="button">
+                        Əlavə et
+                        <ShoppingBasket size={17} />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </section>
+
+        <aside className="rx-order-summary">
+          <h2>
+            <ReceiptText size={22} />
+            Sifariş Xülasəsi
+          </h2>
+          <div className="rx-summary-list">
+            {selectedItems.length ? (
+              selectedItems.map((item) => (
+                <div key={item.id}>
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>{quantities[item.id]} ədəd</small>
+                  </span>
+                  <strong>₼{priceToNumber(item.price) * (quantities[item.id] ?? 0)}</strong>
+                </div>
+              ))
+            ) : (
+              <p>Hələ məhsul seçilməyib.</p>
+            )}
+          </div>
+          <div className="rx-summary-total">
+            <span>Cəmi:</span>
+            <strong>₼{total}</strong>
+          </div>
           <Link className="rx-primary" to="/checkout">
             Ödənişə keç
           </Link>
-        }
-      />
-      <section className="rx-menu-list">
-        {menuProducts.map((item) => (
-          <article key={item.id}>
-            <div>
-              <strong>{item.title}</strong>
-              <small>{item.description}</small>
-            </div>
-            <StatusBadge tone={item.tone}>{item.category}</StatusBadge>
-            <strong>{item.price}</strong>
-            <button type="button">
-              <Plus size={17} />
-              Əlavə et
-            </button>
-          </article>
-        ))}
-      </section>
+        </aside>
+      </div>
     </section>
   )
 }

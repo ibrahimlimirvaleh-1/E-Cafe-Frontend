@@ -513,6 +513,323 @@
   box-shadow: var(--rx-shadow-sm);
 }
 
+.rx-menu-page {
+  padding-top: 32px;
+}
+
+.rx-stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: min(760px, 100%);
+  margin: 0 auto 48px;
+}
+
+.rx-stepper div {
+  position: relative;
+  display: grid;
+  flex: 1;
+  justify-items: center;
+  gap: 8px;
+  color: var(--rx-on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.rx-stepper div::after {
+  position: absolute;
+  top: 19px;
+  left: calc(50% + 20px);
+  width: calc(100% - 40px);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--rx-surface-high);
+  content: '';
+}
+
+.rx-stepper div:last-child::after {
+  display: none;
+}
+
+.rx-stepper div.done::after {
+  background: var(--rx-secondary-container);
+}
+
+.rx-stepper span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--rx-on-surface-variant);
+  background: var(--rx-surface-high);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.rx-stepper div.done span {
+  color: #684000;
+  background: var(--rx-secondary-container);
+}
+
+.rx-stepper div:nth-child(3) span {
+  color: #ffffff;
+  background: var(--rx-primary);
+}
+
+.rx-stepper div:nth-child(3) strong {
+  color: var(--rx-primary);
+}
+
+.rx-menu-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(300px, 4fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.rx-menu-main {
+  display: grid;
+  gap: 32px;
+}
+
+.rx-menu-main .rx-page-title {
+  margin-bottom: 0;
+}
+
+.rx-category-tabs {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.rx-category-tabs button {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--rx-radius-xl);
+  padding: 0 32px;
+  color: var(--rx-on-surface-variant);
+  background: var(--rx-surface-lowest);
+  box-shadow: var(--rx-shadow-sm);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.rx-category-tabs button.active {
+  color: #ffffff;
+  background: var(--rx-primary);
+  box-shadow: var(--rx-shadow-md);
+}
+
+.rx-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.rx-menu-card {
+  overflow: hidden;
+  border-radius: var(--rx-radius-xl);
+  background: var(--rx-surface-lowest);
+  box-shadow: var(--rx-shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.rx-menu-card:hover {
+  box-shadow: var(--rx-shadow-md);
+}
+
+.rx-menu-image {
+  position: relative;
+  height: 192px;
+  overflow: hidden;
+}
+
+.rx-menu-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.rx-menu-card:hover .rx-menu-image img {
+  transform: scale(1.08);
+}
+
+.rx-menu-image span {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border-radius: 999px;
+  padding: 5px 12px;
+  color: #684000;
+  background: var(--rx-secondary-container);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.rx-menu-body {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.rx-menu-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rx-menu-card-head h3 {
+  margin: 0;
+  color: var(--rx-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.rx-menu-card-head strong {
+  color: var(--rx-secondary);
+  font-size: 20px;
+  line-height: 28px;
+  white-space: nowrap;
+}
+
+.rx-menu-body p {
+  min-height: 40px;
+  margin: 0;
+  color: var(--rx-on-surface-variant);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.rx-menu-body input {
+  min-height: 36px;
+  border: 0;
+  border-radius: var(--rx-radius-lg);
+  padding: 0 12px;
+  color: var(--rx-on-surface);
+  background: var(--rx-surface-low);
+  font: inherit;
+}
+
+.rx-menu-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rx-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rx-qty button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--rx-outline);
+  border-radius: 999px;
+  color: var(--rx-primary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rx-qty span {
+  width: 32px;
+  color: var(--rx-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  text-align: center;
+}
+
+.rx-menu-card-actions > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  color: var(--rx-primary);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.rx-order-summary {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 24px;
+  border: 1px solid var(--rx-outline-variant);
+  border-radius: var(--rx-radius-xl);
+  padding: 24px;
+  background: var(--rx-surface-low);
+  box-shadow: var(--rx-shadow-md);
+}
+
+.rx-order-summary h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--rx-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.rx-summary-list {
+  display: grid;
+  gap: 16px;
+}
+
+.rx-summary-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--rx-outline-variant);
+  padding-bottom: 12px;
+}
+
+.rx-summary-list small {
+  display: block;
+  margin-top: 4px;
+  color: var(--rx-on-surface-variant);
+  font-size: 14px;
+}
+
+.rx-summary-list p {
+  margin: 0;
+  color: var(--rx-on-surface-variant);
+}
+
+.rx-summary-total {
+  display: flex;
+  justify-content: space-between;
+  color: var(--rx-on-surface);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.rx-order-summary .rx-primary {
+  width: 100%;
+}
+
 .rx-menu-list article,
 .rx-table-row,
 .rx-table-head {
@@ -964,6 +1281,7 @@
   .rx-admin-shell,
   .rx-profile,
   .rx-split,
+  .rx-menu-layout,
   .rx-edit-form {
     grid-template-columns: 1fr;
   }
@@ -981,8 +1299,13 @@
   .rx-restaurant-grid,
   .rx-option-grid,
   .rx-metrics,
-  .rx-module-grid {
+  .rx-module-grid,
+  .rx-menu-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rx-order-summary {
+    position: static;
   }
 
   .rx-table,
@@ -1020,6 +1343,7 @@
   .rx-option-grid,
   .rx-metrics,
   .rx-module-grid,
+  .rx-menu-grid,
   .rx-sidebar nav,
   .rx-form-row,
   .rx-detail dl {
