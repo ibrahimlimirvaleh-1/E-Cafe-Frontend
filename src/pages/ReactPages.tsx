@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Clock,
   Edit,
+  HelpCircle,
   Home,
   LayoutDashboard,
   LogOut,
@@ -20,7 +21,6 @@ import { Link, NavLink, Outlet, useParams } from 'react-router-dom'
 import {
   adminMetrics,
   adminModules,
-  customerNav,
   getAdminModule,
   getAdminRow,
   kitchenTickets,
@@ -178,16 +178,21 @@ export function SiteShell() {
     <div className="rx-app">
       <header className="rx-header">
         <Brand />
-        <nav>
-          {customerNav.map((item) => (
-            <NavLink key={item.to} to={item.to}>
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-        <Link className="rx-icon-link" to="/notifications" title="Bildirişlər">
-          <Bell size={18} />
-        </Link>
+        <label className="rx-header-search">
+          <Search size={18} />
+          <input placeholder="Restoran axtar..." />
+        </label>
+        <div className="rx-header-actions">
+          <Link className="rx-text-button" to="/reservations">
+            Rezervasiyalarım
+          </Link>
+          <Link className="rx-icon-link" to="/notifications" title="Bildirişlər">
+            <Bell size={18} />
+          </Link>
+          <Link className="rx-text-button strong" to="/login">
+            Login
+          </Link>
+        </div>
       </header>
       <main>
         <Outlet />
@@ -216,14 +221,23 @@ export function AdminShell() {
       </aside>
       <section className="rx-admin-main">
         <header className="rx-admin-topbar">
-          <div>
-            <span>Admin panel</span>
-            <strong>Restoran əməliyyatları</strong>
+          <label className="rx-admin-search">
+            <Search size={18} />
+            <input placeholder="Admin paneldə axtar..." />
+          </label>
+          <div className="rx-admin-tools">
+            <Link className="rx-icon-link" to="/notifications" title="Bildirişlər">
+              <Bell size={18} />
+            </Link>
+            <button className="rx-icon-link" type="button" title="Kömək">
+              <HelpCircle size={18} />
+            </button>
+            <span className="rx-divider" />
+            <Link className="rx-link-button danger-text" to="/">
+              <LogOut size={17} />
+              Çıxış
+            </Link>
           </div>
-          <Link className="rx-link-button" to="/">
-            <LogOut size={17} />
-            Sayta keç
-          </Link>
         </header>
         <Outlet />
       </section>
@@ -262,9 +276,8 @@ export function CustomerHome() {
   return (
     <section className="rx-page">
       <PageTitle
-        eyebrow="Restoran kataloqu"
-        title="Masa, ofisiant və menyunu əvvəlcədən seç."
-        description="ECafe müştəri axınında restoran seçimi, rezervasiya, menyu və ödəniş səhifələri artıq React component kimi işləyir."
+        title="Bakıda Ən Yaxşı Restoranlar"
+        description="Sizin üçün seçilmiş premium məkanlar"
         action={
           <Link className="rx-primary" to="/restaurants/saffron-premium/tables">
             Rezerv et
@@ -272,13 +285,10 @@ export function CustomerHome() {
         }
       />
       <div className="rx-toolbar">
-        <label>
-          <Search size={18} />
-          <input placeholder="Restoran, ünvan və ya mətbəx axtar" />
-        </label>
         <button type="button">Filtrlər</button>
         <button type="button">Reytinq</button>
         <button type="button">Açıq</button>
+        <button type="button">Ünvan</button>
       </div>
       <section className="rx-restaurant-grid">
         {restaurants.map((restaurant) => (
@@ -620,9 +630,9 @@ export function AdminEditPage({ moduleKey }: { moduleKey: AdminModuleKey }) {
   return (
     <section className="rx-admin-page">
       <PageTitle
-        eyebrow="Redaktə"
+        eyebrow={module.title}
         title={`${module.singular} redaktəsi`}
-        description="Form strukturu component kimi ayrılıb, sonradan validation və API update əlavə etmək rahatdır."
+        description="Stitch form layout-u React component kimi hazırdır. Sonradan buradakı submit handler API update endpoint-inə bağlanacaq."
       />
       <AdminForm moduleKey={moduleKey} mode="edit" />
     </section>
@@ -660,28 +670,87 @@ function AdminForm({ moduleKey, mode }: { moduleKey: AdminModuleKey; mode: 'crea
   const module = getAdminModule(moduleKey)
   const sample = module.rows[0]
   return (
-    <form className="rx-form rx-wide-form">
-      <label>
-        Başlıq
-        <input defaultValue={mode === 'edit' ? sample.title : ''} placeholder={`${module.singular} adı`} />
-      </label>
-      <label>
-        Açıqlama
-        <input defaultValue={mode === 'edit' ? sample.subtitle : ''} placeholder="Qısa məlumat" />
-      </label>
-      <div className="rx-form-row">
-        <label>
-          Status
-          <input defaultValue={mode === 'edit' ? sample.status : 'Aktiv'} />
-        </label>
-        <label>
-          Dəyər
-          <input defaultValue={mode === 'edit' ? sample.value : ''} placeholder="Məbləğ və ya say" />
-        </label>
-      </div>
-      <button className="rx-primary" type="button">
-        {mode === 'edit' ? 'Yadda saxla' : 'Yarat'}
-      </button>
+    <form className="rx-edit-form">
+      <section className="rx-form-card">
+        <h3>{module.singular} detalları</h3>
+        <div className="rx-field">
+          <label>{module.singular} adı</label>
+          <input defaultValue={mode === 'edit' ? sample.title : ''} placeholder={`${module.singular} adı`} />
+        </div>
+        <div className="rx-form-row">
+          <div className="rx-field">
+            <label>Qeyd nömrəsi</label>
+            <input defaultValue={mode === 'edit' ? sample.id : ''} placeholder="Avtomatik yaradılacaq" />
+          </div>
+          <div className="rx-field">
+            <label>Status</label>
+            <select defaultValue={mode === 'edit' ? sample.status : 'Aktiv'}>
+              <option>Aktiv</option>
+              <option>Qaralama</option>
+              <option>Gözləyir</option>
+              <option>Tamamlandı</option>
+              <option>Deaktiv</option>
+            </select>
+          </div>
+        </div>
+        <div className="rx-form-row">
+          <div className="rx-field">
+            <label>Başlama tarixi</label>
+            <input defaultValue="2026-01-01" type="date" />
+          </div>
+          <div className="rx-field">
+            <label>Bitmə tarixi</label>
+            <input defaultValue="2026-12-31" type="date" />
+          </div>
+        </div>
+        <div className="rx-form-row">
+          <div className="rx-field">
+            <label>{module.columns[2]}</label>
+            <input defaultValue={mode === 'edit' ? sample.meta : ''} placeholder={module.columns[2]} />
+          </div>
+          <div className="rx-field">
+            <label>{module.columns[3]}</label>
+            <input defaultValue={mode === 'edit' ? sample.value : ''} placeholder={module.columns[3]} />
+          </div>
+        </div>
+        <div className="rx-field">
+          <label>Açıqlama</label>
+          <textarea defaultValue={mode === 'edit' ? sample.subtitle : ''} placeholder="Qısa məlumat yaz" rows={5} />
+        </div>
+      </section>
+
+      <aside className="rx-form-side">
+        <section className="rx-form-card">
+          <h3>Şərtlər və qaydalar</h3>
+          <div className="rx-field">
+            <label>Hesablaşma dövrü</label>
+            <div className="rx-segmented">
+              <button className="active" type="button">Günlük</button>
+              <button type="button">Həftəlik</button>
+              <button type="button">Aylıq</button>
+            </div>
+          </div>
+          <div className="rx-field">
+            <label>Ödəniş siyasəti</label>
+            <input defaultValue="Yalnız onlayn" readOnly />
+          </div>
+        </section>
+        <section className="rx-form-card">
+          <h3>Əlavələr</h3>
+          <div className="rx-upload-box">
+            <strong>Sənəd əlavə et</strong>
+            <span>PDF və ya şəkil faylı</span>
+          </div>
+        </section>
+        <section className="rx-form-actions">
+          <Link className="rx-secondary" to={module.route}>
+            Ləğv et
+          </Link>
+          <button className="rx-primary" type="button">
+            {mode === 'edit' ? 'Yadda saxla' : 'Yarat'}
+          </button>
+        </section>
+      </aside>
     </form>
   )
 }

@@ -36,9 +36,9 @@ import './reactApp.css'
 const adminCrudRoutes = [
   { key: 'restaurants', path: 'restaurants', idPath: ':restaurantId' },
   { key: 'contracts', path: 'contracts', idPath: ':contractId', terminatePath: 'terminate' },
-  { key: 'reservations', path: 'reservations', idPath: ':reservationId', readonly: true },
-  { key: 'orders', path: 'orders', idPath: ':orderId', readonly: true },
-  { key: 'payments', path: 'payments', idPath: ':paymentId', readonly: true },
+  { key: 'reservations', path: 'reservations', idPath: ':reservationId' },
+  { key: 'orders', path: 'orders', idPath: ':orderId' },
+  { key: 'payments', path: 'payments', idPath: ':paymentId' },
   { key: 'staff', path: 'staff', idPath: ':staffId', deactivatePath: 'deactivate' },
   { key: 'tables', path: 'tables', idPath: ':tableId', deactivatePath: 'deactivate' },
   { key: 'categories', path: 'categories', idPath: ':categoryId', deactivatePath: 'deactivate' },
@@ -75,22 +75,18 @@ function App() {
               path={route.path}
               element={<AdminModuleList moduleKey={route.key} />}
             />
-            {'readonly' in route && route.readonly ? null : (
-              <Route
-                path={`${route.path}/new`}
-                element={<AdminCreatePage moduleKey={route.key} />}
-              />
-            )}
+            <Route
+              path={`${route.path}/new`}
+              element={<AdminCreatePage moduleKey={route.key} />}
+            />
             <Route
               path={`${route.path}/${route.idPath}`}
               element={<AdminDetailPage moduleKey={route.key} />}
             />
-            {'readonly' in route && route.readonly ? null : (
-              <Route
-                path={`${route.path}/${route.idPath}/edit`}
-                element={<AdminEditPage moduleKey={route.key} />}
-              />
-            )}
+            <Route
+              path={`${route.path}/${route.idPath}/edit`}
+              element={<AdminEditPage moduleKey={route.key} />}
+            />
             {'terminatePath' in route ? (
               <Route
                 path={`${route.path}/${route.idPath}/${route.terminatePath}`}
