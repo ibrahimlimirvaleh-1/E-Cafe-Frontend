@@ -11,6 +11,14 @@ export function StitchPage({ pageId }: StitchPageProps) {
   const navigate = useNavigate()
   const id = pageId ?? params.pageId
   const page = stitchPages.find((item) => item.id === id)
+  const isAdminSurface = Boolean(
+    page?.route?.startsWith('admin') ||
+      page?.group.includes('Admin') ||
+      page?.group === 'Contracts' ||
+      page?.group === 'Tables' ||
+      page?.group === 'Categories' ||
+      page?.group === 'Menu',
+  )
 
   function getTargetRoute(label: string) {
     const text = label.toLowerCase()
@@ -37,6 +45,8 @@ export function StitchPage({ pageId }: StitchPageProps) {
       return
     }
 
+    normalizeFrameBrand(frameDocument)
+
     frameDocument.querySelectorAll<HTMLAnchorElement>('a').forEach((anchor) => {
       const href = anchor.getAttribute('href') ?? ''
       const target = getTargetRoute(anchor.textContent ?? '')
@@ -61,6 +71,83 @@ export function StitchPage({ pageId }: StitchPageProps) {
         navigate(route)
       }
     })
+  }
+
+  function normalizeFrameBrand(frameDocument: Document) {
+    const brandLabel = isAdminSurface ? 'ECafe Admin' : 'ECafe'
+
+    replaceFrameLogoImages(frameDocument)
+
+    if (id === 'giri_qeydiyyat') {
+      frameDocument.querySelector('header')?.remove()
+      return
+    }
+
+    const brandCandidates = Array.from(
+      frameDocument.querySelectorAll<HTMLElement>('h1, h2, h3, span, div, a'),
+    ).filter((element) => {
+      const text = element.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+
+      return /e-?cafe/i.test(text) && text.length <= 32
+    })
+
+    if (brandCandidates.length === 0) {
+      const shell = frameDocument.querySelector<HTMLElement>('header, aside, nav, body')
+      const brand = frameDocument.createElement('div')
+      brand.className = 'ecafe-normalized-brand'
+      brand.textContent = brandLabel
+      shell?.prepend(brand)
+      ensureBrandIcon(brand)
+      return
+    }
+
+    brandCandidates.forEach((brand) => {
+      brand.textContent = brandLabel
+      ensureBrandIcon(brand)
+    })
+  }
+
+  function replaceFrameLogoImages(frameDocument: Document) {
+    frameDocument.querySelectorAll<HTMLImageElement>('img[alt*="ECafe"], img[alt*="Logo"]').forEach((image) => {
+      image.src = '/ecafe-icon.png'
+      image.alt = 'ECafe'
+      image.style.objectFit = 'contain'
+    })
+  }
+
+  function ensureBrandIcon(brand: HTMLElement) {
+    const brandContainer = brand.parentElement ?? brand
+    const previousIcon = brand.previousElementSibling
+    const existingImage = brandContainer.querySelector<HTMLImageElement>(
+      'img[alt*="ECafe"], img[alt*="Logo"], .ecafe-brand-icon',
+    )
+
+    brandContainer.style.display = 'inline-flex'
+    brandContainer.style.alignItems = 'center'
+    brandContainer.style.gap = '8px'
+
+    if (previousIcon?.classList.contains('material-symbols-outlined')) {
+      previousIcon.remove()
+    }
+
+    if (existingImage) {
+      existingImage.src = '/ecafe-icon.png'
+      existingImage.alt = 'ECafe'
+      existingImage.classList.add('ecafe-brand-icon')
+      existingImage.style.width = existingImage.style.width || '32px'
+      existingImage.style.height = existingImage.style.height || '32px'
+      existingImage.style.objectFit = 'contain'
+      return
+    }
+
+    const icon = brand.ownerDocument.createElement('img')
+    icon.className = 'ecafe-brand-icon'
+    icon.src = '/ecafe-icon.png'
+    icon.alt = 'ECafe'
+    icon.style.width = '32px'
+    icon.style.height = '32px'
+    icon.style.objectFit = 'contain'
+    brand.before(icon)
   }
 
   if (!page) {
