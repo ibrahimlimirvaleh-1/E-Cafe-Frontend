@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { MetricCard } from '../../components/MetricCard'
 import { PageIntro } from '../../components/PageIntro'
 import { adminMetrics, adminModules } from '../../data/mockData'
 
@@ -8,11 +9,7 @@ export function AdminDashboard() {
       <PageIntro title="İdarəetmə paneli" text="Rezervasiya, sifariş, ödəniş və cüzdan vəziyyətini izləyin." />
       <div className="metric-grid">
         {adminMetrics.map((metric) => (
-          <article className={`metric-card ${metric.tone}`} key={metric.label}>
-            <span>{metric.label}</span>
-            <strong>{metric.value}</strong>
-            <small>{metric.hint}</small>
-          </article>
+          <MetricCard metric={metric} key={metric.label} />
         ))}
       </div>
       <div className="module-grid">

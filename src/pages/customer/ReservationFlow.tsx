@@ -2,22 +2,20 @@ import { CheckCircle2, Table2, Users } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { PageIntro } from '../../components/PageIntro'
 import { Stepper } from '../../components/Stepper'
-import { menuItems } from '../../data/mockData'
+import { menuItems, reservationTables, waiters } from '../../data/mockData'
 
 export function TableSelection() {
-  const tables = ['T-101', 'T-104', 'VIP-2', 'Terrace-8']
-
   return (
     <section className="page flow-page">
       <Stepper active={1} />
       <PageIntro title="Masa seçimi" text="Uyğun masa tipini seç və rezervasiya saatını təsdiqlə." />
       <div className="option-grid">
-        {tables.map((table, index) => (
-          <NavLink className="selection-card" to="/reserve/waiter" key={table}>
+        {reservationTables.map((table) => (
+          <NavLink className="selection-card" to="/reserve/waiter" key={table.id}>
             <Table2 size={24} />
-            <strong>{table}</strong>
-            <span>{index === 2 ? 'VIP otaq, 6 nəfər' : 'Standart masa, 2-4 nəfər'}</span>
-            <small>{index === 1 ? '20:30 üçün son masa' : 'Uyğundur'}</small>
+            <strong>{table.label}</strong>
+            <span>{table.detail}</span>
+            <small>{table.note}</small>
           </NavLink>
         ))}
       </div>
@@ -26,19 +24,17 @@ export function TableSelection() {
 }
 
 export function WaiterSelection() {
-  const waiters = ['Anar Məmmədov', 'Leyla Əliyeva', 'Kənan Rzayev']
-
   return (
     <section className="page flow-page">
       <Stepper active={2} />
       <PageIntro title="Ofisiant seçimi" text="İstəsən rezervasiyaya məsul olacaq ofisiantı seç." />
       <div className="option-grid">
         {waiters.map((waiter) => (
-          <NavLink className="selection-card" to="/reserve/menu" key={waiter}>
+          <NavLink className="selection-card" to="/reserve/menu" key={waiter.id}>
             <Users size={24} />
-            <strong>{waiter}</strong>
-            <span>Bu gün növbədədir</span>
-            <small>4.9 xidmət reytinqi</small>
+            <strong>{waiter.label}</strong>
+            <span>{waiter.detail}</span>
+            <small>{waiter.note}</small>
           </NavLink>
         ))}
       </div>

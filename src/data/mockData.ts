@@ -6,7 +6,7 @@ import {
   Table2,
   Users,
 } from 'lucide-react'
-import type { AdminMetric, AdminModule, MenuItem, Restaurant } from '../types/domain'
+import type { AdminModule, MenuItem, Metric, ReservationOption, Restaurant } from '../types/domain'
 
 export const restaurants: Restaurant[] = [
   {
@@ -51,11 +51,17 @@ export const menuItems: MenuItem[] = [
   { name: 'Püstəli cheesecake', category: 'Desert', price: 10 },
 ]
 
-export const adminMetrics: AdminMetric[] = [
+export const adminMetrics: Metric[] = [
   { label: 'Bugünkü rezervasiya', value: '24', hint: '+6 dünənə görə', tone: 'success' },
   { label: 'Aktiv sifariş', value: '15', hint: '4 masa gözləyir', tone: 'warning' },
   { label: 'Ödəniş dövriyyəsi', value: '₼2,840', hint: 'Payriff ilə 96%', tone: 'info' },
   { label: 'Cüzdan balansı', value: '₼12,450', hint: '₼1,200 pending', tone: 'success' },
+]
+
+export const waiterMetrics: Metric[] = [
+  { label: 'Rezervasiyalar', value: '8', hint: '3-ü növbəti saatdadır', tone: 'info' },
+  { label: 'Gözləyən sifariş', value: '5', hint: 'Mətbəxdə hazırlanır', tone: 'warning' },
+  { label: 'Aktiv masalar', value: '12', hint: '2 masa hesab istəyir', tone: 'success' },
 ]
 
 export const adminModules: AdminModule[] = [
@@ -65,4 +71,17 @@ export const adminModules: AdminModule[] = [
   { name: 'Menyu', count: '312', icon: ShoppingBag },
   { name: 'Rezervasiyalar', count: '87', icon: CalendarDays },
   { name: 'Ödənişlər', count: '₼18k', icon: CreditCard },
+]
+
+export const reservationTables: ReservationOption[] = [
+  { id: 'T-101', label: 'T-101', detail: 'Standart masa, 2-4 nəfər', note: 'Uyğundur' },
+  { id: 'T-104', label: 'T-104', detail: 'Standart masa, 2-4 nəfər', note: '20:30 üçün son masa' },
+  { id: 'VIP-2', label: 'VIP-2', detail: 'VIP otaq, 6 nəfər', note: 'Uyğundur' },
+  { id: 'Terrace-8', label: 'Terrace-8', detail: 'Standart masa, 2-4 nəfər', note: 'Uyğundur' },
+]
+
+export const waiters: ReservationOption[] = [
+  { id: 'anar-mammadov', label: 'Anar Məmmədov', detail: 'Bu gün növbədədir', note: '4.9 xidmət reytinqi' },
+  { id: 'leyla-aliyeva', label: 'Leyla Əliyeva', detail: 'Bu gün növbədədir', note: '4.9 xidmət reytinqi' },
+  { id: 'kenan-rzayev', label: 'Kənan Rzayev', detail: 'Bu gün növbədədir', note: '4.9 xidmət reytinqi' },
 ]

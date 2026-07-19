@@ -18,15 +18,24 @@ export type MenuItem = {
   popular?: boolean
 }
 
-export type AdminMetric = {
+export type MetricTone = 'success' | 'warning' | 'info' | 'danger'
+
+export type Metric = {
   label: string
   value: string
   hint: string
-  tone: 'success' | 'warning' | 'info' | 'danger'
+  tone: MetricTone
 }
 
 export type AdminModule = {
   name: string
   count: string
   icon: LucideIcon
+}
+
+export type ReservationOption = {
+  id: string
+  label: string
+  detail: string
+  note: string
 }

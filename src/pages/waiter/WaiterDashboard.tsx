@@ -1,26 +1,16 @@
 import { Clock3 } from 'lucide-react'
+import { MetricCard } from '../../components/MetricCard'
 import { PageIntro } from '../../components/PageIntro'
+import { waiterMetrics } from '../../data/mockData'
 
 export function WaiterDashboard() {
   return (
     <section className="page waiter-page">
       <PageIntro title="Ofisiant paneli" text="Bu gün sənə təyin olunmuş masaları və sifarişləri idarə et." />
       <div className="metric-grid">
-        <article className="metric-card info">
-          <span>Rezervasiyalar</span>
-          <strong>8</strong>
-          <small>3-ü növbəti saatdadır</small>
-        </article>
-        <article className="metric-card warning">
-          <span>Gözləyən sifariş</span>
-          <strong>5</strong>
-          <small>Mətbəxdə hazırlanır</small>
-        </article>
-        <article className="metric-card success">
-          <span>Aktiv masalar</span>
-          <strong>12</strong>
-          <small>2 masa hesab istəyir</small>
-        </article>
+        {waiterMetrics.map((metric) => (
+          <MetricCard metric={metric} key={metric.label} />
+        ))}
       </div>
       <div className="split-layout">
         <div className="table-card">
