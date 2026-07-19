@@ -116,42 +116,47 @@ export function StitchPage({ pageId }: StitchPageProps) {
   }
 
   function ensureBrandIcon(brand: HTMLElement) {
-    const brandContainer = brand.parentElement ?? brand
+    const frameDocument = brand.ownerDocument
+    const chrome = brand.closest<HTMLElement>('header, aside, nav') ?? brand.parentElement ?? brand
     const previousIcon = brand.previousElementSibling
-    const existingImage = brandContainer.querySelector<HTMLImageElement>(
-      'img[alt*="ECafe"], img[alt*="Logo"], .ecafe-brand-icon',
-    )
-
-    brandContainer.style.display = 'inline-flex'
-    brandContainer.style.alignItems = 'center'
-    brandContainer.style.gap = '3px'
+    const firstLogo = chrome.querySelector<HTMLElement>('img[alt*="ECafe"], img[alt*="Logo"], .ecafe-brand-icon')
+    const wrapper = frameDocument.createElement('span')
+    const icon = frameDocument.createElement('img')
+    const insertionTarget = firstLogo ?? brand
 
     if (previousIcon?.classList.contains('material-symbols-outlined')) {
       previousIcon.remove()
     }
 
-    if (existingImage) {
-      existingImage.src = '/ecafe-icon.png'
-      existingImage.alt = 'ECafe'
-      existingImage.classList.add('ecafe-brand-icon')
-      existingImage.style.width = existingImage.style.width || '32px'
-      existingImage.style.height = existingImage.style.height || '32px'
-      existingImage.style.objectFit = 'contain'
-      existingImage.style.marginRight = '0'
-      existingImage.style.paddingRight = '0'
-      return
-    }
-
-    const icon = brand.ownerDocument.createElement('img')
     icon.className = 'ecafe-brand-icon'
     icon.src = '/ecafe-icon.png'
     icon.alt = 'ECafe'
-    icon.style.width = '32px'
-    icon.style.height = '32px'
+    icon.style.width = '28px'
+    icon.style.height = '28px'
     icon.style.objectFit = 'contain'
     icon.style.marginRight = '0'
     icon.style.paddingRight = '0'
-    brand.before(icon)
+
+    wrapper.className = 'ecafe-brand-lockup'
+    wrapper.style.display = 'inline-flex'
+    wrapper.style.alignItems = 'center'
+    wrapper.style.gap = '4px'
+    wrapper.style.width = 'max-content'
+    wrapper.style.flex = '0 0 auto'
+
+    brand.style.margin = '0'
+    brand.style.paddingLeft = '0'
+    brand.style.display = 'inline-block'
+    brand.style.whiteSpace = 'nowrap'
+
+    insertionTarget.before(wrapper)
+    wrapper.append(icon, brand)
+
+    chrome.querySelectorAll('img[alt*="ECafe"], img[alt*="Logo"], .ecafe-brand-icon').forEach((image) => {
+      if (image !== icon) {
+        image.remove()
+      }
+    })
   }
 
   if (!page) {
