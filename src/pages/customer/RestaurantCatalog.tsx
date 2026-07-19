@@ -1,8 +1,28 @@
+import { useMemo, useState } from 'react'
 import { ChevronRight, Menu as MenuIcon, Search, Star } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { restaurants } from '../../data/mockData'
 
 export function RestaurantCatalog() {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
+  const filterTags = ['Pre-order', 'Ailə zalı', 'Terras', 'VIP otaq']
+
+  const visibleRestaurants = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+
+    if (!term) {
+      return restaurants
+    }
+
+    return restaurants.filter((restaurant) =>
+      [restaurant.name, restaurant.cuisine, restaurant.area, ...restaurant.tags]
+        .join(' ')
+        .toLowerCase()
+        .includes(term),
+    )
+  }, [searchTerm])
+
   return (
     <section className="page customer-home">
       <div className="hero-section">
@@ -41,16 +61,35 @@ export function RestaurantCatalog() {
       <div className="toolbar">
         <label className="search-field">
           <Search size={18} />
-          <input placeholder="Restoran, mətbəx və ya rayon axtar" />
+          <input
+            placeholder="Restoran, mətbəx və ya rayon axtar"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
         </label>
-        <button className="filter-button" type="button">
+        <button
+          className="filter-button"
+          type="button"
+          aria-pressed={showFilters}
+          onClick={() => setShowFilters((isVisible) => !isVisible)}
+        >
           <MenuIcon size={18} />
           Filter
         </button>
       </div>
 
+      {showFilters && (
+        <div className="tag-row" aria-label="Sürətli filterlər">
+          {filterTags.map((tag) => (
+            <button className="filter-button" type="button" key={tag} onClick={() => setSearchTerm(tag)}>
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="restaurant-grid">
-        {restaurants.map((restaurant) => (
+        {visibleRestaurants.map((restaurant) => (
           <article className="restaurant-card" key={restaurant.id}>
             <img src={restaurant.image} alt={restaurant.name} />
             <div className="restaurant-content">

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { CheckCircle2, Table2, Users } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { PageIntro } from '../../components/PageIntro'
@@ -43,6 +44,32 @@ export function WaiterSelection() {
 }
 
 export function MenuSelection() {
+  const [cart, setCart] = useState<Record<string, number>>({
+    'Şah plov': 1,
+    'Nar souslu quzu': 1,
+  })
+
+  const cartSummary = useMemo(() => {
+    return menuItems.reduce(
+      (summary, item) => {
+        const quantity = cart[item.name] ?? 0
+
+        return {
+          count: summary.count + quantity,
+          total: summary.total + quantity * item.price,
+        }
+      },
+      { count: 0, total: 0 },
+    )
+  }, [cart])
+
+  function addToCart(name: string) {
+    setCart((currentCart) => ({
+      ...currentCart,
+      [name]: (currentCart[name] ?? 0) + 1,
+    }))
+  }
+
   return (
     <section className="page flow-page">
       <Stepper active={3} />
@@ -57,15 +84,17 @@ export function MenuSelection() {
               </div>
               <div>
                 <b>₼{item.price}</b>
-                <button type="button">Əlavə et</button>
+                <button type="button" onClick={() => addToCart(item.name)}>
+                  Əlavə et
+                </button>
               </div>
             </article>
           ))}
         </div>
         <aside className="summary-panel">
           <h2>Səbət xülasəsi</h2>
-          <p>2 məhsul, masa T-104, saat 20:30</p>
-          <strong>₼55.00</strong>
+          <p>{cartSummary.count} məhsul, masa T-104, saat 20:30</p>
+          <strong>₼{cartSummary.total.toFixed(2)}</strong>
           <NavLink className="primary-button full" to="/checkout">
             Ödənişə keç
           </NavLink>

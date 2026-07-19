@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { Clock3 } from 'lucide-react'
 import { MetricCard } from '../../components/MetricCard'
 import { PageIntro } from '../../components/PageIntro'
 import { waiterMetrics } from '../../data/mockData'
 
 export function WaiterDashboard() {
+  const [isKitchenNotified, setIsKitchenNotified] = useState(false)
+
   return (
     <section className="page waiter-page">
       <PageIntro title="Ofisiant paneli" text="Bu gün sənə təyin olunmuş masaları və sifarişləri idarə et." />
@@ -25,9 +28,13 @@ export function WaiterDashboard() {
         <aside className="summary-panel">
           <Clock3 size={28} />
           <h2>Növbəti addım</h2>
-          <p>Masa T-104 üçün pre-order təsdiqini mətbəxə ötür.</p>
-          <button className="primary-button full" type="button">
-            Statusu yenilə
+          <p>
+            {isKitchenNotified
+              ? 'Masa T-104 pre-order təsdiqi mətbəxə ötürüldü.'
+              : 'Masa T-104 üçün pre-order təsdiqini mətbəxə ötür.'}
+          </p>
+          <button className="primary-button full" type="button" onClick={() => setIsKitchenNotified(true)}>
+            {isKitchenNotified ? 'Status yeniləndi' : 'Statusu yenilə'}
           </button>
         </aside>
       </div>
