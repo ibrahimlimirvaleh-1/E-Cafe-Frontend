@@ -11,6 +11,14 @@ export function StitchPage({ pageId }: StitchPageProps) {
   const navigate = useNavigate()
   const id = pageId ?? params.pageId
   const page = stitchPages.find((item) => item.id === id)
+  const isAdminSurface = Boolean(
+    page?.route?.startsWith('admin') ||
+      page?.group.includes('Admin') ||
+      page?.group === 'Contracts' ||
+      page?.group === 'Tables' ||
+      page?.group === 'Categories' ||
+      page?.group === 'Menu',
+  )
 
   function getTargetRoute(label: string) {
     const text = label.toLowerCase()
@@ -37,6 +45,8 @@ export function StitchPage({ pageId }: StitchPageProps) {
       return
     }
 
+    normalizeFrameBrand(frameDocument)
+
     frameDocument.querySelectorAll<HTMLAnchorElement>('a').forEach((anchor) => {
       const href = anchor.getAttribute('href') ?? ''
       const target = getTargetRoute(anchor.textContent ?? '')
@@ -61,6 +71,52 @@ export function StitchPage({ pageId }: StitchPageProps) {
         navigate(route)
       }
     })
+  }
+
+  function normalizeFrameBrand(frameDocument: Document) {
+    const brandLabel = isAdminSurface ? 'ECafe Admin' : 'ECafe'
+    const brandCandidates = Array.from(
+      frameDocument.querySelectorAll<HTMLElement>('h1, h2, h3, span, div, a'),
+    ).filter((element) => {
+      const text = element.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+
+      return /e-?cafe/i.test(text) && text.length <= 32
+    })
+
+    if (brandCandidates.length === 0) {
+      const shell = frameDocument.querySelector<HTMLElement>('header, aside, nav, body')
+      const brand = frameDocument.createElement('div')
+      brand.className = 'ecafe-normalized-brand'
+      brand.textContent = brandLabel
+      shell?.prepend(brand)
+      ensureBrandIcon(brand)
+      return
+    }
+
+    brandCandidates.forEach((brand) => {
+      brand.textContent = brandLabel
+      ensureBrandIcon(brand)
+    })
+  }
+
+  function ensureBrandIcon(brand: HTMLElement) {
+    const brandContainer = brand.parentElement ?? brand
+    const hasIcon =
+      brand.previousElementSibling?.classList.contains('material-symbols-outlined') ||
+      brandContainer.querySelector('img[alt*="ECafe"], img[alt*="Logo"], .ecafe-brand-icon')
+
+    brandContainer.style.display = 'inline-flex'
+    brandContainer.style.alignItems = 'center'
+    brandContainer.style.gap = '8px'
+
+    if (hasIcon) {
+      return
+    }
+
+    const icon = brand.ownerDocument.createElement('span')
+    icon.className = 'material-symbols-outlined text-primary ecafe-brand-icon'
+    icon.textContent = 'restaurant'
+    brand.before(icon)
   }
 
   if (!page) {
