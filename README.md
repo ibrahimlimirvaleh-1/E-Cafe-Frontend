@@ -1,32 +1,71 @@
-# React + TypeScript + Vite
+# ECafe Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite frontend layihəsi.
 
-Currently, two official plugins are available:
+## İşə salmaq
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```powershell
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Frontend default olaraq burada açılır:
+
+```text
+http://127.0.0.1:5173/
+```
+
+Dev mühitində `/api/v1` sorğuları `vite.config.ts` vasitəsilə backend-ə yönləndirilir:
+
+```text
+http://localhost:8080
+```
+
+Backend başqa portda işləyirsə, `vite.config.ts` içində proxy `target` dəyərini dəyiş.
+
+## Build
+
+```powershell
+npm run build
+```
+
+## Struktur
+
+```text
+src/shared/api
+```
+
+Backend endpoint-ləri və mapper-lər buradadır. Backend-i çox bilmədən frontend inteqrasiyasını idarə etmək üçün əvvəl bu qovluğa bax:
+
+- `endpoints.ts`: bütün endpoint URL-ləri
+- `httpClient.ts`: token və fetch məntiqi
+- `mappers.ts`: backend response -> frontend model çevirmə
+- `ecafeApi.ts`: səhifələrin çağırdığı rahat API
+- `README.md`: API qovluğu üzrə izah
+
+```text
+src/shared/hooks/useAsyncData.ts
+```
+
+Səhifələrdə loading/data logic-i təkrar yazılmasın deyə istifadə olunur.
+
+## Hazır backend flow-lara qoşulan hissələr
+
+- Login/register
+- Public restoran kataloqu
+- Restoran profili
+- Public menyu
+- Public staff
+- Public tables
+- Admin restoran/müqavilə/menu/table/staff listləri
+
+## Hələ backend gözləyən hissələr
+
+- Reservation
+- Walk-in/TableSession
+- Order
+- Kitchen
+- Payment/Settlement
+- Notification list/read
+
+Bu hissələr frontend-də demo/placeholder olaraq saxlanılıb ki UI sınmasın.

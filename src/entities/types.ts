@@ -15,7 +15,7 @@ export type OrderStatus = 'Created' | 'Accepted' | 'Preparing' | 'Ready' | 'Serv
 
 export type PaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'Refunded' | 'RefundFailed'
 
-export type ContractStatus = 'Draft' | 'PendingSignature' | 'Active' | 'Expired' | 'Terminated'
+export type ContractStatus = 'Draft' | 'PendingSignature' | 'OwnerApproved' | 'Active' | 'Expired' | 'Terminated'
 
 export type SettlementStatus = 'Open' | 'Payable' | 'PaidByRestaurant' | 'Disputed'
 

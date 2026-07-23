@@ -3,14 +3,22 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
 export function MenuSelectionPage() {
   const { restaurantId = 'saffron-premium' } = useParams()
-  const categories = ecafeApi.menu.categories(restaurantId)
-  const items = ecafeApi.menu.items(restaurantId)
+  const { data: menuData, isLoading } = useAsyncData(
+    async () => {
+      const [categories, items] = await Promise.all([ecafeApi.menu.categories(restaurantId), ecafeApi.menu.items(restaurantId)])
+      return { categories, items }
+    },
+    { categories: [], items: [] },
+    [restaurantId],
+  )
   const [activeCategory, setActiveCategory] = useState('all')
-  const [quantities, setQuantities] = useState<Record<string, number>>({ 'shah-plov': 1, 'pomegranate-drink': 2 })
+  const [quantities, setQuantities] = useState<Record<string, number>>({})
+  const { categories, items } = menuData
 
   const visibleItems = activeCategory === 'all' ? items : items.filter((item) => item.categoryId === activeCategory)
   const selectedItems = useMemo(
@@ -30,7 +38,9 @@ export function MenuSelectionPage() {
       <ReservationStepper activeStep={4} />
       <section className="menu-layout">
         <div className="menu-main">
-          <PageHeader title="Öncədən sifariş" description="Sevdiyin təamları kateqoriyaya görə seç və rezervasiyaya əlavə et." />
+          <PageHeader title="Menyu seçimi" description="Müştəri menyunu görə və seçim edə bilər. Rezerv/order yaratma backend flow-u növbəti mərhələdə bağlanacaq." />
+          {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
+          {!isLoading && items.length === 0 ? <p className="online-only">Bu restoran üçün menyu tapılmadı.</p> : null}
           <div className="category-tabs">
             <button className={activeCategory === 'all' ? 'active' : ''} onClick={() => setActiveCategory('all')} type="button">
               Hamısı
@@ -83,7 +93,7 @@ export function MenuSelectionPage() {
         <aside className="order-summary">
           <h2>
             <ReceiptText size={24} />
-            Sifariş Xülasəsi
+            Sifariş xülasəsi
           </h2>
           <div className="summary-list">
             {selectedItems.map(({ item, quantity }) => (
@@ -110,7 +120,7 @@ export function MenuSelectionPage() {
               <strong>{total.toFixed(2)} ₼</strong>
             </div>
           </div>
-          <p className="online-only">Ödəniş yalnız online qəbul edilir. Nağd ödəniş bu mərhələdə aktiv deyil.</p>
+          <p className="online-only">Ödəniş hələlik sistem üzərindən aparılmır. MVP-də müqavilə üzrə ödəniş fiziki/offline qəbul edilir.</p>
           <Link className="ui-button ui-button-primary full" to="/confirmation">
             Davam et
           </Link>

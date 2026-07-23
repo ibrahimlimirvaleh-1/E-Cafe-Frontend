@@ -1,19 +1,23 @@
 import { MapPin, Phone, Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
 export function RestaurantCatalogPage() {
-  const restaurants = ecafeApi.restaurants.list()
+  const { data: restaurants, isLoading } = useAsyncData(() => ecafeApi.restaurants.publicList(), [])
 
   return (
     <main className="page">
       <PageHeader
         eyebrow="Public kataloq"
-        title="Restoran seç və depozitli rezervasiya et"
-        description="Uyğun restoranı tap, masa və ofisiant seç, rezervasiyanı online depozitlə təsdiqlə."
+        title="Restoran seç və rezervasiyaya başla"
+        description="Uyğun restoranı tap, menyuya, stollara və əməkdaşlara bax. Ödəniş hələlik fiziki/offline aparılır."
       />
+
+      {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
+      {!isLoading && restaurants.length === 0 ? <p className="online-only">Aktiv public restoran tapılmadı.</p> : null}
 
       <section className="restaurant-grid">
         {restaurants.map((restaurant) => (

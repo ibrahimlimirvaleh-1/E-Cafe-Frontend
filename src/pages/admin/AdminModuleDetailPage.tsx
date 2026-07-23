@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom'
-import type { AdminModuleKey } from '../../entities/types'
+import type { AdminModuleKey, AdminRow } from '../../entities/types'
 import { getAdminModule } from '../../entities/mockData'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -14,7 +15,22 @@ export function AdminModuleDetailPage({ moduleKey }: AdminModuleDetailPageProps)
   const params = useParams()
   const module = getAdminModule(moduleKey)
   const recordId = Object.values(params)[0] ?? ''
-  const row = ecafeApi.admin.rows(moduleKey).find((entry) => entry.id === recordId) ?? ecafeApi.admin.rows(moduleKey)[0]
+  const { data: row } = useAsyncData<AdminRow | null>(
+    async () => {
+      const rows = await ecafeApi.admin.rows(moduleKey)
+      return rows.find((entry) => entry.id === recordId) ?? rows[0] ?? null
+    },
+    null,
+    [moduleKey, recordId],
+  )
+
+  if (!row) {
+    return (
+      <main className="admin-page narrow">
+        <p className="online-only">Detallar yüklənir...</p>
+      </main>
+    )
+  }
 
   return (
     <main className="admin-page narrow">

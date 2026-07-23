@@ -1,12 +1,22 @@
 import { Clock, MapPin, Phone, ShieldCheck, Star } from 'lucide-react'
 import { useParams } from 'react-router-dom'
+import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ButtonLink } from '../../shared/ui/Button'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 
 export function RestaurantProfilePage() {
   const { restaurantId = 'saffron-premium' } = useParams()
-  const restaurant = ecafeApi.restaurants.detail(restaurantId)
+  const { data: restaurant } = useAsyncData<Restaurant | null>(() => ecafeApi.restaurants.detail(restaurantId), null, [restaurantId])
+
+  if (!restaurant) {
+    return (
+      <main className="page">
+        <p className="online-only">Restoran profili yüklənir...</p>
+      </main>
+    )
+  }
 
   return (
     <main className="page">
@@ -31,11 +41,11 @@ export function RestaurantProfilePage() {
             </span>
             <span>
               <Clock size={18} />
-              60 dəq ləğv pəncərəsi
+              Rezervasiya qaydaları restoran tərəfindən idarə olunur
             </span>
             <span>
               <ShieldCheck size={18} />
-              Yalnız online ödəniş
+              Ödəniş fiziki/offline
             </span>
           </div>
           <ContractGuardNotice active={restaurant.hasActiveContract} />
