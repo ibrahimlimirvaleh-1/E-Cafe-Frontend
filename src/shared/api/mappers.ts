@@ -56,12 +56,40 @@ export function mapTable(record: AnyRecord, restaurantId: string): Table {
   }
 }
 
+function normalizeStaffRole(role: string): StaffMember['role'] {
+  const normalized = role.trim().toLowerCase()
+
+  if (normalized.includes('ofisiant') || normalized.includes('waiter')) {
+    return 'Waiter'
+  }
+
+  if (normalized.includes('mətbəx') || normalized.includes('metbex') || normalized.includes('kitchen')) {
+    return 'Kitchen'
+  }
+
+  if (normalized.includes('menecer') || normalized.includes('manager')) {
+    return 'Manager'
+  }
+
+  if (normalized.includes('sahibkar') || normalized.includes('owner')) {
+    return 'Owner'
+  }
+
+  if (normalized.includes('admin')) {
+    return 'PlatformAdmin'
+  }
+
+  return 'Waiter'
+}
+
 export function mapStaff(record: AnyRecord, restaurantId: string): StaffMember {
+  const role = str(record.roleName || record.role, 'Waiter')
+
   return {
     id: str(record.id || record.userId || record.staffId),
     restaurantId: str(record.restaurantId, restaurantId),
     name: `${str(record.name)} ${str(record.surname)}`.trim() || str(record.fullName),
-    role: str(record.roleName || record.role, 'Waiter') as StaffMember['role'],
+    role: normalizeStaffRole(role),
     phone: str(record.phone || record.email),
     status: bool(record.isActive, true) ? 'Active' : 'Inactive',
     serviceFeePercent: record.serviceFeePercent == null ? undefined : num(record.serviceFeePercent),
