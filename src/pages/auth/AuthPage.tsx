@@ -1,8 +1,9 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { getUserFromToken } from '../../shared/auth/jwt'
 import { Brand } from '../../shared/layout/Brand'
 import { Button } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
@@ -19,10 +20,24 @@ function splitFullName(fullName: string) {
   }
 }
 
+function getRoleHomePath(roleId: string) {
+  switch (roleId) {
+    case '1':
+    case '2':
+    case '3':
+      return '/admin'
+    case '4':
+      return '/waiter'
+    case '6':
+      return '/kitchen'
+    default:
+      return '/'
+  }
+}
+
 export function AuthPage({ mode }: AuthPageProps) {
   const isLogin = mode === 'login'
   const navigate = useNavigate()
-  const location = useLocation()
   const { setSession } = useAuth()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -46,7 +61,8 @@ export function AuthPage({ mode }: AuthPageProps) {
       }
 
       setSession(tokens)
-      const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/admin'
+      const user = getUserFromToken(tokens.accessToken)
+      const redirectTo = getRoleHomePath(user?.roleId ?? '')
       navigate(redirectTo, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sorğu icra olunmadı.')
