@@ -186,7 +186,7 @@ export function MenuManagementPage() {
                   <strong>{item.name}</strong>
                   <small>{item.description || 'Tərkib qeyd edilməyib'}</small>
                 </div>
-                <span>{categoryNameById.get(item.categoryId) || 'Kateqoriya yoxdur'}</span>
+                <span>{item.categoryName || categoryNameById.get(item.categoryId) || 'Kateqoriya yoxdur'}</span>
                 <Badge tone={item.isActive ? 'success' : 'neutral'}>{item.statusName || (item.isActive ? 'Aktiv' : 'Deaktiv')}</Badge>
                 <small>{item.salesCount ?? 0} satış</small>
                 <b>{item.price.toFixed(2)} ₼</b>

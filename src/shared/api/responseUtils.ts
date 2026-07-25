@@ -55,6 +55,11 @@ export function bool(value: unknown, fallback = false) {
 export function asPaginated<T>(value: unknown, mapItem: (record: AnyRecord) => T): PaginatedResponse<T> {
   if (value && typeof value === 'object' && 'items' in value) {
     const record = value as AnyRecord
+
+    if (record.items && typeof record.items === 'object' && !Array.isArray(record.items) && 'items' in record.items) {
+      return asPaginated(record.items, mapItem)
+    }
+
     return {
       items: asArray<AnyRecord>(record.items).map(mapItem),
       pageIndex: num(record.pageIndex, 1),

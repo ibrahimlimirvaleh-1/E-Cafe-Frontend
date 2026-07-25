@@ -112,6 +112,7 @@ export function mapMenuItem(record: AnyRecord, restaurantId: string): MenuItem {
     id: str(record.id || record.itemId),
     restaurantId: str(record.restaurantId, restaurantId),
     categoryId: str(record.categoryId),
+    categoryName: str(record.categoryName),
     name: str(record.name),
     description: str(record.description),
     price: num(record.price || record.basePrice),
