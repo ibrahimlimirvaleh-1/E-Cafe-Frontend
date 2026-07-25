@@ -12,18 +12,18 @@ export function WaiterSelectionPage() {
   return (
     <main className="page">
       <ReservationStepper activeStep={3} />
-      <PageHeader title="Ofisiant seç" description="Public staff endpoint-i ilə restoranın aktiv ofisiantları göstərilir." />
+      <PageHeader title="Ofisiant seç" />
       {isLoading ? <p className="online-only">Ofisiantlar yüklənir...</p> : null}
-      {!isLoading && waiters.length === 0 ? <p className="online-only">Bu restoran üçün public ofisiant tapılmadı.</p> : null}
+      {!isLoading && waiters.length === 0 ? <p className="online-only">Bu restoran üçün ofisiant tapılmadı.</p> : null}
       <section className="choice-grid">
         {waiters.map((waiter) => (
           <Link className="choice-card" key={waiter.id} to={`/restaurants/${restaurantId}/menu`}>
             <BadgeCheck size={26} />
             <strong>{waiter.name}</strong>
-            <span>{waiter.status}</span>
+            <span>{waiter.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</span>
             <small>
               <WalletCards size={15} />
-              Service fee: {waiter.serviceFeePercent ?? 'default'}%
+              {waiter.serviceFeePercent == null ? 'Servis faizi restoran qaydasına görədir' : `Servis faizi: ${waiter.serviceFeePercent}%`}
             </small>
           </Link>
         ))}

@@ -12,16 +12,16 @@ export function TableSelectionPage() {
   return (
     <main className="page">
       <ReservationStepper activeStep={2} />
-      <PageHeader title="Adam sayına uyğun masa seç" description="Backend hazır olan public table endpoint-ləri əsasında görünən masalar göstərilir." />
+      <PageHeader title="Adam sayına uyğun masa seç" />
       {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
-      {!isLoading && tables.length === 0 ? <p className="online-only">Bu restoran üçün public masa tapılmadı.</p> : null}
+      {!isLoading && tables.length === 0 ? <p className="online-only">Bu restoran üçün masa tapılmadı.</p> : null}
       <section className="choice-grid">
         {tables.map((table) => (
           <Link className="choice-card" key={table.id} to={`/restaurants/${restaurantId}/waiters`}>
             <Users size={26} />
             <strong>{table.number}</strong>
             <span>{table.capacity} nəfərlik masa</span>
-            <small>{table.status}</small>
+            <small>{table.status === 'Available' ? 'Boşdur' : table.status}</small>
           </Link>
         ))}
       </section>

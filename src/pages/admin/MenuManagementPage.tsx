@@ -1,0 +1,201 @@
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { Badge } from '../../shared/ui/Badge'
+import { Button } from '../../shared/ui/Button'
+import { FileUploadField } from '../../shared/ui/FileUploadField'
+import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
+import { PageHeader } from '../../shared/ui/PageHeader'
+
+export function MenuManagementPage() {
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
+  const [fileId, setFileId] = useState<number | null>(null)
+  const [message, setMessage] = useState('')
+  const [categoryForm, setCategoryForm] = useState({ name: '', sortOrder: '' })
+  const [itemForm, setItemForm] = useState({
+    categoryId: '',
+    statusId: '',
+    name: '',
+    description: '',
+    basePrice: '',
+    isAvailable: true,
+    unavailableReason: '',
+  })
+  const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
+  const { data: itemStatuses } = useAsyncData(() => ecafeApi.lookups.itemStatuses(), [], [])
+  const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const { data: categories } = useAsyncData(
+    () => (restaurantId ? ecafeApi.menu.categories(restaurantId) : Promise.resolve([])),
+    [],
+    [restaurantId, reloadKey],
+  )
+  const { data: items, isLoading } = useAsyncData(
+    () => (restaurantId ? ecafeApi.menu.adminItems(restaurantId) : Promise.resolve([])),
+    [],
+    [restaurantId, reloadKey],
+  )
+  const activeStatuses = useMemo(() => itemStatuses.filter((status) => status.id > 0), [itemStatuses])
+  const categoryNameById = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories])
+
+  useEffect(() => {
+    if (!selectedRestaurantId && restaurants[0]) {
+      setSelectedRestaurantId(restaurants[0].id)
+    }
+  }, [restaurants, selectedRestaurantId])
+
+  useEffect(() => {
+    if (!itemForm.categoryId && categories[0]) {
+      setItemForm((current) => ({ ...current, categoryId: categories[0].id }))
+    }
+  }, [categories, itemForm.categoryId])
+
+  useEffect(() => {
+    if (!itemForm.statusId && activeStatuses[0]) {
+      setItemForm((current) => ({ ...current, statusId: String(activeStatuses[0].id) }))
+    }
+  }, [activeStatuses, itemForm.statusId])
+
+  async function handleCreateCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!restaurantId) {
+      setMessage('Restoran seçilməlidir.')
+      return
+    }
+
+    await ecafeApi.menu.createCategory(restaurantId, {
+      name: categoryForm.name,
+      sortOrder: categoryForm.sortOrder ? Number(categoryForm.sortOrder) : null,
+    })
+    setCategoryForm({ name: '', sortOrder: '' })
+    setMessage('Kateqoriya yaradıldı.')
+    setReloadKey((value) => value + 1)
+  }
+
+  async function handleCreateItem(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!restaurantId || !itemForm.categoryId || !itemForm.statusId) {
+      setMessage('Restoran, kateqoriya və status seçilməlidir.')
+      return
+    }
+
+    await ecafeApi.menu.createItem(restaurantId, {
+      categoryId: itemForm.categoryId,
+      statusId: Number(itemForm.statusId),
+      name: itemForm.name,
+      description: itemForm.description,
+      basePrice: Number(itemForm.basePrice),
+      isAvailable: itemForm.isAvailable,
+      unavailableReason: itemForm.unavailableReason,
+      fileId,
+    })
+    setItemForm({
+      categoryId: categories[0]?.id ?? '',
+      statusId: String(activeStatuses[0]?.id ?? ''),
+      name: '',
+      description: '',
+      basePrice: '',
+      isAvailable: true,
+      unavailableReason: '',
+    })
+    setFileId(null)
+    setMessage('Menyu elementi yaradıldı.')
+    setReloadKey((value) => value + 1)
+  }
+
+  return (
+    <main className="admin-page">
+      <PageHeader eyebrow="Admin" title="Menyu idarəetməsi" />
+
+      <section className="admin-resource-layout wide menu-admin-layout">
+        <section className="admin-panel">
+          <span className="eyebrow">Restoran</span>
+          <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
+            {restaurants.map((restaurant) => (
+              <option key={restaurant.id} value={restaurant.id}>
+                {restaurant.name}
+              </option>
+            ))}
+          </SelectField>
+          <form className="stack-form" onSubmit={handleCreateCategory}>
+            <h2>Yeni kateqoriya</h2>
+            <TextField label="Ad" required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
+            <TextField
+              label="Sıra"
+              min={0}
+              type="number"
+              value={categoryForm.sortOrder}
+              onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })}
+              hint="Boş qalsa backend növbəti sıranı özü verir."
+            />
+            <Button type="submit" variant="secondary">
+              Kateqoriya yarat
+            </Button>
+          </form>
+        </section>
+
+        <form className="admin-panel" onSubmit={handleCreateItem}>
+          <div>
+            <span className="eyebrow">Yeni yemək</span>
+            <h2>Menyu elementi</h2>
+          </div>
+          <div className="form-grid two">
+            <SelectField label="Kateqoriya" required value={itemForm.categoryId} onChange={(event) => setItemForm({ ...itemForm, categoryId: event.target.value })}>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField label="Status" required value={itemForm.statusId} onChange={(event) => setItemForm({ ...itemForm, statusId: event.target.value })}>
+              {activeStatuses.map((status) => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+          <TextField label="Ad" required value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} />
+          <TextareaField label="Tərkib" required value={itemForm.description} onChange={(event) => setItemForm({ ...itemForm, description: event.target.value })} />
+          <div className="form-grid two">
+            <TextField label="Qiymət" min={0} required step="0.01" type="number" value={itemForm.basePrice} onChange={(event) => setItemForm({ ...itemForm, basePrice: event.target.value })} />
+            <label className="toggle-field">
+              <input checked={itemForm.isAvailable} type="checkbox" onChange={(event) => setItemForm({ ...itemForm, isAvailable: event.target.checked })} />
+              <span>Satışdadır</span>
+            </label>
+          </div>
+          {!itemForm.isAvailable ? (
+            <TextField label="Satışda olmama səbəbi" value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
+          ) : null}
+          <FileUploadField label="Yemək şəkli" onUploaded={setFileId} />
+          <Button type="submit">Menyu elementi yarat</Button>
+          {message ? <p className="form-message">{message}</p> : null}
+        </form>
+
+        <section className="admin-panel menu-list-panel">
+          <div>
+            <span className="eyebrow">Siyahı</span>
+            <h2>Menyu</h2>
+          </div>
+          {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
+          <div className="admin-menu-list">
+            {items.map((item) => (
+              <article key={item.id}>
+                <img src={item.image} alt={item.name} />
+                <div>
+                  <strong>{item.name}</strong>
+                  <small>{item.description || 'Tərkib qeyd edilməyib'}</small>
+                </div>
+                <span>{categoryNameById.get(item.categoryId) || 'Kateqoriya yoxdur'}</span>
+                <Badge tone={item.isActive ? 'success' : 'neutral'}>{item.statusName || (item.isActive ? 'Aktiv' : 'Deaktiv')}</Badge>
+                <small>{item.salesCount ?? 0} satış</small>
+                <b>{item.price.toFixed(2)} ₼</b>
+              </article>
+            ))}
+            {!isLoading && items.length === 0 ? <p className="online-only">Bu restoran üçün menyu elementi yoxdur.</p> : null}
+          </div>
+        </section>
+      </section>
+    </main>
+  )
+}

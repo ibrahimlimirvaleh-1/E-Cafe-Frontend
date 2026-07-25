@@ -38,7 +38,7 @@ export function MenuSelectionPage() {
       <ReservationStepper activeStep={4} />
       <section className="menu-layout">
         <div className="menu-main">
-          <PageHeader title="Menyu seçimi" description="Müştəri menyunu görə və seçim edə bilər. Rezerv/order yaratma backend flow-u növbəti mərhələdə bağlanacaq." />
+          <PageHeader title="Menyu seçimi" />
           {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
           {!isLoading && items.length === 0 ? <p className="online-only">Bu restoran üçün menyu tapılmadı.</p> : null}
           <div className="category-tabs">
@@ -67,8 +67,8 @@ export function MenuSelectionPage() {
                       <h2>{item.name}</h2>
                       <strong>{item.price.toFixed(2)} ₼</strong>
                     </div>
-                    <p>{item.description}</p>
-                    <input placeholder="Item note / Qeyd" />
+                    <p>{item.description || 'Tərkib qeyd edilməyib'}</p>
+                    <input placeholder="Qeyd" />
                     <footer>
                       <div className="quantity-control">
                         <button onClick={() => setQuantity(item.id, quantity - 1)} type="button" aria-label="Azalt">
@@ -120,7 +120,6 @@ export function MenuSelectionPage() {
               <strong>{total.toFixed(2)} ₼</strong>
             </div>
           </div>
-          <p className="online-only">Ödəniş hələlik sistem üzərindən aparılmır. MVP-də müqavilə üzrə ödəniş fiziki/offline qəbul edilir.</p>
           <Link className="ui-button ui-button-primary full" to="/confirmation">
             Davam et
           </Link>

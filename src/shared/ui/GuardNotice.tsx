@@ -9,7 +9,7 @@ export function ContractGuardNotice({ active }: GuardNoticeProps) {
     return (
       <div className="contract-guard contract-guard-ok">
         <ShieldCheck size={20} />
-        Aktiv müqavilə var. Rezervasiya, sifariş və online ödəniş axınları açıqdır.
+        Aktiv müqavilə var.
       </div>
     )
   }
@@ -17,7 +17,7 @@ export function ContractGuardNotice({ active }: GuardNoticeProps) {
   return (
     <div className="contract-guard contract-guard-blocked">
       <FileWarning size={20} />
-      Aktiv müqavilə yoxdur. Restoran rezervasiya və online ödəniş qəbul edə bilməz.
+      Aktiv müqavilə yoxdur.
     </div>
   )
 }

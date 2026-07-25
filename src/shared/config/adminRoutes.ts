@@ -9,6 +9,7 @@ export type AdminRouteConfig = {
 
 export const adminRouteConfig: AdminRouteConfig[] = [
   { key: 'restaurants', paramName: 'restaurantId', supportsCreate: true, dangerAction: 'deactivate' },
+  { key: 'restaurant-groups', paramName: 'restaurantGroupId', supportsCreate: true },
   { key: 'contracts', paramName: 'contractId', supportsCreate: true, dangerAction: 'terminate' },
   { key: 'reservations', paramName: 'reservationId', supportsCreate: false },
   { key: 'orders', paramName: 'orderId', supportsCreate: false },
@@ -17,4 +18,5 @@ export const adminRouteConfig: AdminRouteConfig[] = [
   { key: 'tables', paramName: 'tableId', supportsCreate: true, dangerAction: 'deactivate' },
   { key: 'categories', paramName: 'categoryId', supportsCreate: true, dangerAction: 'deactivate' },
   { key: 'menu', paramName: 'itemId', supportsCreate: true, dangerAction: 'deactivate' },
+  { key: 'audit-logs', paramName: 'auditLogId', supportsCreate: false },
 ]

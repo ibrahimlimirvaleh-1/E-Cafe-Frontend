@@ -1,8 +1,9 @@
 import type { FormEvent } from 'react'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Brand } from '../../shared/layout/Brand'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { Brand } from '../../shared/layout/Brand'
 import { Button } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
 
@@ -21,8 +22,11 @@ function splitFullName(fullName: string) {
 export function AuthPage({ mode }: AuthPageProps) {
   const isLogin = mode === 'login'
   const navigate = useNavigate()
+  const location = useLocation()
+  const { setSession } = useAuth()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -33,14 +37,17 @@ export function AuthPage({ mode }: AuthPageProps) {
     setIsSubmitting(true)
 
     try {
-      if (isLogin) {
-        await ecafeApi.auth.login({ email, password })
-        navigate('/admin')
-      } else {
-        const nameParts = splitFullName(fullName)
-        await ecafeApi.auth.register({ ...nameParts, email, password })
-        navigate('/login')
+      const tokens = isLogin
+        ? await ecafeApi.auth.login({ email, password })
+        : await ecafeApi.auth.register({ ...splitFullName(fullName), email, phone, password })
+
+      if (!tokens.accessToken || !tokens.refreshToken) {
+        throw new Error('Token məlumatı geri qayıtmadı.')
       }
+
+      setSession(tokens)
+      const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/admin'
+      navigate(redirectTo, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sorğu icra olunmadı.')
     } finally {
@@ -56,7 +63,12 @@ export function AuthPage({ mode }: AuthPageProps) {
           <h1>{isLogin ? 'Daxil ol' : 'Qeydiyyat'}</h1>
           <p>{isLogin ? 'ECafe hesabına giriş et.' : 'Müştəri hesabı yarat və rezervasiyalarını izlə.'}</p>
         </div>
-        {!isLogin ? <TextField label="Ad və soyad" placeholder="Aysel Məmmədova" value={fullName} onChange={(event) => setFullName(event.target.value)} /> : null}
+        {!isLogin ? (
+          <>
+            <TextField label="Ad və soyad" placeholder="Aysel Məmmədova" value={fullName} onChange={(event) => setFullName(event.target.value)} />
+            <TextField label="Telefon" placeholder="+994501234567" value={phone} onChange={(event) => setPhone(event.target.value)} />
+          </>
+        ) : null}
         <TextField label="Email" placeholder="name@example.com" value={email} onChange={(event) => setEmail(event.target.value)} />
         <TextField label="Şifrə" placeholder="••••••••" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
         {error ? <p className="online-only">{error}</p> : null}

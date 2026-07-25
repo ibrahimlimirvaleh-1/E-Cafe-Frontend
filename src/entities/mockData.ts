@@ -1,8 +1,10 @@
 import {
+  Building2,
   CalendarDays,
   ClipboardList,
   CreditCard,
   FileText,
+  History,
   ShoppingBag,
   Store,
   Table2,
@@ -207,15 +209,17 @@ export const settlements: StaffSettlement[] = [
 ]
 
 export const adminModules: AdminModule[] = [
-  { key: 'restaurants', title: 'Restoranlar', singular: 'Restoran', route: '/admin/restaurants', icon: Store, createLabel: 'Yeni restoran', dangerLabel: 'Restoranı deaktiv et', description: 'Profil, aktivlik və contract gate vəziyyəti.', columns: ['Restoran', 'Status', 'Müqavilə', 'Depozit'] },
+  { key: 'restaurants', title: 'Restoranlar', singular: 'Restoran', route: '/admin/restaurants', icon: Store, createLabel: 'Yeni restoran', dangerLabel: 'Restoranı deaktiv et', description: 'Profil və aktivlik vəziyyəti.', columns: ['Restoran', 'Status', 'Müqavilə', 'Depozit'] },
+  { key: 'restaurant-groups', title: 'Restoran qrupları', singular: 'Restoran qrupu', route: '/admin/restaurant-groups', icon: Building2, createLabel: 'Yeni qrup', description: 'Filialları vahid biznes qrupu altında birləşdirir.', columns: ['Qrup', 'Status', 'Legal ad', 'Filial'] },
   { key: 'contracts', title: 'Müqavilələr', singular: 'Müqavilə', route: '/admin/contracts', icon: FileText, createLabel: 'Yeni müqavilə', dangerLabel: 'Müqaviləni ləğv et', description: 'Platforma-restoran kommersiya və hüquqi şərtləri.', columns: ['Müqavilə', 'Status', 'Dövr', 'Ödəniş siyasəti'] },
   { key: 'reservations', title: 'Rezervasiyalar', singular: 'Rezervasiya', route: '/admin/reservations', icon: CalendarDays, description: 'Depozitli masa rezervləri və check-in statusları.', columns: ['Rezerv', 'Status', 'Tarix', 'Depozit'] },
-  { key: 'orders', title: 'Sifarişlər', singular: 'Sifariş', route: '/admin/orders', icon: ShoppingBag, description: 'WaiterCreated order lifecycle və online payment statusu.', columns: ['Sifariş', 'Status', 'Mənbə', 'Məbləğ'] },
-  { key: 'payments', title: 'Ödənişlər', singular: 'Ödəniş', route: '/admin/payments', icon: CreditCard, description: 'Payriff PaymentIntent, webhook və refund vəziyyəti.', columns: ['Ödəniş', 'Status', 'Provider', 'Məbləğ'] },
-  { key: 'staff', title: 'Personal', singular: 'Əməkdaş', route: '/admin/staff', icon: Users, createLabel: 'Yeni əməkdaş', dangerLabel: 'Əməkdaşı deaktiv et', description: 'Rol, fərdi service fee və settlement earning.', columns: ['Əməkdaş', 'Status', 'Rol', 'Qazanc'] },
-  { key: 'tables', title: 'Masalar', singular: 'Masa', route: '/admin/tables', icon: Table2, createLabel: 'Yeni masa', dangerLabel: 'Masanı deaktiv et', description: 'Tutum, public görünmə və cari masa statusu.', columns: ['Masa', 'Status', 'Tutum', 'Public'] },
-  { key: 'categories', title: 'Kateqoriyalar', singular: 'Kateqoriya', route: '/admin/categories', icon: Tags, createLabel: 'Yeni kateqoriya', dangerLabel: 'Kateqoriyanı deaktiv et', description: 'Public menyu kateqoriyaları.', columns: ['Kateqoriya', 'Status', 'Restoran', 'Item sayı'] },
+  { key: 'orders', title: 'Sifarişlər', singular: 'Sifariş', route: '/admin/orders', icon: ShoppingBag, description: 'Sifariş statusları və məbləğləri.', columns: ['Sifariş', 'Status', 'Mənbə', 'Məbləğ'] },
+  { key: 'payments', title: 'Ödənişlər', singular: 'Ödəniş', route: '/admin/payments', icon: CreditCard, description: 'Ödəniş və geri qaytarma vəziyyəti.', columns: ['Ödəniş', 'Status', 'Provider', 'Məbləğ'] },
+  { key: 'staff', title: 'Personal', singular: 'Əməkdaş', route: '/admin/staff', icon: Users, createLabel: 'Yeni əməkdaş', dangerLabel: 'Əməkdaşı deaktiv et', description: 'Rol, servis faizi və hesablaşma məlumatları.', columns: ['Əməkdaş', 'Status', 'Rol', 'Qazanc'] },
+  { key: 'tables', title: 'Masalar', singular: 'Masa', route: '/admin/tables', icon: Table2, createLabel: 'Yeni masa', dangerLabel: 'Masanı deaktiv et', description: 'Tutum, görünmə və cari masa statusu.', columns: ['Masa', 'Status', 'Tutum', 'Görünmə'] },
+  { key: 'categories', title: 'Kateqoriyalar', singular: 'Kateqoriya', route: '/admin/categories', icon: Tags, createLabel: 'Yeni kateqoriya', dangerLabel: 'Kateqoriyanı deaktiv et', description: 'Menyu kateqoriyaları.', columns: ['Kateqoriya', 'Status', 'Restoran', 'Yemək sayı'] },
   { key: 'menu', title: 'Menyu', singular: 'Menyu elementi', route: '/admin/menu', icon: ClipboardList, createLabel: 'Yeni menyu elementi', dangerLabel: 'Menyu elementini deaktiv et', description: 'Məhsul, qiymət, kateqoriya və aktivlik.', columns: ['Məhsul', 'Status', 'Kateqoriya', 'Qiymət'] },
+  { key: 'audit-logs', title: 'Audit loglar', singular: 'Audit log', route: '/admin/audit-logs', icon: History, description: 'Müqavilə, restoran, fayl və idarəetmə əməliyyatlarını izləyir.', columns: ['Əməliyyat', 'Obyekt', 'İcra edən', 'Tarix'] },
 ]
 
 export function getRestaurant(id = 'saffron-premium') {
@@ -237,9 +241,10 @@ export function getAdminRows(key: AdminModuleKey): AdminRow[] {
       image: restaurant.image,
       status: restaurant.isActive ? 'Aktiv' : 'Deaktiv',
       tone: restaurant.isActive ? 'success' : 'danger',
-      meta: restaurant.hasActiveContract ? 'Active contract' : 'Contract gate bağlı',
+      meta: restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur',
       value: `${restaurant.depositAmount} ₼ depozit`,
     })),
+    'restaurant-groups': [],
     contracts: contracts.map((contract) => ({
       id: contract.id,
       title: contract.contractNumber,
@@ -303,7 +308,7 @@ export function getAdminRows(key: AdminModuleKey): AdminRow[] {
       status: category.isActive ? 'Aktiv' : 'Deaktiv',
       tone: category.isActive ? 'success' : 'neutral',
       meta: restaurantName(category.restaurantId),
-      value: `${menuItems.filter((item) => item.categoryId === category.id).length} item`,
+      value: `${menuItems.filter((item) => item.categoryId === category.id).length} yemək`,
     })),
     menu: menuItems.map((item) => ({
       id: item.id,
@@ -315,6 +320,7 @@ export function getAdminRows(key: AdminModuleKey): AdminRow[] {
       meta: menuCategories.find((category) => category.id === item.categoryId)?.name ?? '-',
       value: `${item.price.toFixed(2)} ₼`,
     })),
+    'audit-logs': [],
   }
 
   return rowMap[key]

@@ -10,19 +10,15 @@ type AdminModuleListPageProps = {
   moduleKey: AdminModuleKey
 }
 
-const backendPendingModules: AdminModuleKey[] = ['reservations', 'orders', 'payments']
-
 export function AdminModuleListPage({ moduleKey }: AdminModuleListPageProps) {
   const module = getAdminModule(moduleKey)
   const { data: rows, isLoading } = useAsyncData(() => ecafeApi.admin.rows(moduleKey), [], [moduleKey])
-  const isBackendPending = backendPendingModules.includes(moduleKey)
 
   return (
     <main className="admin-page">
       <PageHeader
         eyebrow="Admin"
         title={module.title}
-        description={isBackendPending ? `${module.description} Bu flow üçün backend endpoint-ləri hələ yazılmayıb.` : module.description}
         action={
           module.createLabel ? (
             <ButtonLink to={`${module.route}/new`}>{module.createLabel}</ButtonLink>
@@ -30,7 +26,6 @@ export function AdminModuleListPage({ moduleKey }: AdminModuleListPageProps) {
         }
       />
       {isLoading ? <p className="online-only">Məlumatlar yüklənir...</p> : null}
-      {isBackendPending ? <p className="online-only">Bu bölmə hazırda demo/məlumatlandırıcı rejimdədir. Backend flow növbəti mərhələdə yazılacaq.</p> : null}
       <DataTable baseRoute={module.route} columns={module.columns} rows={rows} />
     </main>
   )

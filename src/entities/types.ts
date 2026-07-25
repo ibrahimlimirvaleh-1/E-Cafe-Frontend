@@ -26,8 +26,13 @@ export type Restaurant = {
   name: string
   address: string
   phone: string
+  email?: string
   rating: number
   cuisine: string
+  branchName?: string
+  restaurantGroupId?: string
+  restaurantGroupName?: string
+  cancellationWindowMinutes?: number
   image: string
   isActive: boolean
   hasActiveContract: boolean
@@ -41,13 +46,31 @@ export type RestaurantContract = {
   restaurantId: string
   contractNumber: string
   status: ContractStatus
+  statusId?: number
+  statusName?: string
   startDate: string
   endDate: string
   monthlyFee: number
   commissionPercent: number
   settlementPeriod: string
   paymentPolicy: 'OnlineOnly'
+  paymentPolicyId?: number
   fileName: string
+  fileId?: number
+  fileUrl?: string
+  signedAt?: string
+  signedByUserId?: number
+  signedByUserName?: string
+  availableActions?: WorkflowAction[]
+}
+
+export type WorkflowAction = {
+  code: 'sendForSignature' | 'approve' | 'activate' | 'terminate' | string
+  label: string
+  httpMethod: string
+  endpoint: string
+  requiresConfirmation: boolean
+  sortOrder: number
 }
 
 export type Table = {
@@ -88,6 +111,46 @@ export type MenuItem = {
   price: number
   image: string
   isActive: boolean
+  statusName?: string
+  salesCount?: number
+}
+
+export type LookupItem = {
+  id: number
+  code: string
+  name: string
+}
+
+export type RestaurantGroup = {
+  id: string
+  name: string
+  legalName: string
+  isActive: boolean
+}
+
+export type UserProfile = {
+  id: string
+  name: string
+  surname: string
+  email: string
+  phone: string
+  isActive: boolean
+  rating: number
+  roleId: number
+  role: string
+  restaurantId?: string
+  restaurantName?: string
+  fileUrl?: string
+}
+
+export type AuditLogEntry = {
+  id: string
+  action: string
+  entityName: string
+  entityId: string
+  actorName: string
+  createdAt: string
+  description: string
 }
 
 export type Reservation = {
@@ -136,6 +199,7 @@ export type StaffSettlement = {
 
 export type AdminModuleKey =
   | 'restaurants'
+  | 'restaurant-groups'
   | 'contracts'
   | 'reservations'
   | 'orders'
@@ -144,6 +208,7 @@ export type AdminModuleKey =
   | 'tables'
   | 'categories'
   | 'menu'
+  | 'audit-logs'
 
 export type AdminModule = {
   key: AdminModuleKey

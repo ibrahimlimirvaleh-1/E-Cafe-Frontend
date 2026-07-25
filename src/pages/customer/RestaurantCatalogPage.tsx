@@ -1,26 +1,62 @@
-import { MapPin, Phone, Star } from 'lucide-react'
+import { MapPin, Phone, Search, Star } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
+const pageSize = 6
+
 export function RestaurantCatalogPage() {
-  const { data: restaurants, isLoading } = useAsyncData(() => ecafeApi.restaurants.publicList(), [])
+  const [search, setSearch] = useState('')
+  const [pageNumber, setPageNumber] = useState(1)
+  const query = useMemo(() => {
+    const params = new URLSearchParams({
+      pageNumber: String(pageNumber),
+      pageSize: String(pageSize),
+    })
+
+    if (search.trim()) {
+      params.set('search', search.trim())
+    }
+
+    return `?${params.toString()}`
+  }, [pageNumber, search])
+
+  const { data: restaurantPage, isLoading } = useAsyncData(() => ecafeApi.restaurants.publicPage(query), {
+    items: [],
+    pageIndex: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  }, [query])
 
   return (
     <main className="page">
-      <PageHeader
-        eyebrow="Public kataloq"
-        title="Restoran seç və rezervasiyaya başla"
-        description="Uyğun restoranı tap, menyuya, stollara və əməkdaşlara bax. Ödəniş hələlik fiziki/offline aparılır."
-      />
+      <PageHeader eyebrow="Restoran kataloqu" title="Restoran seç və rezervasiyaya başla" />
+
+      <section className="catalog-toolbar">
+        <label className="site-search catalog-search">
+          <Search size={18} />
+          <input
+            placeholder="Restoran, filial, məkan və ya menyu üzrə axtar..."
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setPageNumber(1)
+            }}
+          />
+        </label>
+        <span>{restaurantPage.totalCount} restoran</span>
+      </section>
 
       {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
-      {!isLoading && restaurants.length === 0 ? <p className="online-only">Aktiv public restoran tapılmadı.</p> : null}
+      {!isLoading && restaurantPage.items.length === 0 ? <p className="online-only">Axtarışa uyğun restoran tapılmadı.</p> : null}
 
       <section className="restaurant-grid">
-        {restaurants.map((restaurant) => (
+        {restaurantPage.items.map((restaurant) => (
           <article className="restaurant-card" key={restaurant.id}>
             <img src={restaurant.image} alt={restaurant.name} />
             <div className="restaurant-card-body">
@@ -48,12 +84,36 @@ export function RestaurantCatalogPage() {
                 className={`ui-button ${restaurant.hasActiveContract ? 'ui-button-primary' : 'ui-button-secondary'}`}
                 to={`/restaurants/${restaurant.id}`}
               >
-                {restaurant.hasActiveContract ? 'Profilə bax' : 'Profilə bax, booking bağlıdır'}
+                {restaurant.hasActiveContract ? 'Profilə bax' : 'Profilə bax, rezervasiya bağlıdır'}
               </Link>
             </div>
           </article>
         ))}
       </section>
+
+      {restaurantPage.totalPages > 1 ? (
+        <section className="pagination-row" aria-label="Restoran səhifələmə">
+          <button
+            className="ui-button ui-button-secondary compact"
+            disabled={!restaurantPage.hasPreviousPage}
+            onClick={() => setPageNumber((current) => Math.max(1, current - 1))}
+            type="button"
+          >
+            Əvvəlki
+          </button>
+          <strong>
+            {restaurantPage.pageIndex} / {restaurantPage.totalPages}
+          </strong>
+          <button
+            className="ui-button ui-button-secondary compact"
+            disabled={!restaurantPage.hasNextPage}
+            onClick={() => setPageNumber((current) => current + 1)}
+            type="button"
+          >
+            Növbəti
+          </button>
+        </section>
+      ) : null}
     </main>
   )
 }

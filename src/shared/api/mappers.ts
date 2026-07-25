@@ -8,38 +8,49 @@ import type {
   StaffMember,
   StatusTone,
   Table,
+  WorkflowAction,
 } from '../../entities/types'
 import type { AnyRecord } from './responseUtils'
 import { bool, num, str } from './responseUtils'
 
 function imageUrl(record: AnyRecord, fallback: string) {
-  return str(record.fileUrl || record.imageUrl || record.image, fallback)
+  const urls = Array.isArray(record.imageUrls) ? record.imageUrls : []
+  return str(record.fileUrl || record.imageUrl || record.image || urls[0], fallback)
 }
 
 export function mapRestaurant(record: AnyRecord): Restaurant {
+  const restaurant = (record.restaurant && typeof record.restaurant === 'object' ? record.restaurant : record) as AnyRecord
+
   return {
-    id: str(record.id || record.restaurantId),
-    name: str(record.name),
-    address: str(record.address || record.location),
-    phone: str(record.phone),
-    rating: num(record.rating, 4.8),
-    cuisine: str(record.cuisine || record.cuisineName, 'Restoran'),
-    image: imageUrl(record, 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80'),
-    isActive: bool(record.isActive, true),
-    hasActiveContract: bool(record.hasActiveContract),
-    depositAmount: num(record.depositAmount),
-    defaultServiceFeePercent: num(record.defaultServiceFeePercent || record.serviceFeePercent),
+    id: str(restaurant.id || restaurant.restaurantId),
+    name: str(restaurant.name),
+    address: str(restaurant.address || restaurant.location),
+    phone: str(restaurant.phone),
+    email: str(restaurant.email),
+    rating: num(restaurant.rating || restaurant.ratingAverage, 4.8),
+    cuisine: str(restaurant.cuisine || restaurant.cuisineName || restaurant.restaurantGroupName, 'Restoran'),
+    branchName: str(restaurant.branchName),
+    restaurantGroupId: restaurant.restaurantGroupId == null ? undefined : str(restaurant.restaurantGroupId),
+    restaurantGroupName: str(restaurant.restaurantGroupName),
+    cancellationWindowMinutes: restaurant.cancellationWindowMinutes == null ? undefined : num(restaurant.cancellationWindowMinutes),
+    image: imageUrl(restaurant, 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80'),
+    isActive: bool(restaurant.isActive, true),
+    hasActiveContract: bool(restaurant.hasActiveContract, true),
+    depositAmount: num(restaurant.depositAmount),
+    defaultServiceFeePercent: num(restaurant.defaultServiceFeePercent || restaurant.serviceFeePercent),
     staffPayoutFrequency: 'weekly',
   }
 }
 
 export function mapTable(record: AnyRecord, restaurantId: string): Table {
+  const isEmpty = record.isEmpty
+
   return {
     id: str(record.id || record.tableId),
     restaurantId: str(record.restaurantId, restaurantId),
-    number: str(record.number || record.name || record.tableNumber),
+    number: str(record.number || record.name || record.tableNumber || record.tableNo),
     capacity: num(record.capacity || record.seatCount, 2),
-    status: str(record.status || record.statusName, 'Available') as Table['status'],
+    status: str(record.status || record.statusName || (isEmpty === false ? 'Occupied' : 'Available'), 'Available') as Table['status'],
     isPublic: bool(record.isPublic, true),
     image: str(record.imageUrl || record.fileUrl || record.image),
   }
@@ -47,11 +58,11 @@ export function mapTable(record: AnyRecord, restaurantId: string): Table {
 
 export function mapStaff(record: AnyRecord, restaurantId: string): StaffMember {
   return {
-    id: str(record.id || record.userId),
+    id: str(record.id || record.userId || record.staffId),
     restaurantId: str(record.restaurantId, restaurantId),
     name: `${str(record.name)} ${str(record.surname)}`.trim() || str(record.fullName),
     role: str(record.roleName || record.role, 'Waiter') as StaffMember['role'],
-    phone: str(record.phone),
+    phone: str(record.phone || record.email),
     status: bool(record.isActive, true) ? 'Active' : 'Inactive',
     serviceFeePercent: record.serviceFeePercent == null ? undefined : num(record.serviceFeePercent),
     currentEarning: num(record.currentEarning),
@@ -75,9 +86,11 @@ export function mapMenuItem(record: AnyRecord, restaurantId: string): MenuItem {
     categoryId: str(record.categoryId),
     name: str(record.name),
     description: str(record.description),
-    price: num(record.price),
+    price: num(record.price || record.basePrice),
     image: imageUrl(record, 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'),
     isActive: bool(record.isActive, true),
+    statusName: str(record.statusName || record.status),
+    salesCount: num(record.salesCount),
   }
 }
 
@@ -85,13 +98,41 @@ export function mapContractStatus(value: unknown): ContractStatus {
   const status = str(value)
   const statusMap: Record<string, ContractStatus> = {
     Layihə: 'Draft',
+    Qaralama: 'Draft',
     'Owner təsdiqlədi': 'OwnerApproved',
     'İmzaya göndərildi': 'PendingSignature',
+    'Təsdiq gözləyir': 'PendingSignature',
     Aktiv: 'Active',
     'Ləğv edildi': 'Terminated',
+    'Ləğv edilib': 'Terminated',
+    Bitdi: 'Expired',
   }
 
   return statusMap[status] ?? ((status || 'Draft') as ContractStatus)
+}
+
+export function contractStatusLabel(contract: RestaurantContract) {
+  const labels: Record<ContractStatus, string> = {
+    Draft: 'Qaralama',
+    PendingSignature: 'Təsdiq gözləyir',
+    OwnerApproved: 'Owner təsdiqlədi',
+    Active: 'Aktiv',
+    Expired: 'Bitib',
+    Terminated: 'Ləğv edilib',
+  }
+
+  return contract.statusName || labels[contract.status] || contract.status
+}
+
+function mapWorkflowAction(record: AnyRecord): WorkflowAction {
+  return {
+    code: str(record.code || record.actionCode),
+    label: str(record.label || record.name || record.code),
+    httpMethod: str(record.httpMethod || record.method, 'POST'),
+    endpoint: str(record.endpoint || record.url),
+    requiresConfirmation: bool(record.requiresConfirmation),
+    sortOrder: num(record.sortOrder),
+  }
 }
 
 export function mapContract(record: AnyRecord, restaurantId: string): RestaurantContract {
@@ -100,26 +141,37 @@ export function mapContract(record: AnyRecord, restaurantId: string): Restaurant
     restaurantId: str(record.restaurantId, restaurantId),
     contractNumber: str(record.contractNumber),
     status: mapContractStatus(record.status || record.statusName),
+    statusId: record.statusId == null ? undefined : num(record.statusId),
+    statusName: str(record.statusName || record.status),
     startDate: str(record.startDate),
     endDate: str(record.endDate),
     monthlyFee: num(record.monthlyFee),
     commissionPercent: num(record.commissionPercent),
     settlementPeriod: str(record.staffSettlementPeriod || record.settlementPeriod),
     paymentPolicy: 'OnlineOnly',
+    paymentPolicyId: record.paymentPolicyId == null ? undefined : num(record.paymentPolicyId),
     fileName: str(record.fileName || record.fileUrl || record.contractFileUrl),
+    fileId: record.fileId == null ? undefined : num(record.fileId),
+    fileUrl: str(record.fileUrl || record.contractFileUrl),
+    signedAt: str(record.signedAt),
+    signedByUserId: record.signedByUserId == null ? undefined : num(record.signedByUserId),
+    signedByUserName: str(record.signedByUserName),
+    availableActions: Array.isArray(record.availableActions)
+      ? record.availableActions.map((action) => mapWorkflowAction(action as AnyRecord))
+      : [],
   }
 }
 
 function tone(status: string): StatusTone {
-  if (['Active', 'Aktiv', 'OwnerApproved', 'Ready', 'Paid', 'Available'].includes(status)) {
+  if (['Active', 'Aktiv', 'OwnerApproved', 'Owner təsdiqlədi', 'Ready', 'Paid', 'Available'].includes(status)) {
     return 'success'
   }
 
-  if (['Draft', 'PendingSignature', 'Reserved', 'Preparing', 'Pending'].includes(status)) {
+  if (['Draft', 'Qaralama', 'PendingSignature', 'Təsdiq gözləyir', 'Reserved', 'Preparing', 'Pending'].includes(status)) {
     return 'warning'
   }
 
-  if (['Terminated', 'Inactive', 'Deaktiv', 'Failed', 'Cancelled'].includes(status)) {
+  if (['Terminated', 'Ləğv edilib', 'Inactive', 'Deaktiv', 'Failed', 'Cancelled'].includes(status)) {
     return 'danger'
   }
 
@@ -144,7 +196,7 @@ export function contractRow(contract: RestaurantContract, restaurantName = contr
     id: contract.id,
     title: contract.contractNumber || `Müqavilə #${contract.id}`,
     subtitle: restaurantName,
-    status: contract.status,
+    status: contractStatusLabel(contract),
     tone: tone(contract.status),
     meta: `${contract.startDate || '-'} - ${contract.endDate || '-'}`,
     value: `Komissiya ${contract.commissionPercent}%`,
@@ -170,7 +222,7 @@ export function staffRow(member: StaffMember): AdminRow {
     title: member.name,
     subtitle: member.phone,
     image: member.avatar,
-    status: member.status,
+    status: member.status === 'Active' ? 'Aktiv' : 'Deaktiv',
     tone: tone(member.status),
     meta: member.role,
     value: member.serviceFeePercent == null ? '-' : `${member.serviceFeePercent}%`,
@@ -197,7 +249,7 @@ export function menuRow(item: MenuItem): AdminRow {
     image: item.image,
     status: item.isActive ? 'Aktiv' : 'Deaktiv',
     tone: item.isActive ? 'success' : 'neutral',
-    meta: item.categoryId || '-',
+    meta: item.statusName || item.categoryId || '-',
     value: `${item.price.toFixed(2)} ₼`,
   }
 }
