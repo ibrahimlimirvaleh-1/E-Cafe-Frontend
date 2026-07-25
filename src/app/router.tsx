@@ -1,5 +1,6 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { RequireAuth } from '../shared/auth/RequireAuth'
+import { useAuth } from '../shared/auth/AuthContext'
 import { adminRouteConfig } from '../shared/config/adminRoutes'
 import { AdminShell } from '../shared/layout/AdminShell'
 import { SiteShell } from '../shared/layout/SiteShell'
@@ -39,11 +40,25 @@ import { StitchIndexPage } from '../pages/stitch/StitchIndexPage'
 
 const customAdminRoutes = ['restaurants', 'contracts', 'restaurant-groups', 'staff', 'tables', 'categories', 'menu', 'audit-logs']
 
+function RestaurantCatalogEntry() {
+  const { user } = useAuth()
+
+  if (user?.roleId === '4') {
+    return <Navigate to="/waiter" replace />
+  }
+
+  if (user?.roleId === '6') {
+    return <Navigate to="/kitchen" replace />
+  }
+
+  return <RestaurantCatalogPage />
+}
+
 export function AppRouter() {
   return (
     <Routes>
       <Route element={<SiteShell />}>
-        <Route index element={<RestaurantCatalogPage />} />
+        <Route index element={<RestaurantCatalogEntry />} />
         <Route path="restaurants/:restaurantId" element={<RestaurantProfilePage />} />
         <Route path="restaurants/:restaurantId/tables" element={<TableSelectionPage />} />
         <Route path="restaurants/:restaurantId/waiters" element={<WaiterSelectionPage />} />
