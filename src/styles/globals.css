@@ -1739,9 +1739,14 @@ img {
 
 .admin-menu-list article {
   display: grid;
-  grid-template-columns: 56px minmax(180px, 1fr) minmax(120px, 0.7fr) minmax(92px, auto) 72px 82px;
+  grid-template-columns: 56px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "image info status price"
+    "image category sales price";
   gap: 12px;
   align-items: center;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius);
   padding: 10px;
@@ -1749,6 +1754,7 @@ img {
 }
 
 .admin-menu-list img {
+  grid-area: image;
   width: 56px;
   height: 56px;
   border-radius: var(--radius);
@@ -1756,9 +1762,29 @@ img {
 }
 
 .admin-menu-list article > div {
+  grid-area: info;
   display: grid;
   gap: 3px;
   min-width: 0;
+}
+
+.admin-menu-list article > span {
+  grid-area: category;
+  min-width: 0;
+}
+
+.admin-menu-list article > .badge {
+  grid-area: status;
+}
+
+.admin-menu-list article > small {
+  grid-area: sales;
+  min-width: 0;
+}
+
+.admin-menu-list article > b {
+  grid-area: price;
+  white-space: nowrap;
 }
 
 .admin-menu-list strong,
@@ -2024,11 +2050,15 @@ img {
 
   .admin-menu-list article {
     grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "image info price"
+      "image category category"
+      "image status sales";
   }
 
   .admin-menu-list article > span,
   .admin-menu-list article > small {
-    grid-column: 2 / -1;
+    grid-column: auto;
   }
 
   .reservation-step {
