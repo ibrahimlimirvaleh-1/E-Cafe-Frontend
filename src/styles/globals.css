@@ -1911,6 +1911,31 @@ img {
   gap: 8px;
 }
 
+.staff-role-actions {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) auto;
+  gap: 10px;
+  align-items: center;
+  justify-content: end;
+  min-width: 0;
+}
+
+.staff-role-actions select {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0 10px;
+  color: var(--on-surface);
+  background: var(--surface-lowest);
+}
+
+.staff-role-actions .ui-button {
+  min-height: 38px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
 .admin-menu-list {
   display: grid;
   gap: 10px;
@@ -2278,6 +2303,15 @@ img {
   .audit-list article {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .staff-badges,
+  .staff-role-actions {
+    justify-content: start;
+  }
+
+  .staff-role-actions {
+    grid-template-columns: 1fr;
   }
 
   .public-menu-row {

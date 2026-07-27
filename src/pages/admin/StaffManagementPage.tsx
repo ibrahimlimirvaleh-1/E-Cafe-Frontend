@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
@@ -18,11 +20,23 @@ const initialForm = {
   serviceFeePercent: '',
 }
 
+const roleIdsByStaffRole: Record<Role, number> = {
+  PlatformAdmin: 1,
+  Owner: 2,
+  Manager: 3,
+  Waiter: 4,
+  Customer: 5,
+  Kitchen: 6,
+}
+
 export function StaffManagementPage() {
+  const { setSession, user } = useAuth()
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const [fileId, setFileId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const [roleSelections, setRoleSelections] = useState<Record<string, string>>({})
+  const [updatingRoleUserId, setUpdatingRoleUserId] = useState('')
   const [form, setForm] = useState(initialForm)
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
@@ -34,12 +48,21 @@ export function StaffManagementPage() {
     [restaurantId, reloadKey],
   )
   const roleOptions = useMemo(() => roles.filter((role) => role.id > 0), [roles])
+  const canChangeRoles = user?.roleId === '1' || user?.permissions.includes('ManageStaff')
 
   useEffect(() => {
     if (!selectedRestaurantId && restaurants[0]) {
       setSelectedRestaurantId(restaurants[0].id)
     }
   }, [restaurants, selectedRestaurantId])
+
+  function currentRoleId(member: StaffMember) {
+    return member.roleId || roleIdsByStaffRole[member.role] || 0
+  }
+
+  function selectedRoleId(member: StaffMember) {
+    return roleSelections[member.id] || String(currentRoleId(member) || '')
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -64,6 +87,30 @@ export function StaffManagementPage() {
     setFileId(null)
     setMessage('Əməkdaş yaradıldı.')
     setReloadKey((value) => value + 1)
+  }
+
+  async function handleRoleChange(member: StaffMember) {
+    const roleId = Number(selectedRoleId(member))
+    if (!roleId) {
+      setMessage('Rol seçilməlidir.')
+      return
+    }
+
+    setMessage('')
+    setUpdatingRoleUserId(member.id)
+    try {
+      const tokens = await ecafeApi.users.updateRole(member.id, roleId)
+      if (tokens.accessToken && tokens.refreshToken) {
+        setSession(tokens)
+      }
+
+      setMessage('Rol yeniləndi.')
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Rol yenilənmədi.')
+    } finally {
+      setUpdatingRoleUserId('')
+    }
   }
 
   return (
@@ -130,12 +177,43 @@ export function StaffManagementPage() {
               <article key={member.id}>
                 <div>
                   <strong>{member.name}</strong>
-                  <small>{member.phone || member.role} · {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `${member.serviceFeePercent}%`}</small>
+                  <small>
+                    {member.phone || member.role} ·{' '}
+                    {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `${member.serviceFeePercent}%`}
+                  </small>
                 </div>
                 <div className="staff-badges">
                   <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>
                   <Badge tone="info">{member.role}</Badge>
                 </div>
+                {canChangeRoles ? (
+                  <div className="staff-role-actions">
+                    <select
+                      aria-label={`${member.name} üçün rol`}
+                      value={selectedRoleId(member)}
+                      onChange={(event) =>
+                        setRoleSelections((current) => ({
+                          ...current,
+                          [member.id]: event.target.value,
+                        }))
+                      }
+                    >
+                      {roleOptions.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)}
+                      onClick={() => void handleRoleChange(member)}
+                      type="button"
+                      variant="secondary"
+                    >
+                      {updatingRoleUserId === member.id ? 'Yenilənir...' : 'Rolu yenilə'}
+                    </Button>
+                  </div>
+                ) : null}
               </article>
             ))}
             {!isLoading && staff.length === 0 ? <p className="online-only">Bu restoran üçün personal tapılmadı.</p> : null}

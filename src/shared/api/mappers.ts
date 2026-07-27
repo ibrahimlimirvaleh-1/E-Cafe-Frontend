@@ -90,6 +90,7 @@ export function mapStaff(record: AnyRecord, restaurantId: string): StaffMember {
     restaurantId: str(record.restaurantId, restaurantId),
     name: `${str(record.name)} ${str(record.surname)}`.trim() || str(record.fullName),
     role: normalizeStaffRole(role),
+    roleId: record.roleId == null ? undefined : num(record.roleId),
     phone: str(record.phone || record.email),
     status: bool(record.isActive, true) ? 'Active' : 'Inactive',
     serviceFeePercent: record.serviceFeePercent == null ? undefined : num(record.serviceFeePercent),

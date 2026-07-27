@@ -88,6 +88,7 @@ export type StaffMember = {
   restaurantId: string
   name: string
   role: Role
+  roleId?: number
   phone: string
   status: 'Active' | 'OnBreak' | 'Inactive'
   serviceFeePercent?: number
