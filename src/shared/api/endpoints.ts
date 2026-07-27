@@ -62,6 +62,12 @@ export const endpoints = {
     get: '/profile',
     update: '/profile',
   },
+  notifications: {
+    list: '/notifications',
+    unreadCount: '/notifications/unread-count',
+    markAsRead: (notificationId: string) => `/notifications/${notificationId}/read`,
+    markAllAsRead: '/notifications/read-all',
+  },
   workflow: {
     actions: (flowCode: string) => `/workflows/${flowCode}/actions`,
   },

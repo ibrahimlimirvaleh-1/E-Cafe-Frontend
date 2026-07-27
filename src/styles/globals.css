@@ -348,6 +348,185 @@ img {
   background: var(--surface-high);
 }
 
+.notification-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.notification-trigger {
+  position: relative;
+}
+
+.notification-trigger.has-unread {
+  color: var(--primary);
+  background: var(--surface-high);
+}
+
+.notification-trigger > span {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 2px solid var(--surface-lowest);
+  border-radius: 999px;
+  padding: 0 4px;
+  color: var(--on-primary);
+  background: var(--danger);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.notification-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  display: grid;
+  width: min(380px, calc(100vw - 28px));
+  overflow: hidden;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-lg);
+}
+
+.notification-popover header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--outline-variant);
+  background: var(--surface-low);
+}
+
+.notification-popover header > div,
+.notification-list button > span,
+.notification-page-list button > span:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.notification-popover strong,
+.notification-page-list strong {
+  overflow: hidden;
+  color: var(--primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-popover small,
+.notification-page-list small,
+.notification-popover time,
+.notification-page-list time {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.notification-popover header button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: var(--on-surface-variant);
+  background: transparent;
+  cursor: pointer;
+}
+
+.notification-popover header button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.notification-list {
+  display: grid;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.notification-list > p,
+.notification-empty {
+  margin: 0;
+  padding: 18px 16px;
+  color: var(--on-surface-variant);
+}
+
+.notification-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-list button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  border: 0;
+  border-bottom: 1px solid var(--outline-variant);
+  padding: 13px 16px;
+  text-align: left;
+  background: var(--surface-lowest);
+  cursor: pointer;
+}
+
+.notification-list button.unread {
+  background: var(--warning-bg);
+}
+
+.notification-list button:hover {
+  background: var(--surface-low);
+}
+
+.notification-all-link {
+  display: grid;
+  min-height: 42px;
+  place-items: center;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: var(--surface-low);
+}
+
+.notification-page-list {
+  display: grid;
+  gap: 12px;
+}
+
+.notification-page-list > button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: left;
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.notification-page-list > button:hover {
+  border-color: var(--primary);
+}
+
+.notification-page-meta {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  min-width: 160px;
+}
+
 .ui-badge {
   display: inline-flex;
   width: max-content;
@@ -2112,6 +2291,22 @@ img {
 
   .user-pill {
     max-width: 220px;
+  }
+
+  .notification-popover {
+    right: auto;
+    left: 0;
+    width: calc(100vw - 28px);
+  }
+
+  .notification-page-list > button {
+    grid-template-columns: 1fr;
+  }
+
+  .notification-page-meta {
+    align-items: center;
+    justify-items: start;
+    min-width: 0;
   }
 
   .audit-meta {

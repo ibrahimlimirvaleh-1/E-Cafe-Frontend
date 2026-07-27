@@ -17,6 +17,7 @@ import type {
   AdminRow,
   AuditLogEntry,
   LookupItem,
+  NotificationItem,
   RestaurantContract,
   RestaurantGroup,
   UserProfile,
@@ -277,6 +278,25 @@ function mapAuditLog(record: AnyRecord): AuditLogEntry {
   }
 }
 
+function mapNotification(record: AnyRecord): NotificationItem {
+  return {
+    id: str(record.id || record.notificationId),
+    restaurantId: record.restaurantId == null ? undefined : str(record.restaurantId),
+    title: str(record.title),
+    message: str(record.message),
+    typeId: num(record.typeId),
+    typeName: str(record.typeName),
+    channelId: num(record.channelId),
+    statusId: num(record.statusId),
+    isRead: bool(record.isRead),
+    readAt: str(record.readAt) || undefined,
+    payloadJson: str(record.payloadJson) || undefined,
+    relatedEntityType: str(record.relatedEntityType) || undefined,
+    relatedEntityId: record.relatedEntityId == null ? undefined : str(record.relatedEntityId),
+    createdAt: str(record.createdAt),
+  }
+}
+
 export const ecafeApi = {
   auth: {
     login: async (request: LoginRequest) => {
@@ -321,6 +341,27 @@ export const ecafeApi = {
         body: formData,
       })
     },
+  },
+
+  notifications: {
+    list: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.notifications.list)
+        return asArray<AnyRecord>(result.data).map(mapNotification)
+      }, [] as NotificationItem[]),
+    unreadCount: async () => {
+      const result = await httpClient<unknown>(endpoints.notifications.unreadCount)
+      const record = (result.data && typeof result.data === 'object' ? result.data : {}) as AnyRecord
+      return num(record.count)
+    },
+    markAsRead: (notificationId: string) =>
+      httpClient<unknown>(endpoints.notifications.markAsRead(notificationId), {
+        method: 'POST',
+      }),
+    markAllAsRead: () =>
+      httpClient<unknown>(endpoints.notifications.markAllAsRead, {
+        method: 'POST',
+      }),
   },
 
   restaurants: {

@@ -1,7 +1,7 @@
-import { Bell } from 'lucide-react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Brand } from './Brand'
+import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
 
 export function SiteShell() {
@@ -21,11 +21,7 @@ export function SiteShell() {
             </nav>
           ) : null}
           <div className="site-actions">
-            {isAuthenticated ? (
-              <Link className="icon-action" to="/notifications" title="Bildirişlər">
-                <Bell size={18} />
-              </Link>
-            ) : null}
+            <NotificationBell />
             <UserMenu />
           </div>
         </div>

@@ -4,6 +4,7 @@ import { adminModules } from '../../entities/mockData'
 import type { AdminModuleKey } from '../../entities/types'
 import { useAuth } from '../auth/AuthContext'
 import { Brand } from './Brand'
+import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
 
 const modulePermissions: Record<AdminModuleKey, string[]> = {
@@ -49,7 +50,10 @@ export function AdminShell() {
             <Search size={18} />
             <input placeholder="Admin daxilində axtar..." />
           </label>
-          <UserMenu />
+          <div className="site-actions">
+            <NotificationBell />
+            <UserMenu />
+          </div>
         </header>
         <Outlet />
       </div>

@@ -74,6 +74,7 @@ export function ContractDetailPage() {
     setActionName(name)
     try {
       await action()
+      window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       setReloadKey((value) => value + 1)
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Əməliyyat icra olunmadı.')

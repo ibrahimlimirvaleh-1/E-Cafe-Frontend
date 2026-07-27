@@ -24,6 +24,7 @@ import { TablesManagementPage } from '../pages/admin/TablesManagementPage'
 import { AuthPage } from '../pages/auth/AuthPage'
 import { ConfirmationPage } from '../pages/customer/ConfirmationPage'
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
+import { NotificationsPage } from '../pages/customer/NotificationsPage'
 import { ProfilePage } from '../pages/customer/ProfilePage'
 import { RestaurantCatalogPage } from '../pages/customer/RestaurantCatalogPage'
 import { RestaurantProfilePage } from '../pages/customer/RestaurantProfilePage'
@@ -66,9 +67,32 @@ export function AppRouter() {
         <Route path="reserve/menu" element={<MenuSelectionPage />} />
         <Route path="confirmation" element={<ConfirmationPage />} />
         <Route path="tracking/:token" element={<TrackingPage />} />
-        <Route path="reservations" element={<SimpleCustomerPage title="Rezervasiyalarım" description="Rezervasiya tarixçəsi üçün backend endpoint hazır olanda bura bağlanacaq." />} />
-        <Route path="orders" element={<SimpleCustomerPage title="Sifarişlərim" description="Sifariş tarixçəsi və izləmə endpointləri hazır olanda bura bağlanacaq." />} />
-        <Route path="notifications" element={<SimpleCustomerPage title="Bildirişlər" description="Bildiriş endpointləri hazır olanda mesajlar burada göstəriləcək." />} />
+        <Route
+          path="notifications"
+          element={
+            <RequireAuth>
+              <NotificationsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="reservations"
+          element={
+            <SimpleCustomerPage
+              title="Rezervasiyalarım"
+              description="Rezervasiya tarixçəsi üçün backend endpoint hazır olanda bura bağlanacaq."
+            />
+          }
+        />
+        <Route
+          path="orders"
+          element={
+            <SimpleCustomerPage
+              title="Sifarişlərim"
+              description="Sifariş tarixçəsi və izləmə endpointləri hazır olanda bura bağlanacaq."
+            />
+          }
+        />
         <Route
           path="account"
           element={

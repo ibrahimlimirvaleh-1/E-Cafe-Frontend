@@ -154,6 +154,23 @@ export type AuditLogEntry = {
   description: string
 }
 
+export type NotificationItem = {
+  id: string
+  restaurantId?: string
+  title: string
+  message: string
+  typeId: number
+  typeName: string
+  channelId: number
+  statusId: number
+  isRead: boolean
+  readAt?: string
+  payloadJson?: string
+  relatedEntityType?: string
+  relatedEntityId?: string
+  createdAt: string
+}
+
 export type Reservation = {
   id: string
   restaurantId: string
