@@ -161,6 +161,7 @@ export function AppRouter() {
         }
       >
         <Route index element={<KitchenBoardPage />} />
+        <Route path="inventory" element={<InventoryManagementPage />} />
       </Route>
 
       <Route

@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
@@ -24,19 +25,30 @@ function stockAmount(item: InventoryItem) {
   return `${item.quantityOnHand.toLocaleString('az-AZ')} ${item.unitCode || item.unitName}`
 }
 
+function hasPermission(permissions: string[], permission: string) {
+  return permissions.includes(permission)
+}
+
 export function InventoryManagementPage() {
+  const { user } = useAuth()
+  const canManageInventory = hasPermission(user?.permissions ?? [], 'ManageInventory')
+  const canManageRecipes = hasPermission(user?.permissions ?? [], 'ManageRecipes')
+
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [selectedInventoryId, setSelectedInventoryId] = useState('')
   const [selectedMenuItemId, setSelectedMenuItemId] = useState('')
   const [onlyLowStock, setOnlyLowStock] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
   const [message, setMessage] = useState('')
+  const [editingInventoryId, setEditingInventoryId] = useState('')
+  const [editingRecipeId, setEditingRecipeId] = useState('')
 
   const [stockForm, setStockForm] = useState({
     name: '',
     unitId: '2',
     quantityOnHand: '',
     lowStockThreshold: '',
+    isActive: true,
   })
   const [movementForm, setMovementForm] = useState({
     movementTypeId: '',
@@ -48,6 +60,7 @@ export function InventoryManagementPage() {
     inventoryItemId: '',
     quantity: '',
     unitId: '2',
+    isActive: true,
   })
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
@@ -114,21 +127,42 @@ export function InventoryManagementPage() {
     }
   }, [inventoryItems, recipeForm.inventoryItemId])
 
-  async function handleCreateStock(event: FormEvent<HTMLFormElement>) {
+  function resetStockForm() {
+    setEditingInventoryId('')
+    setStockForm({ name: '', unitId: '2', quantityOnHand: '', lowStockThreshold: '', isActive: true })
+  }
+
+  function resetRecipeForm() {
+    setEditingRecipeId('')
+    setRecipeForm({ inventoryItemId: inventoryItems[0]?.id ?? '', quantity: '', unitId: '2', isActive: true })
+  }
+
+  async function handleSaveStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId) {
       setMessage('Restoran seçilməlidir.')
       return
     }
 
-    await ecafeApi.inventory.create(restaurantId, {
-      name: stockForm.name,
-      unitId: Number(stockForm.unitId),
-      quantityOnHand: Number(stockForm.quantityOnHand),
-      lowStockThreshold: Number(stockForm.lowStockThreshold),
-    })
-    setStockForm({ name: '', unitId: '2', quantityOnHand: '', lowStockThreshold: '' })
-    setMessage('Stok elementi yaradıldı.')
+    if (editingInventoryId) {
+      await ecafeApi.inventory.update(restaurantId, editingInventoryId, {
+        name: stockForm.name,
+        unitId: Number(stockForm.unitId),
+        lowStockThreshold: Number(stockForm.lowStockThreshold),
+        isActive: stockForm.isActive,
+      })
+      setMessage('Stok elementi yeniləndi.')
+    } else {
+      await ecafeApi.inventory.create(restaurantId, {
+        name: stockForm.name,
+        unitId: Number(stockForm.unitId),
+        quantityOnHand: Number(stockForm.quantityOnHand),
+        lowStockThreshold: Number(stockForm.lowStockThreshold),
+      })
+      setMessage('Stok elementi yaradıldı.')
+    }
+
+    resetStockForm()
     setReloadKey((value) => value + 1)
   }
 
@@ -150,21 +184,78 @@ export function InventoryManagementPage() {
     setReloadKey((value) => value + 1)
   }
 
-  async function handleCreateRecipe(event: FormEvent<HTMLFormElement>) {
+  function startInventoryEdit(item: InventoryItem) {
+    setEditingInventoryId(item.id)
+    setSelectedInventoryId(item.id)
+    setStockForm({
+      name: item.name,
+      unitId: String(item.unitId || 2),
+      quantityOnHand: String(item.quantityOnHand),
+      lowStockThreshold: String(item.lowStockThreshold),
+      isActive: item.isActive,
+    })
+  }
+
+  async function toggleInventoryStatus(item: InventoryItem) {
+    if (!restaurantId) {
+      return
+    }
+
+    if (item.isActive) {
+      await ecafeApi.inventory.deactivate(restaurantId, item.id)
+      setMessage('Stok elementi deaktiv edildi.')
+    } else {
+      await ecafeApi.inventory.activate(restaurantId, item.id)
+      setMessage('Stok elementi aktiv edildi.')
+    }
+    setReloadKey((value) => value + 1)
+  }
+
+  async function deleteInventory(item: InventoryItem) {
+    if (!restaurantId || !confirm(`${item.name} silinsin?`)) {
+      return
+    }
+
+    await ecafeApi.inventory.delete(restaurantId, item.id)
+    setMessage('Stok elementi silindi.')
+    resetStockForm()
+    setReloadKey((value) => value + 1)
+  }
+
+  async function handleSaveRecipe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !menuItem) {
       setMessage('Menyu məhsulu seçilməlidir.')
       return
     }
 
-    await ecafeApi.recipes.create(restaurantId, menuItem.id, {
+    const request = {
       inventoryItemId: recipeForm.inventoryItemId,
       quantity: Number(recipeForm.quantity),
       unitId: Number(recipeForm.unitId),
-    })
-    setRecipeForm({ inventoryItemId: inventoryItems[0]?.id ?? '', quantity: '', unitId: '2' })
-    setMessage('Resept ingredienti əlavə edildi.')
+      isActive: recipeForm.isActive,
+    }
+
+    if (editingRecipeId) {
+      await ecafeApi.recipes.update(restaurantId, menuItem.id, editingRecipeId, request)
+      setMessage('Resept ingredienti yeniləndi.')
+    } else {
+      await ecafeApi.recipes.create(restaurantId, menuItem.id, request)
+      setMessage('Resept ingredienti əlavə edildi.')
+    }
+
+    resetRecipeForm()
     setReloadKey((value) => value + 1)
+  }
+
+  function startRecipeEdit(recipe: Recipe) {
+    setEditingRecipeId(recipe.id)
+    setRecipeForm({
+      inventoryItemId: recipe.inventoryItemId,
+      quantity: String(recipe.quantity),
+      unitId: String(recipe.unitId || 2),
+      isActive: recipe.isActive,
+    })
   }
 
   async function toggleRecipe(recipe: Recipe) {
@@ -182,9 +273,20 @@ export function InventoryManagementPage() {
     setReloadKey((value) => value + 1)
   }
 
+  async function deleteRecipe(recipe: Recipe) {
+    if (!restaurantId || !menuItem || !confirm(`${recipe.inventoryItemName} reseptdən silinsin?`)) {
+      return
+    }
+
+    await ecafeApi.recipes.delete(restaurantId, menuItem.id, recipe.id)
+    setMessage('Resept ingredienti silindi.')
+    resetRecipeForm()
+    setReloadKey((value) => value + 1)
+  }
+
   return (
     <main className="admin-page">
-      <PageHeader eyebrow="Admin" title="Stok və resept idarəetməsi" description="Ingredient qalığı, stok hərəkətləri və menyu məhsullarının resept tərkibi." />
+      <PageHeader eyebrow="İdarəetmə" title="Stok və resept idarəetməsi" />
 
       <section className="inventory-page-grid">
         <section className="admin-panel">
@@ -197,22 +299,42 @@ export function InventoryManagementPage() {
             ))}
           </SelectField>
 
-          <form className="stack-form" onSubmit={handleCreateStock}>
-            <h2>Yeni stok elementi</h2>
-            <TextField label="Ad" required value={stockForm.name} onChange={(event) => setStockForm({ ...stockForm, name: event.target.value })} />
-            <SelectField label="Ölçü vahidi" required value={stockForm.unitId} onChange={(event) => setStockForm({ ...stockForm, unitId: event.target.value })}>
-              {units.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unitLabel(unit.id)}
-                </option>
-              ))}
-            </SelectField>
-            <div className="form-grid two">
-              <TextField label="Cari miqdar" min={0} required step="0.001" type="number" value={stockForm.quantityOnHand} onChange={(event) => setStockForm({ ...stockForm, quantityOnHand: event.target.value })} />
-              <TextField label="Xəbərdarlıq limiti" min={0} required step="0.001" type="number" value={stockForm.lowStockThreshold} onChange={(event) => setStockForm({ ...stockForm, lowStockThreshold: event.target.value })} />
-            </div>
-            <Button type="submit">Stok yarat</Button>
-          </form>
+          {canManageInventory ? (
+            <form className="stack-form" onSubmit={handleSaveStock}>
+              <h2>{editingInventoryId ? 'Stoku redaktə et' : 'Yeni stok elementi'}</h2>
+              <TextField label="Ad" required value={stockForm.name} onChange={(event) => setStockForm({ ...stockForm, name: event.target.value })} />
+              <SelectField label="Ölçü vahidi" required value={stockForm.unitId} onChange={(event) => setStockForm({ ...stockForm, unitId: event.target.value })}>
+                {units.map((unit) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unitLabel(unit.id)}
+                  </option>
+                ))}
+              </SelectField>
+              <div className="form-grid two">
+                <TextField
+                  disabled={Boolean(editingInventoryId)}
+                  label="Cari miqdar"
+                  min={0}
+                  required={!editingInventoryId}
+                  step="0.001"
+                  type="number"
+                  value={stockForm.quantityOnHand}
+                  onChange={(event) => setStockForm({ ...stockForm, quantityOnHand: event.target.value })}
+                />
+                <TextField label="Xəbərdarlıq limiti" min={0} required step="0.001" type="number" value={stockForm.lowStockThreshold} onChange={(event) => setStockForm({ ...stockForm, lowStockThreshold: event.target.value })} />
+              </div>
+              {editingInventoryId ? (
+                <label className="toggle-field compact-toggle">
+                  <input checked={stockForm.isActive} type="checkbox" onChange={(event) => setStockForm({ ...stockForm, isActive: event.target.checked })} />
+                  <span>Aktivdir</span>
+                </label>
+              ) : null}
+              <div className="inline-actions">
+                <Button type="submit">{editingInventoryId ? 'Stoku yenilə' : 'Stok yarat'}</Button>
+                {editingInventoryId ? <Button type="button" variant="secondary" onClick={resetStockForm}>Ləğv et</Button> : null}
+              </div>
+            </form>
+          ) : null}
         </section>
 
         <section className="admin-panel">
@@ -229,56 +351,65 @@ export function InventoryManagementPage() {
           {inventoryLoading ? <p className="online-only">Stok yüklənir...</p> : null}
           <div className="inventory-list">
             {inventoryItems.map((item) => (
-              <button className={item.id === inventoryItem?.id ? 'selected' : ''} key={item.id} type="button" onClick={() => setSelectedInventoryId(item.id)}>
-                <span>
-                  <strong>{item.name}</strong>
-                  <small>{stockAmount(item)}</small>
-                </span>
-                <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ? 'Az qalır' : item.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
-              </button>
+              <article className={item.id === inventoryItem?.id ? 'selected inventory-row' : 'inventory-row'} key={item.id}>
+                <button type="button" onClick={() => setSelectedInventoryId(item.id)}>
+                  <span>
+                    <strong>{item.name}</strong>
+                    <small>{stockAmount(item)}</small>
+                  </span>
+                  <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ? 'Az qalır' : item.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                </button>
+                {canManageInventory ? (
+                  <div className="inline-actions">
+                    <Button type="button" variant="secondary" onClick={() => startInventoryEdit(item)}>Redaktə</Button>
+                    <Button type="button" variant="secondary" onClick={() => toggleInventoryStatus(item)}>{item.isActive ? 'Deaktiv et' : 'Aktiv et'}</Button>
+                    <Button type="button" variant="danger" onClick={() => deleteInventory(item)}>Sil</Button>
+                  </div>
+                ) : null}
+              </article>
             ))}
             {!inventoryLoading && inventoryItems.length === 0 ? <p className="online-only">Bu restoran üçün stok elementi yoxdur.</p> : null}
           </div>
         </section>
 
-        <section className="admin-panel">
-          <div>
-            <span className="eyebrow">Hərəkət</span>
-            <h2>{inventoryItem?.name || 'Stok seç'}</h2>
-          </div>
-          <form className="stack-form" onSubmit={handleMovement}>
-            <div className="form-grid two">
-              <SelectField label="Hərəkət tipi" required value={movementForm.movementTypeId} onChange={(event) => setMovementForm({ ...movementForm, movementTypeId: event.target.value })}>
-                {movementTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
-                  </option>
-                ))}
-              </SelectField>
-              <SelectField label="Ölçü vahidi" required value={movementForm.unitId} onChange={(event) => setMovementForm({ ...movementForm, unitId: event.target.value })}>
-                {units.map((unit) => (
-                  <option key={unit.id} value={unit.id}>
-                    {unitLabel(unit.id)}
-                  </option>
-                ))}
-              </SelectField>
+        {canManageInventory ? (
+          <section className="admin-panel">
+            <div>
+              <span className="eyebrow">Hərəkət</span>
+              <h2>{inventoryItem?.name || 'Stok seç'}</h2>
             </div>
-            <TextField label="Miqdar" min={0} required step="0.001" type="number" value={movementForm.quantity} onChange={(event) => setMovementForm({ ...movementForm, quantity: event.target.value })} />
-            <TextareaField label="Səbəb" required value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
-            <Button disabled={!inventoryItem} type="submit">
-              Hərəkət əlavə et
-            </Button>
-          </form>
-          <div className="movement-list">
-            {movements.slice(0, 5).map((movement) => (
-              <article key={movement.id}>
-                <strong>{movement.movementType || movement.movementTypeCode}</strong>
-                <span>{movement.quantityChange} {movement.unitName}</span>
-                <small>{movement.reason || '-'}</small>
-              </article>
-            ))}
-          </div>
-        </section>
+            <form className="stack-form" onSubmit={handleMovement}>
+              <div className="form-grid two">
+                <SelectField label="Hərəkət tipi" required value={movementForm.movementTypeId} onChange={(event) => setMovementForm({ ...movementForm, movementTypeId: event.target.value })}>
+                  {movementTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </SelectField>
+                <SelectField label="Ölçü vahidi" required value={movementForm.unitId} onChange={(event) => setMovementForm({ ...movementForm, unitId: event.target.value })}>
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unitLabel(unit.id)}
+                    </option>
+                  ))}
+                </SelectField>
+              </div>
+              <TextField label="Miqdar" min={0} required step="0.001" type="number" value={movementForm.quantity} onChange={(event) => setMovementForm({ ...movementForm, quantity: event.target.value })} />
+              <TextareaField label="Səbəb" required value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
+              <Button disabled={!inventoryItem} type="submit">Hərəkət əlavə et</Button>
+            </form>
+            <div className="movement-list">
+              {movements.slice(0, 5).map((movement) => (
+                <article key={movement.id}>
+                  <strong>{movement.movementType || movement.movementTypeCode}</strong>
+                  <span>{movement.quantityChange} {movement.unitName}</span>
+                  <small>{movement.reason || '-'}</small>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="admin-panel recipe-panel">
           <div>
@@ -292,26 +423,35 @@ export function InventoryManagementPage() {
               </option>
             ))}
           </SelectField>
-          <form className="recipe-form" onSubmit={handleCreateRecipe}>
-            <SelectField label="Ingredient" required value={recipeForm.inventoryItemId} onChange={(event) => setRecipeForm({ ...recipeForm, inventoryItemId: event.target.value })}>
-              {inventoryItems.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </SelectField>
-            <TextField label="Miqdar" min={0} required step="0.001" type="number" value={recipeForm.quantity} onChange={(event) => setRecipeForm({ ...recipeForm, quantity: event.target.value })} />
-            <SelectField label="Ölçü" required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
-              {units.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.code}
-                </option>
-              ))}
-            </SelectField>
-            <Button disabled={!menuItem || inventoryItems.length === 0} type="submit">
-              Reseptə əlavə et
-            </Button>
-          </form>
+          {canManageRecipes ? (
+            <form className="recipe-form" onSubmit={handleSaveRecipe}>
+              <SelectField label="Ingredient" required value={recipeForm.inventoryItemId} onChange={(event) => setRecipeForm({ ...recipeForm, inventoryItemId: event.target.value })}>
+                {inventoryItems.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </SelectField>
+              <TextField label="Miqdar" min={0} required step="0.001" type="number" value={recipeForm.quantity} onChange={(event) => setRecipeForm({ ...recipeForm, quantity: event.target.value })} />
+              <SelectField label="Ölçü" required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
+                {units.map((unit) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unit.code}
+                  </option>
+                ))}
+              </SelectField>
+              <label className="toggle-field compact-toggle">
+                <input checked={recipeForm.isActive} type="checkbox" onChange={(event) => setRecipeForm({ ...recipeForm, isActive: event.target.checked })} />
+                <span>Aktivdir</span>
+              </label>
+              <div className="inline-actions">
+                <Button disabled={!menuItem || inventoryItems.length === 0} type="submit">
+                  {editingRecipeId ? 'Resepti yenilə' : 'Reseptə əlavə et'}
+                </Button>
+                {editingRecipeId ? <Button type="button" variant="secondary" onClick={resetRecipeForm}>Ləğv et</Button> : null}
+              </div>
+            </form>
+          ) : null}
           <div className="recipe-list">
             {recipes.map((recipe) => (
               <article key={recipe.id}>
@@ -319,9 +459,14 @@ export function InventoryManagementPage() {
                   <strong>{recipe.inventoryItemName}</strong>
                   <small>{recipe.quantity} {recipe.unitCode || recipe.unitName}</small>
                 </div>
-                <Button type="button" variant="secondary" onClick={() => toggleRecipe(recipe)}>
-                  {recipe.isActive ? 'Deaktiv et' : 'Aktiv et'}
-                </Button>
+                <Badge tone={recipe.isActive ? 'success' : 'neutral'}>{recipe.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                {canManageRecipes ? (
+                  <div className="inline-actions">
+                    <Button type="button" variant="secondary" onClick={() => startRecipeEdit(recipe)}>Redaktə</Button>
+                    <Button type="button" variant="secondary" onClick={() => toggleRecipe(recipe)}>{recipe.isActive ? 'Deaktiv et' : 'Aktiv et'}</Button>
+                    <Button type="button" variant="danger" onClick={() => deleteRecipe(recipe)}>Sil</Button>
+                  </div>
+                ) : null}
               </article>
             ))}
             {menuItem && recipes.length === 0 ? <p className="online-only">Bu məhsul üçün resept tərkibi yoxdur.</p> : null}

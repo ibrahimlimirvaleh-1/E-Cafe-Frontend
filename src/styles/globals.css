@@ -79,6 +79,26 @@ img {
   padding: 14px 24px;
 }
 
+.staff-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.staff-nav a {
+  color: var(--on-surface-variant);
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.staff-nav a.active {
+  background: var(--surface-container);
+  color: var(--on-surface);
+}
+
 .site-nav,
 .site-actions,
 .action-row,
@@ -2085,6 +2105,7 @@ img {
   min-width: 0;
 }
 
+.inventory-row,
 .inventory-list button,
 .recipe-list article,
 .movement-list article {
@@ -2097,10 +2118,16 @@ img {
   text-align: left;
 }
 
+.inventory-row {
+  display: grid;
+  gap: 10px;
+}
+
 .inventory-list button {
   cursor: pointer;
 }
 
+.inventory-row.selected,
 .inventory-list button.selected {
   border-color: var(--primary);
   background: var(--primary-container);

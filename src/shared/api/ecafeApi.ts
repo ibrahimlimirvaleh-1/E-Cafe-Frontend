@@ -148,7 +148,10 @@ type CreateInventoryItemRequest = {
   lowStockThreshold: number
 }
 
-type UpdateInventoryItemRequest = CreateInventoryItemRequest & {
+type UpdateInventoryItemRequest = {
+  name: string
+  unitId: number
+  lowStockThreshold: number
   isActive?: boolean
 }
 
