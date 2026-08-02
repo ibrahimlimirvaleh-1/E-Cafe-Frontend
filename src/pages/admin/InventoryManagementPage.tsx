@@ -11,18 +11,19 @@ import type { InventoryItem, MenuItem, Recipe } from '../../entities/types'
 
 type InventoryPageMode = 'items' | 'movements' | 'recipes'
 
+// The three inventory routes share data loading, but each mode renders one focused workflow.
 const units = [
   { id: 1, name: 'Kilogram', code: 'kg' },
   { id: 2, name: 'Qram', code: 'g' },
   { id: 3, name: 'Litr', code: 'l' },
   { id: 4, name: 'Millilitr', code: 'ml' },
-  { id: 5, name: 'Ədəd', code: 'pcs' },
+  { id: 5, name: 'Eded', code: 'pcs' },
 ]
 
 const pageCopy: Record<InventoryPageMode, { eyebrow: string; title: string }> = {
-  items: { eyebrow: 'Stok', title: 'Stok elementləri' },
-  movements: { eyebrow: 'Stok', title: 'Stok hərəkətləri' },
-  recipes: { eyebrow: 'Resept', title: 'Resept idarəetməsi' },
+  items: { eyebrow: 'Stok', title: 'Stok elementleri' },
+  movements: { eyebrow: 'Stok', title: 'Stok hereketleri' },
+  recipes: { eyebrow: 'Resept', title: 'Resept idareetmesi' },
 }
 
 function unitLabel(unitId: number, fallback?: string) {
@@ -151,7 +152,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   async function handleSaveStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage('Restoran secilmelidir.')
       return
     }
 
@@ -162,7 +163,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         lowStockThreshold: Number(stockForm.lowStockThreshold),
         isActive: stockForm.isActive,
       })
-      setMessage('Stok elementi yeniləndi.')
+      setMessage('Stok elementi yenilendi.')
     } else {
       await ecafeApi.inventory.create(restaurantId, {
         name: stockForm.name,
@@ -170,7 +171,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         quantityOnHand: Number(stockForm.quantityOnHand),
         lowStockThreshold: Number(stockForm.lowStockThreshold),
       })
-      setMessage('Stok elementi yaradıldı.')
+      setMessage('Stok elementi yaradildi.')
     }
 
     resetStockForm()
@@ -180,7 +181,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   async function handleMovement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !inventoryItem) {
-      setMessage('Stok elementi seçilməlidir.')
+      setMessage('Stok elementi secilmelidir.')
       return
     }
 
@@ -191,7 +192,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       reason: movementForm.reason,
     })
     setMovementForm({ movementTypeId: String(movementTypes[0]?.id ?? ''), quantity: '', unitId: inventoryItem.unitId ? String(inventoryItem.unitId) : '2', reason: '' })
-    setMessage('Stok hərəkəti əlavə edildi.')
+    setMessage('Stok hereketi elave edildi.')
     setReloadKey((value) => value + 1)
   }
 
@@ -236,7 +237,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   async function handleSaveRecipe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !menuItem) {
-      setMessage('Menyu məhsulu seçilməlidir.')
+      setMessage('Menyu mehsulu secilmelidir.')
       return
     }
 
@@ -249,10 +250,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
     if (editingRecipeId) {
       await ecafeApi.recipes.update(restaurantId, menuItem.id, editingRecipeId, request)
-      setMessage('Resept ingredienti yeniləndi.')
+      setMessage('Resept ingredienti yenilendi.')
     } else {
       await ecafeApi.recipes.create(restaurantId, menuItem.id, request)
-      setMessage('Resept ingredienti əlavə edildi.')
+      setMessage('Resept ingredienti elave edildi.')
     }
 
     resetRecipeForm()
@@ -285,7 +286,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   }
 
   async function deleteRecipe(recipe: Recipe) {
-    if (!restaurantId || !menuItem || !confirm(`${recipe.inventoryItemName} reseptdən silinsin?`)) {
+    if (!restaurantId || !menuItem || !confirm(`${recipe.inventoryItemName} reseptden silinsin?`)) {
       return
     }
 
@@ -317,17 +318,17 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             {canManageInventory ? (
               <section className="admin-panel">
                 <form className="stack-form" onSubmit={handleSaveStock}>
-                  <span className="eyebrow">{editingInventoryId ? 'Redaktə' : 'Yeni qeyd'}</span>
-                  <h2>{editingInventoryId ? 'Stoku redaktə et' : 'Yeni stok elementi'}</h2>
+                  <span className="eyebrow">{editingInventoryId ? 'Redakte' : 'Yeni qeyd'}</span>
+                  <h2>{editingInventoryId ? 'Stoku redakte et' : 'Yeni stok elementi'}</h2>
                   <TextField label="Ad" required value={stockForm.name} onChange={(event) => setStockForm({ ...stockForm, name: event.target.value })} />
-                  <SelectField label="Ölçü vahidi" required value={stockForm.unitId} onChange={(event) => setStockForm({ ...stockForm, unitId: event.target.value })}>
+                  <SelectField label="Olcu vahidi" required value={stockForm.unitId} onChange={(event) => setStockForm({ ...stockForm, unitId: event.target.value })}>
                     {units.map((unit) => (
                       <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
                     ))}
                   </SelectField>
                   <div className="form-grid two">
                     <TextField disabled={Boolean(editingInventoryId)} label="Cari miqdar" min={0} required={!editingInventoryId} step="0.001" type="number" value={stockForm.quantityOnHand} onChange={(event) => setStockForm({ ...stockForm, quantityOnHand: event.target.value })} />
-                    <TextField label="Xəbərdarlıq limiti" min={0} required step="0.001" type="number" value={stockForm.lowStockThreshold} onChange={(event) => setStockForm({ ...stockForm, lowStockThreshold: event.target.value })} />
+                    <TextField label="Xeberdarliq limiti" min={0} required step="0.001" type="number" value={stockForm.lowStockThreshold} onChange={(event) => setStockForm({ ...stockForm, lowStockThreshold: event.target.value })} />
                   </div>
                   {editingInventoryId ? (
                     <label className="toggle-field compact-toggle">
@@ -336,8 +337,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     </label>
                   ) : null}
                   <div className="inline-actions">
-                    <Button type="submit">{editingInventoryId ? 'Stoku yenilə' : 'Stok yarat'}</Button>
-                    {editingInventoryId ? <Button type="button" variant="secondary" onClick={resetStockForm}>Ləğv et</Button> : null}
+                    <Button type="submit">{editingInventoryId ? 'Stoku yenile' : 'Stok yarat'}</Button>
+                    {editingInventoryId ? <Button type="button" variant="secondary" onClick={resetStockForm}>Legv et</Button> : null}
                   </div>
                 </form>
               </section>
@@ -346,35 +347,35 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             <section className="admin-panel">
               <div className="inventory-panel-header">
                 <div>
-                  <span className="eyebrow">Siyahı</span>
-                  <h2>Stok elementləri</h2>
+                  <span className="eyebrow">Siyahi</span>
+                  <h2>Stok elementleri</h2>
                 </div>
                 <label className="toggle-field compact-toggle">
                   <input checked={onlyLowStock} type="checkbox" onChange={(event) => setOnlyLowStock(event.target.checked)} />
-                  <span>Yalnız az qalanlar</span>
+                  <span>Yalniz az qalanlar</span>
                 </label>
               </div>
-              {inventoryLoading ? <p className="online-only">Stok yüklənir...</p> : null}
+              {inventoryLoading ? <p className="online-only">Stok yuklenir...</p> : null}
               <div className="inventory-list">
                 {inventoryItems.map((item) => (
                   <article className={item.id === inventoryItem?.id ? 'selected inventory-row' : 'inventory-row'} key={item.id}>
                     <button type="button" onClick={() => setSelectedInventoryId(item.id)}>
                       <span>
                         <strong>{item.name}</strong>
-                        <small>{stockAmount(item)} · limit {item.lowStockThreshold} {item.unitCode || item.unitName}</small>
+                        <small>{stockAmount(item)} Р’В· limit {item.lowStockThreshold} {item.unitCode || item.unitName}</small>
                       </span>
-                      <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ? 'Az qalır' : item.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                      <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ? 'Az qalir' : item.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
                     </button>
                     {canManageInventory ? (
                       <div className="inline-actions">
-                        <Button type="button" variant="secondary" onClick={() => startInventoryEdit(item)}>Redaktə</Button>
+                        <Button type="button" variant="secondary" onClick={() => startInventoryEdit(item)}>Redakte</Button>
                         <Button type="button" variant="secondary" onClick={() => toggleInventoryStatus(item)}>{item.isActive ? 'Deaktiv et' : 'Aktiv et'}</Button>
                         <Button type="button" variant="danger" onClick={() => deleteInventory(item)}>Sil</Button>
                       </div>
                     ) : null}
                   </article>
                 ))}
-                {!inventoryLoading && inventoryItems.length === 0 ? <p className="online-only">Bu restoran üçün stok elementi yoxdur.</p> : null}
+                {!inventoryLoading && inventoryItems.length === 0 ? <p className="online-only">Bu restoran ucun stok elementi yoxdur.</p> : null}
               </div>
             </section>
           </>
@@ -385,12 +386,12 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             <section className="admin-panel">
               <div className="inventory-panel-header">
                 <div>
-                  <span className="eyebrow">Stok seçimi</span>
+                  <span className="eyebrow">Stok secimi</span>
                   <h2>Ingredient</h2>
                 </div>
                 <label className="toggle-field compact-toggle">
                   <input checked={onlyLowStock} type="checkbox" onChange={(event) => setOnlyLowStock(event.target.checked)} />
-                  <span>Yalnız az qalanlar</span>
+                  <span>Yalniz az qalanlar</span>
                 </label>
               </div>
               <div className="inventory-list">
@@ -400,7 +401,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                       <strong>{item.name}</strong>
                       <small>{stockAmount(item)}</small>
                     </span>
-                    <Badge tone={item.isLowStock ? 'warning' : 'success'}>{item.isLowStock ? 'Az qalır' : 'Normal'}</Badge>
+                    <Badge tone={item.isLowStock ? 'warning' : 'success'}>{item.isLowStock ? 'Az qalir' : 'Normal'}</Badge>
                   </button>
                 ))}
               </div>
@@ -408,35 +409,35 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
             <section className="admin-panel">
               <div>
-                <span className="eyebrow">Yeni hərəkət</span>
-                <h2>{inventoryItem?.name || 'Stok seç'}</h2>
+                <span className="eyebrow">Yeni hereket</span>
+                <h2>{inventoryItem?.name || 'Stok sec'}</h2>
               </div>
               {canManageInventory ? (
                 <form className="stack-form" onSubmit={handleMovement}>
                   <div className="form-grid two">
-                    <SelectField label="Hərəkət tipi" required value={movementForm.movementTypeId} onChange={(event) => setMovementForm({ ...movementForm, movementTypeId: event.target.value })}>
+                    <SelectField label="Hereket tipi" required value={movementForm.movementTypeId} onChange={(event) => setMovementForm({ ...movementForm, movementTypeId: event.target.value })}>
                       {movementTypes.map((type) => (
                         <option key={type.id} value={type.id}>{type.name}</option>
                       ))}
                     </SelectField>
-                    <SelectField label="Ölçü vahidi" required value={movementForm.unitId} onChange={(event) => setMovementForm({ ...movementForm, unitId: event.target.value })}>
+                    <SelectField label="Olcu vahidi" required value={movementForm.unitId} onChange={(event) => setMovementForm({ ...movementForm, unitId: event.target.value })}>
                       {units.map((unit) => (
                         <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
                       ))}
                     </SelectField>
                   </div>
                   <TextField label="Miqdar" min={0} required step="0.001" type="number" value={movementForm.quantity} onChange={(event) => setMovementForm({ ...movementForm, quantity: event.target.value })} />
-                  <TextareaField label="Səbəb" required value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
-                  <Button disabled={!inventoryItem} type="submit">Hərəkət əlavə et</Button>
+                  <TextareaField label="Sebeb" required value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
+                  <Button disabled={!inventoryItem} type="submit">Hereket elave et</Button>
                 </form>
               ) : (
-                <p className="online-only">Stok hərəkəti yaratmaq üçün icazəniz yoxdur.</p>
+                <p className="online-only">Stok hereketi yaratmaq ucun icazeniz yoxdur.</p>
               )}
             </section>
 
             <section className="admin-panel">
-              <span className="eyebrow">Tarixçə</span>
-              <h2>Son hərəkətlər</h2>
+              <span className="eyebrow">Tarixce</span>
+              <h2>Son hereketler</h2>
               <div className="movement-list">
                 {movements.map((movement) => (
                   <article key={movement.id}>
@@ -445,7 +446,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     <small>{movement.reason || '-'}</small>
                   </article>
                 ))}
-                {movements.length === 0 ? <p className="online-only">Bu stok elementi üçün hərəkət yoxdur.</p> : null}
+                {movements.length === 0 ? <p className="online-only">Bu stok elementi ucun hereket yoxdur.</p> : null}
               </div>
             </section>
           </>
@@ -454,8 +455,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         {mode === 'recipes' ? (
           <>
             <section className="admin-panel">
-              <span className="eyebrow">Menyu məhsulu</span>
-              <SelectField label="Menyu məhsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
+              <span className="eyebrow">Menyu mehsulu</span>
+              <SelectField label="Menyu mehsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
                 {menuItems.map((item: MenuItem) => (
                   <option key={item.id} value={item.id}>{item.name}</option>
                 ))}
@@ -465,15 +466,15 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             {canManageRecipes ? (
               <section className="admin-panel recipe-editor-panel">
                 <form className="recipe-form" onSubmit={handleSaveRecipe}>
-                  <span className="eyebrow">{editingRecipeId ? 'Redaktə' : 'Yeni tərkib'}</span>
-                  <h2>{menuItem?.name || 'Məhsul seç'}</h2>
+                  <span className="eyebrow">{editingRecipeId ? 'Redakte' : 'Yeni terkib'}</span>
+                  <h2>{menuItem?.name || 'Mehsul sec'}</h2>
                   <SelectField label="Ingredient" required value={recipeForm.inventoryItemId} onChange={(event) => setRecipeForm({ ...recipeForm, inventoryItemId: event.target.value })}>
                     {inventoryItems.map((item) => (
                       <option key={item.id} value={item.id}>{item.name}</option>
                     ))}
                   </SelectField>
                   <TextField label="Miqdar" min={0} required step="0.001" type="number" value={recipeForm.quantity} onChange={(event) => setRecipeForm({ ...recipeForm, quantity: event.target.value })} />
-                  <SelectField label="Ölçü" required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
+                  <SelectField label="Olcu" required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
                     {units.map((unit) => (
                       <option key={unit.id} value={unit.id}>{unit.code}</option>
                     ))}
@@ -483,16 +484,16 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     <span>Aktivdir</span>
                   </label>
                   <div className="inline-actions">
-                    <Button disabled={!menuItem || inventoryItems.length === 0} type="submit">{editingRecipeId ? 'Resepti yenilə' : 'Reseptə əlavə et'}</Button>
-                    {editingRecipeId ? <Button type="button" variant="secondary" onClick={resetRecipeForm}>Ləğv et</Button> : null}
+                    <Button disabled={!menuItem || inventoryItems.length === 0} type="submit">{editingRecipeId ? 'Resepti yenile' : 'Resepte elave et'}</Button>
+                    {editingRecipeId ? <Button type="button" variant="secondary" onClick={resetRecipeForm}>Legv et</Button> : null}
                   </div>
                 </form>
               </section>
             ) : null}
 
             <section className="admin-panel recipe-panel">
-              <span className="eyebrow">Tərkib</span>
-              <h2>Resept ingredientləri</h2>
+              <span className="eyebrow">Terkib</span>
+              <h2>Resept ingredientleri</h2>
               <div className="recipe-list">
                 {recipes.map((recipe: Recipe) => (
                   <article key={recipe.id}>
@@ -503,14 +504,14 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     <Badge tone={recipe.isActive ? 'success' : 'neutral'}>{recipe.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
                     {canManageRecipes ? (
                       <div className="inline-actions">
-                        <Button type="button" variant="secondary" onClick={() => startRecipeEdit(recipe)}>Redaktə</Button>
+                        <Button type="button" variant="secondary" onClick={() => startRecipeEdit(recipe)}>Redakte</Button>
                         <Button type="button" variant="secondary" onClick={() => toggleRecipe(recipe)}>{recipe.isActive ? 'Deaktiv et' : 'Aktiv et'}</Button>
                         <Button type="button" variant="danger" onClick={() => deleteRecipe(recipe)}>Sil</Button>
                       </div>
                     ) : null}
                   </article>
                 ))}
-                {menuItem && recipes.length === 0 ? <p className="online-only">Bu məhsul üçün resept tərkibi yoxdur.</p> : null}
+                {menuItem && recipes.length === 0 ? <p className="online-only">Bu mehsul ucun resept terkibi yoxdur.</p> : null}
               </div>
             </section>
           </>
