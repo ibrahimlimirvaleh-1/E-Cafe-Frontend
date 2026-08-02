@@ -270,6 +270,8 @@ export type AdminModuleKey =
   | 'categories'
   | 'menu'
   | 'inventory'
+  | 'inventory-movements'
+  | 'recipes'
   | 'audit-logs'
 
 export type AdminModule = {

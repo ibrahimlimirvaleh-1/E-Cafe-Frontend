@@ -21,7 +21,8 @@ export function StaffShell({ title }: StaffShellProps) {
           {isKitchen ? (
             <>
               <NavLink end to="/kitchen">Sifarişlər</NavLink>
-              <NavLink to="/kitchen/inventory">Stok və resept</NavLink>
+              <NavLink to="/kitchen/inventory">Stok</NavLink>
+              <NavLink to="/kitchen/recipes">Reseptlər</NavLink>
             </>
           ) : null}
           {isWaiter ? (

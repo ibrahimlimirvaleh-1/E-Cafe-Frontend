@@ -18,7 +18,9 @@ const modulePermissions: Record<AdminModuleKey, string[]> = {
   tables: ['ManageTables'],
   categories: ['ManageCatalog'],
   menu: ['ManageCatalog'],
-  inventory: ['ViewInventory', 'ManageInventory', 'ViewRecipes', 'ManageRecipes'],
+  inventory: ['ViewInventory', 'ManageInventory'],
+  'inventory-movements': ['ViewInventory', 'ManageInventory'],
+  recipes: ['ViewRecipes', 'ManageRecipes'],
   'audit-logs': ['ViewAuditLogs'],
 }
 
