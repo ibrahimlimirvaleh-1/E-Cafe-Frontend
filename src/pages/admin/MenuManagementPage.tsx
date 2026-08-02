@@ -2,12 +2,14 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
-import { Button } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
-export function MenuManagementPage() {
+type MenuPageMode = 'categories' | 'create-category' | 'items' | 'create-item'
+
+export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const [fileId, setFileId] = useState<number | null>(null)
@@ -103,11 +105,23 @@ export function MenuManagementPage() {
     setReloadKey((value) => value + 1)
   }
 
+  const title = mode === 'categories' ? 'Kateqoriyalar' : mode === 'create-category' ? 'Yeni kateqoriya' : mode === 'create-item' ? 'Yeni menyu elementi' : 'Menyu'
+  const action =
+    mode === 'items' ? (
+      <ButtonLink to="/admin/menu/new">Yeni menyu elementi</ButtonLink>
+    ) : mode === 'create-item' ? (
+      <ButtonLink to="/admin/menu" variant="secondary">Siyahıya qayıt</ButtonLink>
+    ) : mode === 'categories' ? (
+      <ButtonLink to="/admin/categories/new">Yeni kateqoriya</ButtonLink>
+    ) : mode === 'create-category' ? (
+      <ButtonLink to="/admin/categories" variant="secondary">Siyahıya qayıt</ButtonLink>
+    ) : null
+
   return (
     <main className="admin-page">
-      <PageHeader eyebrow="Admin" title="Menyu idarəetməsi" />
+      <PageHeader eyebrow="Admin" title={title} action={action} />
 
-      <section className="admin-resource-layout wide menu-admin-layout">
+      <section className={mode === 'create-item' || mode === 'create-category' ? 'admin-single-column' : 'admin-resource-layout'}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
           <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
@@ -117,85 +131,112 @@ export function MenuManagementPage() {
               </option>
             ))}
           </SelectField>
-          <form className="stack-form" onSubmit={handleCreateCategory}>
-            <h2>Yeni kateqoriya</h2>
-            <TextField label="Ad" required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
-            <TextField
-              label="Sıra"
-              min={0}
-              type="number"
-              value={categoryForm.sortOrder}
-              onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })}
-              hint="Boş qalsa backend növbəti sıranı özü verir."
-            />
-            <Button type="submit" variant="secondary">
-              Kateqoriya yarat
-            </Button>
+        </section>
+
+        {mode === 'create-category' ? (
+          <section className="admin-panel">
+            <form className="stack-form" onSubmit={handleCreateCategory}>
+              <span className="eyebrow">Yeni kateqoriya</span>
+              <h2>Kateqoriya məlumatları</h2>
+              <TextField label="Ad" required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
+              <TextField label="Sıra" min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint="Boş qalsa backend növbəti sıranı özü verir." />
+              <Button type="submit" variant="secondary">Kateqoriya yarat</Button>
+              {message ? <p className="form-message">{message}</p> : null}
+            </form>
+          </section>
+        ) : null}
+
+        {mode === 'categories' ? (
+          <>
+            <section className="admin-panel">
+              <span className="eyebrow">Siyahı</span>
+              <h2>Kateqoriyalar</h2>
+              <div className="compact-list">
+                {categories.map((category) => (
+                  <article key={category.id}>
+                    <div>
+                      <strong>{category.name}</strong>
+                      <small>{restaurantId ? 'Restorana bağlıdır' : 'Restoran seçilməyib'}</small>
+                    </div>
+                    <Badge tone={category.isActive ? 'success' : 'neutral'}>{category.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                  </article>
+                ))}
+                {categories.length === 0 ? <p className="online-only">Bu restoran üçün kateqoriya yoxdur.</p> : null}
+              </div>
+            </section>
+          </>
+        ) : null}
+
+        {mode === 'create-item' ? (
+          <form className="admin-panel" onSubmit={handleCreateItem}>
+            <div>
+              <span className="eyebrow">Yeni yemək</span>
+              <h2>Menyu elementi</h2>
+            </div>
+            <div className="form-grid two">
+              <SelectField label="Kateqoriya" required value={itemForm.categoryId} onChange={(event) => setItemForm({ ...itemForm, categoryId: event.target.value })}>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </SelectField>
+              <SelectField label="Status" required value={itemForm.statusId} onChange={(event) => setItemForm({ ...itemForm, statusId: event.target.value })}>
+                {activeStatuses.map((status) => (
+                  <option key={status.id} value={status.id}>{status.name}</option>
+                ))}
+              </SelectField>
+            </div>
+            <TextField label="Ad" required value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} />
+            <TextareaField label="Tərkib" required value={itemForm.description} onChange={(event) => setItemForm({ ...itemForm, description: event.target.value })} />
+            <div className="form-grid two">
+              <TextField label="Qiymət" min={0} required step="0.01" type="number" value={itemForm.basePrice} onChange={(event) => setItemForm({ ...itemForm, basePrice: event.target.value })} />
+              <label className="toggle-field">
+                <input checked={itemForm.isAvailable} type="checkbox" onChange={(event) => setItemForm({ ...itemForm, isAvailable: event.target.checked })} />
+                <span>Satışdadır</span>
+              </label>
+            </div>
+            {!itemForm.isAvailable ? (
+              <TextField label="Satışda olmama səbəbi" value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
+            ) : null}
+            <FileUploadField label="Yemək şəkli" onUploaded={setFileId} />
+            <Button type="submit">Menyu elementi yarat</Button>
+            {message ? <p className="form-message">{message}</p> : null}
           </form>
-        </section>
+        ) : null}
 
-        <form className="admin-panel" onSubmit={handleCreateItem}>
-          <div>
-            <span className="eyebrow">Yeni yemək</span>
-            <h2>Menyu elementi</h2>
-          </div>
-          <div className="form-grid two">
-            <SelectField label="Kateqoriya" required value={itemForm.categoryId} onChange={(event) => setItemForm({ ...itemForm, categoryId: event.target.value })}>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
+        {mode === 'items' ? (
+          <section className="admin-panel menu-list-panel">
+            <div>
+              <span className="eyebrow">Siyahı</span>
+              <h2>Menyu</h2>
+            </div>
+            {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
+            <div className="admin-menu-list">
+              {items.map((item) => (
+                <article key={item.id}>
+                  <img src={item.image} alt={item.name} />
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{item.description || 'Tərkib qeyd edilməyib'}</small>
+                  </div>
+                  <span>{item.categoryName || categoryNameById.get(item.categoryId) || 'Kateqoriya yoxdur'}</span>
+                  <Badge tone={item.isActive ? 'success' : 'neutral'}>{item.statusName || (item.isActive ? 'Aktiv' : 'Deaktiv')}</Badge>
+                  <small>{item.salesCount ?? 0} satış</small>
+                  <b>{item.price.toFixed(2)} ₼</b>
+                </article>
               ))}
-            </SelectField>
-            <SelectField label="Status" required value={itemForm.statusId} onChange={(event) => setItemForm({ ...itemForm, statusId: event.target.value })}>
-              {activeStatuses.map((status) => (
-                <option key={status.id} value={status.id}>
-                  {status.name}
-                </option>
-              ))}
-            </SelectField>
-          </div>
-          <TextField label="Ad" required value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} />
-          <TextareaField label="Tərkib" required value={itemForm.description} onChange={(event) => setItemForm({ ...itemForm, description: event.target.value })} />
-          <div className="form-grid two">
-            <TextField label="Qiymət" min={0} required step="0.01" type="number" value={itemForm.basePrice} onChange={(event) => setItemForm({ ...itemForm, basePrice: event.target.value })} />
-            <label className="toggle-field">
-              <input checked={itemForm.isAvailable} type="checkbox" onChange={(event) => setItemForm({ ...itemForm, isAvailable: event.target.checked })} />
-              <span>Satışdadır</span>
-            </label>
-          </div>
-          {!itemForm.isAvailable ? (
-            <TextField label="Satışda olmama səbəbi" value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
-          ) : null}
-          <FileUploadField label="Yemək şəkli" onUploaded={setFileId} />
-          <Button type="submit">Menyu elementi yarat</Button>
-          {message ? <p className="form-message">{message}</p> : null}
-        </form>
-
-        <section className="admin-panel menu-list-panel">
-          <div>
-            <span className="eyebrow">Siyahı</span>
-            <h2>Menyu</h2>
-          </div>
-          {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
-          <div className="admin-menu-list">
-            {items.map((item) => (
-              <article key={item.id}>
-                <img src={item.image} alt={item.name} />
-                <div>
-                  <strong>{item.name}</strong>
-                  <small>{item.description || 'Tərkib qeyd edilməyib'}</small>
-                </div>
-                <span>{item.categoryName || categoryNameById.get(item.categoryId) || 'Kateqoriya yoxdur'}</span>
-                <Badge tone={item.isActive ? 'success' : 'neutral'}>{item.statusName || (item.isActive ? 'Aktiv' : 'Deaktiv')}</Badge>
-                <small>{item.salesCount ?? 0} satış</small>
-                <b>{item.price.toFixed(2)} ₼</b>
-              </article>
-            ))}
-            {!isLoading && items.length === 0 ? <p className="online-only">Bu restoran üçün menyu elementi yoxdur.</p> : null}
-          </div>
-        </section>
+              {!isLoading && items.length === 0 ? <p className="online-only">Bu restoran üçün menyu elementi yoxdur.</p> : null}
+            </div>
+          </section>
+        ) : null}
       </section>
     </main>
   )
+}
+
+export function MenuItemCreatePage() {
+  return <MenuManagementPage mode="create-item" />
+}
+
+export function CategoryCreatePage() {
+  return <MenuManagementPage mode="create-category" />
 }

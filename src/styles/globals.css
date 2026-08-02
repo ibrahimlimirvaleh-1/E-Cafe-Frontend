@@ -1858,6 +1858,12 @@ img {
   align-items: start;
 }
 
+.admin-single-column {
+  display: grid;
+  gap: 18px;
+  width: min(760px, 100%);
+}
+
 .admin-resource-layout.wide {
   grid-template-columns: minmax(260px, 320px) minmax(340px, 0.9fr) minmax(420px, 1.2fr);
 }
@@ -1963,7 +1969,7 @@ img {
 
 .admin-menu-list article {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto auto;
+  grid-template-columns: 56px minmax(0, 1fr) minmax(120px, auto) auto;
   grid-template-areas:
     "image info status price"
     "image category sales price";
@@ -2223,6 +2229,9 @@ img {
   .admin-sidebar {
     position: static;
     height: auto;
+    padding: 16px 18px;
+    border-right: 0;
+    border-bottom: 1px solid var(--outline-variant);
   }
 
   .admin-topbar {
@@ -2230,7 +2239,28 @@ img {
   }
 
   .admin-sidebar nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .admin-sidebar nav a {
+    flex: 0 0 auto;
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
+  .admin-resource-layout,
+  .admin-resource-layout.wide,
+  .inventory-page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recipe-panel {
+    grid-column: auto;
   }
 
   .order-summary {
@@ -2256,8 +2286,31 @@ img {
   }
 
   .site-topbar-inner,
-  .staff-topbar {
+  .staff-topbar,
+  .admin-topbar {
     padding: 12px 14px;
+  }
+
+  .admin-sidebar {
+    padding: 14px;
+  }
+
+  .admin-sidebar nav {
+    margin-top: 14px;
+  }
+
+  .admin-sidebar nav a {
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+
+  .admin-topbar .site-actions {
+    align-items: stretch;
+  }
+
+  .admin-single-column {
+    width: 100%;
   }
 
   .brand img {
@@ -2428,6 +2481,53 @@ img {
 
   .form-grid.two {
     grid-template-columns: 1fr;
+  }
+
+  .compact-list article {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .staff-badges {
+    justify-content: flex-start;
+  }
+
+  .staff-role-actions {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+
+  .staff-role-actions .ui-button {
+    width: 100%;
+  }
+
+  .admin-menu-list article {
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-areas:
+      "image info"
+      "image category"
+      "status sales"
+      "price price";
+  }
+
+  .admin-menu-list article > b {
+    justify-self: start;
+  }
+
+  .inventory-panel-header,
+  .inventory-list button,
+  .recipe-list article,
+  .movement-list article {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .inline-actions {
+    width: 100%;
+  }
+
+  .inline-actions .ui-button {
+    flex: 1 1 140px;
   }
 
   .compact-list article,

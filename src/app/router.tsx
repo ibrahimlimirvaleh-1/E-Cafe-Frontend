@@ -15,13 +15,13 @@ import { ContractDetailPage } from '../pages/admin/contracts/ContractDetailPage'
 import { ContractFormPage } from '../pages/admin/contracts/ContractFormPage'
 import { ContractListPage } from '../pages/admin/contracts/ContractListPage'
 import { InventoryManagementPage, InventoryMovementsPage, RecipeManagementPage } from '../pages/admin/InventoryManagementPage'
-import { MenuManagementPage } from '../pages/admin/MenuManagementPage'
+import { CategoryCreatePage, MenuItemCreatePage, MenuManagementPage } from '../pages/admin/MenuManagementPage'
 import { RestaurantGroupsPage } from '../pages/admin/RestaurantGroupsPage'
 import { RestaurantDetailPage } from '../pages/admin/RestaurantDetailPage'
 import { RestaurantEditPage } from '../pages/admin/RestaurantEditPage'
-import { RestaurantManagementPage } from '../pages/admin/RestaurantManagementPage'
-import { StaffManagementPage } from '../pages/admin/StaffManagementPage'
-import { TablesManagementPage } from '../pages/admin/TablesManagementPage'
+import { RestaurantCreatePage, RestaurantManagementPage } from '../pages/admin/RestaurantManagementPage'
+import { StaffCreatePage, StaffManagementPage } from '../pages/admin/StaffManagementPage'
+import { TableCreatePage, TablesManagementPage } from '../pages/admin/TablesManagementPage'
 import { AuthPage } from '../pages/auth/AuthPage'
 import { ConfirmationPage } from '../pages/customer/ConfirmationPage'
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
@@ -124,14 +124,27 @@ export function AppRouter() {
         </Route>
         <Route path="restaurants">
           <Route index element={<RestaurantManagementPage />} />
+          <Route path="new" element={<RestaurantCreatePage />} />
           <Route path=":restaurantId" element={<RestaurantDetailPage />} />
           <Route path=":restaurantId/edit" element={<RestaurantEditPage />} />
         </Route>
         <Route path="restaurant-groups" element={<RestaurantGroupsPage />} />
-        <Route path="staff" element={<StaffManagementPage />} />
-        <Route path="tables" element={<TablesManagementPage />} />
-        <Route path="categories" element={<MenuManagementPage />} />
-        <Route path="menu" element={<MenuManagementPage />} />
+        <Route path="staff">
+          <Route index element={<StaffManagementPage />} />
+          <Route path="new" element={<StaffCreatePage />} />
+        </Route>
+        <Route path="tables">
+          <Route index element={<TablesManagementPage />} />
+          <Route path="new" element={<TableCreatePage />} />
+        </Route>
+        <Route path="categories">
+          <Route index element={<MenuManagementPage mode="categories" />} />
+          <Route path="new" element={<CategoryCreatePage />} />
+        </Route>
+        <Route path="menu">
+          <Route index element={<MenuManagementPage />} />
+          <Route path="new" element={<MenuItemCreatePage />} />
+        </Route>
         <Route path="inventory" element={<InventoryManagementPage />} />
         <Route path="inventory/movements" element={<InventoryMovementsPage />} />
         <Route path="recipes" element={<RecipeManagementPage />} />

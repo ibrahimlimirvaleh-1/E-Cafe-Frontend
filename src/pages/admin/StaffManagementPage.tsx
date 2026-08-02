@@ -4,10 +4,12 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
-import { Button } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+
+type StaffPageMode = 'list' | 'create'
 
 const initialForm = {
   name: '',
@@ -29,7 +31,7 @@ const roleIdsByStaffRole: Record<Role, number> = {
   Kitchen: 6,
 }
 
-export function StaffManagementPage() {
+export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode }) {
   const { setSession, user } = useAuth()
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -115,111 +117,116 @@ export function StaffManagementPage() {
 
   return (
     <main className="admin-page">
-      <PageHeader eyebrow="Admin" title="Personal idarəetməsi" />
+      <PageHeader
+        eyebrow="Admin"
+        title={mode === 'create' ? 'Yeni əməkdaş' : 'Personal'}
+        action={mode === 'list' ? <ButtonLink to="/admin/staff/new">Yeni əməkdaş</ButtonLink> : <ButtonLink to="/admin/staff" variant="secondary">Siyahıya qayıt</ButtonLink>}
+      />
 
-      <section className="admin-resource-layout">
-        <form className="admin-panel" onSubmit={handleSubmit}>
-          <div>
-            <span className="eyebrow">Yeni əməkdaş</span>
-            <h2>Əməkdaş məlumatları</h2>
-          </div>
-          <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
-            {restaurants.map((restaurant) => (
-              <option key={restaurant.id} value={restaurant.id}>
-                {restaurant.name}
-              </option>
-            ))}
-          </SelectField>
-          <div className="form-grid two">
-            <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            <TextField label="Soyad" required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
-          </div>
-          <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-          <div className="form-grid two">
-            <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-            <TextField label="Parol" required type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
-          </div>
-          <SelectField label="Rol" required value={form.roleId} onChange={(event) => setForm({ ...form, roleId: event.target.value })}>
-            <option value="">Rol seç</option>
-            {roleOptions.map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
-            ))}
-          </SelectField>
-          <div className="form-grid two">
-            <SelectField label="Status" value={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.value })}>
-              <option value="true">Aktiv</option>
-              <option value="false">Deaktiv</option>
+      <section className={mode === 'create' ? 'admin-single-column' : 'admin-resource-layout'}>
+        {mode === 'create' ? (
+          <form className="admin-panel" onSubmit={handleSubmit}>
+            <div>
+              <span className="eyebrow">Yeni əməkdaş</span>
+              <h2>Əməkdaş məlumatları</h2>
+            </div>
+            <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
+              {restaurants.map((restaurant) => (
+                <option key={restaurant.id} value={restaurant.id}>
+                  {restaurant.name}
+                </option>
+              ))}
             </SelectField>
-            <TextField
-              label="Servis faizi"
-              min={0}
-              step="0.01"
-              type="number"
-              value={form.serviceFeePercent}
-              onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })}
-            />
-          </div>
-          <FileUploadField label="Profil şəkli" onUploaded={setFileId} />
-          <Button type="submit">Əməkdaş yarat</Button>
-          {message ? <p className="form-message">{message}</p> : null}
-        </form>
-
-        <section className="admin-panel">
-          <div>
-            <span className="eyebrow">Siyahı</span>
-            <h2>Restoran personalı</h2>
-          </div>
-          {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
-          <div className="compact-list">
-            {staff.map((member) => (
-              <article key={member.id}>
-                <div>
-                  <strong>{member.name}</strong>
-                  <small>
-                    {member.phone || member.role} ·{' '}
-                    {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `${member.serviceFeePercent}%`}
-                  </small>
-                </div>
-                <div className="staff-badges">
-                  <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>
-                  <Badge tone="info">{member.role}</Badge>
-                </div>
-                {canChangeRoles ? (
-                  <div className="staff-role-actions">
-                    <select
-                      aria-label={`${member.name} üçün rol`}
-                      value={selectedRoleId(member)}
-                      onChange={(event) =>
-                        setRoleSelections((current) => ({
-                          ...current,
-                          [member.id]: event.target.value,
-                        }))
-                      }
-                    >
-                      {roleOptions.map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.name}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)}
-                      onClick={() => void handleRoleChange(member)}
-                      type="button"
-                      variant="secondary"
-                    >
-                      {updatingRoleUserId === member.id ? 'Yenilənir...' : 'Rolu yenilə'}
-                    </Button>
+            <div className="form-grid two">
+              <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+              <TextField label="Soyad" required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
+            </div>
+            <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+            <div className="form-grid two">
+              <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+              <TextField label="Parol" required type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
+            </div>
+            <SelectField label="Rol" required value={form.roleId} onChange={(event) => setForm({ ...form, roleId: event.target.value })}>
+              <option value="">Rol seç</option>
+              {roleOptions.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </SelectField>
+            <div className="form-grid two">
+              <SelectField label="Status" value={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.value })}>
+                <option value="true">Aktiv</option>
+                <option value="false">Deaktiv</option>
+              </SelectField>
+              <TextField label="Servis faizi" min={0} step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
+            </div>
+            <FileUploadField label="Profil şəkli" onUploaded={setFileId} />
+            <Button type="submit">Əməkdaş yarat</Button>
+            {message ? <p className="form-message">{message}</p> : null}
+          </form>
+        ) : (
+          <section className="admin-panel">
+            <div>
+              <span className="eyebrow">Siyahı</span>
+              <h2>Restoran personalı</h2>
+            </div>
+            <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
+              {restaurants.map((restaurant) => (
+                <option key={restaurant.id} value={restaurant.id}>
+                  {restaurant.name}
+                </option>
+              ))}
+            </SelectField>
+            {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
+            <div className="compact-list">
+              {staff.map((member) => (
+                <article key={member.id}>
+                  <div>
+                    <strong>{member.name}</strong>
+                    <small>
+                      {member.phone || member.role} · {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `${member.serviceFeePercent}%`}
+                    </small>
                   </div>
-                ) : null}
-              </article>
-            ))}
-            {!isLoading && staff.length === 0 ? <p className="online-only">Bu restoran üçün personal tapılmadı.</p> : null}
-          </div>
-        </section>
+                  <div className="staff-badges">
+                    <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>
+                    <Badge tone="info">{member.role}</Badge>
+                  </div>
+                  {canChangeRoles ? (
+                    <div className="staff-role-actions">
+                      <select
+                        aria-label={`${member.name} üçün rol`}
+                        value={selectedRoleId(member)}
+                        onChange={(event) =>
+                          setRoleSelections((current) => ({
+                            ...current,
+                            [member.id]: event.target.value,
+                          }))
+                        }
+                      >
+                        {roleOptions.map((role) => (
+                          <option key={role.id} value={role.id}>
+                            {role.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Button disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)} onClick={() => void handleRoleChange(member)} type="button" variant="secondary">
+                        {updatingRoleUserId === member.id ? 'Yenilənir...' : 'Rolu yenilə'}
+                      </Button>
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+              {!isLoading && staff.length === 0 ? <p className="online-only">Bu restoran üçün personal tapılmadı.</p> : null}
+            </div>
+            {message ? <p className="form-message">{message}</p> : null}
+          </section>
+        )}
       </section>
     </main>
   )
+}
+
+export function StaffCreatePage() {
+  return <StaffManagementPage mode="create" />
 }

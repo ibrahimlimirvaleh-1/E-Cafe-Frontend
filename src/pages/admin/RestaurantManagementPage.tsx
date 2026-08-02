@@ -2,30 +2,34 @@ import { type FormEvent, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { restaurantRow } from '../../shared/api/mappers'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
-import { Button } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
 import { DataTable } from '../../shared/ui/DataTable'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
-export function RestaurantManagementPage() {
+type RestaurantPageMode = 'list' | 'create'
+
+const initialForm = {
+  name: '',
+  location: '',
+  phone: '',
+  email: '',
+  restaurantGroupId: '',
+  restaurantGroupName: '',
+  restaurantGroupLegalName: '',
+  branchName: '',
+  depositAmount: '0',
+  cancellationWindowMinutes: '60',
+  serviceFeePercent: '0',
+  staffSettlementPeriod: '7',
+}
+
+export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
   const [reloadKey, setReloadKey] = useState(0)
   const [fileIds, setFileIds] = useState<number[]>([])
   const [message, setMessage] = useState('')
-  const [form, setForm] = useState({
-    name: '',
-    location: '',
-    phone: '',
-    email: '',
-    restaurantGroupId: '',
-    restaurantGroupName: '',
-    restaurantGroupLegalName: '',
-    branchName: '',
-    depositAmount: '0',
-    cancellationWindowMinutes: '60',
-    serviceFeePercent: '0',
-    staffSettlementPeriod: '7',
-  })
+  const [form, setForm] = useState(initialForm)
   const { data: restaurants, isLoading } = useAsyncData(() => ecafeApi.restaurants.list(), [], [reloadKey])
   const { data: groups } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
 
@@ -48,20 +52,7 @@ export function RestaurantManagementPage() {
       staffSettlementPeriod: Number(form.staffSettlementPeriod),
       fileIds,
     })
-    setForm({
-      name: '',
-      location: '',
-      phone: '',
-      email: '',
-      restaurantGroupId: '',
-      restaurantGroupName: '',
-      restaurantGroupLegalName: '',
-      branchName: '',
-      depositAmount: '0',
-      cancellationWindowMinutes: '60',
-      serviceFeePercent: '0',
-      staffSettlementPeriod: '7',
-    })
+    setForm(initialForm)
     setFileIds([])
     setMessage('Restoran yaradıldı.')
     setReloadKey((value) => value + 1)
@@ -71,12 +62,17 @@ export function RestaurantManagementPage() {
     <main className="admin-page">
       <PageHeader
         eyebrow="Admin"
-        title="Restoranlar"
-        description="Yeni restoran və filial yaradılır, mövcud qrup seçilə və ya yeni qrup məlumatları create request-də göndərilə bilər."
+        title={mode === 'create' ? 'Yeni restoran' : 'Restoranlar'}
+        action={mode === 'list' ? <ButtonLink to="/admin/restaurants/new">Yeni restoran</ButtonLink> : <ButtonLink to="/admin/restaurants" variant="secondary">Siyahıya qayıt</ButtonLink>}
       />
 
-      <section className="admin-resource-layout">
-        <form className="admin-panel" onSubmit={handleSubmit}>
+      {mode === 'list' ? (
+        <section>
+          {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
+          <DataTable baseRoute="/admin/restaurants" columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']} rows={restaurants.map(restaurantRow)} />
+        </section>
+      ) : (
+        <form className="admin-panel admin-single-column" onSubmit={handleSubmit}>
           <div>
             <span className="eyebrow">Yeni restoran</span>
             <h2>Profil və filial</h2>
@@ -128,12 +124,11 @@ export function RestaurantManagementPage() {
           <Button type="submit">Restoran yarat</Button>
           {message ? <p className="form-message">{message}</p> : null}
         </form>
-
-        <section>
-          {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
-          <DataTable baseRoute="/admin/restaurants" columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']} rows={restaurants.map(restaurantRow)} />
-        </section>
-      </section>
+      )}
     </main>
   )
+}
+
+export function RestaurantCreatePage() {
+  return <RestaurantManagementPage mode="create" />
 }
