@@ -1873,6 +1873,10 @@ img {
   width: min(760px, 100%);
 }
 
+.staff-list-layout {
+  width: min(1040px, 100%);
+}
+
 .admin-resource-layout.wide {
   grid-template-columns: minmax(260px, 320px) minmax(340px, 0.9fr) minmax(420px, 1.2fr);
 }
@@ -1945,6 +1949,50 @@ img {
   justify-content: flex-end;
   gap: 8px;
   min-width: 0;
+}
+
+.staff-restaurant-summary {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: var(--surface-low);
+}
+
+.staff-restaurant-summary img,
+.staff-member-row > img {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  background: var(--surface-container);
+}
+
+.staff-restaurant-summary div,
+.staff-member-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.staff-restaurant-summary strong,
+.staff-restaurant-summary span,
+.staff-restaurant-summary small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staff-restaurant-summary span,
+.staff-restaurant-summary small {
+  color: var(--on-surface-variant);
+}
+
+.compact-list article.staff-member-row {
+  grid-template-columns: 64px minmax(0, 1fr) auto minmax(260px, auto);
 }
 
 .staff-role-actions {
@@ -2537,6 +2585,18 @@ img {
   .compact-list article {
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+
+  .staff-restaurant-summary,
+  .compact-list article.staff-member-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .staff-restaurant-summary img,
+  .staff-member-row > img {
+    width: 100%;
+    height: 160px;
   }
 
   .staff-badges {

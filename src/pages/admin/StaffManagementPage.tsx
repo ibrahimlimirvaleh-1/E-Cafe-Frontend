@@ -44,6 +44,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const { data: roles } = useAsyncData(() => ecafeApi.lookups.roles(), [], [])
   const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: staff, isLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.staff.byRestaurant(restaurantId) : Promise.resolve([])),
     [],
@@ -64,6 +65,23 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
   function selectedRoleId(member: StaffMember) {
     return roleSelections[member.id] || String(currentRoleId(member) || '')
+  }
+
+  function restaurantOptionLabel(restaurant: (typeof restaurants)[number]) {
+    return [restaurant.name, restaurant.branchName, restaurant.address].filter(Boolean).join(' - ')
+  }
+
+  function roleLabel(role: Role) {
+    const labels: Record<Role, string> = {
+      PlatformAdmin: 'Platforma admini',
+      Owner: 'Sahibkar',
+      Manager: 'Menecer',
+      Waiter: 'Ofisiant',
+      Kitchen: 'Mətbəx',
+      Customer: 'Müştəri',
+    }
+
+    return labels[role] || role
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -123,7 +141,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
         action={mode === 'list' ? <ButtonLink to="/admin/staff/new">Yeni əməkdaş</ButtonLink> : <ButtonLink to="/admin/staff" variant="secondary">Siyahıya qayıt</ButtonLink>}
       />
 
-      <section className={mode === 'create' ? 'admin-single-column' : 'admin-resource-layout'}>
+      <section className={mode === 'create' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         {mode === 'create' ? (
           <form className="admin-panel" onSubmit={handleSubmit}>
             <div>
@@ -133,7 +151,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
-                  {restaurant.name}
+                  {restaurantOptionLabel(restaurant)}
                 </option>
               ))}
             </SelectField>
@@ -174,23 +192,37 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
-                  {restaurant.name}
+                  {restaurantOptionLabel(restaurant)}
                 </option>
               ))}
             </SelectField>
             {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
+            {selectedRestaurant ? (
+              <article className="staff-restaurant-summary">
+                <img src={selectedRestaurant.image} alt={selectedRestaurant.name} />
+                <div>
+                  <strong>{selectedRestaurant.name}</strong>
+                  <span>{selectedRestaurant.restaurantGroupName || 'Restoran qrupu yoxdur'} - {selectedRestaurant.branchName || selectedRestaurant.address}</span>
+                  <small>{selectedRestaurant.address} - {selectedRestaurant.phone}</small>
+                </div>
+                <Badge tone={selectedRestaurant.hasActiveContract ? 'success' : 'warning'}>
+                  {selectedRestaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur'}
+                </Badge>
+              </article>
+            ) : null}
             <div className="compact-list">
               {staff.map((member) => (
-                <article key={member.id}>
-                  <div>
-                    <strong>{member.name}</strong>
+                <article className="staff-member-row" key={member.id}>
+                  <img src={member.avatar} alt={member.name} />
+                  <div className="staff-member-main">
+                    <strong>{member.name || 'Adsız əməkdaş'}</strong>
                     <small>
-                      {member.phone || member.role} · {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `${member.serviceFeePercent}%`}
+                      {member.phone || 'Telefon yoxdur'} - {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `Servis faizi ${member.serviceFeePercent}%`}
                     </small>
                   </div>
                   <div className="staff-badges">
                     <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>
-                    <Badge tone="info">{member.role}</Badge>
+                    <Badge tone="info">{roleLabel(member.role)}</Badge>
                   </div>
                   {canChangeRoles ? (
                     <div className="staff-role-actions">
