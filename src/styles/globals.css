@@ -2049,6 +2049,101 @@ img {
   color: var(--on-surface-variant);
 }
 
+.inventory-page-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(320px, 0.9fr) minmax(340px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.recipe-panel {
+  grid-column: 2 / 4;
+}
+
+.inventory-panel-header,
+.inventory-list button,
+.recipe-list article,
+.movement-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.compact-toggle {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.inventory-list,
+.recipe-list,
+.movement-list {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.inventory-list button,
+.recipe-list article,
+.movement-list article {
+  width: 100%;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: var(--surface);
+  color: var(--on-surface);
+  text-align: left;
+}
+
+.inventory-list button {
+  cursor: pointer;
+}
+
+.inventory-list button.selected {
+  border-color: var(--primary);
+  background: var(--primary-container);
+}
+
+.inventory-list span,
+.recipe-list div,
+.movement-list article {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.inventory-list strong,
+.inventory-list small,
+.recipe-list strong,
+.recipe-list small,
+.movement-list strong,
+.movement-list span,
+.movement-list small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inventory-list small,
+.recipe-list small,
+.movement-list small,
+.movement-list span {
+  color: var(--on-surface-variant);
+}
+
+.recipe-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 120px 110px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.inventory-message {
+  margin-top: 16px;
+}
+
 .toggle-field {
   display: flex;
   align-items: center;
@@ -2240,7 +2335,16 @@ img {
   }
 
   .admin-resource-layout,
-  .admin-resource-layout.wide {
+  .admin-resource-layout.wide,
+  .inventory-page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recipe-panel {
+    grid-column: auto;
+  }
+
+  .recipe-form {
     grid-template-columns: 1fr;
   }
 

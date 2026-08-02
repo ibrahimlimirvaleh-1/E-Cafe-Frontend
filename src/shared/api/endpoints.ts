@@ -20,6 +20,7 @@ export const endpoints = {
   lookups: {
     roles: '/lookups/roles',
     itemStatuses: '/lookups/item-statuses',
+    inventoryMovementTypes: '/lookups/inventory-movement-types',
     contractStatuses: '/lookups/contract-statuses',
     paymentPolicies: '/lookups/payment-policies',
   },
@@ -44,6 +45,24 @@ export const endpoints = {
     createCategory: (restaurantId: string) => `/restaurants/${restaurantId}/categories`,
     items: '/items/getAll',
     createItem: (restaurantId: string) => `/restaurants/${restaurantId}/items`,
+  },
+  inventory: {
+    list: (restaurantId: string) => `/restaurants/${restaurantId}/inventory`,
+    detail: (restaurantId: string, inventoryItemId: string) => `/restaurants/${restaurantId}/inventory/${inventoryItemId}`,
+    create: (restaurantId: string) => `/restaurants/${restaurantId}/inventory`,
+    update: (restaurantId: string, inventoryItemId: string) => `/restaurants/${restaurantId}/inventory/${inventoryItemId}`,
+    activate: (restaurantId: string, inventoryItemId: string) => `/restaurants/${restaurantId}/inventory/${inventoryItemId}/activate`,
+    deactivate: (restaurantId: string, inventoryItemId: string) => `/restaurants/${restaurantId}/inventory/${inventoryItemId}/deactivate`,
+    delete: (restaurantId: string, inventoryItemId: string) => `/restaurants/${restaurantId}/inventory/${inventoryItemId}`,
+    movements: (restaurantId: string, inventoryItemId: string) => `/restaurants/${restaurantId}/inventory/${inventoryItemId}/movements`,
+  },
+  recipes: {
+    list: (restaurantId: string, itemId: string) => `/restaurants/${restaurantId}/items/${itemId}/recipes`,
+    create: (restaurantId: string, itemId: string) => `/restaurants/${restaurantId}/items/${itemId}/recipes`,
+    update: (restaurantId: string, itemId: string, recipeId: string) => `/restaurants/${restaurantId}/items/${itemId}/recipes/${recipeId}`,
+    activate: (restaurantId: string, itemId: string, recipeId: string) => `/restaurants/${restaurantId}/items/${itemId}/recipes/${recipeId}/activate`,
+    deactivate: (restaurantId: string, itemId: string, recipeId: string) => `/restaurants/${restaurantId}/items/${itemId}/recipes/${recipeId}/deactivate`,
+    delete: (restaurantId: string, itemId: string, recipeId: string) => `/restaurants/${restaurantId}/items/${itemId}/recipes/${recipeId}`,
   },
   tables: {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/tables`,

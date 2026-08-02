@@ -117,6 +117,48 @@ export type MenuItem = {
   salesCount?: number
 }
 
+export type InventoryItem = {
+  id: string
+  restaurantId: string
+  name: string
+  unitId: number
+  unitName: string
+  unitCode: string
+  quantityOnHand: number
+  lowStockThreshold: number
+  isLowStock: boolean
+  isActive: boolean
+}
+
+export type InventoryMovement = {
+  id: string
+  restaurantId: string
+  inventoryItemId: string
+  quantityChange: number
+  unitId: number
+  unitName: string
+  movementTypeId: number
+  movementType: string
+  movementTypeCode: string
+  reason: string
+  quantityAfterMovement: number
+  createdAt: string
+}
+
+export type Recipe = {
+  id: string
+  restaurantId: string
+  itemId: string
+  itemName: string
+  inventoryItemId: string
+  inventoryItemName: string
+  quantity: number
+  unitId: number
+  unitName: string
+  unitCode: string
+  isActive: boolean
+}
+
 export type LookupItem = {
   id: number
   code: string
@@ -227,6 +269,7 @@ export type AdminModuleKey =
   | 'tables'
   | 'categories'
   | 'menu'
+  | 'inventory'
   | 'audit-logs'
 
 export type AdminModule = {

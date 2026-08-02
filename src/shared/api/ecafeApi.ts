@@ -16,8 +16,11 @@ import type {
   AdminModuleKey,
   AdminRow,
   AuditLogEntry,
+  InventoryItem,
+  InventoryMovement,
   LookupItem,
   NotificationItem,
+  Recipe,
   RestaurantContract,
   RestaurantGroup,
   UserProfile,
@@ -136,6 +139,34 @@ type CreateMenuItemRequest = {
   isAvailable: boolean
   unavailableReason?: string
   fileId?: number | null
+}
+
+type CreateInventoryItemRequest = {
+  name: string
+  unitId: number
+  quantityOnHand: number
+  lowStockThreshold: number
+}
+
+type UpdateInventoryItemRequest = CreateInventoryItemRequest & {
+  isActive?: boolean
+}
+
+type CreateInventoryMovementRequest = {
+  quantity: number
+  unitId: number
+  movementTypeId: number
+  reason: string
+}
+
+type CreateRecipeRequest = {
+  inventoryItemId: string
+  quantity: number
+  unitId: number
+}
+
+type UpdateRecipeRequest = CreateRecipeRequest & {
+  isActive: boolean
 }
 
 type UpdateProfileRequest = {
@@ -294,6 +325,54 @@ function mapNotification(record: AnyRecord): NotificationItem {
     relatedEntityType: str(record.relatedEntityType) || undefined,
     relatedEntityId: record.relatedEntityId == null ? undefined : str(record.relatedEntityId),
     createdAt: str(record.createdAt),
+  }
+}
+
+function mapInventoryItem(record: AnyRecord, restaurantId: string): InventoryItem {
+  return {
+    id: str(record.id || record.inventoryItemId),
+    restaurantId: str(record.restaurantId, restaurantId),
+    name: str(record.name),
+    unitId: num(record.unitId),
+    unitName: str(record.unitName),
+    unitCode: str(record.unitCode || record.unit),
+    quantityOnHand: num(record.quantityOnHand),
+    lowStockThreshold: num(record.lowStockThreshold),
+    isLowStock: bool(record.isLowStock),
+    isActive: bool(record.isActive, true),
+  }
+}
+
+function mapInventoryMovement(record: AnyRecord, restaurantId: string, inventoryItemId: string): InventoryMovement {
+  return {
+    id: str(record.id || record.inventoryMovementId),
+    restaurantId: str(record.restaurantId, restaurantId),
+    inventoryItemId: str(record.inventoryItemId, inventoryItemId),
+    quantityChange: num(record.quantityChange),
+    unitId: num(record.unitId),
+    unitName: str(record.unitName),
+    movementTypeId: num(record.movementTypeId),
+    movementType: str(record.movementType || record.movementTypeName),
+    movementTypeCode: str(record.movementTypeCode),
+    reason: str(record.reason),
+    quantityAfterMovement: num(record.quantityAfterMovement),
+    createdAt: str(record.createdAt),
+  }
+}
+
+function mapRecipe(record: AnyRecord, restaurantId: string, itemId: string): Recipe {
+  return {
+    id: str(record.id || record.recipeId),
+    restaurantId: str(record.restaurantId, restaurantId),
+    itemId: str(record.itemId, itemId),
+    itemName: str(record.itemName),
+    inventoryItemId: str(record.inventoryItemId),
+    inventoryItemName: str(record.inventoryItemName),
+    quantity: num(record.quantity),
+    unitId: num(record.unitId),
+    unitName: str(record.unitName),
+    unitCode: str(record.unitCode),
+    isActive: bool(record.isActive, true),
   }
 }
 
@@ -491,6 +570,19 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.lookups.itemStatuses)
         return asArray<AnyRecord>(result.data).map(mapLookup)
       }, [] as LookupItem[]),
+    inventoryMovementTypes: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.lookups.inventoryMovementTypes)
+        return asArray<AnyRecord>(result.data).map(mapLookup)
+      }, [
+        { id: 1, code: 'Purchase', name: 'Alış' },
+        { id: 2, code: 'ManualIncrease', name: 'Manual artım' },
+        { id: 3, code: 'ManualDecrease', name: 'Manual azalma' },
+        { id: 4, code: 'OrderConsumption', name: 'Sifariş sərfiyyatı' },
+        { id: 5, code: 'Waste', name: 'İtki' },
+        { id: 6, code: 'StockReturn', name: 'Stoka qaytarma' },
+        { id: 7, code: 'Correction', name: 'Düzəliş' },
+      ] as LookupItem[]),
     contractStatuses: () =>
       safe(async () => {
         const result = await httpClient<unknown>(endpoints.lookups.contractStatuses)
@@ -520,6 +612,94 @@ export const ecafeApi = {
     },
     delete: (fileId: string) =>
       httpClient<unknown>(endpoints.files.delete(fileId), {
+        method: 'DELETE',
+      }),
+  },
+
+  inventory: {
+    list: (restaurantId: string, params: { search?: string; onlyLowStock?: boolean } = {}) =>
+      safe(async () => {
+        const query = new URLSearchParams()
+        if (params.search) {
+          query.set('Search', params.search)
+        }
+        if (params.onlyLowStock) {
+          query.set('OnlyLowStock', 'true')
+        }
+
+        const suffix = query.toString() ? `?${query.toString()}` : ''
+        const result = await httpClient<unknown>(`${endpoints.inventory.list(restaurantId)}${suffix}`)
+        return asPaginated(result.data, (item) => mapInventoryItem(item, restaurantId)).items
+      }, [] as InventoryItem[]),
+    create: (restaurantId: string, request: CreateInventoryItemRequest) =>
+      httpClient<unknown>(endpoints.inventory.create(restaurantId), {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }),
+    update: (restaurantId: string, inventoryItemId: string, request: UpdateInventoryItemRequest) =>
+      httpClient<unknown>(endpoints.inventory.update(restaurantId, inventoryItemId), {
+        method: 'PUT',
+        body: JSON.stringify(request),
+      }),
+    activate: (restaurantId: string, inventoryItemId: string) =>
+      httpClient<unknown>(endpoints.inventory.activate(restaurantId, inventoryItemId), {
+        method: 'PATCH',
+      }),
+    deactivate: (restaurantId: string, inventoryItemId: string) =>
+      httpClient<unknown>(endpoints.inventory.deactivate(restaurantId, inventoryItemId), {
+        method: 'PATCH',
+      }),
+    delete: (restaurantId: string, inventoryItemId: string) =>
+      httpClient<unknown>(endpoints.inventory.delete(restaurantId, inventoryItemId), {
+        method: 'DELETE',
+      }),
+    movements: (restaurantId: string, inventoryItemId: string) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.inventory.movements(restaurantId, inventoryItemId))
+        return asPaginated(result.data, (movement) => mapInventoryMovement(movement, restaurantId, inventoryItemId)).items
+      }, [] as InventoryMovement[]),
+    createMovement: (restaurantId: string, inventoryItemId: string, request: CreateInventoryMovementRequest) =>
+      httpClient<unknown>(endpoints.inventory.movements(restaurantId, inventoryItemId), {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }),
+  },
+
+  recipes: {
+    list: (restaurantId: string, itemId: string) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.recipes.list(restaurantId, itemId))
+        return asArray<AnyRecord>(result.data).map((recipe) => mapRecipe(recipe, restaurantId, itemId))
+      }, [] as Recipe[]),
+    create: (restaurantId: string, itemId: string, request: CreateRecipeRequest) =>
+      httpClient<unknown>(endpoints.recipes.create(restaurantId, itemId), {
+        method: 'POST',
+        body: JSON.stringify({
+          inventoryItemId: Number(request.inventoryItemId),
+          quantity: request.quantity,
+          unitId: request.unitId,
+        }),
+      }),
+    update: (restaurantId: string, itemId: string, recipeId: string, request: UpdateRecipeRequest) =>
+      httpClient<unknown>(endpoints.recipes.update(restaurantId, itemId, recipeId), {
+        method: 'PUT',
+        body: JSON.stringify({
+          inventoryItemId: Number(request.inventoryItemId),
+          quantity: request.quantity,
+          unitId: request.unitId,
+          isActive: request.isActive,
+        }),
+      }),
+    activate: (restaurantId: string, itemId: string, recipeId: string) =>
+      httpClient<unknown>(endpoints.recipes.activate(restaurantId, itemId, recipeId), {
+        method: 'PATCH',
+      }),
+    deactivate: (restaurantId: string, itemId: string, recipeId: string) =>
+      httpClient<unknown>(endpoints.recipes.deactivate(restaurantId, itemId, recipeId), {
+        method: 'PATCH',
+      }),
+    delete: (restaurantId: string, itemId: string, recipeId: string) =>
+      httpClient<unknown>(endpoints.recipes.delete(restaurantId, itemId, recipeId), {
         method: 'DELETE',
       }),
   },

@@ -18,5 +18,6 @@ export const adminRouteConfig: AdminRouteConfig[] = [
   { key: 'tables', paramName: 'tableId', supportsCreate: true, dangerAction: 'deactivate' },
   { key: 'categories', paramName: 'categoryId', supportsCreate: true, dangerAction: 'deactivate' },
   { key: 'menu', paramName: 'itemId', supportsCreate: true, dangerAction: 'deactivate' },
+  { key: 'inventory', paramName: 'inventoryItemId', supportsCreate: true, dangerAction: 'deactivate' },
   { key: 'audit-logs', paramName: 'auditLogId', supportsCreate: false },
 ]

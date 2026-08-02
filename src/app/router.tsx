@@ -14,6 +14,7 @@ import { AuditLogPage } from '../pages/admin/AuditLogPage'
 import { ContractDetailPage } from '../pages/admin/contracts/ContractDetailPage'
 import { ContractFormPage } from '../pages/admin/contracts/ContractFormPage'
 import { ContractListPage } from '../pages/admin/contracts/ContractListPage'
+import { InventoryManagementPage } from '../pages/admin/InventoryManagementPage'
 import { MenuManagementPage } from '../pages/admin/MenuManagementPage'
 import { RestaurantGroupsPage } from '../pages/admin/RestaurantGroupsPage'
 import { RestaurantDetailPage } from '../pages/admin/RestaurantDetailPage'
@@ -39,7 +40,7 @@ import { WaiterOrdersPage } from '../pages/staff/WaiterOrdersPage'
 import { StitchFramePage } from '../pages/stitch/StitchFramePage'
 import { StitchIndexPage } from '../pages/stitch/StitchIndexPage'
 
-const customAdminRoutes = ['restaurants', 'contracts', 'restaurant-groups', 'staff', 'tables', 'categories', 'menu', 'audit-logs']
+const customAdminRoutes = ['restaurants', 'contracts', 'restaurant-groups', 'staff', 'tables', 'categories', 'menu', 'inventory', 'audit-logs']
 
 function RestaurantCatalogEntry() {
   const { user } = useAuth()
@@ -131,6 +132,7 @@ export function AppRouter() {
         <Route path="tables" element={<TablesManagementPage />} />
         <Route path="categories" element={<MenuManagementPage />} />
         <Route path="menu" element={<MenuManagementPage />} />
+        <Route path="inventory" element={<InventoryManagementPage />} />
         <Route path="audit-logs" element={<AuditLogPage />} />
         {adminRouteConfig
           .filter((config) => !customAdminRoutes.includes(config.key))

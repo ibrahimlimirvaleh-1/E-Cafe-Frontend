@@ -5,6 +5,7 @@ import {
   CreditCard,
   FileText,
   History,
+  Package,
   ShoppingBag,
   Store,
   Table2,
@@ -219,6 +220,7 @@ export const adminModules: AdminModule[] = [
   { key: 'tables', title: 'Masalar', singular: 'Masa', route: '/admin/tables', icon: Table2, createLabel: 'Yeni masa', dangerLabel: 'Masanı deaktiv et', description: 'Tutum, görünmə və cari masa statusu.', columns: ['Masa', 'Status', 'Tutum', 'Görünmə'] },
   { key: 'categories', title: 'Kateqoriyalar', singular: 'Kateqoriya', route: '/admin/categories', icon: Tags, createLabel: 'Yeni kateqoriya', dangerLabel: 'Kateqoriyanı deaktiv et', description: 'Menyu kateqoriyaları.', columns: ['Kateqoriya', 'Status', 'Restoran', 'Yemək sayı'] },
   { key: 'menu', title: 'Menyu', singular: 'Menyu elementi', route: '/admin/menu', icon: ClipboardList, createLabel: 'Yeni menyu elementi', dangerLabel: 'Menyu elementini deaktiv et', description: 'Məhsul, qiymət, kateqoriya və aktivlik.', columns: ['Məhsul', 'Status', 'Kateqoriya', 'Qiymət'] },
+  { key: 'inventory', title: 'Stok', singular: 'Stok elementi', route: '/admin/inventory', icon: Package, createLabel: 'Yeni stok', dangerLabel: 'Stoku deaktiv et', description: 'Ingredient, resept və stok hərəkətləri.', columns: ['Ingredient', 'Status', 'Miqdar', 'Limit'] },
   { key: 'audit-logs', title: 'Audit loglar', singular: 'Audit log', route: '/admin/audit-logs', icon: History, description: 'Müqavilə, restoran, fayl və idarəetmə əməliyyatlarını izləyir.', columns: ['Əməliyyat', 'Obyekt', 'İcra edən', 'Tarix'] },
 ]
 
@@ -320,6 +322,7 @@ export function getAdminRows(key: AdminModuleKey): AdminRow[] {
       meta: menuCategories.find((category) => category.id === item.categoryId)?.name ?? '-',
       value: `${item.price.toFixed(2)} ₼`,
     })),
+    inventory: [],
     'audit-logs': [],
   }
 
