@@ -294,10 +294,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   }
 
   return (
-    <main className="admin-page">
+    <main className={`admin-page inventory-mode-${mode}`}>
       <PageHeader eyebrow={copy.eyebrow} title={copy.title} />
 
-      <section className="inventory-page-grid">
+      <section className={`inventory-page-grid inventory-page-grid-${mode}`}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
           <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
@@ -460,7 +460,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             </section>
 
             {canManageRecipes ? (
-              <section className="admin-panel">
+              <section className="admin-panel recipe-editor-panel">
                 <form className="recipe-form" onSubmit={handleSaveRecipe}>
                   <span className="eyebrow">{editingRecipeId ? 'Redaktə' : 'Yeni tərkib'}</span>
                   <h2>{menuItem?.name || 'Məhsul seç'}</h2>

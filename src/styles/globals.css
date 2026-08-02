@@ -1306,6 +1306,7 @@ img {
 
 .admin-workspace {
   min-width: 0;
+  overflow-x: clip;
 }
 
 .admin-topbar {
@@ -2103,13 +2104,26 @@ img {
 
 .inventory-page-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(320px, 0.9fr) minmax(340px, 1fr);
+  grid-template-columns: minmax(240px, 320px) minmax(280px, 0.9fr) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+  min-width: 0;
 }
 
 .recipe-panel {
   grid-column: 2 / 4;
+}
+
+.inventory-page-grid-recipes {
+  grid-template-columns: minmax(260px, 400px) minmax(0, 1fr);
+}
+
+.inventory-page-grid-recipes .recipe-editor-panel {
+  grid-column: 1;
+}
+
+.inventory-page-grid-recipes .recipe-panel {
+  grid-column: 2;
 }
 
 .inventory-panel-header,
@@ -2197,6 +2211,16 @@ img {
   grid-template-columns: minmax(180px, 1fr) 120px 110px auto;
   gap: 12px;
   align-items: end;
+  min-width: 0;
+}
+
+.inventory-page-grid-recipes .recipe-form {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+}
+
+.inventory-page-grid-recipes .recipe-form .inline-actions .ui-button {
+  width: 100%;
 }
 
 .inventory-message {
