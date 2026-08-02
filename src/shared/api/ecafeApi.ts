@@ -68,9 +68,6 @@ type ContractRecord = {
   restaurantName: string
 }
 
-const adminRestaurantListDefaultQuery = '?pageNumber=1&pageSize=100'
-const publicRestaurantListDefaultQuery = '?pageNumber=1&pageSize=6'
-
 type CreateContractRequest = {
   startDate: string
   endDate?: string | null
@@ -212,7 +209,7 @@ function extractAuthTokens(data: unknown): AuthResponse {
 }
 
 async function listRestaurants(query = '') {
-  const result = await httpClient<unknown>(`${endpoints.restaurants.adminList}${query || adminRestaurantListDefaultQuery}`)
+  const result = await httpClient<unknown>(`${endpoints.restaurants.adminList}${query}`)
   return asArray<AnyRecord>(result.data).map(mapRestaurant)
 }
 
@@ -504,12 +501,12 @@ export const ecafeApi = {
       }),
     publicList: (query = '') =>
       safe(async () => {
-        const result = await httpClient<unknown>(`${endpoints.restaurants.publicList}${query || publicRestaurantListDefaultQuery}`)
+        const result = await httpClient<unknown>(`${endpoints.restaurants.publicList}${query}`)
         return asArray<AnyRecord>(result.data).map(mapRestaurant)
       }, restaurants.filter((restaurant) => restaurant.isActive && restaurant.hasActiveContract)),
     publicPage: (query = '') =>
       safe(async () => {
-        const result = await httpClient<unknown>(`${endpoints.restaurants.publicList}${query || publicRestaurantListDefaultQuery}`)
+        const result = await httpClient<unknown>(`${endpoints.restaurants.publicList}${query}`)
         return asPaginated(result.data, mapRestaurant)
       }, {
         items: restaurants.filter((restaurant) => restaurant.isActive && restaurant.hasActiveContract),
