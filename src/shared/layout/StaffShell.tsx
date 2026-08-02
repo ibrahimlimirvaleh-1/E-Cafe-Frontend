@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { Brand } from './Brand'
+import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
 import { useAuth } from '../auth/AuthContext'
 
@@ -32,7 +33,10 @@ export function StaffShell({ title }: StaffShellProps) {
             </>
           ) : null}
         </nav>
-        <UserMenu />
+        <div className="site-actions">
+          <NotificationBell />
+          <UserMenu />
+        </div>
       </header>
       <Outlet />
     </div>
