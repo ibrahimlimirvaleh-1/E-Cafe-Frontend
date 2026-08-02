@@ -1,4 +1,5 @@
-import { type FormEvent, useState } from 'react'
+import { Search } from 'lucide-react'
+import { type FormEvent, useMemo, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { restaurantRow } from '../../shared/api/mappers'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -7,6 +8,7 @@ import { DataTable } from '../../shared/ui/DataTable'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { PaginationControls } from '../../shared/ui/PaginationControls'
 
 type RestaurantPageMode = 'list' | 'create'
 
@@ -25,12 +27,35 @@ const initialForm = {
   staffSettlementPeriod: '7',
 }
 
+const pageSize = 20
+
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
   const [reloadKey, setReloadKey] = useState(0)
+  const [pageNumber, setPageNumber] = useState(1)
+  const [search, setSearch] = useState('')
   const [fileIds, setFileIds] = useState<number[]>([])
   const [message, setMessage] = useState('')
   const [form, setForm] = useState(initialForm)
-  const { data: restaurants, isLoading } = useAsyncData(() => ecafeApi.restaurants.list(), [], [reloadKey])
+  const query = useMemo(() => {
+    const params = new URLSearchParams({
+      pageNumber: String(pageNumber),
+      pageSize: String(pageSize),
+    })
+
+    if (search.trim()) {
+      params.set('search', search.trim())
+    }
+
+    return `?${params.toString()}`
+  }, [pageNumber, search])
+  const { data: restaurantPage, isLoading } = useAsyncData(() => ecafeApi.restaurants.page(query), {
+    items: [],
+    pageIndex: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  }, [query, reloadKey])
   const { data: groups } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -68,8 +93,30 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
 
       {mode === 'list' ? (
         <section>
+          <section className="catalog-toolbar admin-list-toolbar">
+            <label className="site-search catalog-search">
+              <Search size={18} />
+              <input
+                placeholder="Restoran, filial və ya məkan üzrə axtar..."
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value)
+                  setPageNumber(1)
+                }}
+              />
+            </label>
+            <span>{restaurantPage.totalCount} restoran</span>
+          </section>
           {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
-          <DataTable baseRoute="/admin/restaurants" columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']} rows={restaurants.map(restaurantRow)} />
+          <DataTable baseRoute="/admin/restaurants" columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']} rows={restaurantPage.items.map(restaurantRow)} />
+          <PaginationControls
+            ariaLabel="Admin restoran səhifələmə"
+            hasNextPage={restaurantPage.hasNextPage}
+            hasPreviousPage={restaurantPage.hasPreviousPage}
+            pageIndex={restaurantPage.pageIndex}
+            totalPages={restaurantPage.totalPages}
+            onPageChange={setPageNumber}
+          />
         </section>
       ) : (
         <form className="admin-panel admin-single-column" onSubmit={handleSubmit}>

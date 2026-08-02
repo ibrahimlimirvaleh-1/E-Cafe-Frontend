@@ -5,6 +5,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { PaginationControls } from '../../shared/ui/PaginationControls'
 
 const pageSize = 6
 
@@ -91,29 +92,14 @@ export function RestaurantCatalogPage() {
         ))}
       </section>
 
-      {restaurantPage.totalPages > 1 ? (
-        <section className="pagination-row" aria-label="Restoran səhifələmə">
-          <button
-            className="ui-button ui-button-secondary compact"
-            disabled={!restaurantPage.hasPreviousPage}
-            onClick={() => setPageNumber((current) => Math.max(1, current - 1))}
-            type="button"
-          >
-            Əvvəlki
-          </button>
-          <strong>
-            {restaurantPage.pageIndex} / {restaurantPage.totalPages}
-          </strong>
-          <button
-            className="ui-button ui-button-secondary compact"
-            disabled={!restaurantPage.hasNextPage}
-            onClick={() => setPageNumber((current) => current + 1)}
-            type="button"
-          >
-            Növbəti
-          </button>
-        </section>
-      ) : null}
+      <PaginationControls
+        ariaLabel="Restoran səhifələmə"
+        hasNextPage={restaurantPage.hasNextPage}
+        hasPreviousPage={restaurantPage.hasPreviousPage}
+        pageIndex={restaurantPage.pageIndex}
+        totalPages={restaurantPage.totalPages}
+        onPageChange={setPageNumber}
+      />
     </main>
   )
 }

@@ -5,6 +5,7 @@ import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
 
 type TablesPageMode = 'list' | 'create'
 
@@ -15,11 +16,23 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const [form, setForm] = useState({ tableNo: '', name: '', capacity: '2' })
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: tables, isLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.tables.list(restaurantId) : Promise.resolve([])),
     [],
     [restaurantId, reloadKey],
   )
+
+  function tableStatusLabel(status: string) {
+    const labels: Record<string, string> = {
+      Available: 'Boşdur',
+      Occupied: 'Dolu',
+      Reserved: 'Rezervdir',
+      Hidden: 'Gizlidir',
+    }
+
+    return labels[status] || status
+  }
 
   useEffect(() => {
     if (!selectedRestaurantId && restaurants[0]) {
@@ -52,7 +65,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
         action={mode === 'list' ? <ButtonLink to="/admin/tables/new">Yeni masa</ButtonLink> : <ButtonLink to="/admin/tables" variant="secondary">Siyahıya qayıt</ButtonLink>}
       />
 
-      <section className={mode === 'create' ? 'admin-single-column' : 'admin-resource-layout'}>
+      <section className={mode === 'create' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         {mode === 'create' ? (
           <form className="admin-panel" onSubmit={handleSubmit}>
             <div>
@@ -62,7 +75,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
             <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
-                  {restaurant.name}
+                  {restaurantOptionLabel(restaurant)}
                 </option>
               ))}
             </SelectField>
@@ -83,11 +96,12 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
             <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
-                  {restaurant.name}
+                  {restaurantOptionLabel(restaurant)}
                 </option>
               ))}
             </SelectField>
             {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
+            <RestaurantContextCard restaurant={selectedRestaurant} />
             <div className="compact-list">
               {tables.map((table) => (
                 <article key={table.id}>
@@ -95,7 +109,9 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
                     <strong>{table.number}</strong>
                     <small>{table.capacity} nəfər</small>
                   </div>
-                  <Badge tone={table.status === 'Available' ? 'success' : 'neutral'}>{table.status}</Badge>
+                  <Badge tone={table.status === 'Available' ? 'success' : table.status === 'Occupied' ? 'warning' : 'neutral'}>
+                    {tableStatusLabel(table.status)}
+                  </Badge>
                 </article>
               ))}
               {!isLoading && tables.length === 0 ? <p className="online-only">Bu restoran üçün masa yoxdur.</p> : null}

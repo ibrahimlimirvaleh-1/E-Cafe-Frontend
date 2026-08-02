@@ -5,6 +5,7 @@
 body {
   min-width: 320px;
   margin: 0;
+  overflow-x: hidden;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0, rgba(248, 249, 250, 0) 280px),
     var(--surface);
@@ -1260,6 +1261,8 @@ img {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
+  max-width: 100vw;
+  overflow-x: hidden;
   background: var(--surface);
 }
 
@@ -1409,7 +1412,9 @@ img {
 }
 
 .ui-table {
-  overflow-x: auto;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
   overflow-y: hidden;
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-lg);
@@ -1420,10 +1425,10 @@ img {
 .ui-table-head,
 .ui-table-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.4fr) minmax(110px, 0.65fr) minmax(170px, 1fr) minmax(130px, 0.7fr) minmax(190px, 0.95fr);
+  grid-template-columns: minmax(180px, 1.35fr) minmax(96px, 0.7fr) minmax(140px, 1fr) minmax(110px, 0.7fr) minmax(150px, 0.9fr);
   gap: 12px;
   align-items: center;
-  min-width: 860px;
+  min-width: 0;
   padding: 14px 18px;
 }
 
@@ -1482,6 +1487,21 @@ img {
 .ui-table-row small,
 .ui-table-row span {
   color: var(--on-surface-variant);
+}
+
+.ui-table-cell,
+.ui-table-primary strong,
+.ui-table-primary small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ui-table-empty {
+  margin: 0;
+  border-top: 1px solid var(--outline-variant);
+  padding: 18px;
+  color: var(--on-surface-variant);
+  font-weight: 600;
 }
 
 .ui-row-actions a {
@@ -1951,7 +1971,7 @@ img {
   min-width: 0;
 }
 
-.staff-restaurant-summary {
+.restaurant-context-card {
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr) auto;
   align-items: center;
@@ -1962,7 +1982,7 @@ img {
   background: var(--surface-low);
 }
 
-.staff-restaurant-summary img,
+.restaurant-context-card img,
 .staff-member-row > img {
   width: 64px;
   height: 64px;
@@ -1971,24 +1991,28 @@ img {
   background: var(--surface-container);
 }
 
-.staff-restaurant-summary div,
+.restaurant-context-card div,
 .staff-member-main {
   display: grid;
   gap: 3px;
   min-width: 0;
 }
 
-.staff-restaurant-summary strong,
-.staff-restaurant-summary span,
-.staff-restaurant-summary small {
+.restaurant-context-card strong,
+.restaurant-context-card span,
+.restaurant-context-card small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.staff-restaurant-summary span,
-.staff-restaurant-summary small {
+.restaurant-context-card span,
+.restaurant-context-card small {
   color: var(--on-surface-variant);
+}
+
+.restaurant-context-meta {
+  justify-items: end;
 }
 
 .compact-list article.staff-member-row {
@@ -2587,13 +2611,13 @@ img {
     align-items: stretch;
   }
 
-  .staff-restaurant-summary,
+  .restaurant-context-card,
   .compact-list article.staff-member-row {
     grid-template-columns: 1fr;
     align-items: stretch;
   }
 
-  .staff-restaurant-summary img,
+  .restaurant-context-card img,
   .staff-member-row > img {
     width: 100%;
     height: 160px;

@@ -8,6 +8,7 @@ import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
 
 type StaffPageMode = 'list' | 'create'
 
@@ -65,10 +66,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
   function selectedRoleId(member: StaffMember) {
     return roleSelections[member.id] || String(currentRoleId(member) || '')
-  }
-
-  function restaurantOptionLabel(restaurant: (typeof restaurants)[number]) {
-    return [restaurant.name, restaurant.branchName, restaurant.address].filter(Boolean).join(' - ')
   }
 
   function roleLabel(role: Role) {
@@ -197,19 +194,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               ))}
             </SelectField>
             {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
-            {selectedRestaurant ? (
-              <article className="staff-restaurant-summary">
-                <img src={selectedRestaurant.image} alt={selectedRestaurant.name} />
-                <div>
-                  <strong>{selectedRestaurant.name}</strong>
-                  <span>{selectedRestaurant.restaurantGroupName || 'Restoran qrupu yoxdur'} - {selectedRestaurant.branchName || selectedRestaurant.address}</span>
-                  <small>{selectedRestaurant.address} - {selectedRestaurant.phone}</small>
-                </div>
-                <Badge tone={selectedRestaurant.hasActiveContract ? 'success' : 'warning'}>
-                  {selectedRestaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur'}
-                </Badge>
-              </article>
-            ) : null}
+            <RestaurantContextCard restaurant={selectedRestaurant} />
             <div className="compact-list">
               {staff.map((member) => (
                 <article className="staff-member-row" key={member.id}>

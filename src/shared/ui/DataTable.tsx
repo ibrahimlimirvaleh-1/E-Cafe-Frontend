@@ -4,20 +4,22 @@ import type { AdminRow } from '../../entities/types'
 import { Badge } from './Badge'
 
 type DataTableProps = {
-  columns: string[]
-  rows: AdminRow[]
   baseRoute: string
+  columns: string[]
   editable?: boolean
+  emptyMessage?: string
+  rows: AdminRow[]
 }
 
-export function DataTable({ baseRoute, columns, editable = true, rows }: DataTableProps) {
+// Shared admin table keeps list pages responsive and makes action placement consistent.
+export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 'Melumat tapilmadi.', rows }: DataTableProps) {
   return (
-    <section className="ui-table" aria-label="Məlumat cədvəli">
+    <section className="ui-table" aria-label="Melumat cedveli">
       <div className="ui-table-head">
         {columns.map((column) => (
           <span key={column}>{column}</span>
         ))}
-        {editable ? <span>Əməliyyat</span> : null}
+        {editable ? <span>Emeliyyat</span> : null}
       </div>
       {rows.map((row) => (
         <article className="ui-table-row" key={row.id}>
@@ -38,19 +40,20 @@ export function DataTable({ baseRoute, columns, editable = true, rows }: DataTab
             {row.value}
           </strong>
           {editable ? (
-            <div className="ui-row-actions" data-label="Əməliyyat">
+            <div className="ui-row-actions" data-label="Emeliyyat">
               <Link className="ui-action-link" to={`${baseRoute}/${row.id}`} title="Detallar">
                 <ChevronRight size={18} />
                 <span>Detallar</span>
               </Link>
-              <Link className="ui-action-link" to={`${baseRoute}/${row.id}/edit`} title="Redaktə et">
+              <Link className="ui-action-link" to={`${baseRoute}/${row.id}/edit`} title="Redakte et">
                 <Edit3 size={17} />
-                <span>Redaktə</span>
+                <span>Redakte</span>
               </Link>
             </div>
           ) : null}
         </article>
       ))}
+      {rows.length === 0 ? <p className="ui-table-empty">{emptyMessage}</p> : null}
     </section>
   )
 }

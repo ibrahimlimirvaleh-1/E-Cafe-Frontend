@@ -448,6 +448,18 @@ export const ecafeApi = {
 
   restaurants: {
     list: (query = '') => safe(() => listRestaurants(query), restaurants),
+    page: (query = '') =>
+      safe(async () => {
+        const result = await httpClient<unknown>(`${endpoints.restaurants.adminList}${query}`)
+        return asPaginated(result.data, mapRestaurant)
+      }, {
+        items: restaurants,
+        pageIndex: 1,
+        totalPages: 1,
+        totalCount: restaurants.length,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      }),
     create: async (request: CreateRestaurantRequest) => {
       const formData = new FormData()
       formData.set('Name', request.name)

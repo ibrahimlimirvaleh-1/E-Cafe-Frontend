@@ -6,6 +6,7 @@ import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
 import type { InventoryItem, MenuItem, Recipe } from '../../entities/types'
 
 type InventoryPageMode = 'items' | 'movements' | 'recipes'
@@ -74,6 +75,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
 
   const { data: inventoryItems, isLoading: inventoryLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.inventory.list(restaurantId, { onlyLowStock }) : Promise.resolve([])),
@@ -303,10 +305,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
             {restaurants.map((restaurant) => (
               <option key={restaurant.id} value={restaurant.id}>
-                {restaurant.name}
+                {restaurantOptionLabel(restaurant)}
               </option>
             ))}
           </SelectField>
+          <RestaurantContextCard restaurant={selectedRestaurant} />
         </section>
 
         {mode === 'items' ? (

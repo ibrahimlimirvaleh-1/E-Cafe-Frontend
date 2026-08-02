@@ -6,6 +6,7 @@ import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
 
 type MenuPageMode = 'categories' | 'create-category' | 'items' | 'create-item'
 
@@ -27,6 +28,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const { data: itemStatuses } = useAsyncData(() => ecafeApi.lookups.itemStatuses(), [], [])
   const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: categories } = useAsyncData(
     () => (restaurantId ? ecafeApi.menu.categories(restaurantId) : Promise.resolve([])),
     [],
@@ -121,16 +123,17 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     <main className="admin-page">
       <PageHeader eyebrow="Admin" title={title} action={action} />
 
-      <section className={mode === 'create-item' || mode === 'create-category' ? 'admin-single-column' : 'admin-resource-layout'}>
+      <section className={mode === 'create-item' || mode === 'create-category' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
           <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
             {restaurants.map((restaurant) => (
               <option key={restaurant.id} value={restaurant.id}>
-                {restaurant.name}
+                {restaurantOptionLabel(restaurant)}
               </option>
             ))}
           </SelectField>
+          <RestaurantContextCard restaurant={selectedRestaurant} />
         </section>
 
         {mode === 'create-category' ? (

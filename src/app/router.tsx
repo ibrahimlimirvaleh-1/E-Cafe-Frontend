@@ -16,7 +16,7 @@ import { ContractFormPage } from '../pages/admin/contracts/ContractFormPage'
 import { ContractListPage } from '../pages/admin/contracts/ContractListPage'
 import { InventoryManagementPage, InventoryMovementsPage, RecipeManagementPage } from '../pages/admin/InventoryManagementPage'
 import { CategoryCreatePage, MenuItemCreatePage, MenuManagementPage } from '../pages/admin/MenuManagementPage'
-import { RestaurantGroupsPage } from '../pages/admin/RestaurantGroupsPage'
+import { RestaurantGroupCreatePage, RestaurantGroupsPage } from '../pages/admin/RestaurantGroupsPage'
 import { RestaurantDetailPage } from '../pages/admin/RestaurantDetailPage'
 import { RestaurantEditPage } from '../pages/admin/RestaurantEditPage'
 import { RestaurantCreatePage, RestaurantManagementPage } from '../pages/admin/RestaurantManagementPage'
@@ -128,7 +128,10 @@ export function AppRouter() {
           <Route path=":restaurantId" element={<RestaurantDetailPage />} />
           <Route path=":restaurantId/edit" element={<RestaurantEditPage />} />
         </Route>
-        <Route path="restaurant-groups" element={<RestaurantGroupsPage />} />
+        <Route path="restaurant-groups">
+          <Route index element={<RestaurantGroupsPage />} />
+          <Route path="new" element={<RestaurantGroupCreatePage />} />
+        </Route>
         <Route path="staff">
           <Route index element={<StaffManagementPage />} />
           <Route path="new" element={<StaffCreatePage />} />
