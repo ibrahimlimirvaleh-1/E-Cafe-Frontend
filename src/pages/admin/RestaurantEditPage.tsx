@@ -6,6 +6,7 @@ import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function RestaurantEditPage() {
   const navigate = useNavigate()
@@ -132,7 +133,7 @@ export function RestaurantEditPage() {
             }
           }}
         />
-        {error ? <p className="form-error">{error}</p> : null}
+        {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
         <div className="form-actions">
           <Button disabled={isSubmitting} type="submit">{isSubmitting ? 'Saxlanılır...' : 'Yadda saxla'}</Button>
           <ButtonLink to={`/admin/restaurants/${restaurantId}`} variant="secondary">Ləğv et</ButtonLink>

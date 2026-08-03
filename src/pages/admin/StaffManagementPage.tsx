@@ -9,6 +9,7 @@ import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type StaffPageMode = 'list' | 'create'
 
@@ -178,7 +179,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             </div>
             <FileUploadField label="Profil şəkli" onUploaded={setFileId} />
             <Button type="submit">Əməkdaş yarat</Button>
-            {message ? <p className="form-message">{message}</p> : null}
+            {message ? <StatusMessage>{message}</StatusMessage> : null}
           </form>
         ) : (
           <section className="admin-panel">
@@ -236,7 +237,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               ))}
               {!isLoading && staff.length === 0 ? <p className="online-only">Bu restoran üçün personal tapılmadı.</p> : null}
             </div>
-            {message ? <p className="form-message">{message}</p> : null}
+            {message ? <StatusMessage>{message}</StatusMessage> : null}
           </section>
         )}
       </section>

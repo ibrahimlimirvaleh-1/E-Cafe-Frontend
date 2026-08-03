@@ -6,6 +6,7 @@ import { Button, ButtonLink } from '../../shared/ui/Button'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type TablesPageMode = 'list' | 'create'
 
@@ -85,7 +86,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
             </div>
             <TextField label="Tutum" min={1} required type="number" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
             <Button type="submit">Masa yarat</Button>
-            {message ? <p className="form-message">{message}</p> : null}
+            {message ? <StatusMessage>{message}</StatusMessage> : null}
           </form>
         ) : (
           <section className="admin-panel">

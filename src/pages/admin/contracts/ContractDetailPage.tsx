@@ -9,6 +9,7 @@ import { Badge } from '../../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../../shared/ui/Button'
 import { TextareaField } from '../../../shared/ui/FormField'
 import { PageHeader } from '../../../shared/ui/PageHeader'
+import { StatusMessage } from '../../../shared/ui/StatusMessage'
 
 function statusTone(status: ContractStatus): StatusTone {
   if (status === 'Active' || status === 'OwnerApproved') {
@@ -235,7 +236,7 @@ export function ContractDetailPage() {
         ) : null}
 
         {!hasVisibleAction ? <p className="muted-text">Sizin rolunuz üçün bu statusda icra ediləcək əməliyyat yoxdur.</p> : null}
-        {actionError ? <p className="form-error">{actionError}</p> : null}
+        {actionError ? <StatusMessage tone="danger">{actionError}</StatusMessage> : null}
       </section>
     </main>
   )

@@ -7,6 +7,7 @@ import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type MenuPageMode = 'categories' | 'create-category' | 'items' | 'create-item'
 
@@ -144,7 +145,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
               <TextField label="Ad" required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
               <TextField label="Sıra" min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint="Boş qalsa backend növbəti sıranı özü verir." />
               <Button type="submit" variant="secondary">Kateqoriya yarat</Button>
-              {message ? <p className="form-message">{message}</p> : null}
+              {message ? <StatusMessage>{message}</StatusMessage> : null}
             </form>
           </section>
         ) : null}
@@ -202,7 +203,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             ) : null}
             <FileUploadField label="Yemək şəkli" onUploaded={setFileId} />
             <Button type="submit">Menyu elementi yarat</Button>
-            {message ? <p className="form-message">{message}</p> : null}
+            {message ? <StatusMessage>{message}</StatusMessage> : null}
           </form>
         ) : null}
 

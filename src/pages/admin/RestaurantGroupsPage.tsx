@@ -5,6 +5,7 @@ import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type RestaurantGroupsPageMode = 'list' | 'create'
 
@@ -44,7 +45,7 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
             <TextField label="Qrup adı" required value={name} onChange={(event) => setName(event.target.value)} />
             <TextField label="Legal ad" value={legalName} onChange={(event) => setLegalName(event.target.value)} />
             <Button type="submit">Qrup yarat</Button>
-            {message ? <p className="form-message">{message}</p> : null}
+            {message ? <StatusMessage>{message}</StatusMessage> : null}
           </form>
         ) : (
           <section className="admin-panel">

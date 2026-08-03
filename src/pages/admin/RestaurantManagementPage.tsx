@@ -9,6 +9,7 @@ import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type RestaurantPageMode = 'list' | 'create'
 
@@ -169,7 +170,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             }}
           />
           <Button type="submit">Restoran yarat</Button>
-          {message ? <p className="form-message">{message}</p> : null}
+          {message ? <StatusMessage>{message}</StatusMessage> : null}
         </form>
       )}
     </main>

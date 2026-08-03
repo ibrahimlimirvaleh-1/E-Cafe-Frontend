@@ -6,6 +6,7 @@ import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../../shared/ui/Button'
 import { SelectField, TextField } from '../../../shared/ui/FormField'
 import { PageHeader } from '../../../shared/ui/PageHeader'
+import { StatusMessage } from '../../../shared/ui/StatusMessage'
 
 function todayInputValue() {
   return new Date().toISOString().slice(0, 10)
@@ -119,7 +120,7 @@ export function ContractFormPage() {
           <TextField label="Hesablaşma dövrü" min="1" onChange={(event) => setStaffSettlementPeriod(event.target.value)} type="number" value={staffSettlementPeriod} />
         </div>
 
-        {error ? <p className="form-error">{error}</p> : null}
+        {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
 
         <div className="form-actions">
           <Button disabled={isSubmitting || restaurants.length === 0} type="submit">

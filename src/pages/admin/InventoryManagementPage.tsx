@@ -7,6 +7,7 @@ import { Button } from '../../shared/ui/Button'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { InventoryItem, MenuItem, Recipe } from '../../entities/types'
 
 type InventoryPageMode = 'items' | 'movements' | 'recipes'
@@ -517,7 +518,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           </>
         ) : null}
       </section>
-      {message ? <p className="form-message inventory-message">{message}</p> : null}
+      {message ? <StatusMessage className="inventory-message">{message}</StatusMessage> : null}
     </main>
   )
 }

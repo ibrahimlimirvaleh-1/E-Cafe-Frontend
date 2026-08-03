@@ -2171,7 +2171,54 @@ img {
 
 .upload-field small,
 .form-message {
-  color: var(--on-surface-variant);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin: 4px 0 0;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: var(--surface-low);
+  color: var(--on-surface);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-message svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.form-message span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.form-message-success {
+  border-color: rgba(0, 142, 96, 0.28);
+  background: rgba(0, 142, 96, 0.1);
+  color: #006b4b;
+}
+
+.form-message-warning {
+  border-color: rgba(184, 119, 0, 0.3);
+  background: rgba(184, 119, 0, 0.1);
+  color: #7a4d00;
+}
+
+.form-message-danger {
+  border-color: rgba(196, 26, 26, 0.28);
+  background: rgba(196, 26, 26, 0.1);
+  color: var(--danger);
+}
+
+.form-message-info {
+  border-color: rgba(47, 97, 214, 0.24);
+  background: rgba(47, 97, 214, 0.09);
+  color: #244ca8;
 }
 
 .inventory-page-grid {

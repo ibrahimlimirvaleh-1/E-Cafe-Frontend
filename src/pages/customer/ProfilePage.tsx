@@ -8,6 +8,7 @@ import { Button } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 function isSuperAdmin(roleId?: string, roleName = '') {
   const normalizedRoleName = roleName.toLowerCase()
@@ -177,8 +178,8 @@ export function ProfilePage() {
         </section>
       </div>
 
-      {statusMessage ? <p className="form-success">{statusMessage}</p> : null}
-      {formError ? <p className="form-error">{formError}</p> : null}
+      {statusMessage ? <StatusMessage>{statusMessage}</StatusMessage> : null}
+      {formError ? <StatusMessage tone="danger">{formError}</StatusMessage> : null}
     </main>
   )
 }
