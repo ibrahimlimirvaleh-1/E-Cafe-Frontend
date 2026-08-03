@@ -1462,6 +1462,19 @@ img {
   white-space: nowrap;
 }
 
+.action-icon-button {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.action-icon-button svg {
+  flex: 0 0 auto;
+}
+
 .ui-table-primary {
   display: flex;
   align-items: center;
@@ -1506,11 +1519,12 @@ img {
 
 .ui-row-actions a {
   display: inline-flex;
-  min-height: 34px;
+  min-height: 38px;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border-radius: 999px;
-  padding: 0 10px;
+  padding: 0;
   background: var(--surface-low);
   transition: background 0.18s ease, color 0.18s ease;
 }
@@ -2059,6 +2073,12 @@ img {
   letter-spacing: 0;
 }
 
+.inline-actions .ui-button.action-icon-button {
+  min-width: 38px;
+  padding: 0;
+  border-radius: 999px;
+}
+
 .admin-menu-list {
   display: grid;
   gap: 10px;
@@ -2316,7 +2336,6 @@ img {
 .inventory-row .inline-actions .ui-button,
 .recipe-list .inline-actions .ui-button {
   flex: 0 0 auto;
-  min-width: 104px;
 }
 
 .inventory-list button {

@@ -1,4 +1,4 @@
-import { ChevronRight, Edit3 } from 'lucide-react'
+import { Eye, Pencil } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { AdminRow } from '../../entities/types'
 import { Badge } from './Badge'
@@ -41,13 +41,11 @@ export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 
           </strong>
           {editable ? (
             <div className="ui-row-actions" data-label="Emeliyyat">
-              <Link className="ui-action-link" to={`${baseRoute}/${row.id}`} title="Detallar">
-                <ChevronRight size={18} />
-                <span>Detallar</span>
+              <Link aria-label={`${row.title} detallar`} className="ui-action-link action-icon-button" to={`${baseRoute}/${row.id}`} title="Detallar">
+                <Eye size={18} />
               </Link>
-              <Link className="ui-action-link" to={`${baseRoute}/${row.id}/edit`} title="Redakte et">
-                <Edit3 size={17} />
-                <span>Redakte</span>
+              <Link aria-label={`${row.title} redakte et`} className="ui-action-link action-icon-button" to={`${baseRoute}/${row.id}/edit`} title="Redakte et">
+                <Pencil size={17} />
               </Link>
             </div>
           ) : null}

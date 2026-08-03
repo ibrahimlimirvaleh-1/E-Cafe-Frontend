@@ -1,16 +1,18 @@
+import { Pencil, Power, Trash2 } from 'lucide-react'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
-import { Button } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { InventoryItem, MenuItem, Recipe } from '../../entities/types'
 
-type InventoryPageMode = 'items' | 'movements' | 'recipes'
+type InventoryPageMode = 'items' | 'create' | 'movements' | 'recipes'
 
 // The three inventory routes share data loading, but each mode renders one focused workflow.
 const units = [
@@ -23,6 +25,7 @@ const units = [
 
 const pageCopy: Record<InventoryPageMode, { eyebrow: string; title: string }> = {
   items: { eyebrow: 'Stok', title: 'Stok elementleri' },
+  create: { eyebrow: 'Stok', title: 'Yeni stok elementi' },
   movements: { eyebrow: 'Stok', title: 'Stok hereketleri' },
   recipes: { eyebrow: 'Resept', title: 'Resept idareetmesi' },
 }
@@ -41,6 +44,9 @@ function hasPermission(permissions: string[], permission: string) {
 }
 
 export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPageMode }) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const canManageInventory = hasPermission(user?.permissions ?? [], 'ManageInventory')
   const canManageRecipes = hasPermission(user?.permissions ?? [], 'ManageRecipes')
@@ -90,6 +96,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     [restaurantId, reloadKey],
   )
   const { data: movementTypes } = useAsyncData(() => ecafeApi.lookups.inventoryMovementTypes(), [], [])
+  const inventoryRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory' : '/admin/inventory'
+  const editingInventoryItemId = mode === 'create' ? searchParams.get('inventoryItemId') ?? '' : ''
 
   const inventoryItem = useMemo(
     () => inventoryItems.find((item) => item.id === selectedInventoryId) ?? inventoryItems[0],
@@ -133,6 +141,27 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       setMovementForm((current) => ({ ...current, movementTypeId: String(movementTypes[0].id) }))
     }
   }, [movementForm.movementTypeId, movementTypes])
+
+  useEffect(() => {
+    if (mode !== 'create' || !editingInventoryItemId) {
+      return
+    }
+
+    const item = inventoryItems.find((entry) => entry.id === editingInventoryItemId)
+    if (!item) {
+      return
+    }
+
+    setEditingInventoryId(item.id)
+    setSelectedInventoryId(item.id)
+    setStockForm({
+      name: item.name,
+      unitId: String(item.unitId || 2),
+      quantityOnHand: String(item.quantityOnHand),
+      lowStockThreshold: String(item.lowStockThreshold),
+      isActive: item.isActive,
+    })
+  }, [editingInventoryItemId, inventoryItems, mode])
 
   useEffect(() => {
     if (!recipeForm.inventoryItemId && inventoryItems[0]) {
@@ -198,15 +227,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   }
 
   function startInventoryEdit(item: InventoryItem) {
-    setEditingInventoryId(item.id)
-    setSelectedInventoryId(item.id)
-    setStockForm({
-      name: item.name,
-      unitId: String(item.unitId || 2),
-      quantityOnHand: String(item.quantityOnHand),
-      lowStockThreshold: String(item.lowStockThreshold),
-      isActive: item.isActive,
-    })
+    navigate(`${inventoryRouteBase}/new?inventoryItemId=${item.id}`)
   }
 
   async function toggleInventoryStatus(item: InventoryItem) {
@@ -299,7 +320,17 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
   return (
     <main className={`admin-page inventory-mode-${mode}`}>
-      <PageHeader eyebrow={copy.eyebrow} title={copy.title} />
+      <PageHeader
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        action={
+          mode === 'items' && canManageInventory ? (
+            <ButtonLink to={`${inventoryRouteBase}/new`}>Yeni stok elementi</ButtonLink>
+          ) : mode === 'create' ? (
+            <ButtonLink to={inventoryRouteBase} variant="secondary">Siyahiya qayit</ButtonLink>
+          ) : null
+        }
+      />
 
       <section className={`inventory-page-grid inventory-page-grid-${mode}`}>
         <section className="admin-panel">
@@ -314,9 +345,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           <RestaurantContextCard restaurant={selectedRestaurant} />
         </section>
 
-        {mode === 'items' ? (
-          <>
-            {canManageInventory ? (
+        {mode === 'create' ? (
+            canManageInventory ? (
               <section className="admin-panel">
                 <form className="stack-form" onSubmit={handleSaveStock}>
                   <span className="eyebrow">{editingInventoryId ? 'Redakte' : 'Yeni qeyd'}</span>
@@ -343,8 +373,15 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                   </div>
                 </form>
               </section>
-            ) : null}
+            ) : (
+              <section className="admin-panel">
+                <p className="online-only">Stok elementi yaratmaq ucun icazeniz yoxdur.</p>
+              </section>
+            )
 
+        ) : null}
+
+        {mode === 'items' ? (
             <section className="admin-panel">
               <div className="inventory-panel-header">
                 <div>
@@ -363,15 +400,21 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     <button type="button" onClick={() => setSelectedInventoryId(item.id)}>
                       <span>
                         <strong>{item.name}</strong>
-                        <small>{stockAmount(item)} Р’В· limit {item.lowStockThreshold} {item.unitCode || item.unitName}</small>
+                        <small>{stockAmount(item)} - limit {item.lowStockThreshold} {item.unitCode || item.unitName}</small>
                       </span>
                       <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ? 'Az qalir' : item.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
                     </button>
                     {canManageInventory ? (
                       <div className="inline-actions">
-                        <Button type="button" variant="secondary" onClick={() => startInventoryEdit(item)}>Redakte</Button>
-                        <Button type="button" variant="secondary" onClick={() => toggleInventoryStatus(item)}>{item.isActive ? 'Deaktiv et' : 'Aktiv et'}</Button>
-                        <Button type="button" variant="danger" onClick={() => deleteInventory(item)}>Sil</Button>
+                        <Button aria-label={`${item.name} redakte et`} className="action-icon-button" title="Redakte et" type="button" variant="secondary" onClick={() => startInventoryEdit(item)}>
+                          <Pencil size={17} />
+                        </Button>
+                        <Button aria-label={`${item.name} aktiv/deaktiv et`} className="action-icon-button" title={item.isActive ? 'Deaktiv et' : 'Aktiv et'} type="button" variant="secondary" onClick={() => toggleInventoryStatus(item)}>
+                          <Power size={17} />
+                        </Button>
+                        <Button aria-label={`${item.name} sil`} className="action-icon-button" title="Sil" type="button" variant="danger" onClick={() => deleteInventory(item)}>
+                          <Trash2 size={17} />
+                        </Button>
                       </div>
                     ) : null}
                   </article>
@@ -379,7 +422,6 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                 {!inventoryLoading && inventoryItems.length === 0 ? <p className="online-only">Bu restoran ucun stok elementi yoxdur.</p> : null}
               </div>
             </section>
-          </>
         ) : null}
 
         {mode === 'movements' ? (
@@ -505,9 +547,15 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     <Badge tone={recipe.isActive ? 'success' : 'neutral'}>{recipe.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
                     {canManageRecipes ? (
                       <div className="inline-actions">
-                        <Button type="button" variant="secondary" onClick={() => startRecipeEdit(recipe)}>Redakte</Button>
-                        <Button type="button" variant="secondary" onClick={() => toggleRecipe(recipe)}>{recipe.isActive ? 'Deaktiv et' : 'Aktiv et'}</Button>
-                        <Button type="button" variant="danger" onClick={() => deleteRecipe(recipe)}>Sil</Button>
+                        <Button aria-label={`${recipe.inventoryItemName} redakte et`} className="action-icon-button" title="Redakte et" type="button" variant="secondary" onClick={() => startRecipeEdit(recipe)}>
+                          <Pencil size={17} />
+                        </Button>
+                        <Button aria-label={`${recipe.inventoryItemName} aktiv/deaktiv et`} className="action-icon-button" title={recipe.isActive ? 'Deaktiv et' : 'Aktiv et'} type="button" variant="secondary" onClick={() => toggleRecipe(recipe)}>
+                          <Power size={17} />
+                        </Button>
+                        <Button aria-label={`${recipe.inventoryItemName} sil`} className="action-icon-button" title="Sil" type="button" variant="danger" onClick={() => deleteRecipe(recipe)}>
+                          <Trash2 size={17} />
+                        </Button>
                       </div>
                     ) : null}
                   </article>
@@ -525,6 +573,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
 export function InventoryMovementsPage() {
   return <InventoryManagementPage mode="movements" />
+}
+
+export function InventoryCreatePage() {
+  return <InventoryManagementPage mode="create" />
 }
 
 export function RecipeManagementPage() {
