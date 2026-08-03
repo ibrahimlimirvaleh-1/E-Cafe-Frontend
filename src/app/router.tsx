@@ -14,7 +14,7 @@ import { AuditLogPage } from '../pages/admin/AuditLogPage'
 import { ContractDetailPage } from '../pages/admin/contracts/ContractDetailPage'
 import { ContractFormPage } from '../pages/admin/contracts/ContractFormPage'
 import { ContractListPage } from '../pages/admin/contracts/ContractListPage'
-import { InventoryCreatePage, InventoryManagementPage, InventoryMovementsPage, RecipeManagementPage } from '../pages/admin/InventoryManagementPage'
+import { InventoryCreatePage, InventoryManagementPage, InventoryMovementsPage, RecipeCreatePage, RecipeManagementPage } from '../pages/admin/InventoryManagementPage'
 import { CategoryCreatePage, MenuItemCreatePage, MenuManagementPage } from '../pages/admin/MenuManagementPage'
 import { RestaurantGroupCreatePage, RestaurantGroupsPage } from '../pages/admin/RestaurantGroupsPage'
 import { RestaurantDetailPage } from '../pages/admin/RestaurantDetailPage'
@@ -153,7 +153,10 @@ export function AppRouter() {
           <Route path="new" element={<InventoryCreatePage />} />
         </Route>
         <Route path="inventory/movements" element={<InventoryMovementsPage />} />
-        <Route path="recipes" element={<RecipeManagementPage />} />
+        <Route path="recipes">
+          <Route index element={<RecipeManagementPage />} />
+          <Route path="new" element={<RecipeCreatePage />} />
+        </Route>
         <Route path="audit-logs" element={<AuditLogPage />} />
         {adminRouteConfig
           .filter((config) => !customAdminRoutes.includes(config.key))
@@ -184,7 +187,10 @@ export function AppRouter() {
         <Route index element={<KitchenBoardPage />} />
         <Route path="inventory" element={<InventoryManagementPage />} />
         <Route path="inventory/new" element={<InventoryCreatePage />} />
-        <Route path="recipes" element={<RecipeManagementPage />} />
+        <Route path="recipes">
+          <Route index element={<RecipeManagementPage />} />
+          <Route path="new" element={<RecipeCreatePage />} />
+        </Route>
       </Route>
 
       <Route

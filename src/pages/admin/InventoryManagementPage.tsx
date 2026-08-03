@@ -12,7 +12,7 @@ import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/Re
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { InventoryItem, MenuItem, Recipe } from '../../entities/types'
 
-type InventoryPageMode = 'items' | 'create' | 'movements' | 'recipes'
+type InventoryPageMode = 'items' | 'create' | 'movements' | 'recipes' | 'recipe-create'
 
 // The three inventory routes share data loading, but each mode renders one focused workflow.
 const units = [
@@ -28,6 +28,7 @@ const pageCopy: Record<InventoryPageMode, { eyebrow: string; title: string }> = 
   create: { eyebrow: 'Stok', title: 'Yeni stok elementi' },
   movements: { eyebrow: 'Stok', title: 'Stok hereketleri' },
   recipes: { eyebrow: 'Resept', title: 'Resept idareetmesi' },
+  'recipe-create': { eyebrow: 'Resept', title: 'Yeni resept terkibi' },
 }
 
 function unitLabel(unitId: number, fallback?: string) {
@@ -97,7 +98,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   )
   const { data: movementTypes } = useAsyncData(() => ecafeApi.lookups.inventoryMovementTypes(), [], [])
   const inventoryRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory' : '/admin/inventory'
+  const recipeRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/recipes' : '/admin/recipes'
   const editingInventoryItemId = mode === 'create' ? searchParams.get('inventoryItemId') ?? '' : ''
+  const recipeMenuItemId = mode === 'recipe-create' ? searchParams.get('menuItemId') ?? '' : ''
+  const editingRecipeItemId = mode === 'recipe-create' ? searchParams.get('recipeId') ?? '' : ''
 
   const inventoryItem = useMemo(
     () => inventoryItems.find((item) => item.id === selectedInventoryId) ?? inventoryItems[0],
@@ -168,6 +172,33 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       setRecipeForm((current) => ({ ...current, inventoryItemId: inventoryItems[0].id }))
     }
   }, [inventoryItems, recipeForm.inventoryItemId])
+
+  useEffect(() => {
+    if (mode !== 'recipe-create' || !recipeMenuItemId) {
+      return
+    }
+
+    setSelectedMenuItemId(recipeMenuItemId)
+  }, [mode, recipeMenuItemId])
+
+  useEffect(() => {
+    if (mode !== 'recipe-create' || !editingRecipeItemId) {
+      return
+    }
+
+    const recipe = recipes.find((entry) => entry.id === editingRecipeItemId)
+    if (!recipe) {
+      return
+    }
+
+    setEditingRecipeId(recipe.id)
+    setRecipeForm({
+      inventoryItemId: recipe.inventoryItemId,
+      quantity: String(recipe.quantity),
+      unitId: String(recipe.unitId || 2),
+      isActive: recipe.isActive,
+    })
+  }, [editingRecipeItemId, mode, recipes])
 
   function resetStockForm() {
     setEditingInventoryId('')
@@ -283,13 +314,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   }
 
   function startRecipeEdit(recipe: Recipe) {
-    setEditingRecipeId(recipe.id)
-    setRecipeForm({
-      inventoryItemId: recipe.inventoryItemId,
-      quantity: String(recipe.quantity),
-      unitId: String(recipe.unitId || 2),
-      isActive: recipe.isActive,
-    })
+    navigate(`${recipeRouteBase}/new?menuItemId=${menuItem?.id || selectedMenuItemId}&recipeId=${recipe.id}`)
   }
 
   async function toggleRecipe(recipe: Recipe) {
@@ -328,6 +353,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             <ButtonLink to={`${inventoryRouteBase}/new`}>Yeni stok elementi</ButtonLink>
           ) : mode === 'create' ? (
             <ButtonLink to={inventoryRouteBase} variant="secondary">Siyahiya qayit</ButtonLink>
+          ) : mode === 'recipes' && canManageRecipes ? (
+            <ButtonLink to={`${recipeRouteBase}/new${menuItem?.id ? `?menuItemId=${menuItem.id}` : ''}`}>Yeni resept terkibi</ButtonLink>
+          ) : mode === 'recipe-create' ? (
+            <ButtonLink to={recipeRouteBase} variant="secondary">Siyahiya qayit</ButtonLink>
           ) : null
         }
       />
@@ -397,10 +426,18 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
               <div className="inventory-list">
                 {inventoryItems.map((item) => (
                   <article className={item.id === inventoryItem?.id ? 'selected inventory-row' : 'inventory-row'} key={item.id}>
-                    <button type="button" onClick={() => setSelectedInventoryId(item.id)}>
+                    <button className="inventory-row-main" type="button" onClick={() => setSelectedInventoryId(item.id)}>
                       <span>
+                        <small>Element</small>
                         <strong>{item.name}</strong>
-                        <small>{stockAmount(item)} - limit {item.lowStockThreshold} {item.unitCode || item.unitName}</small>
+                      </span>
+                      <span>
+                        <small>Miqdar</small>
+                        <strong>{stockAmount(item)}</strong>
+                      </span>
+                      <span>
+                        <small>Limit</small>
+                        <strong>{item.lowStockThreshold} {item.unitCode || item.unitName}</strong>
                       </span>
                       <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ? 'Az qalir' : item.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
                     </button>
@@ -506,34 +543,6 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
               </SelectField>
             </section>
 
-            {canManageRecipes ? (
-              <section className="admin-panel recipe-editor-panel">
-                <form className="recipe-form" onSubmit={handleSaveRecipe}>
-                  <span className="eyebrow">{editingRecipeId ? 'Redakte' : 'Yeni terkib'}</span>
-                  <h2>{menuItem?.name || 'Mehsul sec'}</h2>
-                  <SelectField label="Ingredient" required value={recipeForm.inventoryItemId} onChange={(event) => setRecipeForm({ ...recipeForm, inventoryItemId: event.target.value })}>
-                    {inventoryItems.map((item) => (
-                      <option key={item.id} value={item.id}>{item.name}</option>
-                    ))}
-                  </SelectField>
-                  <TextField label="Miqdar" min={0} required step="0.001" type="number" value={recipeForm.quantity} onChange={(event) => setRecipeForm({ ...recipeForm, quantity: event.target.value })} />
-                  <SelectField label="Olcu" required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
-                    {units.map((unit) => (
-                      <option key={unit.id} value={unit.id}>{unit.code}</option>
-                    ))}
-                  </SelectField>
-                  <label className="toggle-field compact-toggle">
-                    <input checked={recipeForm.isActive} type="checkbox" onChange={(event) => setRecipeForm({ ...recipeForm, isActive: event.target.checked })} />
-                    <span>Aktivdir</span>
-                  </label>
-                  <div className="inline-actions">
-                    <Button disabled={!menuItem || inventoryItems.length === 0} type="submit">{editingRecipeId ? 'Resepti yenile' : 'Resepte elave et'}</Button>
-                    {editingRecipeId ? <Button type="button" variant="secondary" onClick={resetRecipeForm}>Legv et</Button> : null}
-                  </div>
-                </form>
-              </section>
-            ) : null}
-
             <section className="admin-panel recipe-panel">
               <span className="eyebrow">Terkib</span>
               <h2>Resept ingredientleri</h2>
@@ -565,6 +574,53 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             </section>
           </>
         ) : null}
+
+        {mode === 'recipe-create' ? (
+          canManageRecipes ? (
+            <>
+              <section className="admin-panel">
+                <span className="eyebrow">Menyu mehsulu</span>
+                <SelectField label="Menyu mehsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
+                  {menuItems.map((item: MenuItem) => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
+                </SelectField>
+              </section>
+
+              <section className="admin-panel recipe-editor-panel">
+                <form className="stack-form" onSubmit={handleSaveRecipe}>
+                  <span className="eyebrow">{editingRecipeId ? 'Redakte' : 'Yeni terkib'}</span>
+                  <h2>{menuItem?.name || 'Mehsul sec'}</h2>
+                  <SelectField label="Ingredient" required value={recipeForm.inventoryItemId} onChange={(event) => setRecipeForm({ ...recipeForm, inventoryItemId: event.target.value })}>
+                    {inventoryItems.map((item) => (
+                      <option key={item.id} value={item.id}>{item.name}</option>
+                    ))}
+                  </SelectField>
+                  <div className="form-grid two">
+                    <TextField label="Miqdar" min={0} required step="0.001" type="number" value={recipeForm.quantity} onChange={(event) => setRecipeForm({ ...recipeForm, quantity: event.target.value })} />
+                    <SelectField label="Olcu" required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
+                      {units.map((unit) => (
+                        <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
+                      ))}
+                    </SelectField>
+                  </div>
+                  <label className="toggle-field compact-toggle">
+                    <input checked={recipeForm.isActive} type="checkbox" onChange={(event) => setRecipeForm({ ...recipeForm, isActive: event.target.checked })} />
+                    <span>Aktivdir</span>
+                  </label>
+                  <div className="inline-actions">
+                    <Button disabled={!menuItem || inventoryItems.length === 0} type="submit">{editingRecipeId ? 'Resepti yenile' : 'Resept terkibi yarat'}</Button>
+                    {editingRecipeId ? <Button type="button" variant="secondary" onClick={resetRecipeForm}>Legv et</Button> : null}
+                  </div>
+                </form>
+              </section>
+            </>
+          ) : (
+            <section className="admin-panel">
+              <p className="online-only">Resept yaratmaq ucun icazeniz yoxdur.</p>
+            </section>
+          )
+        ) : null}
       </section>
       {message ? <StatusMessage className="inventory-message">{message}</StatusMessage> : null}
     </main>
@@ -581,4 +637,8 @@ export function InventoryCreatePage() {
 
 export function RecipeManagementPage() {
   return <InventoryManagementPage mode="recipes" />
+}
+
+export function RecipeCreatePage() {
+  return <InventoryManagementPage mode="recipe-create" />
 }

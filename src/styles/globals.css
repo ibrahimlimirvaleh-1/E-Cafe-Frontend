@@ -2257,8 +2257,19 @@ img {
 
 .inventory-page-grid-items > .admin-panel:first-child,
 .inventory-page-grid-movements > .admin-panel:first-child,
-.inventory-page-grid-recipes > .admin-panel:first-child {
+.inventory-page-grid-recipes > .admin-panel:first-child,
+.inventory-page-grid-recipe-create > .admin-panel:first-child {
   grid-column: 1 / -1;
+}
+
+.inventory-page-grid-items > .admin-panel:nth-child(2),
+.inventory-page-grid-recipes > .admin-panel:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
+.inventory-page-grid-create,
+.inventory-page-grid-recipe-create {
+  grid-template-columns: minmax(280px, 0.72fr) minmax(420px, 1fr);
 }
 
 .inventory-page-grid-movements {
@@ -2282,7 +2293,7 @@ img {
 }
 
 .inventory-panel-header,
-.inventory-list button,
+.inventory-row-main,
 .recipe-list article,
 .movement-list article {
   display: flex;
@@ -2321,11 +2332,20 @@ img {
 
 .inventory-row {
   display: grid;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
 }
 
-.inventory-row > button {
+.inventory-row-main {
   min-width: 0;
+}
+
+.inventory-row-main {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(140px, 0.75fr) minmax(140px, 0.75fr) auto;
+  gap: 16px;
+  align-items: center;
 }
 
 .inventory-row .inline-actions,
