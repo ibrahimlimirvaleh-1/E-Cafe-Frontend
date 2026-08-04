@@ -536,12 +536,21 @@ export const ecafeApi = {
   },
 
   users: {
+    list: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.users.adminList)
+        return asArray<AnyRecord>(result.data).map(mapUserProfile)
+      }, [] as UserProfile[]),
     updateRole: async (userId: string, roleId: number) => {
       const result = await httpClient<unknown>(`${endpoints.users.updateRole(userId)}?roleId=${encodeURIComponent(roleId)}`, {
         method: 'PATCH',
       })
       return extractAuthTokens(result.data)
     },
+    delete: (userId: string) =>
+      httpClient<unknown>(endpoints.users.delete(userId), {
+        method: 'DELETE',
+      }),
   },
 
   workflow: {
@@ -585,6 +594,17 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.lookups.itemStatuses)
         return asArray<AnyRecord>(result.data).map(mapLookup)
       }, [] as LookupItem[]),
+    units: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.lookups.units)
+        return asArray<AnyRecord>(result.data).map(mapLookup)
+      }, [
+        { id: 1, code: 'kg', name: 'Kilogram' },
+        { id: 2, code: 'g', name: 'Qram' },
+        { id: 3, code: 'l', name: 'Litr' },
+        { id: 4, code: 'ml', name: 'Millilitr' },
+        { id: 5, code: 'pcs', name: 'Eded' },
+      ] as LookupItem[]),
     inventoryMovementTypes: () =>
       safe(async () => {
         const result = await httpClient<unknown>(endpoints.lookups.inventoryMovementTypes)
@@ -646,6 +666,11 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(`${endpoints.inventory.list(restaurantId)}${suffix}`)
         return asPaginated(result.data, (item) => mapInventoryItem(item, restaurantId)).items
       }, [] as InventoryItem[]),
+    detail: (restaurantId: string, inventoryItemId: string) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.inventory.detail(restaurantId, inventoryItemId))
+        return mapInventoryItem(result.data as AnyRecord, restaurantId)
+      }, null as InventoryItem | null),
     create: (restaurantId: string, request: CreateInventoryItemRequest) =>
       httpClient<unknown>(endpoints.inventory.create(restaurantId), {
         method: 'POST',
@@ -749,6 +774,16 @@ export const ecafeApi = {
         method: 'PUT',
         body: JSON.stringify(request),
       }),
+    active: (restaurantId: string) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.contracts.active(restaurantId))
+        return mapContract(result.data as AnyRecord, restaurantId)
+      }, null as RestaurantContract | null),
+    actions: (restaurantId: string, contractId: string) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.contracts.actions(restaurantId, contractId))
+        return asArray<AnyRecord>(result.data).map(mapWorkflowAction)
+      }, [] as WorkflowAction[]),
     sendForSignature: (restaurantId: string, contractId: string) =>
       httpClient<unknown>(endpoints.contracts.sendForSignature(restaurantId, contractId), {
         method: 'POST',
@@ -809,6 +844,11 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.staff.list(restaurantId))
         return asArray<AnyRecord>(result.data).map((member) => mapStaff(member, restaurantId))
       }, staff.filter((member) => member.restaurantId === restaurantId)),
+    detail: (restaurantId: string, staffId: string) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.staff.detail(restaurantId, staffId))
+        return mapStaff(result.data as AnyRecord, restaurantId)
+      }, staff.find((member) => member.restaurantId === restaurantId && member.id === staffId) ?? null),
     waiters: (restaurantId: string) =>
       safe(async () => {
         const result = await httpClient<unknown>(endpoints.publicRestaurant.staff(restaurantId))

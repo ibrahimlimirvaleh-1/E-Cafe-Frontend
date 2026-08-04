@@ -20,6 +20,7 @@ export const endpoints = {
   lookups: {
     roles: '/lookups/roles',
     itemStatuses: '/lookups/item-statuses',
+    units: '/lookups/units',
     inventoryMovementTypes: '/lookups/inventory-movement-types',
     contractStatuses: '/lookups/contract-statuses',
     paymentPolicies: '/lookups/payment-policies',
@@ -29,6 +30,7 @@ export const endpoints = {
     create: (restaurantId: string) => `/admin/restaurants/${restaurantId}/contracts`,
     update: (restaurantId: string, contractId: string) => `/admin/restaurants/${restaurantId}/contracts/${contractId}`,
     active: (restaurantId: string) => `/restaurants/${restaurantId}/contracts/active`,
+    actions: (restaurantId: string, contractId: string) => `/restaurants/${restaurantId}/contracts/${contractId}/actions`,
     sendForSignature: (restaurantId: string, contractId: string) =>
       `/admin/restaurants/${restaurantId}/contracts/${contractId}/send-for-signature`,
     approve: (restaurantId: string, contractId: string) => `/restaurants/${restaurantId}/contracts/${contractId}/approve`,
@@ -70,6 +72,7 @@ export const endpoints = {
   },
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,
+    detail: (restaurantId: string, staffId: string) => `/staff/${restaurantId}/detail/${staffId}`,
   },
   users: {
     create: '/users',
