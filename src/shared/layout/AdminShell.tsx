@@ -1,4 +1,3 @@
-import { Search } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { adminModules } from '../../entities/mockData'
 import type { AdminModuleKey } from '../../entities/types'
@@ -49,10 +48,6 @@ export function AdminShell() {
       </aside>
       <div className="admin-workspace">
         <header className="admin-topbar compact">
-          <label className="admin-search">
-            <Search size={18} />
-            <input placeholder="Admin daxilində axtar..." />
-          </label>
           <div className="site-actions">
             <NotificationBell />
             <UserMenu />
