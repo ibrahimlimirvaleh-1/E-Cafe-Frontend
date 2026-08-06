@@ -1,8 +1,8 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { getUserFromToken } from './jwt'
 import type { CurrentUser } from './jwt'
-import { clearAuthTokens, getAccessToken, saveAuthTokens } from './tokenStorage'
+import { clearAuthTokens, getAccessToken, onAuthTokensChanged, saveAuthTokens } from './tokenStorage'
 import type { AuthTokens } from './tokenStorage'
 
 type AuthContextValue = {
@@ -16,10 +16,14 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<CurrentUser | null>(() => {
+  const readCurrentUser = () => {
     const token = getAccessToken()
     return token ? getUserFromToken(token) : null
-  })
+  }
+
+  const [user, setUser] = useState<CurrentUser | null>(readCurrentUser)
+
+  useEffect(() => onAuthTokensChanged(() => setUser(readCurrentUser())), [])
 
   const value = useMemo<AuthContextValue>(
     () => ({
