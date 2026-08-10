@@ -29,6 +29,7 @@ export function RestaurantEditPage() {
     cancellationWindowMinutes: '60',
     serviceFeePercent: '0',
     staffSettlementPeriod: '7',
+    defaultWaiterTableLimit: '',
   })
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export function RestaurantEditPage() {
       cancellationWindowMinutes: String(restaurant.cancellationWindowMinutes ?? 60),
       serviceFeePercent: String(restaurant.defaultServiceFeePercent),
       staffSettlementPeriod: '7',
+      defaultWaiterTableLimit: restaurant.defaultWaiterTableLimit == null ? '' : String(restaurant.defaultWaiterTableLimit),
     })
   }, [restaurant])
 
@@ -71,6 +73,7 @@ export function RestaurantEditPage() {
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         serviceFeePercent: Number(form.serviceFeePercent),
         staffSettlementPeriod: Number(form.staffSettlementPeriod),
+        defaultWaiterTableLimit: form.defaultWaiterTableLimit ? Number(form.defaultWaiterTableLimit) : null,
         fileIds: fileIds.length > 0 ? fileIds : undefined,
       })
       navigate(`/admin/restaurants/${restaurantId}`)
@@ -125,6 +128,7 @@ export function RestaurantEditPage() {
           <TextField label="Ləğv pəncərəsi dəqiqə" min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
           <TextField label="Personal hesablaşma günü" min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
         </div>
+        <TextField label="Ofisiant default masa limiti" min={1} type="number" value={form.defaultWaiterTableLimit} onChange={(event) => setForm({ ...form, defaultWaiterTableLimit: event.target.value })} />
         <FileUploadField
           label="Restoran şəkli"
           onUploaded={(fileId) => {

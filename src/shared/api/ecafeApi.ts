@@ -28,6 +28,7 @@ import type {
 } from '../../entities/types'
 import { endpoints } from './endpoints'
 import { httpClient } from './httpClient'
+import { getRefreshToken } from '../auth/tokenStorage'
 import {
   categoryRow,
   contractRow,
@@ -101,6 +102,7 @@ type CreateRestaurantRequest = {
   cancellationWindowMinutes: number
   serviceFeePercent: number
   staffSettlementPeriod: number
+  defaultWaiterTableLimit?: number | null
   fileIds?: number[]
 }
 
@@ -117,6 +119,7 @@ type CreateStaffRequest = {
   roleId: number
   fileId?: number | null
   serviceFeePercent?: number | null
+  maxActiveTableCount?: number | null
 }
 
 type CreateTableRequest = {
@@ -191,8 +194,12 @@ type UploadedFile = {
 async function safe<T>(request: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await request()
-  } catch {
-    return fallback
+  } catch (error) {
+    if (import.meta.env.VITE_ENABLE_API_FALLBACKS === 'true') {
+      return fallback
+    }
+
+    throw error
   }
 }
 
@@ -402,6 +409,18 @@ export const ecafeApi = {
       })
       return extractAuthTokens(result.data)
     },
+    logout: async () => {
+      const refreshToken = getRefreshToken()
+      if (!refreshToken) {
+        return
+      }
+
+      await httpClient<unknown>(endpoints.auth.logout, {
+        method: 'POST',
+        skipAuthRefresh: true,
+        body: JSON.stringify({ refreshToken }),
+      })
+    },
   },
 
   profile: {
@@ -474,6 +493,7 @@ export const ecafeApi = {
       formData.set('CancellationWindowMinutes', String(request.cancellationWindowMinutes))
       formData.set('ServiceFeePercent', String(request.serviceFeePercent))
       formData.set('StaffSettlementPeriod', String(request.staffSettlementPeriod))
+      appendIfPresent(formData, 'DefaultWaiterTableLimit', request.defaultWaiterTableLimit)
       request.fileIds?.forEach((fileId) => formData.append('FileIds', String(fileId)))
 
       const result = await httpClient<unknown>(endpoints.restaurants.create, {
@@ -504,6 +524,7 @@ export const ecafeApi = {
           cancellationWindowMinutes: request.cancellationWindowMinutes,
           serviceFeePercent: request.serviceFeePercent,
           staffSettlementPeriod: request.staffSettlementPeriod,
+          defaultWaiterTableLimit: request.defaultWaiterTableLimit,
           fileIds: request.fileIds,
         }),
       }),
@@ -869,6 +890,7 @@ export const ecafeApi = {
       formData.set('RoleId', String(request.roleId))
       appendIfPresent(formData, 'FileId', request.fileId)
       appendIfPresent(formData, 'ServiceFeePercent', request.serviceFeePercent)
+      appendIfPresent(formData, 'MaxActiveTableCount', request.maxActiveTableCount)
 
       return httpClient<unknown>(endpoints.users.create, {
         method: 'POST',

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { getHomePathForUser } from '../../shared/auth/authz'
 import { getUserFromToken } from '../../shared/auth/jwt'
 import { Brand } from '../../shared/layout/Brand'
 import { Button } from '../../shared/ui/Button'
@@ -17,21 +18,6 @@ function splitFullName(fullName: string) {
   return {
     name,
     surname: rest.join(' ') || name,
-  }
-}
-
-function getRoleHomePath(roleId: string) {
-  switch (roleId) {
-    case '1':
-    case '2':
-    case '3':
-      return '/admin'
-    case '4':
-      return '/waiter'
-    case '6':
-      return '/kitchen'
-    default:
-      return '/'
   }
 }
 
@@ -62,7 +48,7 @@ export function AuthPage({ mode }: AuthPageProps) {
 
       setSession(tokens)
       const user = getUserFromToken(tokens.accessToken)
-      const redirectTo = getRoleHomePath(user?.roleId ?? '')
+      const redirectTo = getHomePathForUser(user)
       navigate(redirectTo, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sorğu icra olunmadı.')

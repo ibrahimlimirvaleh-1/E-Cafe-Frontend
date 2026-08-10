@@ -37,6 +37,7 @@ export type Restaurant = {
   isActive: boolean
   hasActiveContract: boolean
   depositAmount: number
+  defaultWaiterTableLimit?: number
   defaultServiceFeePercent: number
   staffPayoutFrequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'manual'
 }
@@ -92,6 +93,10 @@ export type StaffMember = {
   phone: string
   status: 'Active' | 'OnBreak' | 'Inactive'
   serviceFeePercent?: number
+  maxActiveTableCount?: number
+  effectiveMaxActiveTableCount?: number
+  activeTableSessionCount?: number
+  canAcceptMoreTables?: boolean
   currentEarning: number
   avatar: string
 }

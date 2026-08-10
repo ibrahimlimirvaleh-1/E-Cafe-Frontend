@@ -3,6 +3,7 @@ import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
 import { useAuth } from '../auth/AuthContext'
+import { RoleIds, isInRole } from '../auth/authz'
 
 type StaffShellProps = {
   title: string
@@ -10,8 +11,8 @@ type StaffShellProps = {
 
 export function StaffShell({ title }: StaffShellProps) {
   const { user } = useAuth()
-  const isKitchen = user?.roleId === '6'
-  const isWaiter = user?.roleId === '4'
+  const isKitchen = isInRole(user, [RoleIds.Kitchen])
+  const isWaiter = isInRole(user, [RoleIds.Waiter])
 
   return (
     <div className="staff-shell">

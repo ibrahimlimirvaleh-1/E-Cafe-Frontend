@@ -1,7 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import { RequireAuth } from '../shared/auth/RequireAuth'
 import { useAuth } from '../shared/auth/AuthContext'
+import { AdminRoleIds, RoleIds, getHomePathForUser, isInRole } from '../shared/auth/authz'
 import { adminRouteConfig } from '../shared/config/adminRoutes'
+import { adminModulePermissions } from '../shared/config/adminPermissions'
 import { AdminShell } from '../shared/layout/AdminShell'
 import { SiteShell } from '../shared/layout/SiteShell'
 import { StaffShell } from '../shared/layout/StaffShell'
@@ -45,15 +48,19 @@ const customAdminRoutes = ['restaurants', 'contracts', 'restaurant-groups', 'sta
 function RestaurantCatalogEntry() {
   const { user } = useAuth()
 
-  if (user?.roleId === '4') {
-    return <Navigate to="/waiter" replace />
-  }
-
-  if (user?.roleId === '6') {
-    return <Navigate to="/kitchen" replace />
+  if (isInRole(user, [RoleIds.Waiter, RoleIds.Kitchen])) {
+    return <Navigate to={getHomePathForUser(user)} replace />
   }
 
   return <RestaurantCatalogPage />
+}
+
+function AdminProtected({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
+  return (
+    <RequireAuth allowedRoleIds={AdminRoleIds} anyPermission={adminModulePermissions[moduleKey]}>
+      {children}
+    </RequireAuth>
+  )
 }
 
 export function AppRouter() {
@@ -110,66 +117,66 @@ export function AppRouter() {
       <Route
         path="admin"
         element={
-          <RequireAuth allowedRoleIds={['1', '2', '3']}>
+          <RequireAuth allowedRoleIds={AdminRoleIds}>
             <AdminShell />
           </RequireAuth>
         }
       >
         <Route index element={<AdminDashboardPage />} />
         <Route path="contracts">
-          <Route index element={<ContractListPage />} />
-          <Route path="new" element={<ContractFormPage />} />
-          <Route path=":contractId/edit" element={<ContractFormPage />} />
-          <Route path=":contractId" element={<ContractDetailPage />} />
+          <Route index element={<AdminProtected moduleKey="contracts"><ContractListPage /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="contracts"><ContractFormPage /></AdminProtected>} />
+          <Route path=":contractId/edit" element={<AdminProtected moduleKey="contracts"><ContractFormPage /></AdminProtected>} />
+          <Route path=":contractId" element={<AdminProtected moduleKey="contracts"><ContractDetailPage /></AdminProtected>} />
         </Route>
         <Route path="restaurants">
-          <Route index element={<RestaurantManagementPage />} />
-          <Route path="new" element={<RestaurantCreatePage />} />
-          <Route path=":restaurantId" element={<RestaurantDetailPage />} />
-          <Route path=":restaurantId/edit" element={<RestaurantEditPage />} />
+          <Route index element={<AdminProtected moduleKey="restaurants"><RestaurantManagementPage /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="restaurants"><RestaurantCreatePage /></AdminProtected>} />
+          <Route path=":restaurantId" element={<AdminProtected moduleKey="restaurants"><RestaurantDetailPage /></AdminProtected>} />
+          <Route path=":restaurantId/edit" element={<AdminProtected moduleKey="restaurants"><RestaurantEditPage /></AdminProtected>} />
         </Route>
         <Route path="restaurant-groups">
-          <Route index element={<RestaurantGroupsPage />} />
-          <Route path="new" element={<RestaurantGroupCreatePage />} />
+          <Route index element={<AdminProtected moduleKey="restaurant-groups"><RestaurantGroupsPage /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="restaurant-groups"><RestaurantGroupCreatePage /></AdminProtected>} />
         </Route>
         <Route path="staff">
-          <Route index element={<StaffManagementPage />} />
-          <Route path="new" element={<StaffCreatePage />} />
+          <Route index element={<AdminProtected moduleKey="staff"><StaffManagementPage /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="staff"><StaffCreatePage /></AdminProtected>} />
         </Route>
         <Route path="tables">
-          <Route index element={<TablesManagementPage />} />
-          <Route path="new" element={<TableCreatePage />} />
+          <Route index element={<AdminProtected moduleKey="tables"><TablesManagementPage /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="tables"><TableCreatePage /></AdminProtected>} />
         </Route>
         <Route path="categories">
-          <Route index element={<MenuManagementPage mode="categories" />} />
-          <Route path="new" element={<CategoryCreatePage />} />
+          <Route index element={<AdminProtected moduleKey="categories"><MenuManagementPage mode="categories" /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="categories"><CategoryCreatePage /></AdminProtected>} />
         </Route>
         <Route path="menu">
-          <Route index element={<MenuManagementPage />} />
-          <Route path="new" element={<MenuItemCreatePage />} />
+          <Route index element={<AdminProtected moduleKey="menu"><MenuManagementPage /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="menu"><MenuItemCreatePage /></AdminProtected>} />
         </Route>
         <Route path="inventory">
-          <Route index element={<InventoryManagementPage />} />
-          <Route path="new" element={<InventoryCreatePage />} />
+          <Route index element={<AdminProtected moduleKey="inventory"><InventoryManagementPage /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="inventory"><InventoryCreatePage /></AdminProtected>} />
         </Route>
-        <Route path="inventory/movements" element={<InventoryMovementsPage />} />
+        <Route path="inventory/movements" element={<AdminProtected moduleKey="inventory-movements"><InventoryMovementsPage /></AdminProtected>} />
         <Route path="recipes">
-          <Route index element={<RecipeManagementPage />} />
-          <Route path="new" element={<RecipeCreatePage />} />
+          <Route index element={<AdminProtected moduleKey="recipes"><RecipeManagementPage /></AdminProtected>} />
+          <Route path="new" element={<AdminProtected moduleKey="recipes"><RecipeCreatePage /></AdminProtected>} />
         </Route>
-        <Route path="audit-logs" element={<AuditLogPage />} />
+        <Route path="audit-logs" element={<AdminProtected moduleKey="audit-logs"><AuditLogPage /></AdminProtected>} />
         {adminRouteConfig
           .filter((config) => !customAdminRoutes.includes(config.key))
           .map((config) => (
             <Route key={config.key} path={config.key}>
-              <Route index element={<AdminModuleListPage moduleKey={config.key} />} />
-              {config.supportsCreate ? <Route path="new" element={<AdminModuleFormPage moduleKey={config.key} mode="create" />} /> : null}
-              <Route path={`:${config.paramName}`} element={<AdminModuleDetailPage moduleKey={config.key} />} />
-              <Route path={`:${config.paramName}/edit`} element={<AdminModuleFormPage moduleKey={config.key} mode="edit" />} />
+              <Route index element={<AdminProtected moduleKey={config.key}><AdminModuleListPage moduleKey={config.key} /></AdminProtected>} />
+              {config.supportsCreate ? <Route path="new" element={<AdminProtected moduleKey={config.key}><AdminModuleFormPage moduleKey={config.key} mode="create" /></AdminProtected>} /> : null}
+              <Route path={`:${config.paramName}`} element={<AdminProtected moduleKey={config.key}><AdminModuleDetailPage moduleKey={config.key} /></AdminProtected>} />
+              <Route path={`:${config.paramName}/edit`} element={<AdminProtected moduleKey={config.key}><AdminModuleFormPage moduleKey={config.key} mode="edit" /></AdminProtected>} />
               {config.dangerAction ? (
                 <Route
                   path={`:${config.paramName}/${config.dangerAction}`}
-                  element={<AdminModuleActionPage action={config.dangerAction} moduleKey={config.key} />}
+                  element={<AdminProtected moduleKey={config.key}><AdminModuleActionPage action={config.dangerAction} moduleKey={config.key} /></AdminProtected>}
                 />
               ) : null}
             </Route>
@@ -179,7 +186,7 @@ export function AppRouter() {
       <Route
         path="kitchen"
         element={
-          <RequireAuth allowedRoleIds={['6']}>
+          <RequireAuth allowedRoleIds={[RoleIds.Kitchen]}>
             <StaffShell title="Mətbəx paneli" />
           </RequireAuth>
         }
@@ -196,7 +203,7 @@ export function AppRouter() {
       <Route
         path="waiter"
         element={
-          <RequireAuth allowedRoleIds={['4']}>
+          <RequireAuth allowedRoleIds={[RoleIds.Waiter]}>
             <StaffShell title="Ofisiant paneli" />
           </RequireAuth>
         }

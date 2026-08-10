@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { NotificationItem } from '../../entities/types'
 import { ecafeApi } from '../api/ecafeApi'
 import { useAuth } from '../auth/AuthContext'
+import { AdminRoleIds, RoleIds, isInRole } from '../auth/authz'
 
 function parsePayload(payloadJson?: string) {
   if (!payloadJson) {
@@ -114,16 +115,16 @@ export function NotificationBell() {
       (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
     const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
 
-    if (contractId && ['1', '2', '3'].includes(user?.roleId || '')) {
+    if (contractId && isInRole(user, AdminRoleIds)) {
       return `/admin/contracts/${contractId}`
     }
 
     if (relatedType.includes('order')) {
-      if (user?.roleId === '6') {
+      if (isInRole(user, [RoleIds.Kitchen])) {
         return '/kitchen'
       }
 
-      if (user?.roleId === '4') {
+      if (isInRole(user, [RoleIds.Waiter])) {
         return '/waiter/orders'
       }
 
@@ -134,7 +135,7 @@ export function NotificationBell() {
       return '/admin/reservations'
     }
 
-    if (restaurantId && ['1', '2', '3'].includes(user?.roleId || '')) {
+    if (restaurantId && isInRole(user, AdminRoleIds)) {
       return `/admin/restaurants/${restaurantId}`
     }
 

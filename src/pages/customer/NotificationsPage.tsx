@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import type { NotificationItem, StatusTone } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { AdminRoleIds, RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
@@ -33,16 +34,16 @@ function notificationRoute(notification: NotificationItem, roleId?: string) {
     (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
   const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
 
-  if (contractId && ['1', '2', '3'].includes(roleId || '')) {
+  if (contractId && AdminRoleIds.includes(roleId || '')) {
     return `/admin/contracts/${contractId}`
   }
 
   if (relatedType.includes('order')) {
-    if (roleId === '6') {
+    if (roleId === RoleIds.Kitchen) {
       return '/kitchen'
     }
 
-    if (roleId === '4') {
+    if (roleId === RoleIds.Waiter) {
       return '/waiter/orders'
     }
 
@@ -53,7 +54,7 @@ function notificationRoute(notification: NotificationItem, roleId?: string) {
     return '/admin/reservations'
   }
 
-  if (restaurantId && ['1', '2', '3'].includes(roleId || '')) {
+  if (restaurantId && AdminRoleIds.includes(roleId || '')) {
     return `/admin/restaurants/${restaurantId}`
   }
 

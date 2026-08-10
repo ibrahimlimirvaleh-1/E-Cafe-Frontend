@@ -1,34 +1,18 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { adminModules } from '../../entities/mockData'
-import type { AdminModuleKey } from '../../entities/types'
 import { useAuth } from '../auth/AuthContext'
+import { RoleIds, hasAnyPermission, isInRole } from '../auth/authz'
+import { adminModulePermissions } from '../config/adminPermissions'
 import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
 
-const modulePermissions: Record<AdminModuleKey, string[]> = {
-  restaurants: ['ManageRestaurants', 'ViewRestaurantInfo'],
-  'restaurant-groups': ['ManageRestaurants'],
-  contracts: ['ManageRestaurantContracts', 'ViewRestaurantContracts'],
-  reservations: ['ManageReservations', 'ViewAssignedReservations'],
-  orders: ['ManageOrders'],
-  payments: ['ManagePayments'],
-  staff: ['ManageStaff'],
-  tables: ['ManageTables'],
-  categories: ['ManageCatalog'],
-  menu: ['ManageCatalog'],
-  inventory: ['ViewInventory', 'ManageInventory'],
-  'inventory-movements': ['ViewInventory', 'ManageInventory'],
-  recipes: ['ViewRecipes', 'ManageRecipes'],
-  'audit-logs': ['ViewAuditLogs'],
-}
-
 export function AdminShell() {
   const { user } = useAuth()
-  const isSuperAdmin = user?.roleId === '1'
+  const isSuperAdmin = isInRole(user, [RoleIds.PlatformAdmin])
   const modules = isSuperAdmin
     ? adminModules
-    : adminModules.filter((module) => modulePermissions[module.key].some((permission) => user?.permissions.includes(permission)))
+    : adminModules.filter((module) => hasAnyPermission(user, adminModulePermissions[module.key]))
 
   return (
     <div className="admin-shell">

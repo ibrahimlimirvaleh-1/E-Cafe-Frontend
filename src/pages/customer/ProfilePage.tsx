@@ -2,6 +2,7 @@ import { Save, ShieldCheck } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
@@ -12,7 +13,7 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 function isSuperAdmin(roleId?: string, roleName = '') {
   const normalizedRoleName = roleName.toLowerCase()
-  return roleId === '1' || normalizedRoleName.includes('super')
+  return roleId === RoleIds.PlatformAdmin || normalizedRoleName.includes('super')
 }
 
 function isRestaurantScopedRole(roleId: number) {

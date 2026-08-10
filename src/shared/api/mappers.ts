@@ -37,6 +37,7 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
     isActive: bool(restaurant.isActive, true),
     hasActiveContract: bool(restaurant.hasActiveContract, true),
     depositAmount: num(restaurant.depositAmount),
+    defaultWaiterTableLimit: restaurant.defaultWaiterTableLimit == null ? undefined : num(restaurant.defaultWaiterTableLimit),
     defaultServiceFeePercent: num(restaurant.defaultServiceFeePercent || restaurant.serviceFeePercent),
     staffPayoutFrequency: 'weekly',
   }
@@ -94,6 +95,10 @@ export function mapStaff(record: AnyRecord, restaurantId: string): StaffMember {
     phone: str(record.phone || record.email),
     status: bool(record.isActive, true) ? 'Active' : 'Inactive',
     serviceFeePercent: record.serviceFeePercent == null ? undefined : num(record.serviceFeePercent),
+    maxActiveTableCount: record.maxActiveTableCount == null ? undefined : num(record.maxActiveTableCount),
+    effectiveMaxActiveTableCount: record.effectiveMaxActiveTableCount == null ? undefined : num(record.effectiveMaxActiveTableCount),
+    activeTableSessionCount: record.activeTableSessionCount == null ? undefined : num(record.activeTableSessionCount),
+    canAcceptMoreTables: record.canAcceptMoreTables == null ? undefined : bool(record.canAcceptMoreTables, true),
     currentEarning: num(record.currentEarning),
     avatar: imageUrl(record, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'),
   }

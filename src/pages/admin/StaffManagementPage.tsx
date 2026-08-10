@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { RoleIds, hasPermission, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -22,6 +23,7 @@ const initialForm = {
   roleId: '',
   isActive: 'true',
   serviceFeePercent: '',
+  maxActiveTableCount: '',
 }
 
 const roleIdsByStaffRole: Record<Role, number> = {
@@ -53,7 +55,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     [restaurantId, reloadKey],
   )
   const roleOptions = useMemo(() => roles.filter((role) => role.id > 0), [roles])
-  const canChangeRoles = user?.roleId === '1' || user?.permissions.includes('ManageStaff')
+  const canChangeRoles = isInRole(user, [RoleIds.PlatformAdmin]) || hasPermission(user, 'ManageStaff')
+  const selectedRoleName = roleOptions.find((role) => String(role.id) === form.roleId)?.name.toLowerCase() || ''
+  const isWaiterRoleSelected = selectedRoleName.includes('ofisiant') || selectedRoleName.includes('waiter') || form.roleId === String(roleIdsByStaffRole.Waiter)
 
   useEffect(() => {
     if (!selectedRestaurantId && restaurants[0]) {
@@ -99,6 +103,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       roleId: Number(form.roleId),
       isActive: form.isActive === 'true',
       serviceFeePercent: form.serviceFeePercent ? Number(form.serviceFeePercent) : null,
+      maxActiveTableCount: form.maxActiveTableCount ? Number(form.maxActiveTableCount) : null,
       fileId,
     })
     setForm(initialForm)
@@ -118,7 +123,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     setUpdatingRoleUserId(member.id)
     try {
       const tokens = await ecafeApi.users.updateRole(member.id, roleId)
-      if (tokens.accessToken && tokens.refreshToken) {
+      if (tokens.accessToken) {
         setSession(tokens)
       }
 
@@ -177,6 +182,15 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               </SelectField>
               <TextField label="Servis faizi" min={0} step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
             </div>
+            {isWaiterRoleSelected ? (
+              <TextField
+                label="Ofisiant aktiv masa limiti"
+                min={1}
+                type="number"
+                value={form.maxActiveTableCount}
+                onChange={(event) => setForm({ ...form, maxActiveTableCount: event.target.value })}
+              />
+            ) : null}
             <FileUploadField label="Profil şəkli" onUploaded={setFileId} />
             <Button type="submit">Əməkdaş yarat</Button>
             {message ? <StatusMessage>{message}</StatusMessage> : null}
@@ -205,6 +219,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                     <small>
                       {member.phone || 'Telefon yoxdur'} - {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `Servis faizi ${member.serviceFeePercent}%`}
                     </small>
+                    {member.role === 'Waiter' ? (
+                      <small className="staff-capacity">
+                        Masa yükü: {member.activeTableSessionCount ?? 0}/{member.effectiveMaxActiveTableCount ?? 'limitsiz'}
+                      </small>
+                    ) : null}
                   </div>
                   <div className="staff-badges">
                     <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>

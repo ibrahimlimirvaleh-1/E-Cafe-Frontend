@@ -14,8 +14,8 @@ export function UserMenu() {
     )
   }
 
-  const onLogout = () => {
-    logout()
+  const onLogout = async () => {
+    await logout()
     navigate('/login')
   }
 
@@ -30,7 +30,7 @@ export function UserMenu() {
           <small>{user.roleName || `Rol #${user.roleId}`}</small>
         </span>
       </Link>
-      <button className="icon-action" type="button" title="Çıxış" onClick={onLogout}>
+      <button className="icon-action" type="button" title="Çıxış" onClick={() => void onLogout()}>
         <LogOut size={18} />
       </button>
     </div>

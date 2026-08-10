@@ -3,6 +3,7 @@ export const endpoints = {
     login: '/user/login',
     register: '/user/register',
     refresh: '/user/refresh',
+    logout: '/user/logout',
   },
   restaurants: {
     adminList: '/restaurants/getAll',

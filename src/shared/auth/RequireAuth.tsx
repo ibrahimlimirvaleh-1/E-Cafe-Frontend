@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
+import { canAccess, getHomePathForUser } from './authz'
 
 type RequireAuthProps = {
   children: ReactNode
-  allowedRoleIds?: string[]
-  anyPermission?: string[]
+  allowedRoleIds?: readonly string[]
+  anyPermission?: readonly string[]
 }
 
 export function RequireAuth({ children, allowedRoleIds, anyPermission }: RequireAuthProps) {
@@ -16,11 +17,8 @@ export function RequireAuth({ children, allowedRoleIds, anyPermission }: Require
     return <Navigate to="/login" replace state={{ from: location }} />
   }
 
-  const hasAllowedRole = !allowedRoleIds?.length || allowedRoleIds.includes(user?.roleId ?? '')
-  const hasPermission = !anyPermission?.length || anyPermission.some((permission) => user?.permissions.includes(permission))
-
-  if (!hasAllowedRole || !hasPermission) {
-    return <Navigate to="/" replace />
+  if (!canAccess(user, { roleIds: allowedRoleIds, permissions: anyPermission })) {
+    return <Navigate to={getHomePathForUser(user)} replace />
   }
 
   return children

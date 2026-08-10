@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { hasPermission } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -40,17 +41,13 @@ function stockAmount(item: InventoryItem) {
   return `${item.quantityOnHand.toLocaleString('az-AZ')} ${item.unitCode || item.unitName}`
 }
 
-function hasPermission(permissions: string[], permission: string) {
-  return permissions.includes(permission)
-}
-
 export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPageMode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
-  const canManageInventory = hasPermission(user?.permissions ?? [], 'ManageInventory')
-  const canManageRecipes = hasPermission(user?.permissions ?? [], 'ManageRecipes')
+  const canManageInventory = hasPermission(user, 'ManageInventory')
+  const canManageRecipes = hasPermission(user, 'ManageRecipes')
   const copy = pageCopy[mode]
 
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')

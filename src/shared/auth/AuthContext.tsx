@@ -4,13 +4,14 @@ import { getUserFromToken } from './jwt'
 import type { CurrentUser } from './jwt'
 import { clearAuthTokens, getAccessToken, saveAuthTokens } from './tokenStorage'
 import type { AuthTokens } from './tokenStorage'
+import { ecafeApi } from '../api/ecafeApi'
 
 type AuthContextValue = {
   user: CurrentUser | null
   isAuthenticated: boolean
   setSession: (tokens: AuthTokens) => void
   updateUser: (patch: Partial<CurrentUser>) => void
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -32,9 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUser: (patch) => {
         setUser((currentUser) => (currentUser ? { ...currentUser, ...patch } : currentUser))
       },
-      logout: () => {
-        clearAuthTokens()
-        setUser(null)
+      logout: async () => {
+        try {
+          await ecafeApi.auth.logout()
+        } finally {
+          clearAuthTokens()
+          setUser(null)
+        }
       },
     }),
     [user],
