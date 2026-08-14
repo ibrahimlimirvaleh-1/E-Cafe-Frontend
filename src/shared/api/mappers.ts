@@ -131,16 +131,30 @@ export function mapMenuItem(record: AnyRecord, restaurantId: string): MenuItem {
 
 export function mapContractStatus(value: unknown): ContractStatus {
   const status = str(value)
+  const normalized = status.trim().toLowerCase()
   const statusMap: Record<string, ContractStatus> = {
+    '6001': 'Draft',
+    '6002': 'PendingSignature',
+    '6003': 'Active',
+    '6004': 'Expired',
+    '6005': 'Terminated',
+    '6006': 'OwnerApproved',
+    '6007': 'Scheduled',
     Layihə: 'Draft',
     Qaralama: 'Draft',
     'Owner təsdiqlədi': 'OwnerApproved',
     'İmzaya göndərildi': 'PendingSignature',
     'Təsdiq gözləyir': 'PendingSignature',
     Aktiv: 'Active',
+    'Planlaşdırılıb': 'Scheduled',
     'Ləğv edildi': 'Terminated',
     'Ləğv edilib': 'Terminated',
     Bitdi: 'Expired',
+    'Müddəti bitib': 'Expired',
+  }
+
+  if (normalized.includes('planla') || normalized.includes('scheduled')) {
+    return 'Scheduled'
   }
 
   return statusMap[status] ?? ((status || 'Draft') as ContractStatus)
@@ -151,6 +165,7 @@ export function contractStatusLabel(contract: RestaurantContract) {
     Draft: 'Qaralama',
     PendingSignature: 'Təsdiq gözləyir',
     OwnerApproved: 'Owner təsdiqlədi',
+    Scheduled: 'Planlaşdırılıb',
     Active: 'Aktiv',
     Expired: 'Bitib',
     Terminated: 'Ləğv edilib',
@@ -175,7 +190,7 @@ export function mapContract(record: AnyRecord, restaurantId: string): Restaurant
     id: str(record.id || record.contractId),
     restaurantId: str(record.restaurantId, restaurantId),
     contractNumber: str(record.contractNumber),
-    status: mapContractStatus(record.status || record.statusName),
+    status: mapContractStatus(record.status || record.statusName || record.statusId),
     statusId: record.statusId == null ? undefined : num(record.statusId),
     statusName: str(record.statusName || record.status),
     startDate: str(record.startDate),
@@ -185,9 +200,10 @@ export function mapContract(record: AnyRecord, restaurantId: string): Restaurant
     settlementPeriod: str(record.staffSettlementPeriod || record.settlementPeriod),
     paymentPolicy: 'OnlineOnly',
     paymentPolicyId: record.paymentPolicyId == null ? undefined : num(record.paymentPolicyId),
-    fileName: str(record.fileName || record.fileUrl || record.contractFileUrl),
+    fileName: str(record.fileName),
     fileId: record.fileId == null ? undefined : num(record.fileId),
     fileUrl: str(record.fileUrl || record.contractFileUrl),
+    fileDownloadUrl: str(record.fileDownloadUrl || record.downloadUrl),
     signedAt: str(record.signedAt),
     signedByUserId: record.signedByUserId == null ? undefined : num(record.signedByUserId),
     signedByUserName: str(record.signedByUserName),
@@ -202,7 +218,7 @@ function tone(status: string): StatusTone {
     return 'success'
   }
 
-  if (['Draft', 'Qaralama', 'PendingSignature', 'Təsdiq gözləyir', 'Reserved', 'Preparing', 'Pending'].includes(status)) {
+  if (['Draft', 'Qaralama', 'PendingSignature', 'Təsdiq gözləyir', 'Scheduled', 'Planlaşdırılıb', 'Reserved', 'Preparing', 'Pending'].includes(status)) {
     return 'warning'
   }
 
@@ -235,6 +251,7 @@ export function contractRow(contract: RestaurantContract, restaurantName = contr
     tone: tone(contract.status),
     meta: `${contract.startDate || '-'} - ${contract.endDate || '-'}`,
     value: `Komissiya ${contract.commissionPercent}%`,
+    canEdit: contract.status === 'Draft' || contract.status === 'PendingSignature',
   }
 }
 

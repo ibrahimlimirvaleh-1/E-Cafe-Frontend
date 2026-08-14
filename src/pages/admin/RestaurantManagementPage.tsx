@@ -166,6 +166,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           <TextField label="Ofisiant default masa limiti" min={1} type="number" value={form.defaultWaiterTableLimit} onChange={(event) => setForm({ ...form, defaultWaiterTableLimit: event.target.value })} />
           <FileUploadField
             label="Restoran şəkli"
+            accept="image/*"
             onUploaded={(fileId) => {
               if (fileId) {
                 setFileIds((current) => [...current, fileId])

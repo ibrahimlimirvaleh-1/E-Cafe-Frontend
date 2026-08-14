@@ -4,10 +4,11 @@ import { ecafeApi } from '../api/ecafeApi'
 
 type FileUploadFieldProps = {
   label: string
+  accept?: string
   onUploaded: (fileId: number | null) => void
 }
 
-export function FileUploadField({ label, onUploaded }: FileUploadFieldProps) {
+export function FileUploadField({ label, accept, onUploaded }: FileUploadFieldProps) {
   const [fileName, setFileName] = useState('')
   const [status, setStatus] = useState('')
 
@@ -29,7 +30,7 @@ export function FileUploadField({ label, onUploaded }: FileUploadFieldProps) {
   return (
     <label className="upload-field">
       <span>{label}</span>
-      <input type="file" onChange={handleChange} />
+      <input type="file" accept={accept} onChange={handleChange} />
       <strong>
         <Upload size={16} />
         {fileName || 'Fayl seç'}

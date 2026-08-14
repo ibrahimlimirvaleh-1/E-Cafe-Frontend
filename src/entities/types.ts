@@ -15,7 +15,7 @@ export type OrderStatus = 'Created' | 'Accepted' | 'Preparing' | 'Ready' | 'Serv
 
 export type PaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'Refunded' | 'RefundFailed'
 
-export type ContractStatus = 'Draft' | 'PendingSignature' | 'OwnerApproved' | 'Active' | 'Expired' | 'Terminated'
+export type ContractStatus = 'Draft' | 'PendingSignature' | 'OwnerApproved' | 'Scheduled' | 'Active' | 'Expired' | 'Terminated'
 
 export type SettlementStatus = 'Open' | 'Payable' | 'PaidByRestaurant' | 'Disputed'
 
@@ -59,6 +59,7 @@ export type RestaurantContract = {
   fileName: string
   fileId?: number
   fileUrl?: string
+  fileDownloadUrl?: string
   signedAt?: string
   signedByUserId?: number
   signedByUserName?: string
@@ -300,4 +301,5 @@ export type AdminRow = {
   meta: string
   value: string
   image?: string
+  canEdit?: boolean
 }

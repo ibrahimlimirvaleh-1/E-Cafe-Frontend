@@ -1,5 +1,5 @@
-import { CheckCircle2, FileText, Send, ShieldCheck, XCircle } from 'lucide-react'
-import { useState } from 'react'
+import { CheckCircle2, Download, Eye, FileText, Send, ShieldCheck, XCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import type { ContractStatus, RestaurantContract, StatusTone, WorkflowAction } from '../../../entities/types'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
@@ -16,7 +16,7 @@ function statusTone(status: ContractStatus): StatusTone {
     return 'success'
   }
 
-  if (status === 'Draft' || status === 'PendingSignature') {
+  if (status === 'Draft' || status === 'PendingSignature' || status === 'Scheduled') {
     return 'warning'
   }
 
@@ -27,7 +27,7 @@ function statusTone(status: ContractStatus): StatusTone {
   return 'neutral'
 }
 
-function formatDate(value: string) {
+function formatDate(value?: string) {
   if (!value) {
     return '-'
   }
@@ -50,7 +50,11 @@ function nextActionText(contract: RestaurantContract, actions: WorkflowAction[])
   }
 
   if (contract.status === 'OwnerApproved') {
-    return 'Restoran sahibi müqaviləni təsdiqləyib. Admin aktivləşdirdikdən sonra restoran əməliyyatları açılır.'
+    return 'Restoran sahibi müqaviləni təsdiqləyib. Başlama tarixi gələcəkdirsə aktivləşdirmədən sonra müqavilə planlaşdırılmış statusa düşəcək.'
+  }
+
+  if (contract.status === 'Scheduled') {
+    return 'Müqavilə planlaşdırılıb. Başlama tarixi çatanda sistem onu avtomatik aktiv edəcək.'
   }
 
   if (contract.status === 'Active') {
@@ -60,6 +64,20 @@ function nextActionText(contract: RestaurantContract, actions: WorkflowAction[])
   return 'Bu müqavilə üzrə aktiv əməliyyat yoxdur.'
 }
 
+function contractFileName(contract: RestaurantContract) {
+  const rawName = contract.fileName || `${contract.contractNumber || `contract-${contract.id}`}.pdf`
+  return rawName.replace(/[\\/:*?"<>|]/g, '-')
+}
+
+async function isPdfBlob(blob: Blob) {
+  if (blob.type.toLowerCase().includes('pdf')) {
+    return true
+  }
+
+  const signature = await blob.slice(0, 5).text().catch(() => '')
+  return signature === '%PDF-'
+}
+
 export function ContractDetailPage() {
   const { contractId = '' } = useParams()
   const [reloadKey, setReloadKey] = useState(0)
@@ -67,8 +85,20 @@ export function ContractDetailPage() {
   const [acceptanceText, setAcceptanceText] = useState('Müqaviləni oxudum və şərtlərini qəbul edirəm.')
   const [actionError, setActionError] = useState('')
   const [actionName, setActionName] = useState('')
+  const [fileError, setFileError] = useState('')
+  const [isOpeningFile, setIsOpeningFile] = useState(false)
+  const [isDownloadingFile, setIsDownloadingFile] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState('')
   const { data: record, isLoading } = useAsyncData(() => ecafeApi.contracts.get(contractId), null, [contractId, reloadKey])
   const contract = record?.contract
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
 
   async function runAction(name: string, action: () => Promise<unknown>) {
     setActionError('')
@@ -82,6 +112,73 @@ export function ContractDetailPage() {
     } finally {
       setActionName('')
     }
+  }
+
+  async function openContractFile() {
+    if (!contract?.fileUrl) {
+      return
+    }
+
+    setFileError('')
+    setIsOpeningFile(true)
+
+    try {
+      const blob = await ecafeApi.files.viewBlob(contract.fileUrl)
+      if (!(await isPdfBlob(blob))) {
+        setFileError('Bu müqavilə sənədi PDF formatında deyil. Faylı yükləyin və ya müqaviləni yenidən yaradın.')
+        return
+      }
+
+      const previewBlob = blob.type.toLowerCase().includes('pdf') ? blob : new Blob([blob], { type: 'application/pdf' })
+      const objectUrl = URL.createObjectURL(previewBlob)
+      setPreviewUrl((currentUrl) => {
+        if (currentUrl) {
+          URL.revokeObjectURL(currentUrl)
+        }
+
+        return objectUrl
+      })
+    } catch (err) {
+      setFileError(err instanceof Error ? err.message : 'Müqavilə sənədi açılmadı.')
+    } finally {
+      setIsOpeningFile(false)
+    }
+  }
+
+  async function downloadContractFile() {
+    const fileUrl = contract?.fileDownloadUrl || contract?.fileUrl
+    if (!contract || !fileUrl) {
+      return
+    }
+
+    setFileError('')
+    setIsDownloadingFile(true)
+
+    try {
+      const blob = await ecafeApi.files.downloadBlob(fileUrl)
+      const objectUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = contractFileName(contract)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
+    } catch (err) {
+      setFileError(err instanceof Error ? err.message : 'Müqavilə sənədi yüklənmədi.')
+    } finally {
+      setIsDownloadingFile(false)
+    }
+  }
+
+  function closePreview() {
+    setPreviewUrl((currentUrl) => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl)
+      }
+
+      return ''
+    })
   }
 
   if (isLoading || !contract) {
@@ -105,7 +202,7 @@ export function ContractDetailPage() {
       <PageHeader
         eyebrow="Müqavilə"
         title={contract.contractNumber || `Müqavilə #${contract.id}`}
-        description={record.restaurantName}
+        description={record?.restaurantName || '-'}
         action={<ButtonLink to="/admin/contracts" variant="secondary">Siyahıya qayıt</ButtonLink>}
       />
 
@@ -113,10 +210,16 @@ export function ContractDetailPage() {
         <div className="contract-status-line">
           <Badge tone={statusTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
           {contract.fileUrl ? (
-            <a className="contract-file-link" href={contract.fileUrl} rel="noreferrer" target="_blank">
-              <FileText size={18} />
-              Müqavilə sənədini aç
-            </a>
+            <div className="contract-file-actions">
+              <button className="contract-file-link" disabled={isOpeningFile} onClick={openContractFile} type="button">
+                <Eye size={18} />
+                {isOpeningFile ? 'Açılır...' : 'Bax'}
+              </button>
+              <button className="contract-file-link" disabled={isDownloadingFile} onClick={downloadContractFile} type="button">
+                <Download size={18} />
+                {isDownloadingFile ? 'Yüklənir...' : 'Yüklə'}
+              </button>
+            </div>
           ) : (
             <span className="contract-file-link muted">
               <FileText size={18} />
@@ -125,10 +228,25 @@ export function ContractDetailPage() {
           )}
         </div>
 
+        {previewUrl ? (
+          <div className="contract-preview-panel">
+            <div className="contract-preview-header">
+              <div>
+                <span className="eyebrow">Sənədə baxış</span>
+                <h2>{contract.fileName || contract.contractNumber || 'Müqavilə sənədi'}</h2>
+              </div>
+              <Button variant="secondary" onClick={closePreview} type="button">
+                Bağla
+              </Button>
+            </div>
+            <iframe src={previewUrl} title="Müqavilə sənədi" />
+          </div>
+        ) : null}
+
         <dl>
           <div>
             <dt>Restoran</dt>
-            <dd>{record.restaurantName}</dd>
+            <dd>{record?.restaurantName || '-'}</dd>
           </div>
           <div>
             <dt>Başlama tarixi</dt>
@@ -156,13 +274,14 @@ export function ContractDetailPage() {
           </div>
           <div>
             <dt>Təsdiq vaxtı</dt>
-            <dd>{formatDate(contract.signedAt || '')}</dd>
+            <dd>{formatDate(contract.signedAt)}</dd>
           </div>
           <div>
             <dt>Fayl</dt>
             <dd>{contract.fileId ? `#${contract.fileId}` : '-'}</dd>
           </div>
         </dl>
+        {fileError ? <StatusMessage tone="danger">{fileError}</StatusMessage> : null}
       </section>
 
       <section className="contract-action-panel">

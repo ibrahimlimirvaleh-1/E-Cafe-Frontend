@@ -29,7 +29,34 @@ export async function httpClient<T>(path: string, init?: RequestOptions): Promis
   return parseResponse<T>(response)
 }
 
+export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOptions): Promise<Blob> {
+  const response = await sendBlobRequest(pathOrUrl, init)
+
+  if (response.status === 401 && !init?.skipAuthRefresh) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) {
+      return fetchProtectedBlob(pathOrUrl, { ...init, skipAuthRefresh: true })
+    }
+  }
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null)
+    const result = normalizeApiResult<unknown>(payload, response.status, response.ok)
+    throw new Error(result.message || `Request failed with status ${response.status}`)
+  }
+
+  return response.blob()
+}
+
 async function sendRequest(path: string, init?: RequestOptions) {
+  return sendApiRequest(`${API_BASE_URL}${path}`, init)
+}
+
+async function sendBlobRequest(pathOrUrl: string, init?: RequestOptions) {
+  return sendApiRequest(resolveApiUrl(pathOrUrl), init)
+}
+
+async function sendApiRequest(url: string, init?: RequestOptions) {
   const { skipAuthRefresh: _skipAuthRefresh, ...requestInit } = init ?? {}
   const token = getAccessToken()
   const headers = new Headers(requestInit.headers)
@@ -43,10 +70,30 @@ async function sendRequest(path: string, init?: RequestOptions) {
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  return fetch(`${API_BASE_URL}${path}`, {
+  return fetch(url, {
     ...requestInit,
     headers,
   })
+}
+
+function resolveApiUrl(pathOrUrl: string) {
+  if (/^https?:\/\//i.test(pathOrUrl)) {
+    return pathOrUrl
+  }
+
+  if (pathOrUrl.startsWith('/api/')) {
+    return resolveApiRootUrl(pathOrUrl)
+  }
+
+  return `${API_BASE_URL}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`
+}
+
+function resolveApiRootUrl(path: string) {
+  if (!/^https?:\/\//i.test(API_BASE_URL)) {
+    return path
+  }
+
+  return `${new URL(API_BASE_URL).origin}${path}`
 }
 
 async function parseResponse<T>(response: Response): Promise<ApiResult<T>> {

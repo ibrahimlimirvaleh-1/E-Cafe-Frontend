@@ -191,7 +191,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                 onChange={(event) => setForm({ ...form, maxActiveTableCount: event.target.value })}
               />
             ) : null}
-            <FileUploadField label="Profil şəkli" onUploaded={setFileId} />
+            <FileUploadField label="Profil şəkli" accept="image/*" onUploaded={setFileId} />
             <Button type="submit">Əməkdaş yarat</Button>
             {message ? <StatusMessage>{message}</StatusMessage> : null}
           </form>

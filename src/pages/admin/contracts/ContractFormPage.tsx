@@ -9,7 +9,12 @@ import { PageHeader } from '../../../shared/ui/PageHeader'
 import { StatusMessage } from '../../../shared/ui/StatusMessage'
 
 function todayInputValue() {
-  return new Date().toISOString().slice(0, 10)
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
 }
 
 function toInputDate(value?: string | null) {
@@ -22,7 +27,7 @@ function toInputDate(value?: string | null) {
 }
 
 function toApiDate(value: string) {
-  return value ? new Date(`${value}T00:00:00`).toISOString() : null
+  return value ? `${value}T00:00:00Z` : null
 }
 
 export function ContractFormPage() {
@@ -53,10 +58,16 @@ export function ContractFormPage() {
   }, [record])
 
   const selectedRestaurantId = restaurantId || firstRestaurantId
+  const canEditContract = !isEditMode || !record?.contract || record.contract.status === 'Draft' || record.contract.status === 'PendingSignature'
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+
+    if (!canEditContract) {
+      setError('Bu statusda olan müqaviləni redaktə etmək olmaz.')
+      return
+    }
 
     if (!selectedRestaurantId) {
       setError('Müqavilə üçün restoran seçilməlidir.')
@@ -69,7 +80,7 @@ export function ContractFormPage() {
     }
 
     const request = {
-      startDate: toApiDate(startDate) ?? new Date().toISOString(),
+      startDate: toApiDate(startDate) ?? `${todayInputValue()}T00:00:00Z`,
       endDate: toApiDate(endDate),
       commissionPercent: commissionPercent === '' ? null : Number(commissionPercent),
       staffSettlementPeriod: staffSettlementPeriod === '' ? null : Number(staffSettlementPeriod),
@@ -120,10 +131,14 @@ export function ContractFormPage() {
           <TextField label="Hesablaşma dövrü" min="1" onChange={(event) => setStaffSettlementPeriod(event.target.value)} type="number" value={staffSettlementPeriod} />
         </div>
 
+        {isEditMode && record?.contract?.status === 'PendingSignature' ? (
+          <StatusMessage tone="warning">Redaktədən sonra müqavilə yenidən qaralama statusuna qayıdacaq və sahibkara təkrar göndərilməlidir.</StatusMessage>
+        ) : null}
+        {!canEditContract ? <StatusMessage tone="warning">Bu statusda olan müqaviləni redaktə etmək olmaz.</StatusMessage> : null}
         {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
 
         <div className="form-actions">
-          <Button disabled={isSubmitting || restaurants.length === 0} type="submit">
+          <Button disabled={!canEditContract || isSubmitting || restaurants.length === 0} type="submit">
             {isSubmitting ? 'Saxlanılır...' : isEditMode ? 'Yadda saxla' : 'Müqavilə yarat'}
           </Button>
           <ButtonLink to="/admin/contracts" variant="secondary">

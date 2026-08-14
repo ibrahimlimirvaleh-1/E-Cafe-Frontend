@@ -1623,13 +1623,55 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--primary);
+  cursor: pointer;
   font-weight: 800;
+  font: inherit;
   text-decoration: none;
+}
+
+.contract-file-link:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.contract-file-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .contract-file-link.muted {
   color: var(--on-surface-variant);
+}
+
+.contract-preview-panel {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.contract-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.contract-preview-panel iframe {
+  width: 100%;
+  min-height: min(760px, 75vh);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  background: #fff;
 }
 
 .contract-action-panel {

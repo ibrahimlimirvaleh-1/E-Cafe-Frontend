@@ -44,9 +44,11 @@ export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 
               <Link aria-label={`${row.title} detallar`} className="ui-action-link action-icon-button" to={`${baseRoute}/${row.id}`} title="Detallar">
                 <Eye size={18} />
               </Link>
-              <Link aria-label={`${row.title} redakte et`} className="ui-action-link action-icon-button" to={`${baseRoute}/${row.id}/edit`} title="Redakte et">
-                <Pencil size={17} />
-              </Link>
+              {row.canEdit === false ? null : (
+                <Link aria-label={`${row.title} redakte et`} className="ui-action-link action-icon-button" to={`${baseRoute}/${row.id}/edit`} title="Redakte et">
+                  <Pencil size={17} />
+                </Link>
+              )}
             </div>
           ) : null}
         </article>

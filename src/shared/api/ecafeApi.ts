@@ -27,7 +27,7 @@ import type {
   WorkflowAction,
 } from '../../entities/types'
 import { endpoints } from './endpoints'
-import { httpClient } from './httpClient'
+import { fetchProtectedBlob, httpClient } from './httpClient'
 import { getRefreshToken } from '../auth/tokenStorage'
 import {
   categoryRow,
@@ -666,6 +666,8 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(endpoints.files.metadata(fileId))
       return mapUploadedFile(result.data as AnyRecord)
     },
+    viewBlob: (fileUrl: string) => fetchProtectedBlob(fileUrl),
+    downloadBlob: (fileUrl: string) => fetchProtectedBlob(fileUrl),
     delete: (fileId: string) =>
       httpClient<unknown>(endpoints.files.delete(fileId), {
         method: 'DELETE',
