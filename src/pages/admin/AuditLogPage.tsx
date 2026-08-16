@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SlidersHorizontal } from 'lucide-react'
+import { Eye, SlidersHorizontal, X } from 'lucide-react'
+import type { AuditLogEntry } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
@@ -35,6 +36,7 @@ export function AuditLogPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null)
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const { data: auditActions } = useAsyncData(() => ecafeApi.lookups.auditActions(), [], [])
   const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
@@ -151,6 +153,7 @@ export function AuditLogPage() {
             <span>İstifadəçi</span>
             <span>Rol</span>
             <span>Tarix</span>
+            <span>Baxış</span>
           </div>
           {logPage.items.map((log) => (
             <article key={log.id}>
@@ -164,6 +167,15 @@ export function AuditLogPage() {
               </div>
               <small>{log.actorRoleName || '-'}</small>
               <small>{toLocalDateTime(log.occurredAt || log.createdAt)}</small>
+              <button
+                type="button"
+                className="ui-button ui-button-secondary action-icon-button"
+                aria-label={`${log.actionDisplayName || log.action || 'Audit log'} detalına bax`}
+                title="Detala bax"
+                onClick={() => setSelectedLog(log)}
+              >
+                <Eye size={18} />
+              </button>
             </article>
           ))}
           {!isLoading && logPage.items.length === 0 ? <p className="online-only">Bu filterlərə uyğun audit log tapılmadı.</p> : null}
@@ -177,6 +189,65 @@ export function AuditLogPage() {
           onPageChange={setPageNumber}
         />
       </section>
+      {selectedLog ? <AuditLogDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} /> : null}
     </main>
+  )
+}
+
+function AuditLogDetailModal({ log, onClose }: { log: AuditLogEntry; onClose: () => void }) {
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <section className="audit-detail-modal" role="dialog" aria-modal="true" aria-label="Audit log detalları" onClick={(event) => event.stopPropagation()}>
+        <div className="audit-detail-header">
+          <div>
+            <span className="eyebrow">Audit detalı</span>
+            <h2>{log.actionDisplayName || log.action || 'Əməliyyat'}</h2>
+          </div>
+          <button type="button" className="ui-button ui-button-secondary action-icon-button" aria-label="Bağla" title="Bağla" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="audit-detail-summary">
+          <DetailItem label="Obyekt" value={log.entityDisplayName || `${log.entityName} #${log.entityId}`} />
+          <DetailItem label="İstifadəçi" value={log.actorName || 'Sistem'} />
+          <DetailItem label="Rol" value={log.actorRoleName || '-'} />
+          <DetailItem label="Tarix" value={toLocalDateTime(log.occurredAt || log.createdAt)} />
+          {log.actorEmail ? <DetailItem label="Email" value={log.actorEmail} /> : null}
+          {log.ipAddress ? <DetailItem label="IP ünvan" value={log.ipAddress} /> : null}
+        </div>
+
+        {log.details.length > 0 ? (
+          <div className="audit-detail-changes">
+            <span className="eyebrow">Dəyişikliklər</span>
+            {log.details.map((detail, index) => (
+              <div className="audit-detail-change" key={`${detail.label}-${index}`}>
+                <strong>{detail.label}</strong>
+                {detail.oldValue !== undefined || detail.newValue !== undefined ? (
+                  <div className="audit-change-values">
+                    <span>{detail.oldValue || '-'}</span>
+                    <span aria-hidden="true">→</span>
+                    <span>{detail.newValue || '-'}</span>
+                  </div>
+                ) : (
+                  <span>{detail.value || '-'}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="online-only">Bu əməliyyat üçün əlavə detal yoxdur.</p>
+        )}
+      </section>
+    </div>
+  )
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   )
 }

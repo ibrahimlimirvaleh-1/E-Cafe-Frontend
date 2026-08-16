@@ -2272,7 +2272,7 @@ img {
 .audit-list-head,
 .audit-list article {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.2fr) minmax(180px, 1fr) minmax(140px, 0.7fr) minmax(150px, 0.8fr);
+  grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.2fr) minmax(180px, 1fr) minmax(140px, 0.7fr) minmax(150px, 0.8fr) auto;
   gap: 14px;
   align-items: center;
 }
@@ -2288,7 +2288,7 @@ img {
 }
 
 .audit-list article {
-  grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.2fr) minmax(180px, 1fr) minmax(140px, 0.7fr) minmax(150px, 0.8fr);
+  grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.2fr) minmax(180px, 1fr) minmax(140px, 0.7fr) minmax(150px, 0.8fr) auto;
 }
 
 .audit-action-cell,
@@ -2300,6 +2300,88 @@ img {
 
 .audit-user-cell .ui-badge {
   max-width: 100%;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(0 0 0 / 0.36);
+}
+
+.audit-detail-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-elevated);
+  padding: 24px;
+}
+
+.audit-detail-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.audit-detail-header h2 {
+  margin: 4px 0 0;
+}
+
+.audit-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface-container-low);
+}
+
+.audit-detail-summary div,
+.audit-detail-change {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.audit-detail-summary span,
+.audit-detail-change > span,
+.audit-change-values span {
+  color: var(--on-surface-variant);
+}
+
+.audit-detail-summary strong,
+.audit-detail-change strong,
+.audit-change-values span {
+  overflow-wrap: anywhere;
+}
+
+.audit-detail-changes {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.audit-detail-change {
+  padding: 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.audit-change-values {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
 }
 
 .upload-field {
@@ -2972,6 +3054,20 @@ img {
 
   .audit-list article {
     gap: 8px;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .audit-detail-modal {
+    max-height: calc(100vh - 24px);
+    padding: 18px;
+  }
+
+  .audit-detail-summary,
+  .audit-change-values {
+    grid-template-columns: 1fr;
   }
 
   .staff-badges,
