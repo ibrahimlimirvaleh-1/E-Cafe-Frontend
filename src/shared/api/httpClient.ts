@@ -11,6 +11,7 @@ export type ApiResult<T> = {
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN ?? 'http://localhost:8080'
 
 type RequestOptions = RequestInit & {
   skipAuthRefresh?: boolean
@@ -89,11 +90,15 @@ function resolveApiUrl(pathOrUrl: string) {
 }
 
 function resolveApiRootUrl(path: string) {
-  if (!/^https?:\/\//i.test(API_BASE_URL)) {
-    return path
+  return `${getApiOrigin()}${path}`
+}
+
+function getApiOrigin() {
+  if (/^https?:\/\//i.test(API_BASE_URL)) {
+    return new URL(API_BASE_URL).origin
   }
 
-  return `${new URL(API_BASE_URL).origin}${path}`
+  return API_PUBLIC_ORIGIN.replace(/\/$/, '')
 }
 
 async function parseResponse<T>(response: Response): Promise<ApiResult<T>> {
@@ -210,4 +215,4 @@ function normalizeApiResult<T>(payload: unknown, statusCode: number, success: bo
   }
 }
 
-export { API_BASE_URL }
+export { API_BASE_URL, getApiOrigin }

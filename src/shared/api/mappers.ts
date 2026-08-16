@@ -11,11 +11,42 @@ import type {
   WorkflowAction,
 } from '../../entities/types'
 import type { AnyRecord } from './responseUtils'
+import { getApiOrigin } from './httpClient'
 import { bool, num, str } from './responseUtils'
+
+function resolvePublicApiAssetUrl(value: string) {
+  if (!value) {
+    return value
+  }
+
+  const apiPath = extractApiPath(value)
+  if (!apiPath) {
+    return value
+  }
+
+  return `${getApiOrigin()}${apiPath}`
+}
+
+function extractApiPath(value: string) {
+  if (value.startsWith('/api/')) {
+    return value
+  }
+
+  if (!/^https?:\/\//i.test(value)) {
+    return ''
+  }
+
+  try {
+    const url = new URL(value)
+    return url.pathname.startsWith('/api/') ? `${url.pathname}${url.search}` : ''
+  } catch {
+    return ''
+  }
+}
 
 function imageUrl(record: AnyRecord, fallback: string) {
   const urls = Array.isArray(record.imageUrls) ? record.imageUrls : []
-  return str(record.fileUrl || record.imageUrl || record.image || urls[0], fallback)
+  return resolvePublicApiAssetUrl(str(record.fileUrl || record.imageUrl || record.image || urls[0], fallback))
 }
 
 export function mapRestaurant(record: AnyRecord): Restaurant {
