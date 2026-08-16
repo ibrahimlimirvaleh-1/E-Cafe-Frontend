@@ -2,6 +2,7 @@ import { Eye, Pencil } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { AdminRow } from '../../entities/types'
 import { Badge } from './Badge'
+import { SafeImage } from './SafeImage'
 
 type DataTableProps = {
   baseRoute: string
@@ -24,7 +25,7 @@ export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 
       {rows.map((row) => (
         <article className="ui-table-row" key={row.id}>
           <div className="ui-table-primary" data-label={columns[0]}>
-            {row.image ? <img className="ui-table-thumb" src={row.image} alt={row.title} /> : null}
+            {row.image ? <SafeImage className="ui-table-thumb" src={row.image} alt={row.title} /> : null}
             <span>
               <strong>{row.title}</strong>
               <small>{row.subtitle}</small>

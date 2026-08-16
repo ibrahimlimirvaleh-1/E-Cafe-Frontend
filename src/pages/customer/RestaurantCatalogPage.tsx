@@ -6,6 +6,7 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
+import { SafeImage } from '../../shared/ui/SafeImage'
 
 const pageSize = 6
 
@@ -59,7 +60,7 @@ export function RestaurantCatalogPage() {
       <section className="restaurant-grid">
         {restaurantPage.items.map((restaurant) => (
           <article className="restaurant-card" key={restaurant.id}>
-            <img src={restaurant.image} alt={restaurant.name} />
+            <SafeImage src={restaurant.image} alt={restaurant.name} />
             <div className="restaurant-card-body">
               <div className="card-kicker">
                 <span>

@@ -7,6 +7,7 @@ import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { SafeImage } from '../../shared/ui/SafeImage'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type MenuPageMode = 'categories' | 'create-category' | 'items' | 'create-item'
@@ -217,7 +218,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             <div className="admin-menu-list">
               {items.map((item) => (
                 <article key={item.id}>
-                  <img src={item.image} alt={item.name} />
+                  <SafeImage src={item.image} alt={item.name} />
                   <div>
                     <strong>{item.name}</strong>
                     <small>{item.description || 'Tərkib qeyd edilməyib'}</small>

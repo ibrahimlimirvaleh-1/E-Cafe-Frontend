@@ -6,6 +6,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button } from '../../shared/ui/Button'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
+import { SafeImage } from '../../shared/ui/SafeImage'
 
 type ProfilePanel = 'staff' | 'tables' | 'menu'
 
@@ -46,7 +47,7 @@ export function RestaurantProfilePage() {
   return (
     <main className="page">
       <section className="profile-layout">
-        <img src={restaurant.image} alt={restaurant.name} />
+        <SafeImage src={restaurant.image} alt={restaurant.name} />
         <article className="profile-panel">
           <span className="eyebrow">Restoran profili</span>
           <h1>{restaurant.name}</h1>
@@ -168,7 +169,7 @@ export function RestaurantProfilePage() {
                 <div className="public-menu-table">
                   {selectedCategory?.items.map((item) => (
                     <article className="public-menu-row" key={item.id}>
-                      <img src={item.image} alt={item.name} />
+                      <SafeImage src={item.image} alt={item.name} />
                       <div>
                         <strong>{item.name}</strong>
                         <small>{item.description || 'Tərkib qeyd edilməyib'}</small>

@@ -5,6 +5,7 @@ import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { SafeImage } from '../../shared/ui/SafeImage'
 
 export function MenuSelectionPage() {
   const { restaurantId = 'saffron-premium' } = useParams()
@@ -59,7 +60,7 @@ export function MenuSelectionPage() {
               return (
                 <article className="menu-card" key={item.id}>
                   <div className="menu-card-image">
-                    <img src={item.image} alt={item.name} />
+                    <SafeImage src={item.image} alt={item.name} />
                     <span>{category?.name ?? 'Menyu'}</span>
                   </div>
                   <div className="menu-card-body">
