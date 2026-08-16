@@ -196,9 +196,19 @@ export type UserProfile = {
 export type AuditLogEntry = {
   id: string
   action: string
+  actionDisplayName?: string
   entityName: string
   entityId: string
+  entityDisplayName?: string
+  actorUserId?: string
   actorName: string
+  actorRoleId?: number
+  actorRoleName?: string
+  actorEmail?: string
+  traceId?: string
+  ipAddress?: string
+  userAgent?: string
+  occurredAt: string
   createdAt: string
   description: string
 }

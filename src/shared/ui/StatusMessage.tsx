@@ -10,7 +10,7 @@ type StatusMessageProps = {
 }
 
 const warningWords = ['secil', 'required', 'tapilmadi', 'yoxdur']
-const dangerWords = ['failed', 'error', 'xeta', 'yenilenmedi', 'icazeniz yoxdur']
+const dangerWords = ['failed', 'error', 'xeta', 'yenilenmedi', 'yaradilmadi', 'icazeniz yoxdur', 'already exists', 'movcuddur']
 
 function inferTone(children: ReactNode): StatusMessageTone {
   const message = typeof children === 'string' ? children.toLowerCase() : ''

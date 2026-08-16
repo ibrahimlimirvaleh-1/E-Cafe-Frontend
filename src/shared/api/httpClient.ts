@@ -7,7 +7,7 @@ export type ApiResult<T> = {
   message: string
   data: T
   traceId?: string
-  errors?: Record<string, string[]>
+  errors?: unknown
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
@@ -42,7 +42,7 @@ export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOption
   if (!response.ok) {
     const payload = await response.json().catch(() => null)
     const result = normalizeApiResult<unknown>(payload, response.status, response.ok)
-    throw new Error(result.message || `Request failed with status ${response.status}`)
+    throw new Error(buildApiErrorMessage(result, response.status))
   }
 
   return response.blob()
@@ -110,7 +110,7 @@ async function parseResponse<T>(response: Response): Promise<ApiResult<T>> {
   const result = normalizeApiResult<T>(payload, response.status, response.ok)
 
   if (!response.ok) {
-    throw new Error(result.message || `Request failed with status ${response.status}`)
+    throw new Error(buildApiErrorMessage(result, response.status))
   }
 
   return result
@@ -152,6 +152,47 @@ async function refreshAccessToken() {
     clearAuthTokens()
     return false
   }
+}
+
+function buildApiErrorMessage(result: ApiResult<unknown>, statusCode: number) {
+  const detailMessages = extractErrorDetails(result.errors)
+
+  if (detailMessages.length > 0) {
+    return detailMessages.join(' ')
+  }
+
+  return result.message || `Request failed with status ${statusCode}`
+}
+
+function extractErrorDetails(errors: unknown): string[] {
+  if (!errors) {
+    return []
+  }
+
+  if (Array.isArray(errors)) {
+    return errors
+      .map((error) => {
+        if (typeof error === 'string') {
+          return error
+        }
+
+        if (error && typeof error === 'object' && 'message' in error) {
+          return String((error as { message?: unknown }).message ?? '')
+        }
+
+        return ''
+      })
+      .filter(Boolean)
+  }
+
+  if (typeof errors === 'object') {
+    return Object.values(errors as Record<string, unknown>)
+      .flatMap((value) => (Array.isArray(value) ? value : [value]))
+      .map((value) => String(value ?? ''))
+      .filter(Boolean)
+  }
+
+  return []
 }
 
 function normalizeApiResult<T>(payload: unknown, statusCode: number, success: boolean): ApiResult<T> {

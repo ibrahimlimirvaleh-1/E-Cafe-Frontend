@@ -25,6 +25,7 @@ export const endpoints = {
     inventoryMovementTypes: '/lookups/inventory-movement-types',
     contractStatuses: '/lookups/contract-statuses',
     paymentPolicies: '/lookups/payment-policies',
+    auditActions: '/lookups/audit-actions',
   },
   contracts: {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/contracts`,

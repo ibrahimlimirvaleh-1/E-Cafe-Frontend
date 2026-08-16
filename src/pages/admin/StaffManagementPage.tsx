@@ -93,23 +93,28 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       return
     }
 
-    await ecafeApi.staff.create({
-      name: form.name,
-      surname: form.surname,
-      email: form.email,
-      phone: form.phone,
-      password: form.password,
-      restaurantId,
-      roleId: Number(form.roleId),
-      isActive: form.isActive === 'true',
-      serviceFeePercent: form.serviceFeePercent ? Number(form.serviceFeePercent) : null,
-      maxActiveTableCount: form.maxActiveTableCount ? Number(form.maxActiveTableCount) : null,
-      fileId,
-    })
-    setForm(initialForm)
-    setFileId(null)
-    setMessage('Əməkdaş yaradıldı.')
-    setReloadKey((value) => value + 1)
+    setMessage('')
+    try {
+      await ecafeApi.staff.create({
+        name: form.name,
+        surname: form.surname,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+        restaurantId,
+        roleId: Number(form.roleId),
+        isActive: form.isActive === 'true',
+        serviceFeePercent: form.serviceFeePercent ? Number(form.serviceFeePercent) : null,
+        maxActiveTableCount: form.maxActiveTableCount ? Number(form.maxActiveTableCount) : null,
+        fileId,
+      })
+      setForm(initialForm)
+      setFileId(null)
+      setMessage('Əməkdaş yaradıldı.')
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Əməkdaş yaradılmadı.')
+    }
   }
 
   async function handleRoleChange(member: StaffMember) {

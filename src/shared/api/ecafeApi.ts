@@ -43,7 +43,7 @@ import {
   staffRow,
   tableRow,
 } from './mappers'
-import type { AnyRecord } from './responseUtils'
+import type { AnyRecord, PaginatedResponse } from './responseUtils'
 import { asArray, asPaginated, bool, num, str } from './responseUtils'
 
 type LoginRequest = {
@@ -82,6 +82,30 @@ type UpdateContractRequest = CreateContractRequest
 type ApproveContractRequest = {
   hasAcceptedContractTerms: boolean
   acceptanceText: string
+}
+
+type WorkflowActionRequest = {
+  action: WorkflowAction
+  body?: unknown
+}
+
+function normalizeWorkflowActionEndpoint(endpoint: string) {
+  const trimmedEndpoint = endpoint.trim()
+
+  if (!trimmedEndpoint) {
+    return ''
+  }
+
+  if (/^https?:\/\//i.test(trimmedEndpoint)) {
+    const url = new URL(trimmedEndpoint)
+    return normalizeWorkflowActionEndpoint(`${url.pathname}${url.search}`)
+  }
+
+  if (trimmedEndpoint.startsWith('/api/v1/')) {
+    return trimmedEndpoint.slice('/api/v1'.length)
+  }
+
+  return trimmedEndpoint.startsWith('/') ? trimmedEndpoint : `/${trimmedEndpoint}`
 }
 
 type CreateRestaurantGroupRequest = {
@@ -181,6 +205,14 @@ type UpdateProfileRequest = {
   email: string
   phone: string
   fileId?: number | null
+}
+
+type AuditLogQuery = {
+  action?: string
+  dateFrom?: string
+  dateTo?: string
+  pageNumber?: number
+  pageSize?: number
 }
 
 type UploadedFile = {
@@ -308,15 +340,43 @@ function mapWorkflowAction(record: AnyRecord): WorkflowAction {
 }
 
 function mapAuditLog(record: AnyRecord): AuditLogEntry {
+  const occurredAt = str(record.occurredAt || record.createdAt || record.timestamp)
+  const actorName = str(record.actorFullName || record.actorName || record.createdBy || record.userName)
+  const entityName = str(record.entityName || record.entity)
+  const entityId = str(record.entityId)
+
   return {
     id: str(record.id || record.auditLogId),
     action: str(record.action || record.actionName),
-    entityName: str(record.entityName || record.entity),
-    entityId: str(record.entityId),
-    actorName: str(record.actorName || record.createdBy || record.userName),
-    createdAt: str(record.createdAt || record.timestamp),
-    description: str(record.description || record.message),
+    actionDisplayName: str(record.actionDisplayName || record.actionName),
+    entityName,
+    entityId,
+    entityDisplayName: str(record.entityDisplayName),
+    actorUserId: record.actorUserId == null && record.userId == null ? undefined : str(record.actorUserId || record.userId),
+    actorName,
+    actorRoleId: record.actorRoleId == null ? undefined : num(record.actorRoleId),
+    actorRoleName: str(record.actorRoleName || record.roleName),
+    actorEmail: str(record.actorEmail),
+    traceId: str(record.correlationId || record.traceId),
+    ipAddress: str(record.ipAddress),
+    userAgent: str(record.userAgent),
+    occurredAt,
+    createdAt: occurredAt,
+    description: str(record.description || record.message || `${entityName} #${entityId}`),
   }
+}
+
+function buildAuditLogQuery(query: AuditLogQuery = {}) {
+  const params = new URLSearchParams()
+
+  if (query.action?.trim()) params.set('Action', query.action.trim())
+  if (query.dateFrom) params.set('DateFrom', query.dateFrom)
+  if (query.dateTo) params.set('DateTo', query.dateTo)
+  if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
+  if (query.pageSize) params.set('PageSize', String(query.pageSize))
+
+  const search = params.toString()
+  return search ? `?${search}` : ''
 }
 
 function mapNotification(record: AnyRecord): NotificationItem {
@@ -649,6 +709,11 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.lookups.paymentPolicies)
         return asArray<AnyRecord>(result.data).map(mapLookup)
       }, [] as LookupItem[]),
+    auditActions: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.lookups.auditActions)
+        return asArray<AnyRecord>(result.data).map(mapLookup)
+      }, [] as LookupItem[]),
   },
 
   files: {
@@ -807,6 +872,11 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.contracts.actions(restaurantId, contractId))
         return asArray<AnyRecord>(result.data).map(mapWorkflowAction)
       }, [] as WorkflowAction[]),
+    executeAction: ({ action, body }: WorkflowActionRequest) =>
+      httpClient<unknown>(normalizeWorkflowActionEndpoint(action.endpoint), {
+        method: action.httpMethod || 'POST',
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      }),
     sendForSignature: (restaurantId: string, contractId: string) =>
       httpClient<unknown>(endpoints.contracts.sendForSignature(restaurantId, contractId), {
         method: 'POST',
@@ -1018,10 +1088,21 @@ export const ecafeApi = {
   },
 
   auditLogs: {
-    list: (restaurantId: string) =>
+    page: (restaurantId: string, query: AuditLogQuery = {}) =>
       safe(async () => {
-        const result = await httpClient<unknown>(endpoints.auditLogs.list(restaurantId))
-        return asArray<AnyRecord>(result.data).map(mapAuditLog)
-      }, [] as AuditLogEntry[]),
+        const result = await httpClient<unknown>(`${endpoints.auditLogs.list(restaurantId)}${buildAuditLogQuery(query)}`)
+        return asPaginated(result.data, mapAuditLog)
+      }, {
+        items: [],
+        pageIndex: 1,
+        totalPages: 1,
+        totalCount: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      } as PaginatedResponse<AuditLogEntry>),
+    list: async (restaurantId: string, query: AuditLogQuery = {}) => {
+      const page = await ecafeApi.auditLogs.page(restaurantId, query)
+      return page.items
+    },
   },
 }

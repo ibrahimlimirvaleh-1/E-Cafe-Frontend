@@ -293,7 +293,7 @@ export function ContractDetailPage() {
         {sendForSignatureAction ? (
           <Button
             disabled={isBusy}
-            onClick={() => runAction('send', () => ecafeApi.contracts.sendForSignature(contract.restaurantId, contract.id))}
+            onClick={() => runAction('send', () => ecafeApi.contracts.executeAction({ action: sendForSignatureAction }))}
           >
             <Send size={18} />
             {actionName === 'send' ? 'Göndərilir...' : sendForSignatureAction.label}
@@ -320,9 +320,14 @@ export function ContractDetailPage() {
               disabled={isBusy || !hasAcceptedContractTerms || !acceptanceText.trim()}
               onClick={() =>
                 runAction('approve', () =>
-                  ecafeApi.contracts.approve(contract.restaurantId, contract.id, {
-                    hasAcceptedContractTerms,
-                    acceptanceText,
+                  ecafeApi.contracts.executeAction({
+                    action: approveAction,
+                    body: {
+                      restaurantId: Number(contract.restaurantId),
+                      contractId: Number(contract.id),
+                      hasAcceptedContractTerms,
+                      acceptanceText,
+                    },
                   }),
                 )
               }
@@ -336,7 +341,7 @@ export function ContractDetailPage() {
         {activateAction ? (
           <Button
             disabled={isBusy}
-            onClick={() => runAction('activate', () => ecafeApi.contracts.activate(contract.restaurantId, contract.id))}
+            onClick={() => runAction('activate', () => ecafeApi.contracts.executeAction({ action: activateAction }))}
           >
             <ShieldCheck size={18} />
             {actionName === 'activate' ? 'Aktivləşdirilir...' : activateAction.label}
@@ -346,7 +351,7 @@ export function ContractDetailPage() {
         {terminateAction ? (
           <Button
             disabled={isBusy}
-            onClick={() => runAction('terminate', () => ecafeApi.contracts.terminate(contract.restaurantId, contract.id))}
+            onClick={() => runAction('terminate', () => ecafeApi.contracts.executeAction({ action: terminateAction }))}
             variant="danger"
           >
             <XCircle size={18} />

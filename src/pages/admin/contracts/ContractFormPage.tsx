@@ -2,6 +2,8 @@ import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
+import { useAuth } from '../../../shared/auth/AuthContext'
+import { RoleIds, isInRole } from '../../../shared/auth/authz'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../../shared/ui/Button'
 import { SelectField, TextField } from '../../../shared/ui/FormField'
@@ -32,6 +34,7 @@ function toApiDate(value: string) {
 
 export function ContractFormPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { contractId = '' } = useParams()
   const isEditMode = contractId !== ''
   const { data: restaurants, isLoading } = useAsyncData(() => ecafeApi.restaurants.list(), [])
@@ -58,7 +61,8 @@ export function ContractFormPage() {
   }, [record])
 
   const selectedRestaurantId = restaurantId || firstRestaurantId
-  const canEditContract = !isEditMode || !record?.contract || record.contract.status === 'Draft' || record.contract.status === 'PendingSignature'
+  const canManageContracts = isInRole(user, [RoleIds.PlatformAdmin])
+  const canEditContract = canManageContracts && (!isEditMode || !record?.contract || record.contract.status === 'Draft' || record.contract.status === 'PendingSignature')
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -103,6 +107,22 @@ export function ContractFormPage() {
     }
   }
 
+
+  if (!canManageContracts) {
+    return (
+      <main className="admin-page narrow">
+        <PageHeader eyebrow="Müqavilələr" title="Müqavilə idarəetməsi bağlıdır" />
+        <section className="form-card">
+          <StatusMessage tone="warning">Sahibkar müqavilə yarada və ya redaktə edə bilməz. Müqaviləni yalnız oxuyub təsdiqləyə bilərsiniz.</StatusMessage>
+          <div className="form-actions">
+            <ButtonLink to="/admin/contracts" variant="secondary">
+              Siyahıya qayıt
+            </ButtonLink>
+          </div>
+        </section>
+      </main>
+    )
+  }
   return (
     <main className="admin-page narrow">
       <PageHeader eyebrow={isEditMode ? 'Müqavilə redaktəsi' : 'Yeni müqavilə'} title={isEditMode ? 'Müqaviləni redaktə et' : 'Müqavilə yarat'} />
