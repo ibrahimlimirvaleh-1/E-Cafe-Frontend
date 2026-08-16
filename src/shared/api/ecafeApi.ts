@@ -137,7 +137,6 @@ type CreateStaffRequest = {
   surname: string
   email: string
   phone: string
-  password: string
   isActive: boolean
   restaurantId: string
   roleId: number
@@ -344,6 +343,16 @@ function mapAuditLog(record: AnyRecord): AuditLogEntry {
   const actorName = str(record.actorFullName || record.actorName || record.createdBy || record.userName)
   const entityName = str(record.entityName || record.entity)
   const entityId = str(record.entityId)
+  const details = asArray(record.details).map((detailRecord) => {
+    const detail = detailRecord as AnyRecord
+
+    return {
+      label: str(detail.label),
+      value: detail.value == null ? undefined : str(detail.value),
+      oldValue: detail.oldValue == null ? undefined : str(detail.oldValue),
+      newValue: detail.newValue == null ? undefined : str(detail.newValue),
+    }
+  })
 
   return {
     id: str(record.id || record.auditLogId),
@@ -363,6 +372,7 @@ function mapAuditLog(record: AnyRecord): AuditLogEntry {
     occurredAt,
     createdAt: occurredAt,
     description: str(record.description || record.message || `${entityName} #${entityId}`),
+    details,
   }
 }
 
@@ -469,6 +479,12 @@ export const ecafeApi = {
       })
       return extractAuthTokens(result.data)
     },
+    setPassword: (request: { token: string; password: string; confirmPassword: string }) =>
+      httpClient<unknown>(endpoints.auth.setPassword, {
+        method: 'POST',
+        body: JSON.stringify(request),
+        skipAuthRefresh: true,
+      }),
     logout: async () => {
       const refreshToken = getRefreshToken()
       if (!refreshToken) {
@@ -956,7 +972,6 @@ export const ecafeApi = {
       formData.set('Surname', request.surname)
       formData.set('Email', request.email)
       formData.set('Phone', request.phone)
-      formData.set('Password', request.password)
       formData.set('IsActive', String(request.isActive))
       formData.set('RestaurantId', request.restaurantId)
       formData.set('RoleId', String(request.roleId))

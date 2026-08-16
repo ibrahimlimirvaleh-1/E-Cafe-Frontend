@@ -26,6 +26,7 @@ import { RestaurantCreatePage, RestaurantManagementPage } from '../pages/admin/R
 import { StaffCreatePage, StaffManagementPage } from '../pages/admin/StaffManagementPage'
 import { TableCreatePage, TablesManagementPage } from '../pages/admin/TablesManagementPage'
 import { AuthPage } from '../pages/auth/AuthPage'
+import { SetPasswordPage } from '../pages/auth/SetPasswordPage'
 import { ConfirmationPage } from '../pages/customer/ConfirmationPage'
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
 import { NotificationsPage } from '../pages/customer/NotificationsPage'
@@ -113,6 +114,7 @@ export function AppRouter() {
 
       <Route path="login" element={<AuthPage mode="login" />} />
       <Route path="register" element={<AuthPage mode="register" />} />
+      <Route path="set-password" element={<SetPasswordPage />} />
 
       <Route
         path="admin"

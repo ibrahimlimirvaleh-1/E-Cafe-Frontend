@@ -10,6 +10,7 @@ import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { SafeImage } from '../../shared/ui/SafeImage'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type StaffPageMode = 'list' | 'create'
@@ -19,7 +20,6 @@ const initialForm = {
   surname: '',
   email: '',
   phone: '',
-  password: '',
   roleId: '',
   isActive: 'true',
   serviceFeePercent: '',
@@ -100,7 +100,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
         surname: form.surname,
         email: form.email,
         phone: form.phone,
-        password: form.password,
         restaurantId,
         roleId: Number(form.roleId),
         isActive: form.isActive === 'true',
@@ -110,7 +109,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       })
       setForm(initialForm)
       setFileId(null)
-      setMessage('Əməkdaş yaradıldı.')
+      setMessage('Əməkdaş yaradıldı. Şifrə təyin etmə linki emailə göndərildi.')
       setReloadKey((value) => value + 1)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Əməkdaş yaradılmadı.')
@@ -168,10 +167,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <TextField label="Soyad" required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
             </div>
             <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-            <div className="form-grid two">
-              <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-              <TextField label="Parol" required type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
-            </div>
+            <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
             <SelectField label="Rol" required value={form.roleId} onChange={(event) => setForm({ ...form, roleId: event.target.value })}>
               <option value="">Rol seç</option>
               {roleOptions.map((role) => (
@@ -218,7 +214,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <div className="compact-list">
               {staff.map((member) => (
                 <article className="staff-member-row" key={member.id}>
-                  <img src={member.avatar} alt={member.name} />
+                  <SafeImage src={member.avatar} alt={member.name} />
                   <div className="staff-member-main">
                     <strong>{member.name || 'Adsız əməkdaş'}</strong>
                     <small>

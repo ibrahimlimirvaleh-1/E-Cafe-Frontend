@@ -211,6 +211,14 @@ export type AuditLogEntry = {
   occurredAt: string
   createdAt: string
   description: string
+  details: AuditLogDetail[]
+}
+
+export type AuditLogDetail = {
+  label: string
+  value?: string
+  oldValue?: string
+  newValue?: string
 }
 
 export type NotificationItem = {

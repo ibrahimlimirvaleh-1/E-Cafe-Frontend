@@ -2,6 +2,7 @@ export const endpoints = {
   auth: {
     login: '/user/login',
     register: '/user/register',
+    setPassword: '/user/set-password',
     refresh: '/user/refresh',
     logout: '/user/logout',
   },
