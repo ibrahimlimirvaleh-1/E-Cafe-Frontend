@@ -238,6 +238,29 @@ export type NotificationItem = {
   createdAt: string
 }
 
+export type OutboxMessage = {
+  id: string
+  eventType: string
+  aggregateType: string
+  aggregateId: number
+  channelId: number
+  channel: string
+  statusId: number
+  status: string
+  recipient: string
+  recipientName: string
+  subject: string
+  retryCount: number
+  maxRetryCount: number
+  occurredAt: string
+  processedAt?: string
+  lockedUntil?: string
+  nextRetryAt?: string
+  lastError?: string
+  relatedEntityType?: string
+  relatedEntityId?: number
+}
+
 export type Reservation = {
   id: string
   restaurantId: string

@@ -27,6 +27,8 @@ export const endpoints = {
     contractStatuses: '/lookups/contract-statuses',
     paymentPolicies: '/lookups/payment-policies',
     auditActions: '/lookups/audit-actions',
+    outboxStatuses: '/lookups/outbox-statuses',
+    notificationChannels: '/lookups/notification-channels',
   },
   contracts: {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/contracts`,
@@ -103,5 +105,10 @@ export const endpoints = {
   },
   auditLogs: {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/audit-logs`,
+  },
+  outbox: {
+    list: '/admin/outbox/messages',
+    detail: (messageId: string) => `/admin/outbox/messages/${messageId}`,
+    retry: (messageId: string) => `/admin/outbox/messages/${messageId}/retry`,
   },
 }

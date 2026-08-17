@@ -20,6 +20,7 @@ import type {
   InventoryMovement,
   LookupItem,
   NotificationItem,
+  OutboxMessage,
   Recipe,
   RestaurantContract,
   RestaurantGroup,
@@ -376,6 +377,16 @@ function mapAuditLog(record: AnyRecord): AuditLogEntry {
   }
 }
 
+type OutboxMessageQuery = {
+  statusId?: string
+  channelId?: string
+  search?: string
+  dateFrom?: string
+  dateTo?: string
+  pageNumber?: number
+  pageSize?: number
+}
+
 function buildAuditLogQuery(query: AuditLogQuery = {}) {
   const params = new URLSearchParams()
 
@@ -406,6 +417,46 @@ function mapNotification(record: AnyRecord): NotificationItem {
     relatedEntityId: record.relatedEntityId == null ? undefined : str(record.relatedEntityId),
     createdAt: str(record.createdAt),
   }
+}
+
+function mapOutboxMessage(record: AnyRecord): OutboxMessage {
+  return {
+    id: str(record.id),
+    eventType: str(record.eventType),
+    aggregateType: str(record.aggregateType),
+    aggregateId: num(record.aggregateId),
+    channelId: num(record.channelId),
+    channel: str(record.channel),
+    statusId: num(record.statusId),
+    status: str(record.status),
+    recipient: str(record.recipient),
+    recipientName: str(record.recipientName),
+    subject: str(record.subject),
+    retryCount: num(record.retryCount),
+    maxRetryCount: num(record.maxRetryCount),
+    occurredAt: str(record.occurredAt),
+    processedAt: str(record.processedAt) || undefined,
+    lockedUntil: str(record.lockedUntil) || undefined,
+    nextRetryAt: str(record.nextRetryAt) || undefined,
+    lastError: str(record.lastError) || undefined,
+    relatedEntityType: str(record.relatedEntityType) || undefined,
+    relatedEntityId: record.relatedEntityId == null ? undefined : num(record.relatedEntityId),
+  }
+}
+
+function buildOutboxQuery(query: OutboxMessageQuery = {}) {
+  const params = new URLSearchParams()
+
+  if (query.statusId) params.set('StatusId', query.statusId)
+  if (query.channelId) params.set('ChannelId', query.channelId)
+  if (query.search?.trim()) params.set('Search', query.search.trim())
+  if (query.dateFrom) params.set('DateFrom', query.dateFrom)
+  if (query.dateTo) params.set('DateTo', query.dateTo)
+  if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
+  if (query.pageSize) params.set('PageSize', String(query.pageSize))
+
+  const search = params.toString()
+  return search ? `?${search}` : ''
 }
 
 function mapInventoryItem(record: AnyRecord, restaurantId: string): InventoryItem {
@@ -728,6 +779,16 @@ export const ecafeApi = {
     auditActions: () =>
       safe(async () => {
         const result = await httpClient<unknown>(endpoints.lookups.auditActions)
+        return asArray<AnyRecord>(result.data).map(mapLookup)
+      }, [] as LookupItem[]),
+    outboxStatuses: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.lookups.outboxStatuses)
+        return asArray<AnyRecord>(result.data).map(mapLookup)
+      }, [] as LookupItem[]),
+    notificationChannels: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.lookups.notificationChannels)
         return asArray<AnyRecord>(result.data).map(mapLookup)
       }, [] as LookupItem[]),
   },
@@ -1118,6 +1179,31 @@ export const ecafeApi = {
     list: async (restaurantId: string, query: AuditLogQuery = {}) => {
       const page = await ecafeApi.auditLogs.page(restaurantId, query)
       return page.items
+    },
+  },
+
+  outbox: {
+    page: (query: OutboxMessageQuery = {}) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(`${endpoints.outbox.list}${buildOutboxQuery(query)}`)
+        return asPaginated(result.data, mapOutboxMessage)
+      }, {
+        items: [],
+        pageIndex: 1,
+        totalPages: 1,
+        totalCount: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      } as PaginatedResponse<OutboxMessage>),
+    detail: async (messageId: string) => {
+      const result = await httpClient<unknown>(endpoints.outbox.detail(messageId))
+      return mapOutboxMessage(result.data as AnyRecord)
+    },
+    retry: async (messageId: string) => {
+      const result = await httpClient<unknown>(endpoints.outbox.retry(messageId), {
+        method: 'POST',
+      })
+      return mapOutboxMessage(result.data as AnyRecord)
     },
   },
 }

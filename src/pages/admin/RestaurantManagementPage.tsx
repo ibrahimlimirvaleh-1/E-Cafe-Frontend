@@ -29,11 +29,12 @@ const initialForm = {
   defaultWaiterTableLimit: '',
 }
 
-const pageSize = 20
+const defaultPageSize = 10
 
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
   const [reloadKey, setReloadKey] = useState(0)
   const [pageNumber, setPageNumber] = useState(1)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
   const [search, setSearch] = useState('')
   const [fileIds, setFileIds] = useState<number[]>([])
   const [message, setMessage] = useState('')
@@ -49,7 +50,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     }
 
     return `?${params.toString()}`
-  }, [pageNumber, search])
+  }, [pageNumber, pageSize, search])
   const { data: restaurantPage, isLoading } = useAsyncData(() => ecafeApi.restaurants.page(query), {
     items: [],
     pageIndex: 1,
@@ -117,8 +118,14 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             hasNextPage={restaurantPage.hasNextPage}
             hasPreviousPage={restaurantPage.hasPreviousPage}
             pageIndex={restaurantPage.pageIndex}
+            pageSize={pageSize}
+            totalCount={restaurantPage.totalCount}
             totalPages={restaurantPage.totalPages}
             onPageChange={setPageNumber}
+            onPageSizeChange={(value) => {
+              setPageSize(value)
+              setPageNumber(1)
+            }}
           />
         </section>
       ) : (

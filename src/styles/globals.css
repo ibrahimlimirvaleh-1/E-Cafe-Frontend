@@ -219,9 +219,74 @@ img {
 .pagination-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
+  justify-content: flex-start;
+  gap: 8px;
   margin-top: 28px;
+}
+
+.pagination-modern {
+  flex-wrap: wrap;
+}
+
+.pagination-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-arrow,
+.pagination-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pagination-arrow:disabled,
+.pagination-page:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.pagination-page.active {
+  border-color: transparent;
+  background: #e8f1ff;
+  color: #1f5fbf;
+}
+
+.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pagination-summary {
+  margin-left: auto;
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pagination-size-select {
+  width: 72px;
+  height: 36px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  font-weight: 700;
 }
 
 .site-search input {
@@ -1817,6 +1882,122 @@ img {
   background: var(--surface-lowest);
 }
 
+.outbox-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.outbox-metric {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-sm);
+}
+
+.outbox-metric > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--surface-low);
+}
+
+.outbox-metric small {
+  color: var(--on-surface-variant);
+  font-weight: 800;
+}
+
+.outbox-metric strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 26px;
+  line-height: 32px;
+}
+
+.outbox-metric-success > span {
+  color: var(--success);
+  background: var(--success-container);
+}
+
+.outbox-metric-warning > span {
+  color: var(--secondary);
+  background: var(--secondary-container);
+}
+
+.outbox-metric-danger > span {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.outbox-metric-info > span {
+  color: var(--primary);
+  background: var(--surface-high);
+}
+
+.outbox-toolbar {
+  position: relative;
+  grid-template-columns: minmax(260px, 520px) auto;
+  align-items: end;
+  width: min(820px, 100%);
+  margin-bottom: 18px;
+}
+
+.outbox-table {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--surface-lowest);
+}
+
+.outbox-table-head,
+.outbox-table-row {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.35fr) minmax(100px, 0.55fr) minmax(110px, 0.6fr) minmax(80px, 0.42fr) minmax(130px, 0.72fr) minmax(180px, 1fr) minmax(78px, 0.42fr);
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.outbox-table-head {
+  background: var(--surface-low);
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.outbox-table-row {
+  border-top: 1px solid var(--outline-variant);
+}
+
+.outbox-table-row > *,
+.outbox-message-cell {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.outbox-message-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.outbox-message-cell small,
+.outbox-table-row small,
+.outbox-table-row span {
+  color: var(--on-surface-variant);
+}
+
 .section-title span,
 .detail-list span {
   color: var(--secondary);
@@ -2971,6 +3152,15 @@ img {
     left: auto;
     width: min(100%, calc(100vw - 28px));
     max-height: min(620px, calc(100vh - 180px));
+  }
+
+  .pagination-row {
+    justify-content: flex-start;
+  }
+
+  .pagination-summary {
+    width: 100%;
+    margin-left: 0;
   }
 
   .compact-list article {

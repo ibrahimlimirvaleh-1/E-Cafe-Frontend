@@ -8,7 +8,19 @@ import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 
-const pageSize = 20
+const defaultPageSize = 10
+
+type AuditFilters = {
+  action: string
+  dateFrom: string
+  dateTo: string
+}
+
+const emptyAuditFilters: AuditFilters = {
+  action: '',
+  dateFrom: '',
+  dateTo: '',
+}
 
 function toLocalDateTime(value: string) {
   if (!value) {
@@ -32,9 +44,9 @@ function toLocalDateTime(value: string) {
 export function AuditLogPage() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
-  const [action, setAction] = useState('')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [pageSize, setPageSize] = useState(defaultPageSize)
+  const [filters, setFilters] = useState<AuditFilters>(emptyAuditFilters)
+  const [draftFilters, setDraftFilters] = useState<AuditFilters>(emptyAuditFilters)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null)
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
@@ -42,13 +54,13 @@ export function AuditLogPage() {
   const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
   const query = useMemo(
     () => ({
-      action,
-      dateFrom,
-      dateTo,
+      action: filters.action,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
       pageNumber,
       pageSize,
     }),
-    [action, dateFrom, dateTo, pageNumber],
+    [filters, pageNumber, pageSize],
   )
   const { data: logPage, isLoading } = useAsyncData(
     () =>
@@ -84,10 +96,15 @@ export function AuditLogPage() {
     setPageNumber(1)
   }
 
+  function applyFilters() {
+    setFilters(draftFilters)
+    setPageNumber(1)
+    setIsFilterOpen(false)
+  }
+
   function clearFilters() {
-    setAction('')
-    setDateFrom('')
-    setDateTo('')
+    setDraftFilters(emptyAuditFilters)
+    setFilters(emptyAuditFilters)
     setPageNumber(1)
   }
 
@@ -113,7 +130,11 @@ export function AuditLogPage() {
             <div className="filter-panel" role="dialog" aria-label="Audit log filterləri">
               <span>Sırala</span>
               <div className="filter-panel-grid">
-                <SelectField label="Əməliyyat" value={action} onChange={(event) => resetPageAnd(setAction, event.target.value)}>
+                <SelectField
+                  label="Əməliyyat"
+                  value={draftFilters.action}
+                  onChange={(event) => setDraftFilters((current) => ({ ...current, action: event.target.value }))}
+                >
                   <option value="">Bütün əməliyyatlar</option>
                   {auditActions.map((auditAction) => (
                     <option key={auditAction.code} value={auditAction.code}>
@@ -121,14 +142,24 @@ export function AuditLogPage() {
                     </option>
                   ))}
                 </SelectField>
-                <TextField label="Başlanğıc tarixi" type="date" value={dateFrom} onChange={(event) => resetPageAnd(setDateFrom, event.target.value)} />
-                <TextField label="Bitmə tarixi" type="date" value={dateTo} onChange={(event) => resetPageAnd(setDateTo, event.target.value)} />
+                <TextField
+                  label="Başlanğıc tarixi"
+                  type="date"
+                  value={draftFilters.dateFrom}
+                  onChange={(event) => setDraftFilters((current) => ({ ...current, dateFrom: event.target.value }))}
+                />
+                <TextField
+                  label="Bitmə tarixi"
+                  type="date"
+                  value={draftFilters.dateTo}
+                  onChange={(event) => setDraftFilters((current) => ({ ...current, dateTo: event.target.value }))}
+                />
               </div>
               <div className="filter-panel-actions">
                 <button type="button" className="ui-button ui-button-secondary" onClick={clearFilters}>
                   Təmizlə
                 </button>
-                <button type="button" className="ui-button ui-button-primary" onClick={() => setIsFilterOpen(false)}>
+                <button type="button" className="ui-button ui-button-primary" onClick={applyFilters}>
                   Tətbiq et
                 </button>
               </div>
@@ -185,8 +216,14 @@ export function AuditLogPage() {
           hasNextPage={logPage.hasNextPage}
           hasPreviousPage={logPage.hasPreviousPage}
           pageIndex={logPage.pageIndex}
+          pageSize={pageSize}
+          totalCount={logPage.totalCount}
           totalPages={logPage.totalPages}
           onPageChange={setPageNumber}
+          onPageSizeChange={(value) => {
+            setPageSize(value)
+            setPageNumber(1)
+          }}
         />
       </section>
       {selectedLog ? <AuditLogDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} /> : null}
