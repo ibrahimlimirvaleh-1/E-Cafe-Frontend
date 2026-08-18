@@ -219,6 +219,11 @@ function buildApiError(result: ApiResult<unknown>, statusCode: number) {
   const details = extractErrorDetails(result.errors)
   const message = resolveApiErrorMessage(result, statusCode, details)
 
+  if (statusCode === 401) {
+    clearAuthTokens()
+    notifyAuthExpired()
+  }
+
   return new ApiError(message, statusCode, details, result.code, result.traceId)
 }
 
@@ -363,6 +368,12 @@ function statusMessage(statusCode: number) {
   if (statusCode === 409) return 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.'
   if (statusCode >= 500) return 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.'
   return `Sorğu icra olunmadı. Status: ${statusCode}`
+}
+
+function notifyAuthExpired() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('ecafe:auth-expired'))
+  }
 }
 
 export { API_BASE_URL, getApiOrigin }
