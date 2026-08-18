@@ -167,10 +167,16 @@ type CreateStaffRequest = {
   maxActiveTableCount?: number | null
 }
 
+type UpdateStaffRequest = Omit<CreateStaffRequest, 'restaurantId' | 'roleId'>
+
 type CreateTableRequest = {
   tableNo: string
   name: string
   capacity: number
+}
+
+type UpdateTableRequest = CreateTableRequest & {
+  isActive: boolean
 }
 
 type CreateCategoryRequest = {
@@ -1046,6 +1052,24 @@ export const ecafeApi = {
         body: formData,
       })
     },
+    update: (restaurantId: string, tableId: string, request: UpdateTableRequest) =>
+      httpClient<unknown>(endpoints.tables.update(restaurantId, tableId), {
+        method: 'PUT',
+        body: JSON.stringify({
+          tableNo: Number(request.tableNo),
+          name: request.name,
+          capacity: request.capacity,
+          isActive: request.isActive,
+        }),
+      }),
+    deactivate: (restaurantId: string, tableId: string) =>
+      httpClient<unknown>(endpoints.tables.deactivate(restaurantId, tableId), {
+        method: 'PATCH',
+      }),
+    delete: (restaurantId: string, tableId: string) =>
+      httpClient<unknown>(endpoints.tables.delete(restaurantId, tableId), {
+        method: 'DELETE',
+      }),
   },
 
   staff: {
@@ -1085,9 +1109,29 @@ export const ecafeApi = {
         body: formData,
       })
     },
+    update: (restaurantId: string, staffId: string, request: UpdateStaffRequest) => {
+      const formData = new FormData()
+      formData.set('Name', request.name)
+      formData.set('Surname', request.surname)
+      formData.set('Email', request.email)
+      formData.set('Phone', request.phone)
+      formData.set('IsActive', String(request.isActive))
+      appendIfPresent(formData, 'FileId', request.fileId)
+      appendIfPresent(formData, 'ServiceFeePercent', request.serviceFeePercent)
+      appendIfPresent(formData, 'MaxActiveTableCount', request.maxActiveTableCount)
+
+      return httpClient<unknown>(endpoints.staff.update(restaurantId, staffId), {
+        method: 'PUT',
+        body: formData,
+      })
+    },
     deactivate: (restaurantId: string, staffId: string) =>
       httpClient<unknown>(endpoints.staff.deactivate(restaurantId, staffId), {
         method: 'PATCH',
+      }),
+    delete: (staffId: string) =>
+      httpClient<unknown>(endpoints.users.delete(staffId), {
+        method: 'DELETE',
       }),
   },
 

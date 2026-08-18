@@ -2539,12 +2539,12 @@ img {
 
 .staff-role-actions {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) auto;
+  grid-template-columns: minmax(150px, 1fr) auto auto auto;
   gap: 10px;
   align-items: center;
   justify-content: end;
   min-width: 0;
-  width: min(340px, 100%);
+  width: min(460px, 100%);
 }
 
 .staff-role-actions select {

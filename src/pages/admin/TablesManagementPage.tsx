@@ -1,4 +1,6 @@
+import { Pencil, Trash2, UserX } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -9,9 +11,11 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
-type TablesPageMode = 'list' | 'create'
+type TablesPageMode = 'list' | 'create' | 'edit'
 
 export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode }) {
+  const { tableId = '' } = useParams()
+  const [searchParams] = useSearchParams()
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const [message, setMessage] = useState('')
@@ -25,6 +29,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     [],
     [restaurantId, reloadKey],
   )
+  const editingTable = mode === 'edit' ? tables.find((table) => table.id === tableId) : undefined
 
   function tableStatusLabel(status: string) {
     const labels: Record<string, string> = {
@@ -39,9 +44,19 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
 
   useEffect(() => {
     if (!selectedRestaurantId && restaurants[0]) {
-      setSelectedRestaurantId(restaurants[0].id)
+      setSelectedRestaurantId(searchParams.get('restaurantId') || restaurants[0].id)
     }
-  }, [restaurants, selectedRestaurantId])
+  }, [restaurants, searchParams, selectedRestaurantId])
+
+  useEffect(() => {
+    if (mode === 'edit' && editingTable) {
+      setForm({
+        tableNo: editingTable.number,
+        name: editingTable.name || editingTable.number,
+        capacity: String(editingTable.capacity),
+      })
+    }
+  }, [editingTable, mode])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -54,17 +69,55 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     setMessage('')
     setMessageDetails([])
     try {
-      await ecafeApi.tables.create(restaurantId, {
-        tableNo: form.tableNo,
-        name: form.name,
-        capacity: Number(form.capacity),
-      })
-      setForm({ tableNo: '', name: '', capacity: '2' })
-      setMessage('Masa yaradıldı.')
+      if (mode === 'edit' && tableId) {
+        await ecafeApi.tables.update(restaurantId, tableId, {
+          tableNo: form.tableNo,
+          name: form.name,
+          capacity: Number(form.capacity),
+          isActive: true,
+        })
+        setMessage('Masa məlumatları yeniləndi.')
+      } else {
+        await ecafeApi.tables.create(restaurantId, {
+          tableNo: form.tableNo,
+          name: form.name,
+          capacity: Number(form.capacity),
+        })
+        setForm({ tableNo: '', name: '', capacity: '2' })
+        setMessage('Masa yaradıldı.')
+      }
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Masa yaradılmadı.')
+      const feedback = normalizeCaughtApiError(err, mode === 'edit' ? 'Masa yenilənmədi.' : 'Masa yaradılmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
+  }
+
+  async function handleDeactivate(targetTableId: string) {
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.tables.deactivate(restaurantId, targetTableId)
+      setMessage('Masa deaktiv edildi.')
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Masa deaktiv edilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
+  }
+
+  async function handleDelete(targetTableId: string) {
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.tables.delete(restaurantId, targetTableId)
+      setMessage('Masa silindi.')
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Masa silinmədi.')
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -74,16 +127,16 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     <main className="admin-page">
       <PageHeader
         eyebrow="Admin"
-        title={mode === 'create' ? 'Yeni masa' : 'Masalar'}
+        title={mode === 'create' ? 'Yeni masa' : mode === 'edit' ? 'Masanı redaktə et' : 'Masalar'}
         action={mode === 'list' ? <ButtonLink to="/admin/tables/new">Yeni masa</ButtonLink> : <ButtonLink to="/admin/tables" variant="secondary">Siyahıya qayıt</ButtonLink>}
       />
 
-      <section className={mode === 'create' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
-        {mode === 'create' ? (
+      <section className={mode === 'create' || mode === 'edit' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
+        {mode === 'create' || mode === 'edit' ? (
           <form className="admin-panel" onSubmit={handleSubmit}>
             <div>
-              <span className="eyebrow">Yeni masa</span>
-              <h2>Masa məlumatları</h2>
+              <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni masa'}</span>
+              <h2>{mode === 'edit' ? 'Masa məlumatlarını yenilə' : 'Masa məlumatları'}</h2>
             </div>
             <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
               {restaurants.map((restaurant) => (
@@ -97,7 +150,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </div>
             <TextField label="Tutum" min={1} required type="number" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
-            <Button type="submit">Masa yarat</Button>
+            <Button type="submit">{mode === 'edit' ? 'Yadda saxla' : 'Masa yarat'}</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : (
@@ -115,6 +168,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
             </SelectField>
             {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
             <RestaurantContextCard restaurant={selectedRestaurant} />
+            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             <div className="compact-list">
               {tables.map((table) => (
                 <article key={table.id}>
@@ -125,6 +179,17 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
                   <Badge tone={table.status === 'Available' ? 'success' : table.status === 'Occupied' ? 'warning' : 'neutral'}>
                     {tableStatusLabel(table.status)}
                   </Badge>
+                  <div className="inline-actions">
+                    <ButtonLink className="action-icon-button" to={`/admin/tables/${table.id}/edit?restaurantId=${restaurantId}`} variant="secondary">
+                      <Pencil size={18} />
+                    </ButtonLink>
+                    <Button aria-label={`${table.number} masasını deaktiv et`} className="action-icon-button" onClick={() => void handleDeactivate(table.id)} title="Deaktiv et" type="button" variant="secondary">
+                      <UserX size={18} />
+                    </Button>
+                    <Button aria-label={`${table.number} masasını sil`} className="action-icon-button" onClick={() => void handleDelete(table.id)} title="Sil" type="button" variant="danger">
+                      <Trash2 size={18} />
+                    </Button>
+                  </div>
                 </article>
               ))}
               {!isLoading && tables.length === 0 ? <p className="online-only">Bu restoran üçün masa yoxdur.</p> : null}
