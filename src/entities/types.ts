@@ -109,6 +109,7 @@ export type MenuCategory = {
   id: string
   restaurantId: string
   name: string
+  sortOrder: number
   isActive: boolean
 }
 

@@ -1,4 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { Pencil, Trash2, UserX } from 'lucide-react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -11,9 +13,11 @@ import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/Re
 import { SafeImage } from '../../shared/ui/SafeImage'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
-type MenuPageMode = 'categories' | 'create-category' | 'items' | 'create-item'
+type MenuPageMode = 'categories' | 'create-category' | 'edit-category' | 'items' | 'create-item'
 
 export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) {
+  const { categoryId = '' } = useParams()
+  const [searchParams] = useSearchParams()
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const [fileId, setFileId] = useState<number | null>(null)
@@ -45,12 +49,22 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   )
   const activeStatuses = useMemo(() => itemStatuses.filter((status) => status.id > 0), [itemStatuses])
   const categoryNameById = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories])
+  const editingCategory = mode === 'edit-category' ? categories.find((category) => category.id === categoryId) : undefined
 
   useEffect(() => {
     if (!selectedRestaurantId && restaurants[0]) {
-      setSelectedRestaurantId(restaurants[0].id)
+      setSelectedRestaurantId(searchParams.get('restaurantId') || restaurants[0].id)
     }
-  }, [restaurants, selectedRestaurantId])
+  }, [restaurants, searchParams, selectedRestaurantId])
+
+  useEffect(() => {
+    if (mode === 'edit-category' && editingCategory) {
+      setCategoryForm({
+        name: editingCategory.name,
+        sortOrder: editingCategory.sortOrder ? String(editingCategory.sortOrder) : '',
+      })
+    }
+  }, [editingCategory, mode])
 
   useEffect(() => {
     if (!itemForm.categoryId && categories[0]) {
@@ -85,6 +99,74 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       setReloadKey((value) => value + 1)
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, 'Kateqoriya yaradılmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
+  }
+
+  async function handleUpdateCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!restaurantId || !categoryId) {
+      setMessage('Restoran və kateqoriya seçilməlidir.')
+      setMessageDetails([])
+      return
+    }
+
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.menu.updateCategory(restaurantId, categoryId, {
+        name: categoryForm.name,
+        sortOrder: categoryForm.sortOrder ? Number(categoryForm.sortOrder) : null,
+        isActive: editingCategory?.isActive ?? true,
+      })
+      setMessage('Kateqoriya məlumatları yeniləndi.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Kateqoriya yenilənmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
+  }
+
+  async function handleDeactivateCategory(targetCategoryId: string) {
+    if (!restaurantId) {
+      setMessage('Restoran seçilməlidir.')
+      setMessageDetails([])
+      return
+    }
+
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.menu.deactivateCategory(restaurantId, targetCategoryId)
+      setMessage('Kateqoriya deaktiv edildi.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Kateqoriya deaktiv edilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
+  }
+
+  async function handleDeleteCategory(targetCategoryId: string) {
+    if (!restaurantId) {
+      setMessage('Restoran seçilməlidir.')
+      setMessageDetails([])
+      return
+    }
+
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.menu.deleteCategory(restaurantId, targetCategoryId)
+      setMessage('Kateqoriya silindi.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Kateqoriya silinmədi.')
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -131,7 +213,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     }
   }
 
-  const title = mode === 'categories' ? 'Kateqoriyalar' : mode === 'create-category' ? 'Yeni kateqoriya' : mode === 'create-item' ? 'Yeni menyu elementi' : 'Menyu'
+  const title = mode === 'categories' ? 'Kateqoriyalar' : mode === 'create-category' ? 'Yeni kateqoriya' : mode === 'edit-category' ? 'Kateqoriyanı redaktə et' : mode === 'create-item' ? 'Yeni menyu elementi' : 'Menyu'
   const action =
     mode === 'items' ? (
       <ButtonLink to="/admin/menu/new">Yeni menyu elementi</ButtonLink>
@@ -139,7 +221,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       <ButtonLink to="/admin/menu" variant="secondary">Siyahıya qayıt</ButtonLink>
     ) : mode === 'categories' ? (
       <ButtonLink to="/admin/categories/new">Yeni kateqoriya</ButtonLink>
-    ) : mode === 'create-category' ? (
+    ) : mode === 'create-category' || mode === 'edit-category' ? (
       <ButtonLink to="/admin/categories" variant="secondary">Siyahıya qayıt</ButtonLink>
     ) : null
 
@@ -147,7 +229,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     <main className="admin-page">
       <PageHeader eyebrow="Admin" title={title} action={action} />
 
-      <section className={mode === 'create-item' || mode === 'create-category' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
+      <section className={mode === 'create-item' || mode === 'create-category' || mode === 'edit-category' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
           <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
@@ -173,6 +255,19 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
           </section>
         ) : null}
 
+        {mode === 'edit-category' ? (
+          <section className="admin-panel">
+            <form className="stack-form" onSubmit={handleUpdateCategory}>
+              <span className="eyebrow">Redaktə</span>
+              <h2>Kateqoriya məlumatlarını yenilə</h2>
+              <TextField label="Ad" required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
+              <TextField label="Sıra" min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint="Boş qalsa backend növbəti sıranı özü verir." />
+              <Button type="submit">Yadda saxla</Button>
+              {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
+            </form>
+          </section>
+        ) : null}
+
         {mode === 'categories' ? (
           <>
             <section className="admin-panel">
@@ -183,9 +278,42 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                   <article key={category.id}>
                     <div>
                       <strong>{category.name}</strong>
-                      <small>{restaurantId ? 'Restorana bağlıdır' : 'Restoran seçilməyib'}</small>
+                      <small>{category.sortOrder ? `Sıra ${category.sortOrder}` : 'Sıra təyin edilməyib'}</small>
                     </div>
                     <Badge tone={category.isActive ? 'success' : 'neutral'}>{category.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                    <div className="inline-actions">
+                      <ButtonLink
+                        aria-label={`${category.name} kateqoriyasını redaktə et`}
+                        className="action-icon-button"
+                        title="Redaktə et"
+                        to={`/admin/categories/${category.id}/edit?restaurantId=${restaurantId}`}
+                        variant="secondary"
+                      >
+                        <Pencil size={18} />
+                      </ButtonLink>
+                      {category.isActive ? (
+                        <Button
+                          aria-label={`${category.name} kateqoriyasını deaktiv et`}
+                          className="action-icon-button"
+                          onClick={() => void handleDeactivateCategory(category.id)}
+                          title="Deaktiv et"
+                          type="button"
+                          variant="secondary"
+                        >
+                          <UserX size={18} />
+                        </Button>
+                      ) : null}
+                      <Button
+                        aria-label={`${category.name} kateqoriyasını sil`}
+                        className="action-icon-button"
+                        onClick={() => void handleDeleteCategory(category.id)}
+                        title="Sil"
+                        type="button"
+                        variant="danger"
+                      >
+                        <Trash2 size={18} />
+                      </Button>
+                    </div>
                   </article>
                 ))}
                 {categories.length === 0 ? <p className="online-only">Bu restoran üçün kateqoriya yoxdur.</p> : null}

@@ -76,12 +76,14 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
 
 export function mapTable(record: AnyRecord, restaurantId: string): Table {
   const isEmpty = record.isEmpty
+  const tableNumber = str(record.tableNo || record.tableNumber || record.number)
+  const tableName = str(record.name)
 
   return {
     id: str(record.id || record.tableId),
     restaurantId: str(record.restaurantId, restaurantId),
-    number: str(record.number || record.name || record.tableNumber || record.tableNo),
-    name: str(record.name),
+    number: tableNumber || tableName,
+    name: tableName,
     capacity: num(record.capacity || record.seatCount, 2),
     status: str(record.status || record.statusName || (isEmpty === false ? 'Occupied' : 'Available'), 'Available') as Table['status'],
     isPublic: bool(record.isPublic, true),
@@ -145,6 +147,7 @@ export function mapCategory(record: AnyRecord, restaurantId: string): MenuCatego
     id: str(record.id || record.categoryId),
     restaurantId: str(record.restaurantId, restaurantId),
     name: str(record.name),
+    sortOrder: num(record.sortOrder),
     isActive: bool(record.isActive, true),
   }
 }

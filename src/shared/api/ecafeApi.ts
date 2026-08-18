@@ -184,6 +184,10 @@ type CreateCategoryRequest = {
   sortOrder?: number | null
 }
 
+type UpdateCategoryRequest = CreateCategoryRequest & {
+  isActive: boolean
+}
+
 type CreateMenuItemRequest = {
   categoryId: string
   statusId: number
@@ -1163,6 +1167,32 @@ export const ecafeApi = {
         method: 'POST',
         body: formData,
       })
+    },
+    updateCategory: async (restaurantId: string, categoryId: string, request: UpdateCategoryRequest) => {
+      const result = await httpClient<unknown>(endpoints.menu.updateCategory(restaurantId, categoryId), {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: request.name,
+          sortOrder: request.sortOrder,
+          isActive: request.isActive,
+        }),
+      })
+
+      return mapCategory(result.data as AnyRecord, restaurantId)
+    },
+    deactivateCategory: async (restaurantId: string, categoryId: string) => {
+      const result = await httpClient<unknown>(endpoints.menu.deactivateCategory(restaurantId, categoryId), {
+        method: 'PATCH',
+      })
+
+      return mapCategory(result.data as AnyRecord, restaurantId)
+    },
+    deleteCategory: async (restaurantId: string, categoryId: string) => {
+      const result = await httpClient<unknown>(endpoints.menu.deleteCategory(restaurantId, categoryId), {
+        method: 'DELETE',
+      })
+
+      return mapCategory(result.data as AnyRecord, restaurantId)
     },
     createItem: (restaurantId: string, request: CreateMenuItemRequest) => {
       const formData = new FormData()

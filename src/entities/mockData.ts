@@ -107,10 +107,10 @@ export const staff: StaffMember[] = [
 ]
 
 export const menuCategories: MenuCategory[] = [
-  { id: 'cold-starters', restaurantId: 'saffron-premium', name: 'Soyuq qəlyanaltılar', isActive: true },
-  { id: 'main-dishes', restaurantId: 'saffron-premium', name: 'Əsas yeməklər', isActive: true },
-  { id: 'drinks', restaurantId: 'saffron-premium', name: 'İçkilər', isActive: true },
-  { id: 'desserts', restaurantId: 'saffron-premium', name: 'Şirniyyatlar', isActive: true },
+  { id: 'cold-starters', restaurantId: 'saffron-premium', name: 'Soyuq qəlyanaltılar', sortOrder: 1, isActive: true },
+  { id: 'main-dishes', restaurantId: 'saffron-premium', name: 'Əsas yeməklər', sortOrder: 2, isActive: true },
+  { id: 'drinks', restaurantId: 'saffron-premium', name: 'İçkilər', sortOrder: 3, isActive: true },
+  { id: 'desserts', restaurantId: 'saffron-premium', name: 'Şirniyyatlar', sortOrder: 4, isActive: true },
 ]
 
 export const menuItems: MenuItem[] = [

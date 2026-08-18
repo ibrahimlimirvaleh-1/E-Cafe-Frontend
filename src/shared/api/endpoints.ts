@@ -51,6 +51,9 @@ export const endpoints = {
   menu: {
     categories: (restaurantId: string) => `/category/${restaurantId}`,
     createCategory: (restaurantId: string) => `/restaurants/${restaurantId}/categories`,
+    updateCategory: (restaurantId: string, categoryId: string) => `/restaurants/${restaurantId}/categories/${categoryId}`,
+    deactivateCategory: (restaurantId: string, categoryId: string) => `/restaurants/${restaurantId}/categories/${categoryId}/deactivate`,
+    deleteCategory: (restaurantId: string, categoryId: string) => `/restaurants/${restaurantId}/categories/${categoryId}`,
     items: '/items/getAll',
     createItem: (restaurantId: string) => `/restaurants/${restaurantId}/items`,
   },
