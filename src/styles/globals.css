@@ -1982,6 +1982,16 @@ img {
   gap: 8px;
 }
 
+.contract-workflow-view-head {
+  justify-self: center;
+  text-align: center;
+}
+
+.contract-workflow-view-actions {
+  justify-self: center;
+  width: 100%;
+}
+
 .form-error {
   margin: 0;
   color: var(--danger);
@@ -2538,6 +2548,30 @@ img {
 
 .compact-list article.staff-member-row {
   grid-template-columns: 64px minmax(0, 1fr) auto minmax(260px, auto);
+}
+
+.compact-list article.table-management-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.table-management-info {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.table-management-info span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.table-management-info strong,
+.table-management-info small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .staff-role-actions {
@@ -3502,9 +3536,14 @@ img {
   }
 
   .restaurant-context-card,
+  .compact-list article.table-management-row,
   .compact-list article.staff-member-row {
     grid-template-columns: 1fr;
     align-items: stretch;
+  }
+
+  .table-management-info {
+    grid-template-columns: 1fr;
   }
 
   .restaurant-context-card img,
