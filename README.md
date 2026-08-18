@@ -21,7 +21,19 @@ Dev mühitində `/api/v1` sorğuları `vite.config.ts` vasitəsilə backend-ə y
 http://localhost:8080
 ```
 
-Backend başqa portda işləyirsə, `vite.config.ts` içində proxy `target` dəyərini dəyiş.
+Backend başqa portda işləyirsə, kodu dəyişmə. `.env.local` faylında proxy target-i seç:
+
+```powershell
+# Visual Studio Local API
+VITE_DEV_API_PROXY_TARGET=http://localhost:8080
+VITE_PUBLIC_API_ORIGIN=http://localhost:8080
+
+# Docker API
+VITE_DEV_API_PROXY_TARGET=http://localhost:8081
+VITE_PUBLIC_API_ORIGIN=http://localhost:8081
+```
+
+`.env.example` local debug üçündür, `.env.docker.example` isə Docker API-yə qoşulmaq üçün nümunədir.
 
 ## Build
 
