@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -14,17 +15,26 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
   const [name, setName] = useState('')
   const [legalName, setLegalName] = useState('')
   const [message, setMessage] = useState('')
+  const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const { data: groups, isLoading } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setMessage('')
+    setMessageDetails([])
 
-    await ecafeApi.restaurantGroups.create({ name, legalName })
-    setName('')
-    setLegalName('')
-    setMessage('Restoran qrupu yaradıldı.')
-    setReloadKey((value) => value + 1)
+    try {
+      await ecafeApi.restaurantGroups.create({ name, legalName })
+      setName('')
+      setLegalName('')
+      setMessage('Restoran qrupu yaradıldı.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Restoran qrupu yaradılmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   return (
@@ -45,7 +55,7 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
             <TextField label="Qrup adı" required value={name} onChange={(event) => setName(event.target.value)} />
             <TextField label="Legal ad" value={legalName} onChange={(event) => setLegalName(event.target.value)} />
             <Button type="submit">Qrup yarat</Button>
-            {message ? <StatusMessage>{message}</StatusMessage> : null}
+            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : (
           <section className="admin-panel">

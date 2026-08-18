@@ -2,6 +2,7 @@ export const endpoints = {
   auth: {
     login: '/user/login',
     register: '/user/register',
+    setPassword: '/user/set-password',
     refresh: '/user/refresh',
     logout: '/user/logout',
   },
@@ -26,9 +27,12 @@ export const endpoints = {
     contractStatuses: '/lookups/contract-statuses',
     paymentPolicies: '/lookups/payment-policies',
     auditActions: '/lookups/audit-actions',
+    outboxStatuses: '/lookups/outbox-statuses',
+    notificationChannels: '/lookups/notification-channels',
   },
   contracts: {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/contracts`,
+    paged: (restaurantId: string) => `/restaurants/${restaurantId}/contracts/paged`,
     create: (restaurantId: string) => `/admin/restaurants/${restaurantId}/contracts`,
     update: (restaurantId: string, contractId: string) => `/admin/restaurants/${restaurantId}/contracts/${contractId}`,
     active: (restaurantId: string) => `/restaurants/${restaurantId}/contracts/active`,
@@ -75,6 +79,7 @@ export const endpoints = {
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,
     detail: (restaurantId: string, staffId: string) => `/staff/${restaurantId}/detail/${staffId}`,
+    deactivate: (restaurantId: string, staffId: string) => `/restaurants/${restaurantId}/staff/${staffId}/deactivate`,
   },
   users: {
     create: '/users',
@@ -102,5 +107,10 @@ export const endpoints = {
   },
   auditLogs: {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/audit-logs`,
+  },
+  outbox: {
+    list: '/admin/outbox/messages',
+    detail: (messageId: string) => `/admin/outbox/messages/${messageId}`,
+    retry: (messageId: string) => `/admin/outbox/messages/${messageId}/retry`,
   },
 }

@@ -20,6 +20,7 @@ import type {
   InventoryMovement,
   LookupItem,
   NotificationItem,
+  OutboxMessage,
   Recipe,
   RestaurantContract,
   RestaurantGroup,
@@ -67,6 +68,27 @@ type AuthResponse = {
 type ContractRecord = {
   contract: RestaurantContract
   restaurantName: string
+}
+
+type ContractRecordQuery = {
+  dateFrom?: string
+  dateTo?: string
+  expiringInDays?: string
+  pageNumber?: number
+  pageSize?: number
+  restaurantId?: string
+  search?: string
+  status?: string
+}
+
+const contractStatusIds: Record<string, number> = {
+  Draft: 6001,
+  PendingSignature: 6002,
+  Active: 6003,
+  Expired: 6004,
+  Terminated: 6005,
+  OwnerApproved: 6006,
+  Scheduled: 6007,
 }
 
 type CreateContractRequest = {
@@ -137,7 +159,6 @@ type CreateStaffRequest = {
   surname: string
   email: string
   phone: string
-  password: string
   isActive: boolean
   restaurantId: string
   roleId: number
@@ -252,11 +273,13 @@ async function listRestaurants(query = '') {
   return asArray<AnyRecord>(result.data).map(mapRestaurant)
 }
 
-async function fetchContractRecords(): Promise<ContractRecord[]> {
-  const restaurantList = await listRestaurants()
+async function fetchContractRecords(query: ContractRecordQuery = {}): Promise<ContractRecord[]> {
+  const restaurantList = (await listRestaurants()).filter(
+    (restaurant) => !query.restaurantId || query.restaurantId === 'all' || restaurant.id === query.restaurantId,
+  )
   const entries = await Promise.all(
     restaurantList.map(async (restaurant) => {
-      const result = await httpClient<unknown>(endpoints.contracts.list(restaurant.id))
+      const result = await httpClient<unknown>(buildContractListEndpoint(restaurant.id, query))
       const contractList = asArray<AnyRecord>(result.data).map((contract) => mapContract(contract, restaurant.id))
 
       return contractList.map((contract) => ({
@@ -267,6 +290,23 @@ async function fetchContractRecords(): Promise<ContractRecord[]> {
   )
 
   return entries.flat()
+}
+
+function buildContractListEndpoint(restaurantId: string, query: ContractRecordQuery) {
+  const params = new URLSearchParams()
+
+  if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
+  if (query.pageSize) params.set('PageSize', String(query.pageSize))
+  if (query.search?.trim()) params.set('Search', query.search.trim())
+  if (query.dateFrom) params.set('EndDateFrom', query.dateFrom)
+  if (query.dateTo) params.set('EndDateTo', query.dateTo)
+  if (query.expiringInDays) params.set('ExpiringInDays', query.expiringInDays)
+  if (query.status && query.status !== 'all' && contractStatusIds[query.status]) {
+    params.set('StatusId', String(contractStatusIds[query.status]))
+  }
+
+  const search = params.toString()
+  return search ? `${endpoints.contracts.paged(restaurantId)}?${search}` : endpoints.contracts.list(restaurantId)
 }
 
 function extractCreatedId(data: unknown) {
@@ -344,6 +384,16 @@ function mapAuditLog(record: AnyRecord): AuditLogEntry {
   const actorName = str(record.actorFullName || record.actorName || record.createdBy || record.userName)
   const entityName = str(record.entityName || record.entity)
   const entityId = str(record.entityId)
+  const details = asArray(record.details).map((detailRecord) => {
+    const detail = detailRecord as AnyRecord
+
+    return {
+      label: str(detail.label),
+      value: detail.value == null ? undefined : str(detail.value),
+      oldValue: detail.oldValue == null ? undefined : str(detail.oldValue),
+      newValue: detail.newValue == null ? undefined : str(detail.newValue),
+    }
+  })
 
   return {
     id: str(record.id || record.auditLogId),
@@ -363,7 +413,18 @@ function mapAuditLog(record: AnyRecord): AuditLogEntry {
     occurredAt,
     createdAt: occurredAt,
     description: str(record.description || record.message || `${entityName} #${entityId}`),
+    details,
   }
+}
+
+type OutboxMessageQuery = {
+  statusId?: string
+  channelId?: string
+  search?: string
+  dateFrom?: string
+  dateTo?: string
+  pageNumber?: number
+  pageSize?: number
 }
 
 function buildAuditLogQuery(query: AuditLogQuery = {}) {
@@ -396,6 +457,46 @@ function mapNotification(record: AnyRecord): NotificationItem {
     relatedEntityId: record.relatedEntityId == null ? undefined : str(record.relatedEntityId),
     createdAt: str(record.createdAt),
   }
+}
+
+function mapOutboxMessage(record: AnyRecord): OutboxMessage {
+  return {
+    id: str(record.id),
+    eventType: str(record.eventType),
+    aggregateType: str(record.aggregateType),
+    aggregateId: num(record.aggregateId),
+    channelId: num(record.channelId),
+    channel: str(record.channel),
+    statusId: num(record.statusId),
+    status: str(record.status),
+    recipient: str(record.recipient),
+    recipientName: str(record.recipientName),
+    subject: str(record.subject),
+    retryCount: num(record.retryCount),
+    maxRetryCount: num(record.maxRetryCount),
+    occurredAt: str(record.occurredAt),
+    processedAt: str(record.processedAt) || undefined,
+    lockedUntil: str(record.lockedUntil) || undefined,
+    nextRetryAt: str(record.nextRetryAt) || undefined,
+    lastError: str(record.lastError) || undefined,
+    relatedEntityType: str(record.relatedEntityType) || undefined,
+    relatedEntityId: record.relatedEntityId == null ? undefined : num(record.relatedEntityId),
+  }
+}
+
+function buildOutboxQuery(query: OutboxMessageQuery = {}) {
+  const params = new URLSearchParams()
+
+  if (query.statusId) params.set('StatusId', query.statusId)
+  if (query.channelId) params.set('ChannelId', query.channelId)
+  if (query.search?.trim()) params.set('Search', query.search.trim())
+  if (query.dateFrom) params.set('DateFrom', query.dateFrom)
+  if (query.dateTo) params.set('DateTo', query.dateTo)
+  if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
+  if (query.pageSize) params.set('PageSize', String(query.pageSize))
+
+  const search = params.toString()
+  return search ? `?${search}` : ''
 }
 
 function mapInventoryItem(record: AnyRecord, restaurantId: string): InventoryItem {
@@ -469,6 +570,12 @@ export const ecafeApi = {
       })
       return extractAuthTokens(result.data)
     },
+    setPassword: (request: { token: string; password: string; confirmPassword: string }) =>
+      httpClient<unknown>(endpoints.auth.setPassword, {
+        method: 'POST',
+        body: JSON.stringify(request),
+        skipAuthRefresh: true,
+      }),
     logout: async () => {
       const refreshToken = getRefreshToken()
       if (!refreshToken) {
@@ -714,6 +821,16 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.lookups.auditActions)
         return asArray<AnyRecord>(result.data).map(mapLookup)
       }, [] as LookupItem[]),
+    outboxStatuses: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.lookups.outboxStatuses)
+        return asArray<AnyRecord>(result.data).map(mapLookup)
+      }, [] as LookupItem[]),
+    notificationChannels: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.lookups.notificationChannels)
+        return asArray<AnyRecord>(result.data).map(mapLookup)
+      }, [] as LookupItem[]),
   },
 
   files: {
@@ -838,8 +955,8 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.contracts.list(restaurantId))
         return asArray<AnyRecord>(result.data).map((contract) => mapContract(contract, restaurantId))
       }, contracts.filter((contract) => contract.restaurantId === restaurantId)),
-    records: () =>
-      safe(fetchContractRecords, contracts.map((contract) => ({ contract, restaurantName: contract.restaurantId }))),
+    records: (query: ContractRecordQuery = {}) =>
+      safe(() => fetchContractRecords(query), contracts.map((contract) => ({ contract, restaurantName: contract.restaurantId }))),
     get: (contractId: string) =>
       safe(async () => {
         const records = await fetchContractRecords()
@@ -956,7 +1073,6 @@ export const ecafeApi = {
       formData.set('Surname', request.surname)
       formData.set('Email', request.email)
       formData.set('Phone', request.phone)
-      formData.set('Password', request.password)
       formData.set('IsActive', String(request.isActive))
       formData.set('RestaurantId', request.restaurantId)
       formData.set('RoleId', String(request.roleId))
@@ -969,6 +1085,10 @@ export const ecafeApi = {
         body: formData,
       })
     },
+    deactivate: (restaurantId: string, staffId: string) =>
+      httpClient<unknown>(endpoints.staff.deactivate(restaurantId, staffId), {
+        method: 'PATCH',
+      }),
   },
 
   menu: {
@@ -1103,6 +1223,31 @@ export const ecafeApi = {
     list: async (restaurantId: string, query: AuditLogQuery = {}) => {
       const page = await ecafeApi.auditLogs.page(restaurantId, query)
       return page.items
+    },
+  },
+
+  outbox: {
+    page: (query: OutboxMessageQuery = {}) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(`${endpoints.outbox.list}${buildOutboxQuery(query)}`)
+        return asPaginated(result.data, mapOutboxMessage)
+      }, {
+        items: [],
+        pageIndex: 1,
+        totalPages: 1,
+        totalCount: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      } as PaginatedResponse<OutboxMessage>),
+    detail: async (messageId: string) => {
+      const result = await httpClient<unknown>(endpoints.outbox.detail(messageId))
+      return mapOutboxMessage(result.data as AnyRecord)
+    },
+    retry: async (messageId: string) => {
+      const result = await httpClient<unknown>(endpoints.outbox.retry(messageId), {
+        method: 'POST',
+      })
+      return mapOutboxMessage(result.data as AnyRecord)
     },
   },
 }

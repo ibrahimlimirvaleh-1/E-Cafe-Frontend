@@ -2,12 +2,14 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getHomePathForUser } from '../../shared/auth/authz'
 import { getUserFromToken } from '../../shared/auth/jwt'
 import { Brand } from '../../shared/layout/Brand'
 import { Button } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type AuthPageProps = {
   mode: 'login' | 'register'
@@ -30,11 +32,13 @@ export function AuthPage({ mode }: AuthPageProps) {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [errorDetails, setErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
+    setErrorDetails([])
     setIsSubmitting(true)
 
     try {
@@ -51,7 +55,9 @@ export function AuthPage({ mode }: AuthPageProps) {
       const redirectTo = getHomePathForUser(user)
       navigate(redirectTo, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sorğu icra olunmadı.')
+      const feedback = normalizeCaughtApiError(err, isLogin ? 'Giriş mümkün olmadı.' : 'Qeydiyyat tamamlanmadı.')
+      setError(feedback.message)
+      setErrorDetails(feedback.details)
     } finally {
       setIsSubmitting(false)
     }
@@ -73,7 +79,7 @@ export function AuthPage({ mode }: AuthPageProps) {
         ) : null}
         <TextField label="Email" placeholder="name@example.com" value={email} onChange={(event) => setEmail(event.target.value)} />
         <TextField label="Şifrə" placeholder="••••••••" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-        {error ? <p className="online-only">{error}</p> : null}
+        {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
         <Button disabled={isSubmitting} type="submit">{isSubmitting ? 'Göndərilir...' : isLogin ? 'Daxil ol' : 'Hesab yarat'}</Button>
         <Link to={isLogin ? '/register' : '/login'}>{isLogin ? 'Yeni hesab yarat' : 'Hesabım var'}</Link>
       </form>

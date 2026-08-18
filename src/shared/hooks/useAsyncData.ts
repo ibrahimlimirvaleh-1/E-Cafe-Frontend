@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { normalizeCaughtApiError } from '../api/httpClient'
 
 type AsyncState<T> = {
   data: T
@@ -25,7 +26,7 @@ export function useAsyncData<T>(loader: () => Promise<T>, initialData: T, depend
       })
       .catch((err) => {
         if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Məlumat yüklənmədi.')
+          setError(normalizeCaughtApiError(err, 'Məlumat yüklənmədi.').message)
         }
       })
       .finally(() => {

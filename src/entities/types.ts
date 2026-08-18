@@ -211,6 +211,14 @@ export type AuditLogEntry = {
   occurredAt: string
   createdAt: string
   description: string
+  details: AuditLogDetail[]
+}
+
+export type AuditLogDetail = {
+  label: string
+  value?: string
+  oldValue?: string
+  newValue?: string
 }
 
 export type NotificationItem = {
@@ -228,6 +236,29 @@ export type NotificationItem = {
   relatedEntityType?: string
   relatedEntityId?: string
   createdAt: string
+}
+
+export type OutboxMessage = {
+  id: string
+  eventType: string
+  aggregateType: string
+  aggregateId: number
+  channelId: number
+  channel: string
+  statusId: number
+  status: string
+  recipient: string
+  recipientName: string
+  subject: string
+  retryCount: number
+  maxRetryCount: number
+  occurredAt: string
+  processedAt?: string
+  lockedUntil?: string
+  nextRetryAt?: string
+  lastError?: string
+  relatedEntityType?: string
+  relatedEntityId?: number
 }
 
 export type Reservation = {

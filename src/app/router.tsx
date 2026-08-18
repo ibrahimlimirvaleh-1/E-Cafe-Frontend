@@ -23,9 +23,11 @@ import { RestaurantGroupCreatePage, RestaurantGroupsPage } from '../pages/admin/
 import { RestaurantDetailPage } from '../pages/admin/RestaurantDetailPage'
 import { RestaurantEditPage } from '../pages/admin/RestaurantEditPage'
 import { RestaurantCreatePage, RestaurantManagementPage } from '../pages/admin/RestaurantManagementPage'
+import { OutboxPage } from '../pages/admin/OutboxPage'
 import { StaffCreatePage, StaffManagementPage } from '../pages/admin/StaffManagementPage'
 import { TableCreatePage, TablesManagementPage } from '../pages/admin/TablesManagementPage'
 import { AuthPage } from '../pages/auth/AuthPage'
+import { SetPasswordPage } from '../pages/auth/SetPasswordPage'
 import { ConfirmationPage } from '../pages/customer/ConfirmationPage'
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
 import { NotificationsPage } from '../pages/customer/NotificationsPage'
@@ -43,7 +45,7 @@ import { WaiterOrdersPage } from '../pages/staff/WaiterOrdersPage'
 import { StitchFramePage } from '../pages/stitch/StitchFramePage'
 import { StitchIndexPage } from '../pages/stitch/StitchIndexPage'
 
-const customAdminRoutes = ['restaurants', 'contracts', 'restaurant-groups', 'staff', 'tables', 'categories', 'menu', 'inventory', 'inventory-movements', 'recipes', 'audit-logs']
+const customAdminRoutes = ['restaurants', 'contracts', 'restaurant-groups', 'staff', 'tables', 'categories', 'menu', 'inventory', 'inventory-movements', 'recipes', 'outbox', 'audit-logs']
 
 function RestaurantCatalogEntry() {
   const { user } = useAuth()
@@ -113,6 +115,7 @@ export function AppRouter() {
 
       <Route path="login" element={<AuthPage mode="login" />} />
       <Route path="register" element={<AuthPage mode="register" />} />
+      <Route path="set-password" element={<SetPasswordPage />} />
 
       <Route
         path="admin"
@@ -164,6 +167,7 @@ export function AppRouter() {
           <Route index element={<AdminProtected moduleKey="recipes"><RecipeManagementPage /></AdminProtected>} />
           <Route path="new" element={<AdminProtected moduleKey="recipes"><RecipeCreatePage /></AdminProtected>} />
         </Route>
+        <Route path="outbox" element={<AdminProtected moduleKey="audit-logs"><OutboxPage /></AdminProtected>} />
         <Route path="audit-logs" element={<AdminProtected moduleKey="audit-logs"><AuditLogPage /></AdminProtected>} />
         {adminRouteConfig
           .filter((config) => !customAdminRoutes.includes(config.key))

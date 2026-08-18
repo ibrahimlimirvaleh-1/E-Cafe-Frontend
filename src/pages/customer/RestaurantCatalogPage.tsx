@@ -6,12 +6,14 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
+import { SafeImage } from '../../shared/ui/SafeImage'
 
-const pageSize = 6
+const defaultPageSize = 10
 
 export function RestaurantCatalogPage() {
   const [search, setSearch] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
   const query = useMemo(() => {
     const params = new URLSearchParams({
       pageNumber: String(pageNumber),
@@ -23,7 +25,7 @@ export function RestaurantCatalogPage() {
     }
 
     return `?${params.toString()}`
-  }, [pageNumber, search])
+  }, [pageNumber, pageSize, search])
 
   const { data: restaurantPage, isLoading } = useAsyncData(() => ecafeApi.restaurants.publicPage(query), {
     items: [],
@@ -59,7 +61,7 @@ export function RestaurantCatalogPage() {
       <section className="restaurant-grid">
         {restaurantPage.items.map((restaurant) => (
           <article className="restaurant-card" key={restaurant.id}>
-            <img src={restaurant.image} alt={restaurant.name} />
+            <SafeImage src={restaurant.image} alt={restaurant.name} />
             <div className="restaurant-card-body">
               <div className="card-kicker">
                 <span>
@@ -97,8 +99,14 @@ export function RestaurantCatalogPage() {
         hasNextPage={restaurantPage.hasNextPage}
         hasPreviousPage={restaurantPage.hasPreviousPage}
         pageIndex={restaurantPage.pageIndex}
+        pageSize={pageSize}
+        totalCount={restaurantPage.totalCount}
         totalPages={restaurantPage.totalPages}
         onPageChange={setPageNumber}
+        onPageSizeChange={(value) => {
+          setPageSize(value)
+          setPageNumber(1)
+        }}
       />
     </main>
   )

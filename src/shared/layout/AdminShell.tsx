@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { MailWarning } from 'lucide-react'
 import { adminModules } from '../../entities/mockData'
 import { useAuth } from '../auth/AuthContext'
 import { RoleIds, hasAnyPermission, isInRole } from '../auth/authz'
@@ -7,12 +8,23 @@ import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
 
+const outboxAdminModule = {
+  permissionKey: 'audit-logs',
+  title: 'Sistem mesajları',
+  route: '/admin/outbox',
+  icon: MailWarning,
+} as const
+
 export function AdminShell() {
   const { user } = useAuth()
   const isSuperAdmin = isInRole(user, [RoleIds.PlatformAdmin])
+  const configuredModules = [
+    ...adminModules.map((module) => ({ ...module, permissionKey: module.key })),
+    outboxAdminModule,
+  ]
   const modules = isSuperAdmin
-    ? adminModules
-    : adminModules.filter((module) => hasAnyPermission(user, adminModulePermissions[module.key]))
+    ? configuredModules
+    : configuredModules.filter((module) => hasAnyPermission(user, adminModulePermissions[module.permissionKey]))
 
   return (
     <div className="admin-shell">

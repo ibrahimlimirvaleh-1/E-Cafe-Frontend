@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -7,6 +8,7 @@ import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { SafeImage } from '../../shared/ui/SafeImage'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type MenuPageMode = 'categories' | 'create-category' | 'items' | 'create-item'
@@ -16,6 +18,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const [reloadKey, setReloadKey] = useState(0)
   const [fileId, setFileId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [categoryForm, setCategoryForm] = useState({ name: '', sortOrder: '' })
   const [itemForm, setItemForm] = useState({
     categoryId: '',
@@ -65,47 +68,67 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     event.preventDefault()
     if (!restaurantId) {
       setMessage('Restoran seçilməlidir.')
+      setMessageDetails([])
       return
     }
 
-    await ecafeApi.menu.createCategory(restaurantId, {
-      name: categoryForm.name,
-      sortOrder: categoryForm.sortOrder ? Number(categoryForm.sortOrder) : null,
-    })
-    setCategoryForm({ name: '', sortOrder: '' })
-    setMessage('Kateqoriya yaradıldı.')
-    setReloadKey((value) => value + 1)
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.menu.createCategory(restaurantId, {
+        name: categoryForm.name,
+        sortOrder: categoryForm.sortOrder ? Number(categoryForm.sortOrder) : null,
+      })
+      setCategoryForm({ name: '', sortOrder: '' })
+      setMessage('Kateqoriya yaradıldı.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Kateqoriya yaradılmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   async function handleCreateItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !itemForm.categoryId || !itemForm.statusId) {
       setMessage('Restoran, kateqoriya və status seçilməlidir.')
+      setMessageDetails([])
       return
     }
 
-    await ecafeApi.menu.createItem(restaurantId, {
-      categoryId: itemForm.categoryId,
-      statusId: Number(itemForm.statusId),
-      name: itemForm.name,
-      description: itemForm.description,
-      basePrice: Number(itemForm.basePrice),
-      isAvailable: itemForm.isAvailable,
-      unavailableReason: itemForm.unavailableReason,
-      fileId,
-    })
-    setItemForm({
-      categoryId: categories[0]?.id ?? '',
-      statusId: String(activeStatuses[0]?.id ?? ''),
-      name: '',
-      description: '',
-      basePrice: '',
-      isAvailable: true,
-      unavailableReason: '',
-    })
-    setFileId(null)
-    setMessage('Menyu elementi yaradıldı.')
-    setReloadKey((value) => value + 1)
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.menu.createItem(restaurantId, {
+        categoryId: itemForm.categoryId,
+        statusId: Number(itemForm.statusId),
+        name: itemForm.name,
+        description: itemForm.description,
+        basePrice: Number(itemForm.basePrice),
+        isAvailable: itemForm.isAvailable,
+        unavailableReason: itemForm.unavailableReason,
+        fileId,
+      })
+      setItemForm({
+        categoryId: categories[0]?.id ?? '',
+        statusId: String(activeStatuses[0]?.id ?? ''),
+        name: '',
+        description: '',
+        basePrice: '',
+        isAvailable: true,
+        unavailableReason: '',
+      })
+      setFileId(null)
+      setMessage('Menyu elementi yaradıldı.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Menyu elementi yaradılmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   const title = mode === 'categories' ? 'Kateqoriyalar' : mode === 'create-category' ? 'Yeni kateqoriya' : mode === 'create-item' ? 'Yeni menyu elementi' : 'Menyu'
@@ -145,7 +168,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
               <TextField label="Ad" required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
               <TextField label="Sıra" min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint="Boş qalsa backend növbəti sıranı özü verir." />
               <Button type="submit" variant="secondary">Kateqoriya yarat</Button>
-              {message ? <StatusMessage>{message}</StatusMessage> : null}
+              {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             </form>
           </section>
         ) : null}
@@ -203,7 +226,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             ) : null}
             <FileUploadField label="Yemək şəkli" accept="image/*" onUploaded={setFileId} />
             <Button type="submit">Menyu elementi yarat</Button>
-            {message ? <StatusMessage>{message}</StatusMessage> : null}
+            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : null}
 
@@ -217,7 +240,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             <div className="admin-menu-list">
               {items.map((item) => (
                 <article key={item.id}>
-                  <img src={item.image} alt={item.name} />
+                  <SafeImage src={item.image} alt={item.name} />
                   <div>
                     <strong>{item.name}</strong>
                     <small>{item.description || 'Tərkib qeyd edilməyib'}</small>

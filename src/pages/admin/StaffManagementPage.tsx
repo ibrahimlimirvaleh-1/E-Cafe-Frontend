@@ -1,6 +1,8 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { UserX } from 'lucide-react'
 import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, hasPermission, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -10,6 +12,7 @@ import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { SafeImage } from '../../shared/ui/SafeImage'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type StaffPageMode = 'list' | 'create'
@@ -19,7 +22,6 @@ const initialForm = {
   surname: '',
   email: '',
   phone: '',
-  password: '',
   roleId: '',
   isActive: 'true',
   serviceFeePercent: '',
@@ -41,8 +43,10 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   const [reloadKey, setReloadKey] = useState(0)
   const [fileId, setFileId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [roleSelections, setRoleSelections] = useState<Record<string, string>>({})
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState('')
+  const [deactivatingStaffId, setDeactivatingStaffId] = useState('')
   const [form, setForm] = useState(initialForm)
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
@@ -90,17 +94,18 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     event.preventDefault()
     if (!restaurantId || !form.roleId) {
       setMessage('Restoran və rol seçilməlidir.')
+      setMessageDetails([])
       return
     }
 
     setMessage('')
+    setMessageDetails([])
     try {
       await ecafeApi.staff.create({
         name: form.name,
         surname: form.surname,
         email: form.email,
         phone: form.phone,
-        password: form.password,
         restaurantId,
         roleId: Number(form.roleId),
         isActive: form.isActive === 'true',
@@ -110,10 +115,13 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       })
       setForm(initialForm)
       setFileId(null)
-      setMessage('Əməkdaş yaradıldı.')
+      setMessage('Əməkdaş yaradıldı. Şifrə təyin etmə linki emailə göndərildi.')
+      setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Əməkdaş yaradılmadı.')
+      const feedback = normalizeCaughtApiError(err, 'Əməkdaş yaradılmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
     }
   }
 
@@ -121,10 +129,12 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     const roleId = Number(selectedRoleId(member))
     if (!roleId) {
       setMessage('Rol seçilməlidir.')
+      setMessageDetails([])
       return
     }
 
     setMessage('')
+    setMessageDetails([])
     setUpdatingRoleUserId(member.id)
     try {
       const tokens = await ecafeApi.users.updateRole(member.id, roleId)
@@ -133,11 +143,38 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       }
 
       setMessage('Rol yeniləndi.')
+      setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Rol yenilənmədi.')
+      const feedback = normalizeCaughtApiError(err, 'Rol yenilənmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
     } finally {
       setUpdatingRoleUserId('')
+    }
+  }
+
+  async function handleDeactivate(member: StaffMember) {
+    if (!restaurantId) {
+      setMessage('Restoran seçilməlidir.')
+      setMessageDetails([])
+      return
+    }
+
+    setMessage('')
+    setMessageDetails([])
+    setDeactivatingStaffId(member.id)
+    try {
+      await ecafeApi.staff.deactivate(restaurantId, member.id)
+      setMessage('Əməkdaş deaktiv edildi.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Əməkdaş deaktiv edilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    } finally {
+      setDeactivatingStaffId('')
     }
   }
 
@@ -168,10 +205,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <TextField label="Soyad" required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
             </div>
             <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-            <div className="form-grid two">
-              <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-              <TextField label="Parol" required type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
-            </div>
+            <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
             <SelectField label="Rol" required value={form.roleId} onChange={(event) => setForm({ ...form, roleId: event.target.value })}>
               <option value="">Rol seç</option>
               {roleOptions.map((role) => (
@@ -198,7 +232,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             ) : null}
             <FileUploadField label="Profil şəkli" accept="image/*" onUploaded={setFileId} />
             <Button type="submit">Əməkdaş yarat</Button>
-            {message ? <StatusMessage>{message}</StatusMessage> : null}
+            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : (
           <section className="admin-panel">
@@ -218,7 +252,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <div className="compact-list">
               {staff.map((member) => (
                 <article className="staff-member-row" key={member.id}>
-                  <img src={member.avatar} alt={member.name} />
+                  <SafeImage src={member.avatar} alt={member.name} />
                   <div className="staff-member-main">
                     <strong>{member.name || 'Adsız əməkdaş'}</strong>
                     <small>
@@ -255,13 +289,26 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                       <Button disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)} onClick={() => void handleRoleChange(member)} type="button" variant="secondary">
                         {updatingRoleUserId === member.id ? 'Yenilənir...' : 'Rolu yenilə'}
                       </Button>
+                      {member.status === 'Active' ? (
+                        <Button
+                          aria-label={`${member.name} əməkdaşını deaktiv et`}
+                          disabled={deactivatingStaffId === member.id}
+                          onClick={() => void handleDeactivate(member)}
+                          title="Əməkdaşı deaktiv et"
+                          type="button"
+                          variant="danger"
+                        >
+                          <UserX size={18} />
+                          {deactivatingStaffId === member.id ? 'Deaktiv edilir...' : 'Deaktiv et'}
+                        </Button>
+                      ) : null}
                     </div>
                   ) : null}
                 </article>
               ))}
               {!isLoading && staff.length === 0 ? <p className="online-only">Bu restoran üçün personal tapılmadı.</p> : null}
             </div>
-            {message ? <StatusMessage>{message}</StatusMessage> : null}
+            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </section>
         )}
       </section>
