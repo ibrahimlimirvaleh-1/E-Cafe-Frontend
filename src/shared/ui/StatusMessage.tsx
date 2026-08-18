@@ -14,8 +14,25 @@ type StatusMessageProps = {
   tone?: StatusMessageTone
 }
 
-const warningWords = ['secil', 'required', 'tapilmadi', 'yoxdur']
-const dangerWords = ['failed', 'error', 'xeta', 'yenilenmedi', 'yaradilmadi', 'icazeniz yoxdur', 'already exists', 'movcuddur']
+const warningWords = ['seçilməlidir', 'secil', 'required', 'tapılmadı', 'tapilmadi', 'yoxdur']
+const dangerWords = [
+  'failed',
+  'error',
+  'xəta',
+  'xeta',
+  'uğursuz',
+  'olunmadı',
+  'edilmədi',
+  'yenilənmədi',
+  'yenilenmedi',
+  'yaradılmadı',
+  'yaradilmadi',
+  'icazəniz yoxdur',
+  'icazeniz yoxdur',
+  'already exists',
+  'mövcuddur',
+  'movcuddur',
+]
 
 function inferTone(children: ReactNode): StatusMessageTone {
   const message = typeof children === 'string' ? children.toLowerCase() : ''
@@ -33,7 +50,7 @@ function inferTone(children: ReactNode): StatusMessageTone {
 
 export function StatusMessage({ children, className = '', details = [], tone }: StatusMessageProps) {
   const [isVisible, setIsVisible] = useState(Boolean(children))
-  const resolvedTone = tone ?? inferTone(children)
+  const resolvedTone = tone ?? (details.length > 0 ? 'danger' : inferTone(children))
   const Icon = resolvedTone === 'success' ? CheckCircle2 : resolvedTone === 'danger' ? AlertTriangle : Info
 
   useEffect(() => {
@@ -46,7 +63,7 @@ export function StatusMessage({ children, className = '', details = [], tone }: 
 
   // Forms use one feedback component so save/error states look consistent across admin pages.
   return (
-    <div className={`form-message form-message-${resolvedTone} ${className}`.trim()} role="status">
+    <div className={`form-message form-message-${resolvedTone} ${className}`.trim()} role={resolvedTone === 'danger' ? 'alert' : 'status'}>
       <span className="form-message-icon">
         <Icon size={18} />
       </span>
