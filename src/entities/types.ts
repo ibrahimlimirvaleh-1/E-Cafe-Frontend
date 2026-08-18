@@ -79,6 +79,7 @@ export type Table = {
   id: string
   restaurantId: string
   number: string
+  name?: string
   capacity: number
   status: 'Available' | 'Reserved' | 'Occupied' | 'Hidden'
   isPublic: boolean
@@ -89,6 +90,8 @@ export type StaffMember = {
   id: string
   restaurantId: string
   name: string
+  surname?: string
+  email?: string
   role: Role
   roleId?: number
   phone: string

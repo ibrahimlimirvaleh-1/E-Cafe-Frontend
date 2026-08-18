@@ -145,10 +145,12 @@ export function AppRouter() {
         <Route path="staff">
           <Route index element={<AdminProtected moduleKey="staff"><StaffManagementPage /></AdminProtected>} />
           <Route path="new" element={<AdminProtected moduleKey="staff"><StaffCreatePage /></AdminProtected>} />
+          <Route path=":staffId/edit" element={<AdminProtected moduleKey="staff"><StaffManagementPage mode="edit" /></AdminProtected>} />
         </Route>
         <Route path="tables">
           <Route index element={<AdminProtected moduleKey="tables"><TablesManagementPage /></AdminProtected>} />
           <Route path="new" element={<AdminProtected moduleKey="tables"><TableCreatePage /></AdminProtected>} />
+          <Route path=":tableId/edit" element={<AdminProtected moduleKey="tables"><TablesManagementPage mode="edit" /></AdminProtected>} />
         </Route>
         <Route path="categories">
           <Route index element={<AdminProtected moduleKey="categories"><MenuManagementPage mode="categories" /></AdminProtected>} />

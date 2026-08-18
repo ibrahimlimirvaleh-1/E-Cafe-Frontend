@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { getUserFromToken } from './jwt'
 import type { CurrentUser } from './jwt'
@@ -21,6 +21,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = getAccessToken()
     return token ? getUserFromToken(token) : null
   })
+
+  useEffect(() => {
+    function handleAuthExpired() {
+      clearAuthTokens()
+      setUser(null)
+    }
+
+    window.addEventListener('ecafe:auth-expired', handleAuthExpired)
+    return () => window.removeEventListener('ecafe:auth-expired', handleAuthExpired)
+  }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({

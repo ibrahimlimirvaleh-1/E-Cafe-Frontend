@@ -75,10 +75,14 @@ export const endpoints = {
   tables: {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/tables`,
     create: (restaurantId: string) => `/restaurants/${restaurantId}/tables`,
+    update: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}`,
+    deactivate: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}/deactivate`,
+    delete: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}`,
   },
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,
     detail: (restaurantId: string, staffId: string) => `/staff/${restaurantId}/detail/${staffId}`,
+    update: (restaurantId: string, staffId: string) => `/restaurants/${restaurantId}/staff/${staffId}`,
     deactivate: (restaurantId: string, staffId: string) => `/restaurants/${restaurantId}/staff/${staffId}/deactivate`,
   },
   users: {

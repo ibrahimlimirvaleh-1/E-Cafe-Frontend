@@ -81,6 +81,7 @@ export function mapTable(record: AnyRecord, restaurantId: string): Table {
     id: str(record.id || record.tableId),
     restaurantId: str(record.restaurantId, restaurantId),
     number: str(record.number || record.name || record.tableNumber || record.tableNo),
+    name: str(record.name),
     capacity: num(record.capacity || record.seatCount, 2),
     status: str(record.status || record.statusName || (isEmpty === false ? 'Occupied' : 'Available'), 'Available') as Table['status'],
     isPublic: bool(record.isPublic, true),
@@ -116,11 +117,15 @@ function normalizeStaffRole(role: string): StaffMember['role'] {
 
 export function mapStaff(record: AnyRecord, restaurantId: string): StaffMember {
   const role = str(record.roleName || record.role, 'Waiter')
+  const name = str(record.name)
+  const surname = str(record.surname)
 
   return {
     id: str(record.id || record.userId || record.staffId),
     restaurantId: str(record.restaurantId, restaurantId),
-    name: `${str(record.name)} ${str(record.surname)}`.trim() || str(record.fullName),
+    name: `${name} ${surname}`.trim() || str(record.fullName),
+    surname,
+    email: str(record.email),
     role: normalizeStaffRole(role),
     roleId: record.roleId == null ? undefined : num(record.roleId),
     phone: str(record.phone || record.email),
