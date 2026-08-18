@@ -1,6 +1,7 @@
 import { Save, ShieldCheck } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -29,6 +30,7 @@ export function ProfilePage() {
   const [fileId, setFileId] = useState<number | null>(null)
   const [statusMessage, setStatusMessage] = useState('')
   const [formError, setFormError] = useState('')
+  const [formErrorDetails, setFormErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const canChangeRole = isSuperAdmin(user?.roleId, user?.roleName)
 
@@ -49,6 +51,7 @@ export function ProfilePage() {
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setFormError('')
+    setFormErrorDetails([])
     setStatusMessage('')
     setIsSaving(true)
 
@@ -61,7 +64,9 @@ export function ProfilePage() {
       })
       setStatusMessage('Profil məlumatları yeniləndi.')
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Profil yenilənmədi.')
+      const feedback = normalizeCaughtApiError(err, 'Profil yenilənmədi.')
+      setFormError(feedback.message)
+      setFormErrorDetails(feedback.details)
     } finally {
       setIsSaving(false)
     }
@@ -74,6 +79,7 @@ export function ProfilePage() {
     }
 
     setFormError('')
+    setFormErrorDetails([])
     setStatusMessage('')
     setIsSaving(true)
 
@@ -86,7 +92,9 @@ export function ProfilePage() {
         setStatusMessage('Rol dəyişdirildi.')
       }
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Rol dəyişdirilmədi.')
+      const feedback = normalizeCaughtApiError(err, 'Rol dəyişdirilmədi.')
+      setFormError(feedback.message)
+      setFormErrorDetails(feedback.details)
     } finally {
       setIsSaving(false)
     }
@@ -180,7 +188,7 @@ export function ProfilePage() {
       </div>
 
       {statusMessage ? <StatusMessage>{statusMessage}</StatusMessage> : null}
-      {formError ? <StatusMessage tone="danger">{formError}</StatusMessage> : null}
+      {formError ? <StatusMessage details={formErrorDetails} tone="danger">{formError}</StatusMessage> : null}
     </main>
   )
 }

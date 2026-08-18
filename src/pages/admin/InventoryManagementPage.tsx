@@ -2,6 +2,7 @@ import { Pencil, Power, Trash2 } from 'lucide-react'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { hasPermission } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -56,6 +57,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   const [onlyLowStock, setOnlyLowStock] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
   const [message, setMessage] = useState('')
+  const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [editingInventoryId, setEditingInventoryId] = useState('')
   const [editingRecipeId, setEditingRecipeId] = useState('')
 
@@ -211,47 +213,67 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     event.preventDefault()
     if (!restaurantId) {
       setMessage('Restoran secilmelidir.')
+      setMessageDetails([])
       return
     }
 
-    if (editingInventoryId) {
-      await ecafeApi.inventory.update(restaurantId, editingInventoryId, {
-        name: stockForm.name,
-        unitId: Number(stockForm.unitId),
-        lowStockThreshold: Number(stockForm.lowStockThreshold),
-        isActive: stockForm.isActive,
-      })
-      setMessage('Stok elementi yenilendi.')
-    } else {
-      await ecafeApi.inventory.create(restaurantId, {
-        name: stockForm.name,
-        unitId: Number(stockForm.unitId),
-        quantityOnHand: Number(stockForm.quantityOnHand),
-        lowStockThreshold: Number(stockForm.lowStockThreshold),
-      })
-      setMessage('Stok elementi yaradildi.')
-    }
+    setMessage('')
+    setMessageDetails([])
+    try {
+      if (editingInventoryId) {
+        await ecafeApi.inventory.update(restaurantId, editingInventoryId, {
+          name: stockForm.name,
+          unitId: Number(stockForm.unitId),
+          lowStockThreshold: Number(stockForm.lowStockThreshold),
+          isActive: stockForm.isActive,
+        })
+        setMessage('Stok elementi yeniləndi.')
+      } else {
+        await ecafeApi.inventory.create(restaurantId, {
+          name: stockForm.name,
+          unitId: Number(stockForm.unitId),
+          quantityOnHand: Number(stockForm.quantityOnHand),
+          lowStockThreshold: Number(stockForm.lowStockThreshold),
+        })
+        setMessage('Stok elementi yaradıldı.')
+      }
 
-    resetStockForm()
-    setReloadKey((value) => value + 1)
+      resetStockForm()
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Stok əməliyyatı icra olunmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   async function handleMovement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !inventoryItem) {
       setMessage('Stok elementi secilmelidir.')
+      setMessageDetails([])
       return
     }
 
-    await ecafeApi.inventory.createMovement(restaurantId, inventoryItem.id, {
-      movementTypeId: Number(movementForm.movementTypeId),
-      quantity: Number(movementForm.quantity),
-      unitId: Number(movementForm.unitId),
-      reason: movementForm.reason,
-    })
-    setMovementForm({ movementTypeId: String(movementTypes[0]?.id ?? ''), quantity: '', unitId: inventoryItem.unitId ? String(inventoryItem.unitId) : '2', reason: '' })
-    setMessage('Stok hereketi elave edildi.')
-    setReloadKey((value) => value + 1)
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.inventory.createMovement(restaurantId, inventoryItem.id, {
+        movementTypeId: Number(movementForm.movementTypeId),
+        quantity: Number(movementForm.quantity),
+        unitId: Number(movementForm.unitId),
+        reason: movementForm.reason,
+      })
+      setMovementForm({ movementTypeId: String(movementTypes[0]?.id ?? ''), quantity: '', unitId: inventoryItem.unitId ? String(inventoryItem.unitId) : '2', reason: '' })
+      setMessage('Stok hərəkəti əlavə edildi.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Stok hərəkəti əlavə edilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   function startInventoryEdit(item: InventoryItem) {
@@ -263,14 +285,23 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       return
     }
 
-    if (item.isActive) {
-      await ecafeApi.inventory.deactivate(restaurantId, item.id)
-      setMessage('Stok elementi deaktiv edildi.')
-    } else {
-      await ecafeApi.inventory.activate(restaurantId, item.id)
-      setMessage('Stok elementi aktiv edildi.')
+    setMessage('')
+    setMessageDetails([])
+    try {
+      if (item.isActive) {
+        await ecafeApi.inventory.deactivate(restaurantId, item.id)
+        setMessage('Stok elementi deaktiv edildi.')
+      } else {
+        await ecafeApi.inventory.activate(restaurantId, item.id)
+        setMessage('Stok elementi aktiv edildi.')
+      }
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Stok statusu dəyişdirilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
     }
-    setReloadKey((value) => value + 1)
   }
 
   async function deleteInventory(item: InventoryItem) {
@@ -278,16 +309,26 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       return
     }
 
-    await ecafeApi.inventory.delete(restaurantId, item.id)
-    setMessage('Stok elementi silindi.')
-    resetStockForm()
-    setReloadKey((value) => value + 1)
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.inventory.delete(restaurantId, item.id)
+      setMessage('Stok elementi silindi.')
+      setMessageDetails([])
+      resetStockForm()
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Stok elementi silinmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   async function handleSaveRecipe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !menuItem) {
       setMessage('Menyu mehsulu secilmelidir.')
+      setMessageDetails([])
       return
     }
 
@@ -298,16 +339,25 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       isActive: recipeForm.isActive,
     }
 
-    if (editingRecipeId) {
-      await ecafeApi.recipes.update(restaurantId, menuItem.id, editingRecipeId, request)
-      setMessage('Resept ingredienti yenilendi.')
-    } else {
-      await ecafeApi.recipes.create(restaurantId, menuItem.id, request)
-      setMessage('Resept ingredienti elave edildi.')
-    }
+    setMessage('')
+    setMessageDetails([])
+    try {
+      if (editingRecipeId) {
+        await ecafeApi.recipes.update(restaurantId, menuItem.id, editingRecipeId, request)
+        setMessage('Resept ingredienti yeniləndi.')
+      } else {
+        await ecafeApi.recipes.create(restaurantId, menuItem.id, request)
+        setMessage('Resept ingredienti əlavə edildi.')
+      }
 
-    resetRecipeForm()
-    setReloadKey((value) => value + 1)
+      resetRecipeForm()
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Resept əməliyyatı icra olunmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   function startRecipeEdit(recipe: Recipe) {
@@ -319,14 +369,23 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       return
     }
 
-    if (recipe.isActive) {
-      await ecafeApi.recipes.deactivate(restaurantId, menuItem.id, recipe.id)
-      setMessage('Resept ingredienti deaktiv edildi.')
-    } else {
-      await ecafeApi.recipes.activate(restaurantId, menuItem.id, recipe.id)
-      setMessage('Resept ingredienti aktiv edildi.')
+    setMessage('')
+    setMessageDetails([])
+    try {
+      if (recipe.isActive) {
+        await ecafeApi.recipes.deactivate(restaurantId, menuItem.id, recipe.id)
+        setMessage('Resept ingredienti deaktiv edildi.')
+      } else {
+        await ecafeApi.recipes.activate(restaurantId, menuItem.id, recipe.id)
+        setMessage('Resept ingredienti aktiv edildi.')
+      }
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Resept statusu dəyişdirilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
     }
-    setReloadKey((value) => value + 1)
   }
 
   async function deleteRecipe(recipe: Recipe) {
@@ -334,10 +393,19 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       return
     }
 
-    await ecafeApi.recipes.delete(restaurantId, menuItem.id, recipe.id)
-    setMessage('Resept ingredienti silindi.')
-    resetRecipeForm()
-    setReloadKey((value) => value + 1)
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.recipes.delete(restaurantId, menuItem.id, recipe.id)
+      setMessage('Resept ingredienti silindi.')
+      setMessageDetails([])
+      resetRecipeForm()
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Resept ingredienti silinmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   return (
@@ -619,7 +687,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           )
         ) : null}
       </section>
-      {message ? <StatusMessage className="inventory-message">{message}</StatusMessage> : null}
+      {message ? <StatusMessage className="inventory-message" details={messageDetails}>{message}</StatusMessage> : null}
     </main>
   )
 }

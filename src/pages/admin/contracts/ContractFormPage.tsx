@@ -2,6 +2,7 @@ import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../../shared/api/httpClient'
 import { useAuth } from '../../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../../shared/auth/authz'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -46,6 +47,7 @@ export function ContractFormPage() {
   const [commissionPercent, setCommissionPercent] = useState('0')
   const [staffSettlementPeriod, setStaffSettlementPeriod] = useState('7')
   const [error, setError] = useState('')
+  const [errorDetails, setErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -67,19 +69,23 @@ export function ContractFormPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    setErrorDetails([])
 
     if (!canEditContract) {
       setError('Bu statusda olan müqaviləni redaktə etmək olmaz.')
+      setErrorDetails([])
       return
     }
 
     if (!selectedRestaurantId) {
       setError('Müqavilə üçün restoran seçilməlidir.')
+      setErrorDetails([])
       return
     }
 
     if (!startDate) {
       setError('Başlama tarixi mütləqdir.')
+      setErrorDetails([])
       return
     }
 
@@ -101,7 +107,9 @@ export function ContractFormPage() {
         navigate(createdId ? `/admin/contracts/${createdId}` : '/admin/contracts')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Müqavilə saxlanılmadı.')
+      const feedback = normalizeCaughtApiError(err, 'Müqavilə saxlanılmadı.')
+      setError(feedback.message)
+      setErrorDetails(feedback.details)
     } finally {
       setIsSubmitting(false)
     }
@@ -155,7 +163,7 @@ export function ContractFormPage() {
           <StatusMessage tone="warning">Redaktədən sonra müqavilə yenidən qaralama statusuna qayıdacaq və sahibkara təkrar göndərilməlidir.</StatusMessage>
         ) : null}
         {!canEditContract ? <StatusMessage tone="warning">Bu statusda olan müqaviləni redaktə etmək olmaz.</StatusMessage> : null}
-        {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
+        {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
 
         <div className="form-actions">
           <Button disabled={!canEditContract || isSubmitting || restaurants.length === 0} type="submit">

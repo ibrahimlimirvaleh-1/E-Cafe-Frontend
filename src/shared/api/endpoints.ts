@@ -32,6 +32,7 @@ export const endpoints = {
   },
   contracts: {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/contracts`,
+    paged: (restaurantId: string) => `/restaurants/${restaurantId}/contracts/paged`,
     create: (restaurantId: string) => `/admin/restaurants/${restaurantId}/contracts`,
     update: (restaurantId: string, contractId: string) => `/admin/restaurants/${restaurantId}/contracts/${contractId}`,
     active: (restaurantId: string) => `/restaurants/${restaurantId}/contracts/active`,
@@ -78,6 +79,7 @@ export const endpoints = {
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,
     detail: (restaurantId: string, staffId: string) => `/staff/${restaurantId}/detail/${staffId}`,
+    deactivate: (restaurantId: string, staffId: string) => `/restaurants/${restaurantId}/staff/${staffId}/deactivate`,
   },
   users: {
     create: '/users',

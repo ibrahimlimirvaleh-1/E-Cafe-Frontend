@@ -2,11 +2,13 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { AlertTriangle, CheckCircle2, Clock3, Eye, RefreshCw, RotateCcw, SlidersHorizontal, X } from 'lucide-react'
 import type { OutboxMessage, StatusTone } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 const defaultPageSize = 10
 const sentStatusId = 3
@@ -128,7 +130,7 @@ export function OutboxPage() {
       setSelectedMessage((current) => (current?.id === retriedMessage.id ? retriedMessage : current))
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Mesaj yenidən növbəyə qaytarılmadı.')
+      setActionError(normalizeCaughtApiError(err, 'Mesaj yenidən növbəyə qaytarılmadı.').message)
     }
   }
 
@@ -142,7 +144,7 @@ export function OutboxPage() {
       const detail = await ecafeApi.outbox.detail(message.id)
       setSelectedMessage(detail)
     } catch (err) {
-      setDetailError(err instanceof Error ? err.message : 'Mesaj detalları yüklənmədi.')
+      setDetailError(normalizeCaughtApiError(err, 'Mesaj detalları yüklənmədi.').message)
     } finally {
       setIsDetailLoading(false)
     }
@@ -222,9 +224,9 @@ export function OutboxPage() {
         </div>
 
         {isLoading ? <p className="online-only">Sistem mesajları yüklənir...</p> : null}
-        {error ? <p className="form-error">{error}</p> : null}
-        {actionMessage ? <p className="form-success">{actionMessage}</p> : null}
-        {actionError ? <p className="form-error">{actionError}</p> : null}
+        {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
+        {actionMessage ? <StatusMessage tone="success">{actionMessage}</StatusMessage> : null}
+        {actionError ? <StatusMessage tone="danger">{actionError}</StatusMessage> : null}
 
         <div className="outbox-table" role="table" aria-label="Sistem mesajları">
           <div className="outbox-table-head" role="row">
@@ -349,7 +351,7 @@ function OutboxDetailModal({
         </div>
 
         {isLoading ? <p className="online-only">Mesaj detalları yüklənir...</p> : null}
-        {error ? <p className="form-error">{error}</p> : null}
+        {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
 
         {message ? (
           <>

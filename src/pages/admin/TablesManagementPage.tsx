@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -14,6 +15,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const [message, setMessage] = useState('')
+  const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [form, setForm] = useState({ tableNo: '', name: '', capacity: '2' })
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
@@ -45,17 +47,27 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     event.preventDefault()
     if (!restaurantId) {
       setMessage('Restoran seçilməlidir.')
+      setMessageDetails([])
       return
     }
 
-    await ecafeApi.tables.create(restaurantId, {
-      tableNo: form.tableNo,
-      name: form.name,
-      capacity: Number(form.capacity),
-    })
-    setForm({ tableNo: '', name: '', capacity: '2' })
-    setMessage('Masa yaradıldı.')
-    setReloadKey((value) => value + 1)
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.tables.create(restaurantId, {
+        tableNo: form.tableNo,
+        name: form.name,
+        capacity: Number(form.capacity),
+      })
+      setForm({ tableNo: '', name: '', capacity: '2' })
+      setMessage('Masa yaradıldı.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Masa yaradılmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   return (
@@ -86,7 +98,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
             </div>
             <TextField label="Tutum" min={1} required type="number" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
             <Button type="submit">Masa yarat</Button>
-            {message ? <StatusMessage>{message}</StatusMessage> : null}
+            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : (
           <section className="admin-panel">

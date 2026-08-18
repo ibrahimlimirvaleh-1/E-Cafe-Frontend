@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import type { ContractStatus, RestaurantContract, StatusTone, WorkflowAction } from '../../../entities/types'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../../shared/api/httpClient'
 import { contractStatusLabel } from '../../../shared/api/mappers'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Badge } from '../../../shared/ui/Badge'
@@ -84,8 +85,10 @@ export function ContractDetailPage() {
   const [hasAcceptedContractTerms, setHasAcceptedContractTerms] = useState(false)
   const [acceptanceText, setAcceptanceText] = useState('Müqaviləni oxudum və şərtlərini qəbul edirəm.')
   const [actionError, setActionError] = useState('')
+  const [actionErrorDetails, setActionErrorDetails] = useState<ApiErrorDetail[]>([])
   const [actionName, setActionName] = useState('')
   const [fileError, setFileError] = useState('')
+  const [fileErrorDetails, setFileErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isOpeningFile, setIsOpeningFile] = useState(false)
   const [isDownloadingFile, setIsDownloadingFile] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
@@ -102,13 +105,16 @@ export function ContractDetailPage() {
 
   async function runAction(name: string, action: () => Promise<unknown>) {
     setActionError('')
+    setActionErrorDetails([])
     setActionName(name)
     try {
       await action()
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Əməliyyat icra olunmadı.')
+      const feedback = normalizeCaughtApiError(err, 'Əməliyyat icra olunmadı.')
+      setActionError(feedback.message)
+      setActionErrorDetails(feedback.details)
     } finally {
       setActionName('')
     }
@@ -120,6 +126,7 @@ export function ContractDetailPage() {
     }
 
     setFileError('')
+    setFileErrorDetails([])
     setIsOpeningFile(true)
 
     try {
@@ -139,7 +146,9 @@ export function ContractDetailPage() {
         return objectUrl
       })
     } catch (err) {
-      setFileError(err instanceof Error ? err.message : 'Müqavilə sənədi açılmadı.')
+      const feedback = normalizeCaughtApiError(err, 'Müqavilə sənədi açılmadı.')
+      setFileError(feedback.message)
+      setFileErrorDetails(feedback.details)
     } finally {
       setIsOpeningFile(false)
     }
@@ -152,6 +161,7 @@ export function ContractDetailPage() {
     }
 
     setFileError('')
+    setFileErrorDetails([])
     setIsDownloadingFile(true)
 
     try {
@@ -165,7 +175,9 @@ export function ContractDetailPage() {
       link.remove()
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
     } catch (err) {
-      setFileError(err instanceof Error ? err.message : 'Müqavilə sənədi yüklənmədi.')
+      const feedback = normalizeCaughtApiError(err, 'Müqavilə sənədi yüklənmədi.')
+      setFileError(feedback.message)
+      setFileErrorDetails(feedback.details)
     } finally {
       setIsDownloadingFile(false)
     }
@@ -281,7 +293,7 @@ export function ContractDetailPage() {
             <dd>{contract.fileId ? `#${contract.fileId}` : '-'}</dd>
           </div>
         </dl>
-        {fileError ? <StatusMessage tone="danger">{fileError}</StatusMessage> : null}
+        {fileError ? <StatusMessage details={fileErrorDetails} tone="danger">{fileError}</StatusMessage> : null}
       </section>
 
       <section className="contract-action-panel">
@@ -360,7 +372,7 @@ export function ContractDetailPage() {
         ) : null}
 
         {!hasVisibleAction ? <p className="muted-text">Sizin rolunuz üçün bu statusda icra ediləcək əməliyyat yoxdur.</p> : null}
-        {actionError ? <StatusMessage tone="danger">{actionError}</StatusMessage> : null}
+        {actionError ? <StatusMessage details={actionErrorDetails} tone="danger">{actionError}</StatusMessage> : null}
       </section>
     </main>
   )

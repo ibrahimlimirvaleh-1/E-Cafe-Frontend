@@ -70,6 +70,27 @@ type ContractRecord = {
   restaurantName: string
 }
 
+type ContractRecordQuery = {
+  dateFrom?: string
+  dateTo?: string
+  expiringInDays?: string
+  pageNumber?: number
+  pageSize?: number
+  restaurantId?: string
+  search?: string
+  status?: string
+}
+
+const contractStatusIds: Record<string, number> = {
+  Draft: 6001,
+  PendingSignature: 6002,
+  Active: 6003,
+  Expired: 6004,
+  Terminated: 6005,
+  OwnerApproved: 6006,
+  Scheduled: 6007,
+}
+
 type CreateContractRequest = {
   startDate: string
   endDate?: string | null
@@ -252,11 +273,13 @@ async function listRestaurants(query = '') {
   return asArray<AnyRecord>(result.data).map(mapRestaurant)
 }
 
-async function fetchContractRecords(): Promise<ContractRecord[]> {
-  const restaurantList = await listRestaurants()
+async function fetchContractRecords(query: ContractRecordQuery = {}): Promise<ContractRecord[]> {
+  const restaurantList = (await listRestaurants()).filter(
+    (restaurant) => !query.restaurantId || query.restaurantId === 'all' || restaurant.id === query.restaurantId,
+  )
   const entries = await Promise.all(
     restaurantList.map(async (restaurant) => {
-      const result = await httpClient<unknown>(endpoints.contracts.list(restaurant.id))
+      const result = await httpClient<unknown>(buildContractListEndpoint(restaurant.id, query))
       const contractList = asArray<AnyRecord>(result.data).map((contract) => mapContract(contract, restaurant.id))
 
       return contractList.map((contract) => ({
@@ -267,6 +290,23 @@ async function fetchContractRecords(): Promise<ContractRecord[]> {
   )
 
   return entries.flat()
+}
+
+function buildContractListEndpoint(restaurantId: string, query: ContractRecordQuery) {
+  const params = new URLSearchParams()
+
+  if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
+  if (query.pageSize) params.set('PageSize', String(query.pageSize))
+  if (query.search?.trim()) params.set('Search', query.search.trim())
+  if (query.dateFrom) params.set('EndDateFrom', query.dateFrom)
+  if (query.dateTo) params.set('EndDateTo', query.dateTo)
+  if (query.expiringInDays) params.set('ExpiringInDays', query.expiringInDays)
+  if (query.status && query.status !== 'all' && contractStatusIds[query.status]) {
+    params.set('StatusId', String(contractStatusIds[query.status]))
+  }
+
+  const search = params.toString()
+  return search ? `${endpoints.contracts.paged(restaurantId)}?${search}` : endpoints.contracts.list(restaurantId)
 }
 
 function extractCreatedId(data: unknown) {
@@ -915,8 +955,8 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.contracts.list(restaurantId))
         return asArray<AnyRecord>(result.data).map((contract) => mapContract(contract, restaurantId))
       }, contracts.filter((contract) => contract.restaurantId === restaurantId)),
-    records: () =>
-      safe(fetchContractRecords, contracts.map((contract) => ({ contract, restaurantName: contract.restaurantId }))),
+    records: (query: ContractRecordQuery = {}) =>
+      safe(() => fetchContractRecords(query), contracts.map((contract) => ({ contract, restaurantName: contract.restaurantId }))),
     get: (contractId: string) =>
       safe(async () => {
         const records = await fetchContractRecords()
@@ -1045,6 +1085,10 @@ export const ecafeApi = {
         body: formData,
       })
     },
+    deactivate: (restaurantId: string, staffId: string) =>
+      httpClient<unknown>(endpoints.staff.deactivate(restaurantId, staffId), {
+        method: 'PATCH',
+      }),
   },
 
   menu: {

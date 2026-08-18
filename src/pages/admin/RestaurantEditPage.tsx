@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
@@ -15,6 +16,7 @@ export function RestaurantEditPage() {
   const { data: groups } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [])
   const [fileIds, setFileIds] = useState<number[]>([])
   const [error, setError] = useState('')
+  const [errorDetails, setErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form, setForm] = useState({
     name: '',
@@ -57,6 +59,7 @@ export function RestaurantEditPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    setErrorDetails([])
     setIsSubmitting(true)
 
     try {
@@ -78,7 +81,9 @@ export function RestaurantEditPage() {
       })
       navigate(`/admin/restaurants/${restaurantId}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Restoran saxlanılmadı.')
+      const feedback = normalizeCaughtApiError(err, 'Restoran saxlanılmadı.')
+      setError(feedback.message)
+      setErrorDetails(feedback.details)
     } finally {
       setIsSubmitting(false)
     }
@@ -138,7 +143,7 @@ export function RestaurantEditPage() {
             }
           }}
         />
-        {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
+        {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
         <div className="form-actions">
           <Button disabled={isSubmitting} type="submit">{isSubmitting ? 'Saxlanılır...' : 'Yadda saxla'}</Button>
           <ButtonLink to={`/admin/restaurants/${restaurantId}`} variant="secondary">Ləğv et</ButtonLink>

@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { restaurantRow } from '../../shared/api/mappers'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -38,6 +39,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   const [search, setSearch] = useState('')
   const [fileIds, setFileIds] = useState<number[]>([])
   const [message, setMessage] = useState('')
+  const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [form, setForm] = useState(initialForm)
   const query = useMemo(() => {
     const params = new URLSearchParams({
@@ -64,27 +66,35 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setMessage('')
+    setMessageDetails([])
 
-    await ecafeApi.restaurants.create({
-      name: form.name,
-      location: form.location,
-      phone: form.phone,
-      email: form.email,
-      restaurantGroupId: form.restaurantGroupId || undefined,
-      restaurantGroupName: form.restaurantGroupId ? undefined : form.restaurantGroupName,
-      restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
-      branchName: form.branchName,
-      depositAmount: Number(form.depositAmount),
-      cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
-      serviceFeePercent: Number(form.serviceFeePercent),
-      staffSettlementPeriod: Number(form.staffSettlementPeriod),
-      defaultWaiterTableLimit: form.defaultWaiterTableLimit ? Number(form.defaultWaiterTableLimit) : null,
-      fileIds,
-    })
-    setForm(initialForm)
-    setFileIds([])
-    setMessage('Restoran yaradıldı.')
-    setReloadKey((value) => value + 1)
+    try {
+      await ecafeApi.restaurants.create({
+        name: form.name,
+        location: form.location,
+        phone: form.phone,
+        email: form.email,
+        restaurantGroupId: form.restaurantGroupId || undefined,
+        restaurantGroupName: form.restaurantGroupId ? undefined : form.restaurantGroupName,
+        restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
+        branchName: form.branchName,
+        depositAmount: Number(form.depositAmount),
+        cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
+        serviceFeePercent: Number(form.serviceFeePercent),
+        staffSettlementPeriod: Number(form.staffSettlementPeriod),
+        defaultWaiterTableLimit: form.defaultWaiterTableLimit ? Number(form.defaultWaiterTableLimit) : null,
+        fileIds,
+      })
+      setForm(initialForm)
+      setFileIds([])
+      setMessage('Restoran yaradıldı.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Restoran yaradılmadı.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
   }
 
   return (
@@ -181,7 +191,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             }}
           />
           <Button type="submit">Restoran yarat</Button>
-          {message ? <StatusMessage>{message}</StatusMessage> : null}
+          {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
         </form>
       )}
     </main>
