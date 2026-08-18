@@ -155,6 +155,7 @@ export function AppRouter() {
         <Route path="categories">
           <Route index element={<AdminProtected moduleKey="categories"><MenuManagementPage mode="categories" /></AdminProtected>} />
           <Route path="new" element={<AdminProtected moduleKey="categories"><CategoryCreatePage /></AdminProtected>} />
+          <Route path=":categoryId/edit" element={<AdminProtected moduleKey="categories"><MenuManagementPage mode="edit-category" /></AdminProtected>} />
         </Route>
         <Route path="menu">
           <Route index element={<AdminProtected moduleKey="menu"><MenuManagementPage /></AdminProtected>} />

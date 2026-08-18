@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { Pencil, Trash2, UserX } from 'lucide-react'
+import { Pencil, RefreshCw, Trash2, UserX } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -344,10 +344,24 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           </option>
                         ))}
                       </select>
-                      <Button disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)} onClick={() => void handleRoleChange(member)} type="button" variant="secondary">
-                        {updatingRoleUserId === member.id ? 'Yenilənir...' : 'Rolu yenilə'}
+                      <Button
+                        aria-label={`${member.name} üçün rolu yenilə`}
+                        className="action-icon-button"
+                        disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)}
+                        onClick={() => void handleRoleChange(member)}
+                        title={updatingRoleUserId === member.id ? 'Rol yenilənir' : 'Rolu yenilə'}
+                        type="button"
+                        variant="secondary"
+                      >
+                        <RefreshCw size={18} />
                       </Button>
-                      <ButtonLink className="action-icon-button" to={`/admin/staff/${member.id}/edit?restaurantId=${restaurantId}`} variant="secondary">
+                      <ButtonLink
+                        aria-label={`${member.name} əməkdaşını redaktə et`}
+                        className="action-icon-button"
+                        title="Redaktə et"
+                        to={`/admin/staff/${member.id}/edit?restaurantId=${restaurantId}`}
+                        variant="secondary"
+                      >
                         <Pencil size={18} />
                       </ButtonLink>
                       {member.status === 'Active' ? (
@@ -355,12 +369,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           aria-label={`${member.name} əməkdaşını deaktiv et`}
                           disabled={deactivatingStaffId === member.id}
                           onClick={() => void handleDeactivate(member)}
-                          title="Əməkdaşı deaktiv et"
+                          title={deactivatingStaffId === member.id ? 'Deaktiv edilir' : 'Deaktiv et'}
                           type="button"
                           variant="danger"
                         >
                           <UserX size={18} />
-                          {deactivatingStaffId === member.id ? 'Deaktiv edilir...' : 'Deaktiv et'}
                         </Button>
                       ) : null}
                       <Button aria-label={`${member.name} əməkdaşını sil`} className="action-icon-button" onClick={() => void handleDelete(member)} title="Sil" type="button" variant="danger">

@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, type LinkProps } from 'react-router-dom'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
@@ -7,20 +7,18 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant
 }
 
-type ButtonLinkProps = {
+type ButtonLinkProps = LinkProps & {
   children: ReactNode
-  to: string
   variant?: ButtonVariant
-  className?: string
 }
 
 export function Button({ className = '', variant = 'primary', ...props }: ButtonProps) {
   return <button className={`ui-button ui-button-${variant} ${className}`} {...props} />
 }
 
-export function ButtonLink({ children, className = '', to, variant = 'primary' }: ButtonLinkProps) {
+export function ButtonLink({ children, className = '', variant = 'primary', ...props }: ButtonLinkProps) {
   return (
-    <Link className={`ui-button ui-button-${variant} ${className}`} to={to}>
+    <Link className={`ui-button ui-button-${variant} ${className}`} {...props}>
       {children}
     </Link>
   )

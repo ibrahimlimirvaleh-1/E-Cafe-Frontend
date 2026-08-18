@@ -1533,6 +1533,9 @@ img {
 }
 
 .action-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 38px;
   min-width: 38px;
   height: 38px;
@@ -1920,7 +1923,7 @@ img {
 .contract-workflow-head,
 .contract-workflow-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.35fr) minmax(150px, 0.8fr) minmax(160px, 0.9fr) minmax(260px, 1.45fr) 104px;
+  grid-template-columns: minmax(220px, 1.35fr) minmax(150px, 0.8fr) minmax(160px, 0.9fr) minmax(260px, 1.45fr) 96px;
   gap: 18px;
   align-items: center;
   padding: 16px 22px;
@@ -1975,7 +1978,7 @@ img {
 .contract-workflow-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -2539,12 +2542,12 @@ img {
 
 .staff-role-actions {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) auto auto auto;
+  grid-template-columns: minmax(150px, 1fr) repeat(4, 38px);
   gap: 10px;
   align-items: center;
   justify-content: end;
   min-width: 0;
-  width: min(460px, 100%);
+  width: min(360px, 100%);
 }
 
 .staff-role-actions select {
@@ -2559,7 +2562,7 @@ img {
 
 .staff-role-actions .ui-button {
   min-height: 38px;
-  padding: 0 12px;
+  padding: 0;
   white-space: nowrap;
 }
 
