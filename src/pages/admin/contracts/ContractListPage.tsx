@@ -247,7 +247,7 @@ function ContractWorkflowList({
         <span>Status</span>
         <span>Müddət</span>
         <span>Növbəti addım</span>
-        <span>Baxış</span>
+        <span className="contract-workflow-view-head">Baxış</span>
       </div>
 
       {records.map((record) => {
@@ -271,7 +271,7 @@ function ContractWorkflowList({
               <strong>{nextStep.title}</strong>
               <small>{nextStep.description}</small>
             </div>
-            <div className="contract-workflow-actions" data-label="Baxış">
+            <div className="contract-workflow-actions contract-workflow-view-actions" data-label="Baxış">
               <Link className="action-icon-button" title="Detallar" to={`/admin/contracts/${contract.id}`}>
                 <Eye size={18} />
               </Link>

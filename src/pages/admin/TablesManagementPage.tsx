@@ -171,10 +171,20 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             <div className="compact-list">
               {tables.map((table) => (
-                <article key={table.id}>
-                  <div>
-                    <strong>{table.number}</strong>
-                    <small>{table.capacity} nəfər</small>
+                <article className="table-management-row" key={table.id}>
+                  <div className="table-management-info">
+                    <span>
+                      <small>Masa nömrəsi</small>
+                      <strong>{table.number}</strong>
+                    </span>
+                    <span>
+                      <small>Ad</small>
+                      <strong>{table.name || '-'}</strong>
+                    </span>
+                    <span>
+                      <small>Tutum</small>
+                      <strong>{table.capacity} nəfər</strong>
+                    </span>
                   </div>
                   <Badge tone={table.status === 'Available' ? 'success' : table.status === 'Occupied' ? 'warning' : 'neutral'}>
                     {tableStatusLabel(table.status)}
