@@ -93,10 +93,10 @@ export const contracts: RestaurantContract[] = [
 ]
 
 export const tables: Table[] = [
-  { id: 'table-101', restaurantId: 'saffron-premium', number: 'T-101', capacity: 2, status: 'Available', isPublic: true, image: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=600&q=80' },
-  { id: 'table-104', restaurantId: 'saffron-premium', number: 'T-104', capacity: 4, status: 'Reserved', isPublic: true, image: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=600&q=80' },
-  { id: 'table-vip-2', restaurantId: 'saffron-premium', number: 'VIP-2', capacity: 8, status: 'Available', isPublic: true, image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80' },
-  { id: 'table-terrace-8', restaurantId: 'saffron-premium', number: 'Terrace-8', capacity: 6, status: 'Occupied', isPublic: false, image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=600&q=80' },
+  { id: 'table-101', restaurantId: 'saffron-premium', number: 'T-101', capacity: 2, status: 'Available', isActive: true, isPublic: true, image: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=600&q=80' },
+  { id: 'table-104', restaurantId: 'saffron-premium', number: 'T-104', capacity: 4, status: 'Reserved', isActive: true, isPublic: true, image: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=600&q=80' },
+  { id: 'table-vip-2', restaurantId: 'saffron-premium', number: 'VIP-2', capacity: 8, status: 'Available', isActive: true, isPublic: true, image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80' },
+  { id: 'table-terrace-8', restaurantId: 'saffron-premium', number: 'Terrace-8', capacity: 6, status: 'Occupied', isActive: true, isPublic: false, image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=600&q=80' },
 ]
 
 export const staff: StaffMember[] = [

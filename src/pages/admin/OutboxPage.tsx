@@ -104,20 +104,31 @@ export function OutboxPage() {
   const failedCount = messagePage.items.filter((message) => message.statusId === failedStatusId).length
   const retryLimit = messagePage.items[0]?.maxRetryCount ?? 5
 
+  function updateFilter<K extends keyof OutboxFilters>(key: K, value: OutboxFilters[K]) {
+    setFilters((current) => ({ ...current, [key]: value }))
+    setPageNumber(1)
+  }
+
+  function openFilterPanel() {
+    setDraftFilters(filters)
+    setIsFilterOpen((value) => !value)
+  }
+
   function updateDraftFilter<K extends keyof OutboxFilters>(key: K, value: OutboxFilters[K]) {
     setDraftFilters((current) => ({ ...current, [key]: value }))
   }
 
   function applyFilters() {
-    setFilters(draftFilters)
+    setFilters((current) => ({ ...current, ...draftFilters, search: current.search }))
     setPageNumber(1)
     setIsFilterOpen(false)
   }
 
   function clearFilters() {
+    setFilters((current) => ({ ...emptyOutboxFilters, search: current.search }))
     setDraftFilters(emptyOutboxFilters)
-    setFilters(emptyOutboxFilters)
     setPageNumber(1)
+    setIsFilterOpen(false)
   }
 
   async function retryMessage(message: OutboxMessage) {
@@ -169,11 +180,11 @@ export function OutboxPage() {
         <TextField
           label="Axtarış"
           placeholder="Mövzu və ya alıcı üzrə axtar..."
-          value={draftFilters.search}
-          onChange={(event) => updateDraftFilter('search', event.target.value)}
+          value={filters.search}
+          onChange={(event) => updateFilter('search', event.target.value)}
         />
         <div className="filter-popover">
-          <button type="button" className="ui-button ui-button-secondary filter-trigger" onClick={() => setIsFilterOpen((value) => !value)}>
+          <button type="button" className="ui-button ui-button-secondary filter-trigger" onClick={openFilterPanel}>
             <SlidersHorizontal size={18} />
             Filter
           </button>

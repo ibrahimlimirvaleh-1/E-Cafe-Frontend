@@ -2,12 +2,15 @@ import { Pencil, Power, Trash2 } from 'lucide-react'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
-import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { hasPermission } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useFormFeedback } from '../../shared/hooks/useFormFeedback'
+import { ActionIconButton } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
+import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
+import { EmptyState } from '../../shared/ui/EmptyState'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
@@ -15,8 +18,8 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { InventoryItem, MenuItem, Recipe } from '../../entities/types'
 
 type InventoryPageMode = 'items' | 'create' | 'movements' | 'recipes' | 'recipe-create'
+type PendingDelete = { id: string; label: string; type: 'inventory' | 'recipe' } | null
 
-// The three inventory routes share data loading, but each mode renders one focused workflow.
 const units = [
   { id: 1, name: 'Kilogram', code: 'kg' },
   { id: 2, name: 'Qram', code: 'g' },
@@ -56,10 +59,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   const [selectedMenuItemId, setSelectedMenuItemId] = useState('')
   const [onlyLowStock, setOnlyLowStock] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
-  const [message, setMessage] = useState('')
-  const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [editingInventoryId, setEditingInventoryId] = useState('')
   const [editingRecipeId, setEditingRecipeId] = useState('')
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null)
+  const { clearFeedback, feedback, setError, setSuccess, setWarning } = useFormFeedback()
 
   const [stockForm, setStockForm] = useState({
     name: '',
@@ -212,13 +215,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   async function handleSaveStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId) {
-      setMessage('Restoran secilmelidir.')
-      setMessageDetails([])
+      setWarning('Restoran seçilməlidir.')
       return
     }
 
-    setMessage('')
-    setMessageDetails([])
+    clearFeedback()
     try {
       if (editingInventoryId) {
         await ecafeApi.inventory.update(restaurantId, editingInventoryId, {
@@ -227,7 +228,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           lowStockThreshold: Number(stockForm.lowStockThreshold),
           isActive: stockForm.isActive,
         })
-        setMessage('Stok elementi yeniləndi.')
+        setSuccess('Stok elementi yeniləndi.')
       } else {
         await ecafeApi.inventory.create(restaurantId, {
           name: stockForm.name,
@@ -235,29 +236,24 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           quantityOnHand: Number(stockForm.quantityOnHand),
           lowStockThreshold: Number(stockForm.lowStockThreshold),
         })
-        setMessage('Stok elementi yaradıldı.')
+        setSuccess('Stok elementi yaradıldı.')
       }
 
       resetStockForm()
-      setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Stok əməliyyatı icra olunmadı.')
-      setMessage(feedback.message)
-      setMessageDetails(feedback.details)
+      setError(err, 'Stok əməliyyatı icra olunmadı.')
     }
   }
 
   async function handleMovement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !inventoryItem) {
-      setMessage('Stok elementi secilmelidir.')
-      setMessageDetails([])
+      setWarning('Stok elementi seçilməlidir.')
       return
     }
 
-    setMessage('')
-    setMessageDetails([])
+    clearFeedback()
     try {
       await ecafeApi.inventory.createMovement(restaurantId, inventoryItem.id, {
         movementTypeId: Number(movementForm.movementTypeId),
@@ -266,13 +262,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         reason: movementForm.reason,
       })
       setMovementForm({ movementTypeId: String(movementTypes[0]?.id ?? ''), quantity: '', unitId: inventoryItem.unitId ? String(inventoryItem.unitId) : '2', reason: '' })
-      setMessage('Stok hərəkəti əlavə edildi.')
-      setMessageDetails([])
+      setSuccess('Stok hərəkəti əlavə edildi.')
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Stok hərəkəti əlavə edilmədi.')
-      setMessage(feedback.message)
-      setMessageDetails(feedback.details)
+      setError(err, 'Stok hərəkəti əlavə edilmədi.')
     }
   }
 
@@ -285,50 +278,43 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       return
     }
 
-    setMessage('')
-    setMessageDetails([])
+    clearFeedback()
     try {
       if (item.isActive) {
         await ecafeApi.inventory.deactivate(restaurantId, item.id)
-        setMessage('Stok elementi deaktiv edildi.')
+        setSuccess('Stok elementi deaktiv edildi.')
       } else {
         await ecafeApi.inventory.activate(restaurantId, item.id)
-        setMessage('Stok elementi aktiv edildi.')
+        setSuccess('Stok elementi aktiv edildi.')
       }
-      setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Stok statusu dəyişdirilmədi.')
-      setMessage(feedback.message)
-      setMessageDetails(feedback.details)
+      setError(err, 'Stok statusu dəyişdirilmədi.')
     }
   }
 
-  async function deleteInventory(item: InventoryItem) {
-    if (!restaurantId || !confirm(`${item.name} silinsin?`)) {
+  async function deleteInventory(itemId: string) {
+    if (!restaurantId) {
       return
     }
 
-    setMessage('')
-    setMessageDetails([])
+    clearFeedback()
     try {
-      await ecafeApi.inventory.delete(restaurantId, item.id)
-      setMessage('Stok elementi silindi.')
-      setMessageDetails([])
+      await ecafeApi.inventory.delete(restaurantId, itemId)
+      setSuccess('Stok elementi silindi.')
       resetStockForm()
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Stok elementi silinmədi.')
-      setMessage(feedback.message)
-      setMessageDetails(feedback.details)
+      setError(err, 'Stok elementi silinmədi.')
+    } finally {
+      setPendingDelete(null)
     }
   }
 
   async function handleSaveRecipe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !menuItem) {
-      setMessage('Menyu mehsulu secilmelidir.')
-      setMessageDetails([])
+      setWarning('Menyu məhsulu seçilməlidir.')
       return
     }
 
@@ -339,24 +325,20 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       isActive: recipeForm.isActive,
     }
 
-    setMessage('')
-    setMessageDetails([])
+    clearFeedback()
     try {
       if (editingRecipeId) {
         await ecafeApi.recipes.update(restaurantId, menuItem.id, editingRecipeId, request)
-        setMessage('Resept ingredienti yeniləndi.')
+        setSuccess('Resept ingredienti yeniləndi.')
       } else {
         await ecafeApi.recipes.create(restaurantId, menuItem.id, request)
-        setMessage('Resept ingredienti əlavə edildi.')
+        setSuccess('Resept ingredienti əlavə edildi.')
       }
 
       resetRecipeForm()
-      setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Resept əməliyyatı icra olunmadı.')
-      setMessage(feedback.message)
-      setMessageDetails(feedback.details)
+      setError(err, 'Resept əməliyyatı icra olunmadı.')
     }
   }
 
@@ -369,43 +351,50 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       return
     }
 
-    setMessage('')
-    setMessageDetails([])
+    clearFeedback()
     try {
       if (recipe.isActive) {
         await ecafeApi.recipes.deactivate(restaurantId, menuItem.id, recipe.id)
-        setMessage('Resept ingredienti deaktiv edildi.')
+        setSuccess('Resept ingredienti deaktiv edildi.')
       } else {
         await ecafeApi.recipes.activate(restaurantId, menuItem.id, recipe.id)
-        setMessage('Resept ingredienti aktiv edildi.')
+        setSuccess('Resept ingredienti aktiv edildi.')
       }
-      setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Resept statusu dəyişdirilmədi.')
-      setMessage(feedback.message)
-      setMessageDetails(feedback.details)
+      setError(err, 'Resept statusu dəyişdirilmədi.')
     }
   }
 
-  async function deleteRecipe(recipe: Recipe) {
-    if (!restaurantId || !menuItem || !confirm(`${recipe.inventoryItemName} reseptden silinsin?`)) {
+  async function deleteRecipe(recipeId: string) {
+    if (!restaurantId || !menuItem) {
       return
     }
 
-    setMessage('')
-    setMessageDetails([])
+    clearFeedback()
     try {
-      await ecafeApi.recipes.delete(restaurantId, menuItem.id, recipe.id)
-      setMessage('Resept ingredienti silindi.')
-      setMessageDetails([])
+      await ecafeApi.recipes.delete(restaurantId, menuItem.id, recipeId)
+      setSuccess('Resept ingredienti silindi.')
       resetRecipeForm()
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Resept ingredienti silinmədi.')
-      setMessage(feedback.message)
-      setMessageDetails(feedback.details)
+      setError(err, 'Resept ingredienti silinmədi.')
+    } finally {
+      setPendingDelete(null)
     }
+  }
+
+  function confirmPendingDelete() {
+    if (!pendingDelete) {
+      return
+    }
+
+    if (pendingDelete.type === 'inventory') {
+      void deleteInventory(pendingDelete.id)
+      return
+    }
+
+    void deleteRecipe(pendingDelete.id)
   }
 
   return (
@@ -487,7 +476,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                   <span>Yalniz az qalanlar</span>
                 </label>
               </div>
-              {inventoryLoading ? <p className="online-only">Stok yuklenir...</p> : null}
+              {inventoryLoading ? <p className="online-only">Stok yüklənir...</p> : null}
               <div className="inventory-list">
                 {inventoryItems.map((item) => (
                   <article className={item.id === inventoryItem?.id ? 'selected inventory-row' : 'inventory-row'} key={item.id}>
@@ -508,20 +497,22 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     </button>
                     {canManageInventory ? (
                       <div className="inline-actions">
-                        <Button aria-label={`${item.name} redakte et`} className="action-icon-button" title="Redakte et" type="button" variant="secondary" onClick={() => startInventoryEdit(item)}>
+                        <ActionIconButton label={`${item.name} redaktə et`} onClick={() => startInventoryEdit(item)}>
                           <Pencil size={17} />
-                        </Button>
-                        <Button aria-label={`${item.name} aktiv/deaktiv et`} className="action-icon-button" title={item.isActive ? 'Deaktiv et' : 'Aktiv et'} type="button" variant="secondary" onClick={() => toggleInventoryStatus(item)}>
+                        </ActionIconButton>
+                        <ActionIconButton label={`${item.name} aktiv/deaktiv et`} onClick={() => toggleInventoryStatus(item)}>
                           <Power size={17} />
-                        </Button>
-                        <Button aria-label={`${item.name} sil`} className="action-icon-button" title="Sil" type="button" variant="danger" onClick={() => deleteInventory(item)}>
+                        </ActionIconButton>
+                        <ActionIconButton label={`${item.name} sil`} tone="danger" onClick={() => setPendingDelete({ id: item.id, label: item.name, type: 'inventory' })}>
                           <Trash2 size={17} />
-                        </Button>
+                        </ActionIconButton>
                       </div>
                     ) : null}
                   </article>
                 ))}
-                {!inventoryLoading && inventoryItems.length === 0 ? <p className="online-only">Bu restoran ucun stok elementi yoxdur.</p> : null}
+                {!inventoryLoading && inventoryItems.length === 0 ? (
+                  <EmptyState title="Stok elementi yoxdur" message="Bu restoran üçün hələ stok elementi yaradılmayıb." />
+                ) : null}
               </div>
             </section>
         ) : null}
@@ -621,20 +612,22 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     <Badge tone={recipe.isActive ? 'success' : 'neutral'}>{recipe.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
                     {canManageRecipes ? (
                       <div className="inline-actions">
-                        <Button aria-label={`${recipe.inventoryItemName} redakte et`} className="action-icon-button" title="Redakte et" type="button" variant="secondary" onClick={() => startRecipeEdit(recipe)}>
+                        <ActionIconButton label={`${recipe.inventoryItemName} redaktə et`} onClick={() => startRecipeEdit(recipe)}>
                           <Pencil size={17} />
-                        </Button>
-                        <Button aria-label={`${recipe.inventoryItemName} aktiv/deaktiv et`} className="action-icon-button" title={recipe.isActive ? 'Deaktiv et' : 'Aktiv et'} type="button" variant="secondary" onClick={() => toggleRecipe(recipe)}>
+                        </ActionIconButton>
+                        <ActionIconButton label={`${recipe.inventoryItemName} aktiv/deaktiv et`} onClick={() => toggleRecipe(recipe)}>
                           <Power size={17} />
-                        </Button>
-                        <Button aria-label={`${recipe.inventoryItemName} sil`} className="action-icon-button" title="Sil" type="button" variant="danger" onClick={() => deleteRecipe(recipe)}>
+                        </ActionIconButton>
+                        <ActionIconButton label={`${recipe.inventoryItemName} sil`} tone="danger" onClick={() => setPendingDelete({ id: recipe.id, label: recipe.inventoryItemName, type: 'recipe' })}>
                           <Trash2 size={17} />
-                        </Button>
+                        </ActionIconButton>
                       </div>
                     ) : null}
                   </article>
                 ))}
-                {menuItem && recipes.length === 0 ? <p className="online-only">Bu mehsul ucun resept terkibi yoxdur.</p> : null}
+                {menuItem && recipes.length === 0 ? (
+                  <EmptyState title="Resept tərkibi yoxdur" message="Bu məhsul üçün hələ ingredient əlavə edilməyib." />
+                ) : null}
               </div>
             </section>
           </>
@@ -687,7 +680,15 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           )
         ) : null}
       </section>
-      {message ? <StatusMessage className="inventory-message" details={messageDetails}>{message}</StatusMessage> : null}
+      {feedback.message ? <StatusMessage className="inventory-message" details={feedback.details} tone={feedback.tone}>{feedback.message}</StatusMessage> : null}
+      <ConfirmDialog
+        confirmLabel="Sil"
+        isOpen={Boolean(pendingDelete)}
+        message={`${pendingDelete?.label ?? 'Seçilmiş qeyd'} silinəcək. Bu əməliyyat geri qaytarılmaya bilər.`}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmPendingDelete}
+        title="Silməni təsdiqlə"
+      />
     </main>
   )
 }

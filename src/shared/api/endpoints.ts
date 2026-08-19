@@ -52,6 +52,7 @@ export const endpoints = {
     categories: (restaurantId: string) => `/category/${restaurantId}`,
     createCategory: (restaurantId: string) => `/restaurants/${restaurantId}/categories`,
     updateCategory: (restaurantId: string, categoryId: string) => `/restaurants/${restaurantId}/categories/${categoryId}`,
+    activateCategory: (restaurantId: string, categoryId: string) => `/restaurants/${restaurantId}/categories/${categoryId}/activate`,
     deactivateCategory: (restaurantId: string, categoryId: string) => `/restaurants/${restaurantId}/categories/${categoryId}/deactivate`,
     deleteCategory: (restaurantId: string, categoryId: string) => `/restaurants/${restaurantId}/categories/${categoryId}`,
     items: '/items/getAll',
@@ -79,6 +80,7 @@ export const endpoints = {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/tables`,
     create: (restaurantId: string) => `/restaurants/${restaurantId}/tables`,
     update: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}`,
+    activate: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}/activate`,
     deactivate: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}/deactivate`,
     delete: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}`,
   },
@@ -86,6 +88,7 @@ export const endpoints = {
     list: (restaurantId: string) => `/staff/${restaurantId}`,
     detail: (restaurantId: string, staffId: string) => `/staff/${restaurantId}/detail/${staffId}`,
     update: (restaurantId: string, staffId: string) => `/restaurants/${restaurantId}/staff/${staffId}`,
+    activate: (restaurantId: string, staffId: string) => `/restaurants/${restaurantId}/staff/${staffId}/activate`,
     deactivate: (restaurantId: string, staffId: string) => `/restaurants/${restaurantId}/staff/${staffId}/deactivate`,
   },
   users: {

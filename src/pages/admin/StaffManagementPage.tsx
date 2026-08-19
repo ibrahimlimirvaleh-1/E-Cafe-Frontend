@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { Pencil, RefreshCw, Trash2, UserX } from 'lucide-react'
+import { CheckCircle2, Pencil, RefreshCw, Trash2, UserX } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -7,6 +7,7 @@ import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/h
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, hasPermission, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
@@ -221,6 +222,30 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     }
   }
 
+  async function handleActivate(member: StaffMember) {
+    if (!restaurantId) {
+      setMessage('Restoran seçilməlidir.')
+      setMessageDetails([])
+      return
+    }
+
+    setMessage('')
+    setMessageDetails([])
+    setDeactivatingStaffId(member.id)
+    try {
+      await ecafeApi.staff.activate(restaurantId, member.id)
+      setMessage('Əməkdaş aktiv edildi.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Əməkdaş aktiv edilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    } finally {
+      setDeactivatingStaffId('')
+    }
+  }
+
   async function handleDelete(member: StaffMember) {
     setMessage('')
     setMessageDetails([])
@@ -344,48 +369,49 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           </option>
                         ))}
                       </select>
-                      <Button
-                        aria-label={`${member.name} üçün rolu yenilə`}
-                        className="action-icon-button"
+                      <ActionIconButton
                         disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)}
+                        label={`${member.name} üçün rolu yenilə`}
                         onClick={() => void handleRoleChange(member)}
                         title={updatingRoleUserId === member.id ? 'Rol yenilənir' : 'Rolu yenilə'}
-                        type="button"
-                        variant="secondary"
                       >
                         <RefreshCw size={18} />
-                      </Button>
-                      <ButtonLink
-                        aria-label={`${member.name} əməkdaşını redaktə et`}
-                        className="action-icon-button"
-                        title="Redaktə et"
+                      </ActionIconButton>
+                      <ActionIconLink
+                        label={`${member.name} əməkdaşını redaktə et`}
                         to={`/admin/staff/${member.id}/edit?restaurantId=${restaurantId}`}
-                        variant="secondary"
                       >
                         <Pencil size={18} />
-                      </ButtonLink>
+                      </ActionIconLink>
                       {member.status === 'Active' ? (
-                        <Button
-                          aria-label={`${member.name} əməkdaşını deaktiv et`}
+                        <ActionIconButton
                           disabled={deactivatingStaffId === member.id}
+                          label={`${member.name} əməkdaşını deaktiv et`}
                           onClick={() => void handleDeactivate(member)}
                           title={deactivatingStaffId === member.id ? 'Deaktiv edilir' : 'Deaktiv et'}
-                          type="button"
-                          variant="danger"
+                          tone="danger"
                         >
                           <UserX size={18} />
-                        </Button>
-                      ) : null}
-                      <Button aria-label={`${member.name} əməkdaşını sil`} className="action-icon-button" onClick={() => void handleDelete(member)} title="Sil" type="button" variant="danger">
+                        </ActionIconButton>
+                      ) : (
+                        <ActionIconButton
+                          disabled={deactivatingStaffId === member.id}
+                          label={`${member.name} əməkdaşını aktiv et`}
+                          onClick={() => void handleActivate(member)}
+                          title={deactivatingStaffId === member.id ? 'Aktiv edilir' : 'Aktiv et'}
+                        >
+                          <CheckCircle2 size={18} />
+                        </ActionIconButton>
+                      )}
+                      <ActionIconButton label={`${member.name} əməkdaşını sil`} onClick={() => void handleDelete(member)} tone="danger">
                         <Trash2 size={18} />
-                      </Button>
+                      </ActionIconButton>
                     </div>
                   ) : null}
                 </article>
               ))}
               {!isLoading && staff.length === 0 ? <p className="online-only">Bu restoran üçün personal tapılmadı.</p> : null}
             </div>
-            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </section>
         )}
       </section>

@@ -76,6 +76,7 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
 
 export function mapTable(record: AnyRecord, restaurantId: string): Table {
   const isEmpty = record.isEmpty
+  const isActive = bool(record.isActive, true)
   const tableNumber = str(record.tableNo || record.tableNumber || record.number)
   const tableName = str(record.name)
 
@@ -85,7 +86,8 @@ export function mapTable(record: AnyRecord, restaurantId: string): Table {
     number: tableNumber || tableName,
     name: tableName,
     capacity: num(record.capacity || record.seatCount, 2),
-    status: str(record.status || record.statusName || (isEmpty === false ? 'Occupied' : 'Available'), 'Available') as Table['status'],
+    status: (isActive ? str(record.status || record.statusName || (isEmpty === false ? 'Occupied' : 'Available'), 'Available') : 'Hidden') as Table['status'],
+    isActive,
     isPublic: bool(record.isPublic, true),
     image: str(record.imageUrl || record.fileUrl || record.image),
   }

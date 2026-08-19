@@ -11,6 +11,29 @@ body {
     var(--surface);
 }
 
+@keyframes route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.route-transition {
+  min-width: 0;
+  animation: route-enter 180ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-transition {
+    animation: none;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -140,14 +163,14 @@ img {
   border-radius: var(--radius-lg);
   padding: 0 14px;
   color: var(--outline);
-  border: 1px solid transparent;
+  border: 0;
   background: var(--surface-highest);
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .site-search:focus-within {
-  border-color: var(--primary);
   background: var(--surface-lowest);
+  box-shadow: none;
 }
 
 .site-search {
@@ -297,6 +320,11 @@ img {
   background: transparent;
 }
 
+.site-search input:focus,
+.site-search input:focus-visible {
+  box-shadow: none;
+}
+
 .page,
 .admin-page,
 .staff-page {
@@ -391,12 +419,28 @@ img {
   background: var(--surface-lowest);
 }
 
+.ui-button.secondary {
+  border-color: var(--outline-variant);
+  color: var(--on-surface-variant);
+  background: var(--surface-lowest);
+}
+
 .ui-button-ghost {
   color: var(--on-surface-variant);
   background: transparent;
 }
 
+.ui-button.ghost {
+  color: var(--on-surface-variant);
+  background: transparent;
+}
+
 .ui-button-danger {
+  color: #fff;
+  background: var(--danger);
+}
+
+.ui-button.danger {
   color: #fff;
   background: var(--danger);
 }
@@ -1344,12 +1388,14 @@ img {
   top: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   min-height: 0;
   padding: 24px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   border-right: 1px solid var(--outline-variant);
   background: rgba(255, 255, 255, 0.96);
+  scrollbar-width: thin;
 }
 
 .admin-sidebar nav {
@@ -1357,9 +1403,7 @@ img {
   gap: 8px;
   margin-top: 32px;
   min-height: 0;
-  overflow-y: auto;
   padding-bottom: 12px;
-  scrollbar-width: thin;
 }
 
 .admin-sidebar nav a {
@@ -1540,8 +1584,39 @@ img {
   min-width: 38px;
   height: 38px;
   min-height: 38px;
+  border: 1px solid var(--outline-variant);
   padding: 0;
   border-radius: 999px;
+  color: var(--on-surface-variant);
+  background: var(--surface-lowest);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.action-icon-button:hover {
+  border-color: transparent;
+  color: var(--primary);
+  background: var(--secondary-container);
+}
+
+.action-icon-button:active {
+  transform: scale(0.96);
+}
+
+.action-icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.action-icon-button-danger {
+  border-color: transparent;
+  color: #fff;
+  background: var(--danger);
+}
+
+.action-icon-button-danger:hover {
+  color: #fff;
+  background: #9f1515;
 }
 
 .action-icon-button svg {
@@ -1605,6 +1680,101 @@ img {
 .ui-row-actions a:hover {
   color: var(--primary);
   background: var(--secondary-container);
+}
+
+.empty-state {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px dashed var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  background: var(--surface-lowest);
+}
+
+.empty-state > span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--on-surface-variant);
+  background: var(--surface-low);
+}
+
+.empty-state h2 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.empty-state p {
+  margin: 2px 0 0;
+  color: var(--on-surface-variant);
+}
+
+.confirm-dialog {
+  display: grid;
+  gap: 14px;
+  width: min(440px, 100%);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-lg);
+}
+
+.confirm-dialog header,
+.confirm-dialog footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.confirm-dialog header button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-low);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+
+.confirm-dialog h2,
+.confirm-dialog p {
+  margin: 0;
+}
+
+.confirm-dialog h2 {
+  color: var(--primary);
+  font-size: 22px;
+  line-height: 30px;
+}
+
+.confirm-dialog p {
+  color: var(--on-surface-variant);
+  line-height: 24px;
+}
+
+.confirm-dialog-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+.confirm-dialog-icon.danger {
+  color: var(--danger);
+  background: var(--danger-bg);
 }
 
 .detail-panel dl {
@@ -1885,6 +2055,8 @@ img {
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   width: min(680px, 100%);
+  max-height: min(520px, calc(100vh - 220px));
+  overflow-y: auto;
   padding: 18px;
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-lg);
@@ -3685,5 +3857,393 @@ img {
   .success-panel,
   .danger-panel {
     padding: 24px;
+  }
+}
+
+/* Modern UI polish layer: keeps existing flows intact while aligning shared surfaces. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+body {
+  background:
+    linear-gradient(180deg, #ffffff 0, #f8f9fb 280px, var(--surface) 620px),
+    var(--surface);
+}
+
+.admin-shell {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(246, 247, 249, 0.94)),
+    var(--surface);
+}
+
+.admin-sidebar {
+  border-right-color: rgba(215, 219, 226, 0.9);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 12px 0 42px rgba(15, 23, 42, 0.045);
+}
+
+.admin-sidebar nav a {
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--on-surface-variant);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.admin-sidebar nav a:hover {
+  border-color: var(--outline-variant);
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  transform: translateX(2px);
+}
+
+.admin-sidebar nav a.active {
+  border-color: rgba(255, 163, 26, 0.56);
+  background: var(--secondary-container);
+  color: var(--primary);
+  box-shadow: 0 10px 24px rgba(255, 163, 26, 0.22);
+}
+
+.admin-topbar,
+.topbar {
+  border-bottom-color: rgba(215, 219, 226, 0.9);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(18px);
+}
+
+.page-header,
+.admin-page > header,
+.public-page > header {
+  margin-bottom: 30px;
+}
+
+.page-header h1,
+.admin-page h1,
+.public-page h1 {
+  letter-spacing: 0;
+}
+
+.admin-panel,
+.auth-card,
+.success-panel,
+.danger-panel,
+.ui-table,
+.restaurant-card,
+.profile-card,
+.dashboard-card,
+.filter-panel,
+.contract-filter-panel,
+.notification-popover,
+.modal-card,
+.audit-detail-modal {
+  border-color: rgba(190, 197, 208, 0.78);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-panel {
+  padding: 24px;
+}
+
+.admin-panel:hover,
+.ui-table:hover,
+.restaurant-card:hover,
+.dashboard-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.ui-field input,
+.ui-field select,
+.ui-field textarea,
+.search-box,
+.filter-panel input,
+.filter-panel select,
+.contract-filter-panel input,
+.contract-filter-panel select {
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--surface-low);
+  color: var(--on-surface);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.ui-field input:hover,
+.ui-field select:hover,
+.ui-field textarea:hover,
+.search-box:hover,
+.filter-panel input:hover,
+.filter-panel select:hover,
+.contract-filter-panel input:hover,
+.contract-filter-panel select:hover {
+  border-color: var(--outline-variant);
+  background: #ffffff;
+}
+
+.ui-field input:focus,
+.ui-field select:focus,
+.ui-field textarea:focus,
+.search-box:focus-within,
+.filter-panel input:focus,
+.filter-panel select:focus,
+.contract-filter-panel input:focus,
+.contract-filter-panel select:focus {
+  border-color: rgba(17, 19, 23, 0.8);
+  background: #ffffff;
+  box-shadow: var(--focus-ring);
+}
+
+.ui-button,
+.action-icon-button,
+.icon-button,
+.filter-trigger,
+.add-link {
+  border-radius: 12px;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.ui-button:hover,
+.action-icon-button:hover,
+.icon-button:hover,
+.filter-trigger:hover,
+.add-link:hover {
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.ui-button-primary,
+.ui-button.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.ui-button-secondary,
+.ui-button.secondary {
+  border-color: var(--outline-variant);
+  background: #ffffff;
+}
+
+.ui-button-danger,
+.ui-button.danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.badge,
+.status-badge,
+.pill,
+.user-pill {
+  border: 1px solid rgba(190, 197, 208, 0.42);
+  border-radius: 999px;
+}
+
+.ui-table {
+  overflow: hidden;
+}
+
+.ui-table-head,
+.audit-list-head {
+  background: var(--surface-container-low);
+  color: var(--on-surface-variant);
+}
+
+.ui-table-row,
+.compact-list article,
+.audit-list article,
+.inventory-row,
+.recipe-list article,
+.movement-list article,
+.notification-page-list > button {
+  border-color: rgba(190, 197, 208, 0.78);
+  border-radius: 14px;
+  background: rgba(248, 249, 251, 0.76);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.ui-table-row:hover,
+.compact-list article:hover,
+.audit-list article:hover,
+.inventory-row:hover,
+.recipe-list article:hover,
+.movement-list article:hover,
+.notification-page-list > button:hover {
+  border-color: rgba(111, 116, 128, 0.44);
+  background: #ffffff;
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.ui-table-thumb,
+.restaurant-context-card img,
+.staff-member-row > img,
+.admin-menu-list img,
+.public-menu-row img {
+  border-radius: 12px;
+  background: var(--surface-container);
+  object-fit: cover;
+}
+
+.filter-panel {
+  padding: 22px;
+  box-shadow: var(--shadow-elevated);
+}
+
+.filter-panel-actions {
+  margin: 4px -22px -22px;
+  padding: 16px 22px 22px;
+  border-top: 1px solid var(--outline-variant);
+  background: rgba(255, 255, 255, 0.92);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.audit-list {
+  display: grid;
+  gap: 10px;
+}
+
+.audit-list-head,
+.audit-list article {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.15fr)
+    minmax(170px, 1fr)
+    minmax(190px, 1.1fr)
+    minmax(150px, 0.9fr)
+    minmax(140px, 0.75fr)
+    72px;
+  gap: 16px;
+  align-items: center;
+}
+
+.audit-list-head {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface-container-low);
+}
+
+.audit-list article {
+  padding: 14px 16px;
+}
+
+.audit-list article > :last-child,
+.audit-list-head > :last-child {
+  justify-self: center;
+}
+
+.form-feedback,
+.error-banner,
+.success-banner {
+  border-radius: 12px;
+}
+
+.pagination-row button,
+.pagination-row select {
+  border-radius: 10px;
+}
+
+@media (max-width: 1080px) {
+  .admin-sidebar {
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-panel {
+    padding: 18px;
+  }
+
+  .admin-sidebar nav a:hover,
+  .ui-button:hover,
+  .action-icon-button:hover,
+  .icon-button:hover,
+  .filter-trigger:hover,
+  .add-link:hover,
+  .ui-table-row:hover,
+  .compact-list article:hover,
+  .audit-list article:hover,
+  .inventory-row:hover,
+  .recipe-list article:hover,
+  .movement-list article:hover,
+  .notification-page-list > button:hover {
+    transform: none;
+  }
+}
+
+.contract-filter-panel {
+  right: 0;
+  grid-template-columns: 1fr;
+  width: min(420px, calc(100vw - 48px));
+  max-height: min(520px, calc(100vh - 220px));
+  overflow-y: auto;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-elevated);
+}
+
+.contract-filter-panel > span {
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.contract-filter-panel label {
+  gap: 7px;
+  color: var(--on-surface);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.contract-filter-panel input,
+.contract-filter-panel select {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--surface-low);
+  font: inherit;
+}
+
+.contract-filter-area {
+  position: relative;
+}
+
+@media (min-width: 1081px) {
+  .contract-filter-panel {
+    top: calc(100% + 10px);
+  }
+}
+
+@media (max-width: 760px) {
+  .contract-filter-area {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-filter-panel {
+    position: static;
+    width: 100%;
   }
 }

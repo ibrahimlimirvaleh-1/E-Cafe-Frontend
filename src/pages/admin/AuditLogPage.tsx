@@ -96,6 +96,15 @@ export function AuditLogPage() {
     setPageNumber(1)
   }
 
+  function openFilterPanel() {
+    setDraftFilters(filters)
+    setIsFilterOpen((value) => !value)
+  }
+
+  function updateDraftFilter<K extends keyof AuditFilters>(key: K, value: AuditFilters[K]) {
+    setDraftFilters((current) => ({ ...current, [key]: value }))
+  }
+
   function applyFilters() {
     setFilters(draftFilters)
     setPageNumber(1)
@@ -103,9 +112,10 @@ export function AuditLogPage() {
   }
 
   function clearFilters() {
-    setDraftFilters(emptyAuditFilters)
     setFilters(emptyAuditFilters)
+    setDraftFilters(emptyAuditFilters)
     setPageNumber(1)
+    setIsFilterOpen(false)
   }
 
   return (
@@ -121,7 +131,7 @@ export function AuditLogPage() {
           ))}
         </SelectField>
         <div className="filter-popover">
-          <button type="button" className="ui-button ui-button-secondary filter-trigger" onClick={() => setIsFilterOpen((value) => !value)}>
+          <button type="button" className="ui-button ui-button-secondary filter-trigger" onClick={openFilterPanel}>
             <SlidersHorizontal size={18} />
             Filter
           </button>
@@ -133,7 +143,7 @@ export function AuditLogPage() {
                 <SelectField
                   label="Əməliyyat"
                   value={draftFilters.action}
-                  onChange={(event) => setDraftFilters((current) => ({ ...current, action: event.target.value }))}
+                  onChange={(event) => updateDraftFilter('action', event.target.value)}
                 >
                   <option value="">Bütün əməliyyatlar</option>
                   {auditActions.map((auditAction) => (
@@ -146,13 +156,13 @@ export function AuditLogPage() {
                   label="Başlanğıc tarixi"
                   type="date"
                   value={draftFilters.dateFrom}
-                  onChange={(event) => setDraftFilters((current) => ({ ...current, dateFrom: event.target.value }))}
+                  onChange={(event) => updateDraftFilter('dateFrom', event.target.value)}
                 />
                 <TextField
                   label="Bitmə tarixi"
                   type="date"
                   value={draftFilters.dateTo}
-                  onChange={(event) => setDraftFilters((current) => ({ ...current, dateTo: event.target.value }))}
+                  onChange={(event) => updateDraftFilter('dateTo', event.target.value)}
                 />
               </div>
               <div className="filter-panel-actions">

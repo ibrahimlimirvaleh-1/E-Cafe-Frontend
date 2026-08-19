@@ -82,6 +82,7 @@ export type Table = {
   name?: string
   capacity: number
   status: 'Available' | 'Reserved' | 'Occupied' | 'Hidden'
+  isActive: boolean
   isPublic: boolean
   image?: string
 }
