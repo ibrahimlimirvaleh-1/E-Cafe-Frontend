@@ -15,7 +15,6 @@ export function RestaurantContextCard({ restaurant }: RestaurantContextCardProps
     return null
   }
 
-  // Restaurant-scoped admin pages use this card to show which branch controls the data below.
   return (
     <article className="restaurant-context-card">
       <SafeImage src={restaurant.image} alt={restaurant.name} />
@@ -26,7 +25,7 @@ export function RestaurantContextCard({ restaurant }: RestaurantContextCardProps
       </div>
       <div className="restaurant-context-meta">
         <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>
-          {restaurant.hasActiveContract ? 'Aktiv muqavile' : 'Muqavile yoxdur'}
+          {restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur'}
         </Badge>
         <small>{restaurant.depositAmount.toFixed(2)} AZN depozit</small>
       </div>

@@ -78,17 +78,7 @@ type ContractRecordQuery = {
   pageSize?: number
   restaurantId?: string
   search?: string
-  status?: string
-}
-
-const contractStatusIds: Record<string, number> = {
-  Draft: 6001,
-  PendingSignature: 6002,
-  Active: 6003,
-  Expired: 6004,
-  Terminated: 6005,
-  OwnerApproved: 6006,
-  Scheduled: 6007,
+  statusId?: string
 }
 
 type CreateContractRequest = {
@@ -308,12 +298,10 @@ function buildContractListEndpoint(restaurantId: string, query: ContractRecordQu
   if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
   if (query.pageSize) params.set('PageSize', String(query.pageSize))
   if (query.search?.trim()) params.set('Search', query.search.trim())
-  if (query.dateFrom) params.set('EndDateFrom', query.dateFrom)
-  if (query.dateTo) params.set('EndDateTo', query.dateTo)
+  if (query.dateFrom) params.set('EndDateFrom', toUtcDayBoundary(query.dateFrom, 'start'))
+  if (query.dateTo) params.set('EndDateTo', toUtcDayBoundary(query.dateTo, 'end'))
   if (query.expiringInDays) params.set('ExpiringInDays', query.expiringInDays)
-  if (query.status && query.status !== 'all' && contractStatusIds[query.status]) {
-    params.set('StatusId', String(contractStatusIds[query.status]))
-  }
+  if (query.statusId && query.statusId !== 'all' && /^\d+$/.test(query.statusId)) params.set('StatusId', query.statusId)
 
   const search = params.toString()
   return search ? `${endpoints.contracts.paged(restaurantId)}?${search}` : endpoints.contracts.list(restaurantId)
@@ -437,12 +425,25 @@ type OutboxMessageQuery = {
   pageSize?: number
 }
 
+function toUtcDayBoundary(value: string | undefined, boundary: 'start' | 'end') {
+  if (!value) {
+    return ''
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value
+  }
+
+  const time = boundary === 'start' ? '00:00:00.000' : '23:59:59.999'
+  return new Date(`${value}T${time}`).toISOString()
+}
+
 function buildAuditLogQuery(query: AuditLogQuery = {}) {
   const params = new URLSearchParams()
 
   if (query.action?.trim()) params.set('Action', query.action.trim())
-  if (query.dateFrom) params.set('DateFrom', query.dateFrom)
-  if (query.dateTo) params.set('DateTo', query.dateTo)
+  if (query.dateFrom) params.set('DateFrom', toUtcDayBoundary(query.dateFrom, 'start'))
+  if (query.dateTo) params.set('DateTo', toUtcDayBoundary(query.dateTo, 'end'))
   if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
   if (query.pageSize) params.set('PageSize', String(query.pageSize))
 
@@ -500,8 +501,8 @@ function buildOutboxQuery(query: OutboxMessageQuery = {}) {
   if (query.statusId) params.set('StatusId', query.statusId)
   if (query.channelId) params.set('ChannelId', query.channelId)
   if (query.search?.trim()) params.set('Search', query.search.trim())
-  if (query.dateFrom) params.set('DateFrom', query.dateFrom)
-  if (query.dateTo) params.set('DateTo', query.dateTo)
+  if (query.dateFrom) params.set('DateFrom', toUtcDayBoundary(query.dateFrom, 'start'))
+  if (query.dateTo) params.set('DateTo', toUtcDayBoundary(query.dateTo, 'end'))
   if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
   if (query.pageSize) params.set('PageSize', String(query.pageSize))
 
@@ -1066,6 +1067,10 @@ export const ecafeApi = {
           isActive: request.isActive,
         }),
       }),
+    activate: (restaurantId: string, tableId: string) =>
+      httpClient<unknown>(endpoints.tables.activate(restaurantId, tableId), {
+        method: 'PATCH',
+      }),
     deactivate: (restaurantId: string, tableId: string) =>
       httpClient<unknown>(endpoints.tables.deactivate(restaurantId, tableId), {
         method: 'PATCH',
@@ -1133,6 +1138,10 @@ export const ecafeApi = {
       httpClient<unknown>(endpoints.staff.deactivate(restaurantId, staffId), {
         method: 'PATCH',
       }),
+    activate: (restaurantId: string, staffId: string) =>
+      httpClient<unknown>(endpoints.staff.activate(restaurantId, staffId), {
+        method: 'PATCH',
+      }),
     delete: (staffId: string) =>
       httpClient<unknown>(endpoints.users.delete(staffId), {
         method: 'DELETE',
@@ -1142,7 +1151,7 @@ export const ecafeApi = {
   menu: {
     categories: (restaurantId: string) =>
       safe(async () => {
-        const result = await httpClient<unknown>(endpoints.publicRestaurant.menu(restaurantId))
+        const result = await httpClient<unknown>(endpoints.menu.categories(restaurantId))
         return asArray<AnyRecord>(result.data).map((category) => mapCategory(category, restaurantId))
       }, menuCategories.filter((category) => category.restaurantId === restaurantId && category.isActive)),
     items: (restaurantId: string) =>
@@ -1176,6 +1185,13 @@ export const ecafeApi = {
           sortOrder: request.sortOrder,
           isActive: request.isActive,
         }),
+      })
+
+      return mapCategory(result.data as AnyRecord, restaurantId)
+    },
+    activateCategory: async (restaurantId: string, categoryId: string) => {
+      const result = await httpClient<unknown>(endpoints.menu.activateCategory(restaurantId, categoryId), {
+        method: 'PATCH',
       })
 
       return mapCategory(result.data as AnyRecord, restaurantId)

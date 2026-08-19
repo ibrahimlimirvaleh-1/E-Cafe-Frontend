@@ -1,7 +1,8 @@
 import { Eye, Pencil } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import type { AdminRow } from '../../entities/types'
+import { ActionIconLink } from './ActionIconButton'
 import { Badge } from './Badge'
+import { EmptyState } from './EmptyState'
 import { SafeImage } from './SafeImage'
 
 type DataTableProps = {
@@ -12,15 +13,14 @@ type DataTableProps = {
   rows: AdminRow[]
 }
 
-// Shared admin table keeps list pages responsive and makes action placement consistent.
-export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 'Melumat tapilmadi.', rows }: DataTableProps) {
+export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 'Məlumat tapılmadı.', rows }: DataTableProps) {
   return (
-    <section className="ui-table" aria-label="Melumat cedveli">
+    <section className="ui-table" aria-label="Məlumat cədvəli">
       <div className="ui-table-head">
         {columns.map((column) => (
           <span key={column}>{column}</span>
         ))}
-        {editable ? <span>Emeliyyat</span> : null}
+        {editable ? <span>Əməliyyat</span> : null}
       </div>
       {rows.map((row) => (
         <article className="ui-table-row" key={row.id}>
@@ -41,20 +41,20 @@ export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 
             {row.value}
           </strong>
           {editable ? (
-            <div className="ui-row-actions" data-label="Emeliyyat">
-              <Link aria-label={`${row.title} detallar`} className="ui-action-link action-icon-button" to={`${baseRoute}/${row.id}`} title="Detallar">
+            <div className="ui-row-actions" data-label="Əməliyyat">
+              <ActionIconLink label={`${row.title} detalına bax`} to={`${baseRoute}/${row.id}`}>
                 <Eye size={18} />
-              </Link>
+              </ActionIconLink>
               {row.canEdit === false ? null : (
-                <Link aria-label={`${row.title} redakte et`} className="ui-action-link action-icon-button" to={`${baseRoute}/${row.id}/edit`} title="Redakte et">
+                <ActionIconLink label={`${row.title} redaktə et`} to={`${baseRoute}/${row.id}/edit`}>
                   <Pencil size={17} />
-                </Link>
+                </ActionIconLink>
               )}
             </div>
           ) : null}
         </article>
       ))}
-      {rows.length === 0 ? <p className="ui-table-empty">{emptyMessage}</p> : null}
+      {rows.length === 0 ? <EmptyState title="Məlumat yoxdur" message={emptyMessage} /> : null}
     </section>
   )
 }

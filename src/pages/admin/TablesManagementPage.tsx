@@ -1,9 +1,10 @@
-import { Pencil, Trash2, UserX } from 'lucide-react'
+import { CheckCircle2, Pencil, Trash2, UserX } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { SelectField, TextField } from '../../shared/ui/FormField'
@@ -109,6 +110,20 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     }
   }
 
+  async function handleActivate(targetTableId: string) {
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.tables.activate(restaurantId, targetTableId)
+      setMessage('Masa aktiv edildi.')
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Masa aktiv edilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
+  }
+
   async function handleDelete(targetTableId: string) {
     setMessage('')
     setMessageDetails([])
@@ -190,15 +205,21 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
                     {tableStatusLabel(table.status)}
                   </Badge>
                   <div className="inline-actions">
-                    <ButtonLink className="action-icon-button" to={`/admin/tables/${table.id}/edit?restaurantId=${restaurantId}`} variant="secondary">
+                    <ActionIconLink label={`${table.number} masasını redaktə et`} to={`/admin/tables/${table.id}/edit?restaurantId=${restaurantId}`}>
                       <Pencil size={18} />
-                    </ButtonLink>
-                    <Button aria-label={`${table.number} masasını deaktiv et`} className="action-icon-button" onClick={() => void handleDeactivate(table.id)} title="Deaktiv et" type="button" variant="secondary">
-                      <UserX size={18} />
-                    </Button>
-                    <Button aria-label={`${table.number} masasını sil`} className="action-icon-button" onClick={() => void handleDelete(table.id)} title="Sil" type="button" variant="danger">
+                    </ActionIconLink>
+                    {table.isActive ? (
+                      <ActionIconButton label={`${table.number} masasını deaktiv et`} onClick={() => void handleDeactivate(table.id)}>
+                        <UserX size={18} />
+                      </ActionIconButton>
+                    ) : (
+                      <ActionIconButton label={`${table.number} masasını aktiv et`} onClick={() => void handleActivate(table.id)}>
+                        <CheckCircle2 size={18} />
+                      </ActionIconButton>
+                    )}
+                    <ActionIconButton label={`${table.number} masasını sil`} onClick={() => void handleDelete(table.id)} tone="danger">
                       <Trash2 size={18} />
-                    </Button>
+                    </ActionIconButton>
                   </div>
                 </article>
               ))}

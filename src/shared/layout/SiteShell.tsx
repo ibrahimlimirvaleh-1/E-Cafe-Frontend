@@ -6,7 +6,6 @@ import { UserMenu } from './UserMenu'
 
 export function SiteShell() {
   const { isAuthenticated } = useAuth()
-
   return (
     <div className="app-shell">
       <header className="site-topbar">
@@ -26,7 +25,9 @@ export function SiteShell() {
           </div>
         </div>
       </header>
-      <Outlet />
+      <div className="route-transition">
+        <Outlet />
+      </div>
     </div>
   )
 }

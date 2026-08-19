@@ -49,7 +49,9 @@ export function AdminShell() {
             <UserMenu />
           </div>
         </header>
-        <Outlet />
+        <div className="route-transition">
+          <Outlet />
+        </div>
       </div>
     </div>
   )

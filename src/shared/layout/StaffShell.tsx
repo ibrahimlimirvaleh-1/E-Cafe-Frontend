@@ -39,7 +39,9 @@ export function StaffShell({ title }: StaffShellProps) {
           <UserMenu />
         </div>
       </header>
-      <Outlet />
+      <div className="route-transition">
+        <Outlet />
+      </div>
     </div>
   )
 }

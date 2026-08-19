@@ -1,12 +1,12 @@
 import { Eye, FileText, Filter, Pencil, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import type { ContractStatus, RestaurantContract, StatusTone } from '../../../entities/types'
+import type { ContractStatus, LookupItem, RestaurantContract, StatusTone } from '../../../entities/types'
 import { contractStatusLabel } from '../../../shared/api/mappers'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
 import { useAuth } from '../../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../../shared/auth/authz'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { ActionIconLink } from '../../../shared/ui/ActionIconButton'
 import { Badge } from '../../../shared/ui/Badge'
 import { ButtonLink } from '../../../shared/ui/Button'
 import { PageHeader } from '../../../shared/ui/PageHeader'
@@ -17,7 +17,7 @@ type ContractFilterState = {
   expiringInDays: string
   restaurantId: string
   search: string
-  status: 'all' | ContractStatus
+  statusId: string
 }
 
 const defaultFilters: ContractFilterState = {
@@ -26,24 +26,15 @@ const defaultFilters: ContractFilterState = {
   expiringInDays: '',
   restaurantId: 'all',
   search: '',
-  status: 'all',
+  statusId: 'all',
 }
-
-const statusTabs: Array<{ label: string; value: ContractFilterState['status'] }> = [
-  { label: 'Hamısı', value: 'all' },
-  { label: 'Qaralama', value: 'Draft' },
-  { label: 'Təsdiq gözləyir', value: 'PendingSignature' },
-  { label: 'Owner təsdiqlədi', value: 'OwnerApproved' },
-  { label: 'Planlaşdırılıb', value: 'Scheduled' },
-  { label: 'Aktiv', value: 'Active' },
-  { label: 'Bitib', value: 'Expired' },
-  { label: 'Ləğv edilib', value: 'Terminated' },
-]
 
 export function ContractListPage() {
   const { user } = useAuth()
   const { data: allRecords } = useAsyncData(() => ecafeApi.contracts.records(), [])
-  const canManageContracts = isInRole(user, [RoleIds.PlatformAdmin])
+  const { data: contractStatuses } = useAsyncData(() => ecafeApi.lookups.contractStatuses(), [], [])
+  const isPlatformAdmin = isInRole(user, [RoleIds.PlatformAdmin])
+  const canManageContracts = isPlatformAdmin
   const [filters, setFilters] = useState<ContractFilterState>(defaultFilters)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const contractQuery = useMemo(
@@ -51,13 +42,13 @@ export function ContractListPage() {
       dateFrom: filters.dateFrom,
       dateTo: filters.dateTo,
       expiringInDays: filters.expiringInDays,
-      restaurantId: filters.restaurantId,
+      restaurantId: isPlatformAdmin ? filters.restaurantId : undefined,
       search: filters.search,
-      status: filters.status,
+      statusId: filters.statusId,
       pageNumber: 1,
       pageSize: 100,
     }),
-    [filters],
+    [filters, isPlatformAdmin],
   )
   const { data: records, isLoading } = useAsyncData(() => ecafeApi.contracts.records(contractQuery), [], [contractQuery])
 
@@ -74,17 +65,31 @@ export function ContractListPage() {
   }, [allRecords])
 
   const statusCounts = useMemo(() => {
-    const counts = new Map<ContractFilterState['status'], number>([['all', allRecords.length]])
+    const counts = new Map<string, number>([['all', allRecords.length]])
     allRecords.forEach((record) => {
-      counts.set(record.contract.status, (counts.get(record.contract.status) || 0) + 1)
+      const statusId = getContractStatusId(record.contract, contractStatuses)
+      if (statusId) {
+        counts.set(statusId, (counts.get(statusId) || 0) + 1)
+      }
     })
     return counts
-  }, [allRecords])
+  }, [allRecords, contractStatuses])
+
+  const statusTabs = useMemo(() => {
+    const backendTabs = contractStatuses.length > 0
+      ? contractStatuses.map((status) => ({
+        label: normalizeContractStatusName(status),
+        value: String(status.id),
+      }))
+      : getStatusTabsFromRecords(allRecords, contractStatuses)
+
+    return [{ label: 'Hamısı', value: 'all' }, ...backendTabs]
+  }, [allRecords, contractStatuses])
 
   const filteredRecords = useMemo(() => {
     const search = normalizeSearch(filters.search)
-    const dateFrom = filters.dateFrom ? new Date(`${filters.dateFrom}T00:00:00`) : null
-    const dateTo = filters.dateTo ? new Date(`${filters.dateTo}T23:59:59`) : null
+    const dateFrom = localDayBoundary(filters.dateFrom, 'start')
+    const dateTo = localDayBoundary(filters.dateTo, 'end')
     const expiringInDays = Number(filters.expiringInDays)
 
     return records.filter((record) => {
@@ -92,7 +97,7 @@ export function ContractListPage() {
       const searchableText = normalizeSearch(`${contract.contractNumber} ${record.restaurantName} ${contractStatusLabel(contract)}`)
       const endDate = parseDate(contract.endDate)
 
-      if (filters.status !== 'all' && contract.status !== filters.status) {
+      if (filters.statusId !== 'all' && getContractStatusId(contract, contractStatuses) !== filters.statusId) {
         return false
       }
 
@@ -118,12 +123,17 @@ export function ContractListPage() {
 
       return true
     })
-  }, [filters, records])
+  }, [contractStatuses, filters, records])
 
   const hasActiveFilters =
-    filters.status !== 'all' ||
-    filters.restaurantId !== 'all' ||
+    filters.statusId !== 'all' ||
+    (isPlatformAdmin && filters.restaurantId !== 'all') ||
     Boolean(filters.search || filters.dateFrom || filters.dateTo || filters.expiringInDays)
+
+  const resetFilters = () => {
+    setFilters(defaultFilters)
+    setIsFilterOpen(false)
+  }
 
   return (
     <main className="admin-page">
@@ -137,9 +147,9 @@ export function ContractListPage() {
         <div className="contract-status-tabs" aria-label="Müqavilə statusları">
           {statusTabs.map((tab) => (
             <button
-              className={`contract-status-tab${filters.status === tab.value ? ' active' : ''}`}
+              className={`contract-status-tab${filters.statusId === tab.value ? ' active' : ''}`}
               key={tab.value}
-              onClick={() => setFilters((current) => ({ ...current, status: tab.value }))}
+              onClick={() => setFilters((current) => ({ ...current, statusId: tab.value }))}
               type="button"
             >
               {tab.label}
@@ -163,7 +173,7 @@ export function ContractListPage() {
             {hasActiveFilters ? <span className="filter-dot" /> : null}
           </button>
           {hasActiveFilters ? (
-            <button className="ui-button ghost" onClick={() => setFilters(defaultFilters)} type="button">
+            <button className="ui-button ghost" onClick={resetFilters} type="button">
               <X size={18} />
               Təmizlə
             </button>
@@ -173,20 +183,22 @@ export function ContractListPage() {
         {isFilterOpen ? (
           <div className="contract-filter-panel">
             <span>Sırala</span>
-            <label>
-              Restoran
-              <select
-                onChange={(event) => setFilters((current) => ({ ...current, restaurantId: event.target.value }))}
-                value={filters.restaurantId}
-              >
-                <option value="all">Bütün restoranlar</option>
-                {restaurantOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {isPlatformAdmin ? (
+              <label>
+                Restoran
+                <select
+                  onChange={(event) => setFilters((current) => ({ ...current, restaurantId: event.target.value }))}
+                  value={filters.restaurantId}
+                >
+                  <option value="all">Bütün restoranlar</option>
+                  {restaurantOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <label>
               Bitmə tarixi başlanğıc
               <input
@@ -272,13 +284,13 @@ function ContractWorkflowList({
               <small>{nextStep.description}</small>
             </div>
             <div className="contract-workflow-actions contract-workflow-view-actions" data-label="Baxış">
-              <Link className="action-icon-button" title="Detallar" to={`/admin/contracts/${contract.id}`}>
+              <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsinə bax`} to={`/admin/contracts/${contract.id}`}>
                 <Eye size={18} />
-              </Link>
+              </ActionIconLink>
               {canManageContracts && canEditContract(contract) ? (
-                <Link className="action-icon-button" title="Redaktə et" to={`/admin/contracts/${contract.id}/edit`}>
+                <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsini redaktə et`} to={`/admin/contracts/${contract.id}/edit`}>
                   <Pencil size={17} />
-                </Link>
+                </ActionIconLink>
               ) : null}
             </div>
           </article>
@@ -382,6 +394,59 @@ function isExpiringWithin(contract: RestaurantContract, days: number) {
 
 function normalizeSearch(value: string) {
   return value.trim().toLocaleLowerCase('az-AZ')
+}
+
+function getContractStatusId(contract: RestaurantContract, statuses: LookupItem[]) {
+  if (contract.statusId) {
+    return String(contract.statusId)
+  }
+
+  const byCode = statuses.find((status) => status.code === contract.status)
+  return byCode ? String(byCode.id) : ''
+}
+
+function normalizeContractStatusName(status: LookupItem) {
+  const labels: Record<string, string> = {
+    Draft: 'Qaralama',
+    PendingSignature: 'Təsdiq gözləyir',
+    OwnerApproved: 'Sahibkar təsdiqlədi',
+    Scheduled: 'Planlaşdırılıb',
+    Active: 'Aktiv',
+    Expired: 'Bitib',
+    Terminated: 'Ləğv edilib',
+  }
+
+  return labels[status.code] || status.name
+}
+
+function getStatusTabsFromRecords(
+  records: Array<{ contract: RestaurantContract; restaurantName: string }>,
+  statuses: LookupItem[],
+) {
+  const tabs = new Map<string, string>()
+  records.forEach((record) => {
+    const value = getContractStatusId(record.contract, statuses)
+    if (value) {
+      tabs.set(value, contractStatusLabel(record.contract))
+    }
+  })
+
+  return Array.from(tabs.entries()).map(([value, label]) => ({ label, value }))
+}
+
+function localDayBoundary(value: string, boundary: 'start' | 'end') {
+  if (!value) {
+    return null
+  }
+
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) {
+    return null
+  }
+
+  return boundary === 'start'
+    ? new Date(year, month - 1, day, 0, 0, 0, 0)
+    : new Date(year, month - 1, day, 23, 59, 59, 999)
 }
 
 function parseDate(value: string) {

@@ -1,11 +1,13 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { Pencil, Trash2, UserX } from 'lucide-react'
+import { CheckCircle2, Pencil, Trash2, UserX } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
+import { EmptyState } from '../../shared/ui/EmptyState'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -48,6 +50,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     [restaurantId, reloadKey],
   )
   const activeStatuses = useMemo(() => itemStatuses.filter((status) => status.id > 0), [itemStatuses])
+  const activeCategories = useMemo(() => categories.filter((category) => category.isActive), [categories])
   const categoryNameById = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories])
   const editingCategory = mode === 'edit-category' ? categories.find((category) => category.id === categoryId) : undefined
 
@@ -67,10 +70,10 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   }, [editingCategory, mode])
 
   useEffect(() => {
-    if (!itemForm.categoryId && categories[0]) {
-      setItemForm((current) => ({ ...current, categoryId: categories[0].id }))
+    if (!itemForm.categoryId && activeCategories[0]) {
+      setItemForm((current) => ({ ...current, categoryId: activeCategories[0].id }))
     }
-  }, [categories, itemForm.categoryId])
+  }, [activeCategories, itemForm.categoryId])
 
   useEffect(() => {
     if (!itemForm.statusId && activeStatuses[0]) {
@@ -151,6 +154,27 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     }
   }
 
+  async function handleActivateCategory(targetCategoryId: string) {
+    if (!restaurantId) {
+      setMessage('Restoran seçilməlidir.')
+      setMessageDetails([])
+      return
+    }
+
+    setMessage('')
+    setMessageDetails([])
+    try {
+      await ecafeApi.menu.activateCategory(restaurantId, targetCategoryId)
+      setMessage('Kateqoriya aktiv edildi.')
+      setMessageDetails([])
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Kateqoriya aktiv edilmədi.')
+      setMessage(feedback.message)
+      setMessageDetails(feedback.details)
+    }
+  }
+
   async function handleDeleteCategory(targetCategoryId: string) {
     if (!restaurantId) {
       setMessage('Restoran seçilməlidir.')
@@ -194,7 +218,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         fileId,
       })
       setItemForm({
-        categoryId: categories[0]?.id ?? '',
+        categoryId: activeCategories[0]?.id ?? '',
         statusId: String(activeStatuses[0]?.id ?? ''),
         name: '',
         description: '',
@@ -282,41 +306,27 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                     </div>
                     <Badge tone={category.isActive ? 'success' : 'neutral'}>{category.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
                     <div className="inline-actions">
-                      <ButtonLink
-                        aria-label={`${category.name} kateqoriyasını redaktə et`}
-                        className="action-icon-button"
-                        title="Redaktə et"
-                        to={`/admin/categories/${category.id}/edit?restaurantId=${restaurantId}`}
-                        variant="secondary"
-                      >
+                      <ActionIconLink label={`${category.name} kateqoriyasını redaktə et`} to={`/admin/categories/${category.id}/edit?restaurantId=${restaurantId}`}>
                         <Pencil size={18} />
-                      </ButtonLink>
+                      </ActionIconLink>
                       {category.isActive ? (
-                        <Button
-                          aria-label={`${category.name} kateqoriyasını deaktiv et`}
-                          className="action-icon-button"
-                          onClick={() => void handleDeactivateCategory(category.id)}
-                          title="Deaktiv et"
-                          type="button"
-                          variant="secondary"
-                        >
+                        <ActionIconButton label={`${category.name} kateqoriyasını deaktiv et`} onClick={() => void handleDeactivateCategory(category.id)}>
                           <UserX size={18} />
-                        </Button>
-                      ) : null}
-                      <Button
-                        aria-label={`${category.name} kateqoriyasını sil`}
-                        className="action-icon-button"
-                        onClick={() => void handleDeleteCategory(category.id)}
-                        title="Sil"
-                        type="button"
-                        variant="danger"
-                      >
+                        </ActionIconButton>
+                      ) : (
+                        <ActionIconButton label={`${category.name} kateqoriyasını aktiv et`} onClick={() => void handleActivateCategory(category.id)}>
+                          <CheckCircle2 size={18} />
+                        </ActionIconButton>
+                      )}
+                      <ActionIconButton label={`${category.name} kateqoriyasını sil`} onClick={() => void handleDeleteCategory(category.id)} tone="danger">
                         <Trash2 size={18} />
-                      </Button>
+                      </ActionIconButton>
                     </div>
                   </article>
                 ))}
-                {categories.length === 0 ? <p className="online-only">Bu restoran üçün kateqoriya yoxdur.</p> : null}
+                {categories.length === 0 ? (
+                  <EmptyState title="Kateqoriya yoxdur" message="Bu restoran üçün hələ kateqoriya yaradılmayıb." />
+                ) : null}
               </div>
             </section>
           </>
@@ -330,7 +340,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             </div>
             <div className="form-grid two">
               <SelectField label="Kateqoriya" required value={itemForm.categoryId} onChange={(event) => setItemForm({ ...itemForm, categoryId: event.target.value })}>
-                {categories.map((category) => (
+                {activeCategories.map((category) => (
                   <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
               </SelectField>
@@ -379,7 +389,9 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                   <b>{item.price.toFixed(2)} ₼</b>
                 </article>
               ))}
-              {!isLoading && items.length === 0 ? <p className="online-only">Bu restoran üçün menyu elementi yoxdur.</p> : null}
+              {!isLoading && items.length === 0 ? (
+                <EmptyState title="Menyu elementi yoxdur" message="Bu restoran üçün hələ menyu elementi yaradılmayıb." />
+              ) : null}
             </div>
           </section>
         ) : null}
