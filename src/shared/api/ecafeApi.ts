@@ -84,8 +84,10 @@ type ContractRecordQuery = {
 type CreateContractRequest = {
   startDate: string
   endDate?: string | null
+  amount: number
   commissionPercent?: number | null
   staffSettlementPeriod?: number | null
+  expiryReminderDaysBefore: number
   paymentPolicyId: number
 }
 
@@ -271,6 +273,37 @@ function extractAuthTokens(data: unknown): AuthResponse {
 async function listRestaurants(query = '') {
   const result = await httpClient<unknown>(`${endpoints.restaurants.adminList}${query}`)
   return asArray<AnyRecord>(result.data).map(mapRestaurant)
+}
+
+async function fetchPublicMenu(restaurantId: string) {
+  const result = await httpClient<unknown>(endpoints.publicRestaurant.menu(restaurantId))
+  const categoryRecords = asArray<AnyRecord>(result.data)
+
+  const categories = categoryRecords.map((category) => mapCategory(category, restaurantId))
+  const items = categoryRecords.flatMap((category) => {
+    const categoryId = str(category.id || category.categoryId)
+    const categoryName = str(category.name)
+
+    return asArray<AnyRecord>(category.items).map((item) =>
+      mapMenuItem(
+        {
+          ...item,
+          categoryId: item.categoryId || categoryId,
+          categoryName: item.categoryName || categoryName,
+        },
+        restaurantId,
+      ),
+    )
+  })
+
+  return { categories, items }
+}
+
+function fallbackPublicMenu(restaurantId: string) {
+  return {
+    categories: menuCategories.filter((category) => category.restaurantId === restaurantId && category.isActive),
+    items: menuItems.filter((item) => item.restaurantId === restaurantId && item.isActive),
+  }
 }
 
 async function fetchContractRecords(query: ContractRecordQuery = {}): Promise<ContractRecord[]> {
@@ -1149,6 +1182,12 @@ export const ecafeApi = {
   },
 
   menu: {
+    publicMenu: (restaurantId: string) => safe(() => fetchPublicMenu(restaurantId), fallbackPublicMenu(restaurantId)),
+    publicCategories: (restaurantId: string) =>
+      safe(async () => {
+        const menu = await fetchPublicMenu(restaurantId)
+        return menu.categories
+      }, fallbackPublicMenu(restaurantId).categories),
     categories: (restaurantId: string) =>
       safe(async () => {
         const result = await httpClient<unknown>(endpoints.menu.categories(restaurantId))
@@ -1156,10 +1195,8 @@ export const ecafeApi = {
       }, menuCategories.filter((category) => category.restaurantId === restaurantId && category.isActive)),
     items: (restaurantId: string) =>
       safe(async () => {
-        const result = await httpClient<unknown>(endpoints.publicRestaurant.menu(restaurantId))
-        return asArray<AnyRecord>(result.data).flatMap((category) =>
-          asArray<AnyRecord>(category.items).map((item) => mapMenuItem({ ...item, categoryId: category.id }, restaurantId)),
-        )
+        const menu = await fetchPublicMenu(restaurantId)
+        return menu.items
       }, menuItems.filter((item) => item.restaurantId === restaurantId && item.isActive)),
     adminItems: (restaurantId: string) =>
       safe(async () => {

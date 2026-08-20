@@ -51,9 +51,13 @@ export type RestaurantContract = {
   statusName?: string
   startDate: string
   endDate: string
+  amount: number
   monthlyFee: number
   commissionPercent: number
   settlementPeriod: string
+  expiryReminderDaysBefore: number
+  expiryReminderAt?: string
+  expiryReminderSentAt?: string
   paymentPolicy: 'OnlineOnly'
   paymentPolicyId?: number
   fileName: string

@@ -18,10 +18,7 @@ export function RestaurantProfilePage() {
   const { data: staff, isLoading: staffLoading } = useAsyncData(() => ecafeApi.staff.waiters(restaurantId), [], [restaurantId])
   const { data: tables, isLoading: tablesLoading } = useAsyncData(() => ecafeApi.tables.listPublic(restaurantId), [], [restaurantId])
   const { data: menuData, isLoading: menuLoading } = useAsyncData(
-    async () => {
-      const [categories, items] = await Promise.all([ecafeApi.menu.categories(restaurantId), ecafeApi.menu.items(restaurantId)])
-      return { categories, items }
-    },
+    () => ecafeApi.menu.publicMenu(restaurantId),
     { categories: [], items: [] },
     [restaurantId],
   )

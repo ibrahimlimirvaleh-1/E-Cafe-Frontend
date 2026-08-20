@@ -37,6 +37,10 @@ function formatDate(value?: string) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('az-AZ')
 }
 
+function formatMoney(value?: number) {
+  return `${Number(value || 0).toFixed(2)} AZN`
+}
+
 function nextActionText(contract: RestaurantContract, actions: WorkflowAction[]) {
   if (actions.some((action) => action.code === 'approve')) {
     return 'Müqavilə təsdiqinizi gözləyir. Sənədi oxuyub şərtləri qəbul etdikdən sonra admin aktivləşdirə biləcək.'
@@ -269,6 +273,10 @@ export function ContractDetailPage() {
             <dd>{formatDate(contract.endDate)}</dd>
           </div>
           <div>
+            <dt>Məbləğ</dt>
+            <dd>{formatMoney(contract.amount)}</dd>
+          </div>
+          <div>
             <dt>Komissiya</dt>
             <dd>{contract.commissionPercent}%</dd>
           </div>
@@ -279,6 +287,14 @@ export function ContractDetailPage() {
           <div>
             <dt>Ödəniş</dt>
             <dd>Fiziki/offline</dd>
+          </div>
+          <div>
+            <dt>Xatırlatma</dt>
+            <dd>{contract.expiryReminderDaysBefore || 1} gün əvvəl</dd>
+          </div>
+          <div>
+            <dt>Xatırlatma vaxtı</dt>
+            <dd>{formatDate(contract.expiryReminderAt)}</dd>
           </div>
           <div>
             <dt>Təsdiqləyən</dt>

@@ -10,10 +10,7 @@ import { SafeImage } from '../../shared/ui/SafeImage'
 export function MenuSelectionPage() {
   const { restaurantId = 'saffron-premium' } = useParams()
   const { data: menuData, isLoading } = useAsyncData(
-    async () => {
-      const [categories, items] = await Promise.all([ecafeApi.menu.categories(restaurantId), ecafeApi.menu.items(restaurantId)])
-      return { categories, items }
-    },
+    () => ecafeApi.menu.publicMenu(restaurantId),
     { categories: [], items: [] },
     [restaurantId],
   )
