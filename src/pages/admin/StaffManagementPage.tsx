@@ -69,9 +69,15 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   )
   const editingStaff = mode === 'edit' ? staffDetail ?? staff.find((member) => member.id === staffId) : undefined
   const roleOptions = useMemo(() => roles.filter((role) => role.id > 0), [roles])
+  const isPlatformAdmin = isInRole(user, [RoleIds.PlatformAdmin])
+  const visibleRoleOptions = useMemo(
+    () => (isPlatformAdmin ? roleOptions : roleOptions.filter((role) => String(role.id) !== RoleIds.Owner)),
+    [isPlatformAdmin, roleOptions],
+  )
   const canChangeRoles = isInRole(user, [RoleIds.PlatformAdmin]) || hasPermission(user, 'ManageStaff')
   const selectedRoleName = roleOptions.find((role) => String(role.id) === form.roleId)?.name.toLowerCase() || ''
   const isWaiterRoleSelected = selectedRoleName.includes('ofisiant') || selectedRoleName.includes('waiter') || form.roleId === String(roleIdsByStaffRole.Waiter)
+  const cannotEditOwnerStaff = mode === 'edit' && editingStaff ? !canManageStaffMember(editingStaff) : false
 
   useEffect(() => {
     if (!selectedRestaurantId && restaurants[0]) {
@@ -120,6 +126,19 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     return labels[role] || role
   }
 
+  function isOwnerStaffMember(member: StaffMember) {
+    return member.role === 'Owner' || currentRoleId(member) === Number(RoleIds.Owner)
+  }
+
+  function canManageStaffMember(member: StaffMember) {
+    return isPlatformAdmin || !isOwnerStaffMember(member)
+  }
+
+  function setOwnerRestrictionMessage() {
+    setMessage('Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.')
+    setMessageDetails([])
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || (mode === 'create' && !form.roleId)) {
@@ -132,6 +151,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     setMessageDetails([])
     try {
       if (mode === 'edit' && staffId) {
+        if (editingStaff && !canManageStaffMember(editingStaff)) {
+          setOwnerRestrictionMessage()
+          return
+        }
+
         await ecafeApi.staff.update(restaurantId, staffId, {
           name: form.name,
           surname: form.surname,
@@ -144,6 +168,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
         })
         setMessage('Əməkdaş məlumatları yeniləndi.')
       } else {
+        if (!isPlatformAdmin && form.roleId === RoleIds.Owner) {
+          setOwnerRestrictionMessage()
+          return
+        }
+
         await ecafeApi.staff.create({
           name: form.name,
           surname: form.surname,
@@ -170,6 +199,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   }
 
   async function handleRoleChange(member: StaffMember) {
+    if (!canManageStaffMember(member) || (!isPlatformAdmin && selectedRoleId(member) === RoleIds.Owner)) {
+      setOwnerRestrictionMessage()
+      return
+    }
+
     const roleId = Number(selectedRoleId(member))
     if (!roleId) {
       setMessage('Rol seçilməlidir.')
@@ -199,6 +233,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   }
 
   async function handleDeactivate(member: StaffMember) {
+    if (!canManageStaffMember(member)) {
+      setOwnerRestrictionMessage()
+      return
+    }
+
     if (!restaurantId) {
       setMessage('Restoran seçilməlidir.')
       setMessageDetails([])
@@ -223,6 +262,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   }
 
   async function handleActivate(member: StaffMember) {
+    if (!canManageStaffMember(member)) {
+      setOwnerRestrictionMessage()
+      return
+    }
+
     if (!restaurantId) {
       setMessage('Restoran seçilməlidir.')
       setMessageDetails([])
@@ -247,6 +291,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   }
 
   async function handleDelete(member: StaffMember) {
+    if (!canManageStaffMember(member)) {
+      setOwnerRestrictionMessage()
+      return
+    }
+
     setMessage('')
     setMessageDetails([])
     try {
@@ -270,6 +319,16 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
       <section className={mode === 'create' || mode === 'edit' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         {mode === 'create' || mode === 'edit' ? (
+          cannotEditOwnerStaff ? (
+          <section className="admin-panel">
+            <div>
+              <span className="eyebrow">İcazə</span>
+              <h2>Bu əməkdaşı yalnız platform administratoru idarə edə bilər</h2>
+            </div>
+            <StatusMessage tone="danger">Sahibkar hesabının redaktəsi, deaktiv edilməsi, silinməsi və rol dəyişikliyi yalnız platform administratoruna açıqdır.</StatusMessage>
+            <ButtonLink to="/admin/staff" variant="secondary">Siyahıya qayıt</ButtonLink>
+          </section>
+          ) : (
           <form className="admin-panel" onSubmit={handleSubmit}>
             <div>
               <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni əməkdaş'}</span>
@@ -290,7 +349,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
             <SelectField disabled={mode === 'edit'} label="Rol" required={mode === 'create'} value={form.roleId} onChange={(event) => setForm({ ...form, roleId: event.target.value })}>
               <option value="">Rol seç</option>
-              {roleOptions.map((role) => (
+              {visibleRoleOptions.map((role) => (
                 <option key={role.id} value={role.id}>
                   {role.name}
                 </option>
@@ -316,6 +375,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <Button type="submit">{mode === 'edit' ? 'Yadda saxla' : 'Əməkdaş yarat'}</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
+          )
         ) : (
           <section className="admin-panel">
             <div>
@@ -351,7 +411,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                     <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>
                     <Badge tone="info">{roleLabel(member.role)}</Badge>
                   </div>
-                  {canChangeRoles ? (
+                  {canChangeRoles && canManageStaffMember(member) ? (
                     <div className="staff-role-actions">
                       <select
                         aria-label={`${member.name} üçün rol`}
@@ -363,7 +423,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           }))
                         }
                       >
-                        {roleOptions.map((role) => (
+                        {visibleRoleOptions.map((role) => (
                           <option key={role.id} value={role.id}>
                             {role.name}
                           </option>

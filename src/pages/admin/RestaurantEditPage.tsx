@@ -19,7 +19,6 @@ export function RestaurantEditPage() {
   const [errorDetails, setErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form, setForm] = useState({
-    name: '',
     location: '',
     phone: '',
     email: '',
@@ -40,7 +39,6 @@ export function RestaurantEditPage() {
     }
 
     setForm({
-      name: restaurant.name,
       location: restaurant.address,
       phone: restaurant.phone,
       email: restaurant.email || '',
@@ -64,7 +62,6 @@ export function RestaurantEditPage() {
 
     try {
       await ecafeApi.restaurants.update(restaurantId, {
-        name: form.name,
         location: form.location,
         phone: form.phone,
         email: form.email,
@@ -102,10 +99,9 @@ export function RestaurantEditPage() {
       <PageHeader eyebrow="Restoran redaktəsi" title={restaurant.name} />
 
       <form className="admin-panel" onSubmit={handleSubmit}>
-        <TextField label="Restoran adı" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
         <div className="form-grid two">
           <TextField label="Məkan" required value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
-          <TextField label="Filial adı" value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
+          <TextField label="Filial adı" required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
         </div>
         <div className="form-grid two">
           <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />

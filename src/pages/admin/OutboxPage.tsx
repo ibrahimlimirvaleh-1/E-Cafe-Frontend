@@ -166,7 +166,7 @@ export function OutboxPage() {
       <PageHeader
         eyebrow="Admin"
         title="Sistem mesajları"
-        description="Email outbox mesajlarının göndərilmə vəziyyəti izlənilir."
+        description="Email və SMS mesajlarının göndərilmə vəziyyəti izlənilir."
       />
 
       <section className="outbox-metrics">
@@ -288,7 +288,7 @@ export function OutboxPage() {
             </article>
           ))}
 
-          {!isLoading && messagePage.items.length === 0 ? <p className="ui-table-empty">Bu filterlərə uyğun sistem mesajı tapılmadı.</p> : null}
+          {!isLoading && !error && messagePage.items.length === 0 ? <p className="ui-table-empty">Bu filterlərə uyğun sistem mesajı tapılmadı.</p> : null}
         </div>
 
         <PaginationControls

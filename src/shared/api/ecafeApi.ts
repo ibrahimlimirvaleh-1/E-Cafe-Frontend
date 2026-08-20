@@ -128,7 +128,6 @@ type CreateRestaurantGroupRequest = {
 }
 
 type CreateRestaurantRequest = {
-  name: string
   location: string
   phone: string
   email: string
@@ -692,7 +691,6 @@ export const ecafeApi = {
       }),
     create: async (request: CreateRestaurantRequest) => {
       const formData = new FormData()
-      formData.set('Name', request.name)
       formData.set('Location', request.location)
       formData.set('Phone', request.phone)
       formData.set('Email', request.email)
@@ -723,7 +721,6 @@ export const ecafeApi = {
       httpClient<unknown>(endpoints.restaurants.update(restaurantId), {
         method: 'PUT',
         body: JSON.stringify({
-          name: request.name,
           location: request.location,
           phone: request.phone,
           email: request.email,

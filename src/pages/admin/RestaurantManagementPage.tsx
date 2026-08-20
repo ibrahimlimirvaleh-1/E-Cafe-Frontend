@@ -15,7 +15,6 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 type RestaurantPageMode = 'list' | 'create'
 
 const initialForm = {
-  name: '',
   location: '',
   phone: '',
   email: '',
@@ -70,7 +69,6 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
 
     try {
       await ecafeApi.restaurants.create({
-        name: form.name,
         location: form.location,
         phone: form.phone,
         email: form.email,
@@ -144,10 +142,9 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             <span className="eyebrow">Yeni restoran</span>
             <h2>Profil və filial</h2>
           </div>
-          <TextField label="Restoran adı" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
           <div className="form-grid two">
             <TextField label="Məkan" required value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
-            <TextField label="Filial adı" value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
+            <TextField label="Filial adı" required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
           </div>
           <div className="form-grid two">
             <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
