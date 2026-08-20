@@ -44,8 +44,10 @@ export function ContractFormPage() {
   const [restaurantId, setRestaurantId] = useState('')
   const [startDate, setStartDate] = useState(todayInputValue())
   const [endDate, setEndDate] = useState('')
+  const [amount, setAmount] = useState('')
   const [commissionPercent, setCommissionPercent] = useState('0')
   const [staffSettlementPeriod, setStaffSettlementPeriod] = useState('7')
+  const [expiryReminderDaysBefore, setExpiryReminderDaysBefore] = useState('1')
   const [error, setError] = useState('')
   const [errorDetails, setErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,8 +60,10 @@ export function ContractFormPage() {
     setRestaurantId(record.contract.restaurantId)
     setStartDate(toInputDate(record.contract.startDate))
     setEndDate(toInputDate(record.contract.endDate))
+    setAmount(String(record.contract.amount ?? ''))
     setCommissionPercent(String(record.contract.commissionPercent ?? 0))
     setStaffSettlementPeriod(record.contract.settlementPeriod || '7')
+    setExpiryReminderDaysBefore(String(record.contract.expiryReminderDaysBefore ?? 1))
   }, [record])
 
   const selectedRestaurantId = restaurantId || firstRestaurantId
@@ -89,11 +93,19 @@ export function ContractFormPage() {
       return
     }
 
+    if (!amount || Number(amount) <= 0) {
+      setError('Müqavilə məbləği sıfırdan böyük olmalıdır.')
+      setErrorDetails([])
+      return
+    }
+
     const request = {
       startDate: toApiDate(startDate) ?? `${todayInputValue()}T00:00:00Z`,
       endDate: toApiDate(endDate),
+      amount: Number(amount),
       commissionPercent: commissionPercent === '' ? null : Number(commissionPercent),
       staffSettlementPeriod: staffSettlementPeriod === '' ? null : Number(staffSettlementPeriod),
+      expiryReminderDaysBefore: Number(expiryReminderDaysBefore || 1),
       paymentPolicyId: 1,
     }
 
@@ -152,6 +164,11 @@ export function ContractFormPage() {
         <div className="form-row">
           <TextField label="Başlama tarixi" onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
           <TextField label="Bitmə tarixi" onChange={(event) => setEndDate(event.target.value)} type="date" value={endDate} />
+        </div>
+
+        <div className="form-row">
+          <TextField label="Müqavilə məbləği" min="0.01" onChange={(event) => setAmount(event.target.value)} step="0.01" type="number" value={amount} />
+          <TextField label="Bitmə xatırlatması" min="1" max="365" onChange={(event) => setExpiryReminderDaysBefore(event.target.value)} type="number" value={expiryReminderDaysBefore} />
         </div>
 
         <div className="form-row">

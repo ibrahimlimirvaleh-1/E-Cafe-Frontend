@@ -236,9 +236,13 @@ export function mapContract(record: AnyRecord, restaurantId: string): Restaurant
     statusName: str(record.statusName || record.status),
     startDate: str(record.startDate),
     endDate: str(record.endDate),
+    amount: num(record.amount),
     monthlyFee: num(record.monthlyFee),
     commissionPercent: num(record.commissionPercent),
     settlementPeriod: str(record.staffSettlementPeriod || record.settlementPeriod),
+    expiryReminderDaysBefore: num(record.expiryReminderDaysBefore, 1),
+    expiryReminderAt: str(record.expiryReminderAt),
+    expiryReminderSentAt: str(record.expiryReminderSentAt),
     paymentPolicy: 'OnlineOnly',
     paymentPolicyId: record.paymentPolicyId == null ? undefined : num(record.paymentPolicyId),
     fileName: str(record.fileName),
@@ -291,7 +295,7 @@ export function contractRow(contract: RestaurantContract, restaurantName = contr
     status: contractStatusLabel(contract),
     tone: tone(contract.status),
     meta: `${contract.startDate || '-'} - ${contract.endDate || '-'}`,
-    value: `Komissiya ${contract.commissionPercent}%`,
+    value: `${contract.amount || 0} AZN`,
     canEdit: contract.status === 'Draft' || contract.status === 'PendingSignature',
   }
 }
