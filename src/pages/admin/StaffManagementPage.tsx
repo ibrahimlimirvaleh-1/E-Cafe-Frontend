@@ -139,6 +139,16 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     setMessageDetails([])
   }
 
+  function fieldError(...fieldNames: string[]) {
+    const normalizedNames = fieldNames.map((fieldName) => fieldName.toLowerCase())
+    const detail = messageDetails.find((item) => {
+      const normalizedField = (item.field || '').replace(/Request\.|Command\./gi, '').toLowerCase()
+      return normalizedNames.includes(normalizedField)
+    })
+
+    return detail?.message
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || (mode === 'create' && !form.roleId)) {
@@ -334,7 +344,13 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni əməkdaş'}</span>
               <h2>Əməkdaş məlumatları</h2>
             </div>
-            <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
+            <SelectField
+              error={fieldError('RestaurantId')}
+              label="Restoran"
+              required
+              value={restaurantId}
+              onChange={(event) => setSelectedRestaurantId(event.target.value)}
+            >
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
                   {restaurantOptionLabel(restaurant)}
@@ -342,12 +358,44 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               ))}
             </SelectField>
             <div className="form-grid two">
-              <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-              <TextField label="Soyad" required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
+              <TextField
+                error={fieldError('Name')}
+                label="Ad"
+                required
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+              />
+              <TextField
+                error={fieldError('Surname')}
+                label="Soyad"
+                required
+                value={form.surname}
+                onChange={(event) => setForm({ ...form, surname: event.target.value })}
+              />
             </div>
-            <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-            <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-            <SelectField disabled={mode === 'edit'} label="Rol" required={mode === 'create'} value={form.roleId} onChange={(event) => setForm({ ...form, roleId: event.target.value })}>
+            <TextField
+              error={fieldError('Email')}
+              label="Email"
+              required
+              type="email"
+              value={form.email}
+              onChange={(event) => setForm({ ...form, email: event.target.value })}
+            />
+            <TextField
+              error={fieldError('Phone')}
+              label="Telefon"
+              required
+              value={form.phone}
+              onChange={(event) => setForm({ ...form, phone: event.target.value })}
+            />
+            <SelectField
+              disabled={mode === 'edit'}
+              error={fieldError('RoleId')}
+              label="Rol"
+              required={mode === 'create'}
+              value={form.roleId}
+              onChange={(event) => setForm({ ...form, roleId: event.target.value })}
+            >
               <option value="">Rol seç</option>
               {visibleRoleOptions.map((role) => (
                 <option key={role.id} value={role.id}>
@@ -356,14 +404,28 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               ))}
             </SelectField>
             <div className="form-grid two">
-              <SelectField label="Status" value={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.value })}>
+              <SelectField
+                error={fieldError('IsActive')}
+                label="Status"
+                value={form.isActive}
+                onChange={(event) => setForm({ ...form, isActive: event.target.value })}
+              >
                 <option value="true">Aktiv</option>
                 <option value="false">Deaktiv</option>
               </SelectField>
-              <TextField label="Servis faizi" min={0} step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
+              <TextField
+                error={fieldError('ServiceFeePercent')}
+                label="Servis faizi"
+                min={0}
+                step="0.01"
+                type="number"
+                value={form.serviceFeePercent}
+                onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })}
+              />
             </div>
             {isWaiterRoleSelected ? (
               <TextField
+                error={fieldError('MaxActiveTableCount')}
                 label="Ofisiant aktiv masa limiti"
                 min={1}
                 type="number"

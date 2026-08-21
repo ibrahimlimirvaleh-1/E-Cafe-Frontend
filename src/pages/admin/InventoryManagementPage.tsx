@@ -1,4 +1,4 @@
-import { Pencil, Power, Trash2 } from 'lucide-react'
+import { History, Pencil, Plus, Power, Trash2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -13,11 +13,12 @@ import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { EmptyState } from '../../shared/ui/EmptyState'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import type { InventoryItem, MenuItem, Recipe } from '../../entities/types'
+import type { InventoryItem, InventoryMovement, MenuItem, Recipe } from '../../entities/types'
 
-type InventoryPageMode = 'items' | 'create' | 'movements' | 'recipes' | 'recipe-create'
+type InventoryPageMode = 'items' | 'create' | 'movements' | 'movement-create' | 'recipes' | 'recipe-create'
 type PendingDelete = { id: string; label: string; type: 'inventory' | 'recipe' } | null
 
 const units = [
@@ -32,8 +33,20 @@ const pageCopy: Record<InventoryPageMode, { eyebrow: string; title: string }> = 
   items: { eyebrow: 'Stok', title: 'Stok elementleri' },
   create: { eyebrow: 'Stok', title: 'Yeni stok elementi' },
   movements: { eyebrow: 'Stok', title: 'Stok hereketleri' },
+  'movement-create': { eyebrow: 'Stok', title: 'Yeni stok hereketi' },
   recipes: { eyebrow: 'Resept', title: 'Resept idareetmesi' },
   'recipe-create': { eyebrow: 'Resept', title: 'Yeni resept terkibi' },
+}
+
+function emptyPage<T>() {
+  return {
+    items: [] as T[],
+    pageIndex: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  }
 }
 
 function unitLabel(unitId: number, fallback?: string) {
@@ -43,6 +56,25 @@ function unitLabel(unitId: number, fallback?: string) {
 
 function stockAmount(item: InventoryItem) {
   return `${item.quantityOnHand.toLocaleString('az-AZ')} ${item.unitCode || item.unitName}`
+}
+
+function formatDateTime(value: string) {
+  if (!value) {
+    return '-'
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return date.toLocaleString('az-AZ', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 }
 
 export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPageMode }) {
@@ -58,6 +90,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   const [selectedInventoryId, setSelectedInventoryId] = useState('')
   const [selectedMenuItemId, setSelectedMenuItemId] = useState('')
   const [onlyLowStock, setOnlyLowStock] = useState(false)
+  const [inventoryPageNumber, setInventoryPageNumber] = useState(1)
+  const [inventoryPageSize, setInventoryPageSize] = useState(10)
+  const [movementPageNumber, setMovementPageNumber] = useState(1)
+  const [movementPageSize, setMovementPageSize] = useState(10)
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
   const [editingInventoryId, setEditingInventoryId] = useState('')
   const [editingRecipeId, setEditingRecipeId] = useState('')
@@ -93,6 +130,18 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     [],
     [restaurantId, onlyLowStock, reloadKey],
   )
+  const { data: movementInventoryPage, isLoading: movementInventoryLoading } = useAsyncData(
+    () =>
+      restaurantId && mode === 'movements'
+        ? ecafeApi.inventory.listPaginated(restaurantId, {
+            onlyLowStock,
+            pageNumber: inventoryPageNumber,
+            pageSize: inventoryPageSize,
+          })
+        : Promise.resolve(emptyPage<InventoryItem>()),
+    emptyPage<InventoryItem>(),
+    [restaurantId, mode, onlyLowStock, inventoryPageNumber, inventoryPageSize, reloadKey],
+  )
   const { data: menuItems } = useAsyncData(
     () => (restaurantId ? ecafeApi.menu.adminItems(restaurantId) : Promise.resolve([])),
     [],
@@ -100,29 +149,39 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   )
   const { data: movementTypes } = useAsyncData(() => ecafeApi.lookups.inventoryMovementTypes(), [], [])
   const inventoryRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory' : '/admin/inventory'
+  const movementRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory/movements' : '/admin/inventory/movements'
   const recipeRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/recipes' : '/admin/recipes'
   const editingInventoryItemId = mode === 'create' ? searchParams.get('inventoryItemId') ?? '' : ''
+  const movementInventoryItemId = mode === 'movement-create' ? searchParams.get('inventoryItemId') ?? '' : ''
   const recipeMenuItemId = mode === 'recipe-create' ? searchParams.get('menuItemId') ?? '' : ''
   const editingRecipeItemId = mode === 'recipe-create' ? searchParams.get('recipeId') ?? '' : ''
+  const inventorySelectionItems = mode === 'movements' ? movementInventoryPage.items : inventoryItems
 
   const inventoryItem = useMemo(
-    () => inventoryItems.find((item) => item.id === selectedInventoryId) ?? inventoryItems[0],
-    [inventoryItems, selectedInventoryId],
+    () => inventorySelectionItems.find((item) => item.id === selectedInventoryId) ?? inventorySelectionItems[0],
+    [inventorySelectionItems, selectedInventoryId],
   )
   const menuItem = useMemo(
     () => menuItems.find((item) => item.id === selectedMenuItemId) ?? menuItems[0],
     [menuItems, selectedMenuItemId],
   )
-  const { data: movements } = useAsyncData(
-    () => (restaurantId && inventoryItem ? ecafeApi.inventory.movements(restaurantId, inventoryItem.id) : Promise.resolve([])),
-    [],
-    [restaurantId, inventoryItem?.id, reloadKey],
+  const { data: movementPage } = useAsyncData(
+    () =>
+      restaurantId && inventoryItem
+        ? ecafeApi.inventory.movementsPaginated(restaurantId, inventoryItem.id, {
+            pageNumber: movementPageNumber,
+            pageSize: movementPageSize,
+          })
+        : Promise.resolve(emptyPage<InventoryMovement>()),
+    emptyPage<InventoryMovement>(),
+    [restaurantId, inventoryItem?.id, movementPageNumber, movementPageSize, reloadKey],
   )
   const { data: recipes } = useAsyncData(
     () => (restaurantId && menuItem ? ecafeApi.recipes.list(restaurantId, menuItem.id) : Promise.resolve([])),
     [],
     [restaurantId, menuItem?.id, reloadKey],
   )
+  const movements = movementPage.items
 
   useEffect(() => {
     if (!selectedRestaurantId && restaurants[0]) {
@@ -131,10 +190,24 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   }, [restaurants, selectedRestaurantId])
 
   useEffect(() => {
-    if (inventoryItems[0] && !inventoryItems.some((item) => item.id === selectedInventoryId)) {
-      setSelectedInventoryId(inventoryItems[0].id)
+    if (inventorySelectionItems[0] && !inventorySelectionItems.some((item) => item.id === selectedInventoryId)) {
+      setSelectedInventoryId(inventorySelectionItems[0].id)
     }
-  }, [inventoryItems, selectedInventoryId])
+  }, [inventorySelectionItems, selectedInventoryId])
+
+  useEffect(() => {
+    setInventoryPageNumber(1)
+  }, [restaurantId, onlyLowStock])
+
+  useEffect(() => {
+    setMovementPageNumber(1)
+  }, [restaurantId, inventoryItem?.id])
+
+  useEffect(() => {
+    if (mode === 'movement-create' && movementInventoryItemId) {
+      setSelectedInventoryId(movementInventoryItemId)
+    }
+  }, [mode, movementInventoryItemId])
 
   useEffect(() => {
     if (menuItems[0] && !menuItems.some((item) => item.id === selectedMenuItemId)) {
@@ -259,7 +332,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         movementTypeId: Number(movementForm.movementTypeId),
         quantity: Number(movementForm.quantity),
         unitId: Number(movementForm.unitId),
-        reason: movementForm.reason,
+        reason: movementForm.reason.trim() || null,
       })
       setMovementForm({ movementTypeId: String(movementTypes[0]?.id ?? ''), quantity: '', unitId: inventoryItem.unitId ? String(inventoryItem.unitId) : '2', reason: '' })
       setSuccess('Stok hərəkəti əlavə edildi.')
@@ -407,6 +480,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             <ButtonLink to={`${inventoryRouteBase}/new`}>Yeni stok elementi</ButtonLink>
           ) : mode === 'create' ? (
             <ButtonLink to={inventoryRouteBase} variant="secondary">Siyahiya qayit</ButtonLink>
+          ) : mode === 'movements' && canManageInventory ? (
+            <ButtonLink to={`${movementRouteBase}/new${inventoryItem?.id ? `?inventoryItemId=${inventoryItem.id}` : ''}`}>Hərəkət əlavə et</ButtonLink>
+          ) : mode === 'movement-create' ? (
+            <ButtonLink to={movementRouteBase} variant="secondary">Siyahiya qayit</ButtonLink>
           ) : mode === 'recipes' && canManageRecipes ? (
             <ButtonLink to={`${recipeRouteBase}/new${menuItem?.id ? `?menuItemId=${menuItem.id}` : ''}`}>Yeni resept terkibi</ButtonLink>
           ) : mode === 'recipe-create' ? (
@@ -522,33 +599,112 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             <section className="admin-panel">
               <div className="inventory-panel-header">
                 <div>
-                  <span className="eyebrow">Stok secimi</span>
-                  <h2>Ingredient</h2>
+                  <span className="eyebrow">Siyahi</span>
+                  <h2>Stok elementləri</h2>
                 </div>
                 <label className="toggle-field compact-toggle">
                   <input checked={onlyLowStock} type="checkbox" onChange={(event) => setOnlyLowStock(event.target.checked)} />
                   <span>Yalniz az qalanlar</span>
                 </label>
               </div>
-              <div className="inventory-list">
-                {inventoryItems.map((item) => (
-                  <button className={item.id === inventoryItem?.id ? 'selected' : ''} key={item.id} type="button" onClick={() => setSelectedInventoryId(item.id)}>
-                    <span>
-                      <strong>{item.name}</strong>
-                      <small>{stockAmount(item)}</small>
-                    </span>
-                    <Badge tone={item.isLowStock ? 'warning' : 'success'}>{item.isLowStock ? 'Az qalir' : 'Normal'}</Badge>
-                  </button>
-                ))}
+              <div className="inventory-table-shell">
+                <table className="inventory-table">
+                  <thead>
+                    <tr>
+                      <th>Element</th>
+                      <th>Miqdar</th>
+                      <th>Limit</th>
+                      <th>Status</th>
+                      <th>Əməliyyat</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movementInventoryPage.items.map((item) => (
+                      <tr className={item.id === inventoryItem?.id ? 'selected' : ''} key={item.id}>
+                        <td>
+                          <strong>{item.name}</strong>
+                        </td>
+                        <td>{stockAmount(item)}</td>
+                        <td>{item.lowStockThreshold} {item.unitCode || item.unitName}</td>
+                        <td>
+                          <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>
+                            {item.isLowStock ? 'Az qalir' : item.isActive ? 'Normal' : 'Deaktiv'}
+                          </Badge>
+                        </td>
+                        <td>
+                          <div className="inline-actions inventory-table-actions">
+                            <ActionIconButton
+                              label={`${item.name} tarixçəsinə bax`}
+                              onClick={() => {
+                                setSelectedInventoryId(item.id)
+                                setMovementPageNumber(1)
+                                setIsHistoryModalOpen(true)
+                              }}
+                            >
+                              <History size={17} />
+                            </ActionIconButton>
+                            {canManageInventory ? (
+                              <ActionIconButton label={`${item.name} üçün hərəkət əlavə et`} onClick={() => navigate(`${movementRouteBase}/new?inventoryItemId=${item.id}`)}>
+                                <Plus size={17} />
+                              </ActionIconButton>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {movementInventoryLoading ? <p className="online-only">Stok yüklənir...</p> : null}
+                {!movementInventoryLoading && movementInventoryPage.items.length === 0 ? (
+                  <EmptyState title="Stok elementi yoxdur" message="Bu filterlərə uyğun stok elementi tapılmadı." />
+                ) : null}
               </div>
+              <PaginationControls
+                ariaLabel="Stok elementləri səhifələmə"
+                hasNextPage={movementInventoryPage.hasNextPage}
+                hasPreviousPage={movementInventoryPage.hasPreviousPage}
+                onPageChange={setInventoryPageNumber}
+                onPageSizeChange={(size) => {
+                  setInventoryPageSize(size)
+                  setInventoryPageNumber(1)
+                }}
+                pageIndex={movementInventoryPage.pageIndex}
+                pageSize={inventoryPageSize}
+                totalCount={movementInventoryPage.totalCount}
+                totalPages={movementInventoryPage.totalPages}
+              />
             </section>
+          </>
+        ) : null}
 
-            <section className="admin-panel">
-              <div>
-                <span className="eyebrow">Yeni hereket</span>
-                <h2>{inventoryItem?.name || 'Stok sec'}</h2>
-              </div>
-              {canManageInventory ? (
+        {mode === 'movement-create' ? (
+          canManageInventory ? (
+            <>
+              <section className="admin-panel">
+                <span className="eyebrow">Stok elementi</span>
+                <SelectField label="Stok elementi" required value={inventoryItem?.id || ''} onChange={(event) => setSelectedInventoryId(event.target.value)}>
+                  {inventoryItems.map((item) => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
+                </SelectField>
+                {inventoryItem ? (
+                  <article className="resource-summary-card">
+                    <div>
+                      <strong>{inventoryItem.name}</strong>
+                      <span>{stockAmount(inventoryItem)} · limit {inventoryItem.lowStockThreshold} {inventoryItem.unitCode || inventoryItem.unitName}</span>
+                    </div>
+                    <Badge tone={inventoryItem.isLowStock ? 'warning' : inventoryItem.isActive ? 'success' : 'neutral'}>
+                      {inventoryItem.isLowStock ? 'Az qalir' : inventoryItem.isActive ? 'Normal' : 'Deaktiv'}
+                    </Badge>
+                  </article>
+                ) : null}
+              </section>
+
+              <section className="admin-panel">
+                <div>
+                  <span className="eyebrow">Yeni hereket</span>
+                  <h2>{inventoryItem?.name || 'Stok sec'}</h2>
+                </div>
                 <form className="stack-form" onSubmit={handleMovement}>
                   <div className="form-grid two">
                     <SelectField label="Hereket tipi" required value={movementForm.movementTypeId} onChange={(event) => setMovementForm({ ...movementForm, movementTypeId: event.target.value })}>
@@ -563,29 +719,16 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     </SelectField>
                   </div>
                   <TextField label="Miqdar" min={0} required step="0.001" type="number" value={movementForm.quantity} onChange={(event) => setMovementForm({ ...movementForm, quantity: event.target.value })} />
-                  <TextareaField label="Sebeb" required value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
+                  <TextareaField label="Sebeb" value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
                   <Button disabled={!inventoryItem} type="submit">Hereket elave et</Button>
                 </form>
-              ) : (
-                <p className="online-only">Stok hereketi yaratmaq ucun icazeniz yoxdur.</p>
-              )}
-            </section>
-
+              </section>
+            </>
+          ) : (
             <section className="admin-panel">
-              <span className="eyebrow">Tarixce</span>
-              <h2>Son hereketler</h2>
-              <div className="movement-list">
-                {movements.map((movement) => (
-                  <article key={movement.id}>
-                    <strong>{movement.movementType || movement.movementTypeCode}</strong>
-                    <span>{movement.quantityChange} {movement.unitName}</span>
-                    <small>{movement.reason || '-'}</small>
-                  </article>
-                ))}
-                {movements.length === 0 ? <p className="online-only">Bu stok elementi ucun hereket yoxdur.</p> : null}
-              </div>
+              <p className="online-only">Stok hereketi yaratmaq ucun icazeniz yoxdur.</p>
             </section>
-          </>
+          )
         ) : null}
 
         {mode === 'recipes' ? (
@@ -689,12 +832,75 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         onConfirm={confirmPendingDelete}
         title="Silməni təsdiqlə"
       />
+      {isHistoryModalOpen && inventoryItem ? (
+        <div className="modal-backdrop" role="presentation" onClick={() => setIsHistoryModalOpen(false)}>
+          <section className="inventory-history-modal" role="dialog" aria-modal="true" aria-label={`${inventoryItem.name} tarixçəsi`} onClick={(event) => event.stopPropagation()}>
+            <header className="audit-detail-header">
+              <div>
+                <span className="eyebrow">Tarixçə</span>
+                <h2>{inventoryItem.name}</h2>
+                <p className="muted-text">Cari miqdar: {stockAmount(inventoryItem)}</p>
+              </div>
+              <button type="button" className="icon-button" aria-label="Bağla" onClick={() => setIsHistoryModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </header>
+
+            <div className="inventory-history-table-shell">
+              <table className="inventory-table inventory-history-table">
+                <thead>
+                  <tr>
+                    <th>Hərəkət</th>
+                    <th>Dəyişiklik</th>
+                    <th>Son miqdar</th>
+                    <th>Səbəb</th>
+                    <th>Tarix</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movements.map((movement) => (
+                    <tr key={movement.id}>
+                      <td>
+                        <strong>{movement.movementType || movement.movementTypeCode || '-'}</strong>
+                      </td>
+                      <td>{movement.quantityChange} {movement.unitName}</td>
+                      <td>{movement.quantityAfterMovement} {movement.unitName}</td>
+                      <td>{movement.reason || '-'}</td>
+                      <td>{formatDateTime(movement.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {movements.length === 0 ? <EmptyState title="Tarixçə yoxdur" message="Bu stok elementi üzrə hərəkət tapılmadı." /> : null}
+            </div>
+
+            <PaginationControls
+              ariaLabel="Stok hərəkətləri tarixçəsi səhifələmə"
+              hasNextPage={movementPage.hasNextPage}
+              hasPreviousPage={movementPage.hasPreviousPage}
+              onPageChange={setMovementPageNumber}
+              onPageSizeChange={(size) => {
+                setMovementPageSize(size)
+                setMovementPageNumber(1)
+              }}
+              pageIndex={movementPage.pageIndex}
+              pageSize={movementPageSize}
+              totalCount={movementPage.totalCount}
+              totalPages={movementPage.totalPages}
+            />
+          </section>
+        </div>
+      ) : null}
     </main>
   )
 }
 
 export function InventoryMovementsPage() {
   return <InventoryManagementPage mode="movements" />
+}
+
+export function InventoryMovementCreatePage() {
+  return <InventoryManagementPage mode="movement-create" />
 }
 
 export function InventoryCreatePage() {

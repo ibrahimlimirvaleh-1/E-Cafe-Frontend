@@ -190,9 +190,14 @@ async function refreshAccessToken() {
 
 export function normalizeCaughtApiError(error: unknown, fallbackMessage = 'Sorğu icra olunmadı.') {
   if (error instanceof ApiError) {
+    const details =
+      error.details.length === 0 && error.statusCode >= 500 && error.traceId
+        ? [{ label: 'İz kodu', message: error.traceId }]
+        : error.details
+
     return {
       message: error.message,
-      details: error.details,
+      details,
       traceId: error.traceId,
       statusCode: error.statusCode,
     }
@@ -233,7 +238,7 @@ function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, 
   }
 
   if (result.message) {
-    return translateMessage(result.message)
+    return translateMessage(result.message, statusCode)
   }
 
   return statusMessage(statusCode)
@@ -248,7 +253,7 @@ function extractErrorDetails(errors: unknown): ApiErrorDetail[] {
     return errors
       .map<ApiErrorDetail | null>((error) => {
         if (typeof error === 'string') {
-          return { message: translateMessage(error) }
+          return { message: translateMessage(error, 400) }
         }
 
         if (error && typeof error === 'object' && 'message' in error) {
@@ -256,7 +261,7 @@ function extractErrorDetails(errors: unknown): ApiErrorDetail[] {
           return {
             field: rawField || undefined,
             label: rawField ? fieldLabel(rawField) : undefined,
-            message: translateMessage(String((error as { message?: unknown }).message ?? '')),
+            message: translateMessage(String((error as { message?: unknown }).message ?? ''), 400),
           }
         }
 
@@ -274,7 +279,7 @@ function extractErrorDetails(errors: unknown): ApiErrorDetail[] {
         .map((message) => ({
           field,
           label: fieldLabel(field),
-          message: translateMessage(message),
+          message: translateMessage(message, 400),
         }))
     })
   }
@@ -339,7 +344,7 @@ function fieldLabel(field: string) {
   return labels[normalized] ?? normalized
 }
 
-function translateMessage(message: string) {
+function translateMessage(message: string, statusCode?: number) {
   const normalized = message.trim()
   const lower = normalized.toLowerCase()
   const messages: Record<string, string> = {
@@ -357,6 +362,10 @@ function translateMessage(message: string) {
 
   if (messages[lower]) {
     return messages[lower]
+  }
+
+  if (statusCode && statusCode >= 400) {
+    return statusMessage(statusCode)
   }
 
   return normalized

@@ -170,6 +170,16 @@ type UpdateTableRequest = CreateTableRequest & {
   isActive: boolean
 }
 
+type CopyTableRequest = {
+  tableNo?: string
+  name?: string
+  copyCount?: string
+  copies?: Array<{
+    tableNo?: string
+    name?: string
+  }>
+}
+
 type CreateCategoryRequest = {
   name: string
   sortOrder?: number | null
@@ -208,7 +218,19 @@ type CreateInventoryMovementRequest = {
   quantity: number
   unitId: number
   movementTypeId: number
-  reason: string
+  reason?: string | null
+}
+
+type InventoryQuery = {
+  search?: string
+  onlyLowStock?: boolean
+  pageNumber?: number
+  pageSize?: number
+}
+
+type InventoryMovementQuery = {
+  pageNumber?: number
+  pageSize?: number
 }
 
 type CreateRecipeRequest = {
@@ -542,6 +564,39 @@ function buildOutboxQuery(query: OutboxMessageQuery = {}) {
   return search ? `?${search}` : ''
 }
 
+function buildInventoryQuery(query: InventoryQuery = {}) {
+  const params = new URLSearchParams()
+
+  if (query.search?.trim()) params.set('Search', query.search.trim())
+  if (query.onlyLowStock) params.set('OnlyLowStock', 'true')
+  if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
+  if (query.pageSize) params.set('PageSize', String(query.pageSize))
+
+  const search = params.toString()
+  return search ? `?${search}` : ''
+}
+
+function buildInventoryMovementQuery(query: InventoryMovementQuery = {}) {
+  const params = new URLSearchParams()
+
+  if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
+  if (query.pageSize) params.set('PageSize', String(query.pageSize))
+
+  const search = params.toString()
+  return search ? `?${search}` : ''
+}
+
+function emptyPaginated<T>(): PaginatedResponse<T> {
+  return {
+    items: [],
+    pageIndex: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  }
+}
+
 function mapInventoryItem(record: AnyRecord, restaurantId: string): InventoryItem {
   return {
     id: str(record.id || record.inventoryItemId),
@@ -568,7 +623,7 @@ function mapInventoryMovement(record: AnyRecord, restaurantId: string, inventory
     movementTypeId: num(record.movementTypeId),
     movementType: str(record.movementType || record.movementTypeName),
     movementTypeCode: str(record.movementTypeCode),
-    reason: str(record.reason),
+    reason: record.reason == null ? null : str(record.reason),
     quantityAfterMovement: num(record.quantityAfterMovement),
     createdAt: str(record.createdAt),
   }
@@ -900,18 +955,15 @@ export const ecafeApi = {
   inventory: {
     list: (restaurantId: string, params: { search?: string; onlyLowStock?: boolean } = {}) =>
       safe(async () => {
-        const query = new URLSearchParams()
-        if (params.search) {
-          query.set('Search', params.search)
-        }
-        if (params.onlyLowStock) {
-          query.set('OnlyLowStock', 'true')
-        }
-
-        const suffix = query.toString() ? `?${query.toString()}` : ''
+        const suffix = buildInventoryQuery(params)
         const result = await httpClient<unknown>(`${endpoints.inventory.list(restaurantId)}${suffix}`)
         return asPaginated(result.data, (item) => mapInventoryItem(item, restaurantId)).items
       }, [] as InventoryItem[]),
+    listPaginated: (restaurantId: string, params: InventoryQuery = {}) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(`${endpoints.inventory.list(restaurantId)}${buildInventoryQuery(params)}`)
+        return asPaginated(result.data, (item) => mapInventoryItem(item, restaurantId))
+      }, emptyPaginated<InventoryItem>()),
     detail: (restaurantId: string, inventoryItemId: string) =>
       safe(async () => {
         const result = await httpClient<unknown>(endpoints.inventory.detail(restaurantId, inventoryItemId))
@@ -944,6 +996,11 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.inventory.movements(restaurantId, inventoryItemId))
         return asPaginated(result.data, (movement) => mapInventoryMovement(movement, restaurantId, inventoryItemId)).items
       }, [] as InventoryMovement[]),
+    movementsPaginated: (restaurantId: string, inventoryItemId: string, params: InventoryMovementQuery = {}) =>
+      safe(async () => {
+        const result = await httpClient<unknown>(`${endpoints.inventory.movements(restaurantId, inventoryItemId)}${buildInventoryMovementQuery(params)}`)
+        return asPaginated(result.data, (movement) => mapInventoryMovement(movement, restaurantId, inventoryItemId))
+      }, emptyPaginated<InventoryMovement>()),
     createMovement: (restaurantId: string, inventoryItemId: string, request: CreateInventoryMovementRequest) =>
       httpClient<unknown>(endpoints.inventory.movements(restaurantId, inventoryItemId), {
         method: 'POST',
@@ -1095,6 +1152,19 @@ export const ecafeApi = {
           name: request.name,
           capacity: request.capacity,
           isActive: request.isActive,
+        }),
+      }),
+    copy: (restaurantId: string, tableId: string, request: CopyTableRequest) =>
+      httpClient<unknown>(endpoints.tables.copy(restaurantId, tableId), {
+        method: 'POST',
+        body: JSON.stringify({
+          tableNo: request.tableNo ? Number(request.tableNo) : null,
+          name: request.name?.trim() || null,
+          copyCount: request.copyCount ? Number(request.copyCount) : 1,
+          copies: request.copies?.map((copy) => ({
+            tableNo: copy.tableNo ? Number(copy.tableNo) : null,
+            name: copy.name?.trim() || null,
+          })) ?? [],
         }),
       }),
     activate: (restaurantId: string, tableId: string) =>

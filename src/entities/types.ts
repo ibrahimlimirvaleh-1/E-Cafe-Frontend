@@ -155,7 +155,7 @@ export type InventoryMovement = {
   movementTypeId: number
   movementType: string
   movementTypeCode: string
-  reason: string
+  reason?: string | null
   quantityAfterMovement: number
   createdAt: string
 }

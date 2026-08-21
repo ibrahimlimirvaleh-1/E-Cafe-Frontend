@@ -17,7 +17,7 @@ import { AuditLogPage } from '../pages/admin/AuditLogPage'
 import { ContractDetailPage } from '../pages/admin/contracts/ContractDetailPage'
 import { ContractFormPage } from '../pages/admin/contracts/ContractFormPage'
 import { ContractListPage } from '../pages/admin/contracts/ContractListPage'
-import { InventoryCreatePage, InventoryManagementPage, InventoryMovementsPage, RecipeCreatePage, RecipeManagementPage } from '../pages/admin/InventoryManagementPage'
+import { InventoryCreatePage, InventoryManagementPage, InventoryMovementCreatePage, InventoryMovementsPage, RecipeCreatePage, RecipeManagementPage } from '../pages/admin/InventoryManagementPage'
 import { CategoryCreatePage, MenuItemCreatePage, MenuManagementPage } from '../pages/admin/MenuManagementPage'
 import { RestaurantGroupCreatePage, RestaurantGroupsPage } from '../pages/admin/RestaurantGroupsPage'
 import { RestaurantDetailPage } from '../pages/admin/RestaurantDetailPage'
@@ -166,6 +166,7 @@ export function AppRouter() {
           <Route path="new" element={<AdminProtected moduleKey="inventory"><InventoryCreatePage /></AdminProtected>} />
         </Route>
         <Route path="inventory/movements" element={<AdminProtected moduleKey="inventory-movements"><InventoryMovementsPage /></AdminProtected>} />
+        <Route path="inventory/movements/new" element={<AdminProtected moduleKey="inventory-movements"><InventoryMovementCreatePage /></AdminProtected>} />
         <Route path="recipes">
           <Route index element={<AdminProtected moduleKey="recipes"><RecipeManagementPage /></AdminProtected>} />
           <Route path="new" element={<AdminProtected moduleKey="recipes"><RecipeCreatePage /></AdminProtected>} />
@@ -201,6 +202,8 @@ export function AppRouter() {
         <Route index element={<KitchenBoardPage />} />
         <Route path="inventory" element={<InventoryManagementPage />} />
         <Route path="inventory/new" element={<InventoryCreatePage />} />
+        <Route path="inventory/movements" element={<InventoryMovementsPage />} />
+        <Route path="inventory/movements/new" element={<InventoryMovementCreatePage />} />
         <Route path="recipes">
           <Route index element={<RecipeManagementPage />} />
           <Route path="new" element={<RecipeCreatePage />} />

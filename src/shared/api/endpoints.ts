@@ -80,6 +80,7 @@ export const endpoints = {
     list: (restaurantId: string) => `/restaurants/${restaurantId}/tables`,
     create: (restaurantId: string) => `/restaurants/${restaurantId}/tables`,
     update: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}`,
+    copy: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}/copy`,
     activate: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}/activate`,
     deactivate: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}/deactivate`,
     delete: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}`,

@@ -1,4 +1,4 @@
-import { CheckCircle2, Pencil, Trash2, UserX } from 'lucide-react'
+import { CheckCircle2, Copy, Pencil, Plus, Trash2, UserX, X } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -13,6 +13,7 @@ import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/Re
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type TablesPageMode = 'list' | 'create' | 'edit'
+type CopyTableRow = { tableNo: string; name: string }
 
 export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode }) {
   const { tableId = '' } = useParams()
@@ -22,6 +23,10 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [form, setForm] = useState({ tableNo: '', name: '', capacity: '2' })
+  const [copyTargetTableId, setCopyTargetTableId] = useState('')
+  const [copyRows, setCopyRows] = useState<CopyTableRow[]>([{ tableNo: '', name: '' }])
+  const [copyMessage, setCopyMessage] = useState('')
+  const [copyMessageDetails, setCopyMessageDetails] = useState<ApiErrorDetail[]>([])
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
   const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
@@ -31,6 +36,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     [restaurantId, reloadKey],
   )
   const editingTable = mode === 'edit' ? tables.find((table) => table.id === tableId) : undefined
+  const copyTargetTable = tables.find((table) => table.id === copyTargetTableId)
 
   function tableStatusLabel(status: string) {
     const labels: Record<string, string> = {
@@ -138,6 +144,66 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     }
   }
 
+  function openCopyModal(targetTableId: string) {
+    const targetTable = tables.find((table) => table.id === targetTableId)
+
+    setCopyTargetTableId(targetTableId)
+    setCopyRows([{ tableNo: '', name: targetTable?.name ? `${targetTable.name} kopya` : '' }])
+    setMessage('')
+    setMessageDetails([])
+    setCopyMessage('')
+    setCopyMessageDetails([])
+  }
+
+  function closeCopyModal() {
+    setCopyTargetTableId('')
+    setCopyRows([{ tableNo: '', name: '' }])
+    setCopyMessage('')
+    setCopyMessageDetails([])
+  }
+
+  function addCopyRow() {
+    if (copyRows.length >= 50) {
+      setCopyMessage('Bir əməliyyatda maksimum 50 masa kopyalana bilər.')
+      setCopyMessageDetails([])
+      return
+    }
+
+    setCopyRows((rows) => [...rows, { tableNo: '', name: '' }])
+  }
+
+  function updateCopyRow(index: number, field: keyof CopyTableRow, value: string) {
+    setCopyRows((rows) => rows.map((row, rowIndex) => (rowIndex === index ? { ...row, [field]: value } : row)))
+  }
+
+  function removeCopyRow(index: number) {
+    setCopyRows((rows) => (rows.length === 1 ? rows : rows.filter((_, rowIndex) => rowIndex !== index)))
+  }
+
+  async function handleCopySubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!restaurantId || !copyTargetTableId) {
+      return
+    }
+
+    setCopyMessage('')
+    setCopyMessageDetails([])
+    try {
+      await ecafeApi.tables.copy(restaurantId, copyTargetTableId, {
+        copies: copyRows,
+      })
+      const copyCount = copyRows.length
+      closeCopyModal()
+      setMessage(copyCount > 1 ? `${copyCount} masa eyni tutumla kopyalandı.` : 'Masa eyni tutumla kopyalandı.')
+      setReloadKey((value) => value + 1)
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Masa kopyalanmadı.')
+      setCopyMessage(feedback.message)
+      setCopyMessageDetails(feedback.details)
+    }
+  }
+
   return (
     <main className="admin-page">
       <PageHeader
@@ -208,6 +274,9 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
                     <ActionIconLink label={`${table.number} masasını redaktə et`} to={`/admin/tables/${table.id}/edit?restaurantId=${restaurantId}`}>
                       <Pencil size={18} />
                     </ActionIconLink>
+                    <ActionIconButton label={`${table.number} masasını kopyala`} onClick={() => openCopyModal(table.id)}>
+                      <Copy size={18} />
+                    </ActionIconButton>
                     {table.isActive ? (
                       <ActionIconButton label={`${table.number} masasını deaktiv et`} onClick={() => void handleDeactivate(table.id)}>
                         <UserX size={18} />
@@ -228,6 +297,59 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
           </section>
         )}
       </section>
+
+      {copyTargetTable ? (
+        <div className="modal-backdrop" role="presentation" onClick={closeCopyModal}>
+          <section className="copy-table-modal" role="dialog" aria-modal="true" aria-label="Masanı kopyala" onClick={(event) => event.stopPropagation()}>
+            <header>
+              <div>
+                <span className="eyebrow">Masa kopyası</span>
+                <h2>{copyTargetTable.number} masasını kopyala</h2>
+              </div>
+              <button aria-label="Bağla" onClick={closeCopyModal} type="button">
+                <X size={18} />
+              </button>
+            </header>
+            <p>
+              Yeni masalar <strong>{copyTargetTable.capacity} nəfərlik</strong> tutumla yaradılacaq. Masa nömrəsini boş saxlasan, sistem növbəti boş nömrəni özü verəcək.
+            </p>
+            <form onSubmit={handleCopySubmit}>
+              <div className="copy-table-row-list">
+                {copyRows.map((row, index) => (
+                  <div className="copy-table-row" key={index}>
+                    <TextField
+                      label="Masa nömrəsi"
+                      min={1}
+                      type="number"
+                      value={row.tableNo}
+                      onChange={(event) => updateCopyRow(index, 'tableNo', event.target.value)}
+                    />
+                    <TextField
+                      label="Masa adı"
+                      value={row.name}
+                      onChange={(event) => updateCopyRow(index, 'name', event.target.value)}
+                    />
+                    <ActionIconButton disabled={copyRows.length === 1} label="Sətri sil" onClick={() => removeCopyRow(index)} type="button">
+                      <Trash2 size={18} />
+                    </ActionIconButton>
+                  </div>
+                ))}
+                <Button onClick={addCopyRow} type="button" variant="secondary">
+                  <Plus size={18} />
+                  Yeni kopya sətri
+                </Button>
+              </div>
+              {copyMessage ? <StatusMessage details={copyMessageDetails}>{copyMessage}</StatusMessage> : null}
+              <footer>
+                <Button onClick={closeCopyModal} type="button" variant="secondary">
+                  Ləğv et
+                </Button>
+                <Button type="submit">Əlavə et</Button>
+              </footer>
+            </form>
+          </section>
+        </div>
+      ) : null}
     </main>
   )
 }
