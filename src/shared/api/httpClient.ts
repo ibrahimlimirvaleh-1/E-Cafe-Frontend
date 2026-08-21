@@ -169,6 +169,7 @@ async function refreshAccessToken() {
 
     if (!response.ok) {
       clearAuthTokens()
+      notifyAuthExpired('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
       return false
     }
 
@@ -177,6 +178,7 @@ async function refreshAccessToken() {
 
     if (!result.data?.accessToken || !result.data?.refreshToken) {
       clearAuthTokens()
+      notifyAuthExpired('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
       return false
     }
 
@@ -184,6 +186,7 @@ async function refreshAccessToken() {
     return true
   } catch {
     clearAuthTokens()
+    notifyAuthExpired('Sessiya yenilənmədi. Zəhmət olmasa yenidən daxil olun.')
     return false
   }
 }
@@ -226,7 +229,7 @@ function buildApiError(result: ApiResult<unknown>, statusCode: number) {
 
   if (statusCode === 401) {
     clearAuthTokens()
-    notifyAuthExpired()
+    notifyAuthExpired(message)
   }
 
   return new ApiError(message, statusCode, details, result.code, result.traceId)
@@ -354,6 +357,7 @@ function translateMessage(message: string, statusCode?: number) {
     'request failed with status 404': 'Axtarılan məlumat tapılmadı.',
     'request failed with status 409': 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.',
     'request failed with status 500': 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.',
+    'hesabınız deaktiv edilib. sistemə girişiniz dayandırıldı.': 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.',
     'only platform admin can manage restaurant owner accounts.': 'Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.',
     'restaurant already has an active owner.': 'Bu restoran üçün artıq aktiv sahibkar təyin edilib.',
     'user with this email already exists': 'Bu email ilə istifadəçi artıq mövcuddur.',
@@ -381,9 +385,9 @@ function statusMessage(statusCode: number) {
   return `Sorğu icra olunmadı. Status: ${statusCode}`
 }
 
-function notifyAuthExpired() {
+function notifyAuthExpired(message?: string) {
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('ecafe:auth-expired'))
+    window.dispatchEvent(new CustomEvent('ecafe:auth-expired', { detail: { message } }))
   }
 }
 

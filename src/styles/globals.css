@@ -3203,6 +3203,34 @@ img {
   color: #fff;
 }
 
+.session-termination-notice {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1200;
+  display: grid;
+  gap: 4px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 18px 20px;
+  border: 1px solid rgba(196, 26, 26, 0.28);
+  border-left: 6px solid var(--danger);
+  border-radius: 6px;
+  background: #fff5f5;
+  box-shadow: 0 18px 48px rgba(16, 24, 40, 0.18);
+  color: var(--danger);
+}
+
+.session-termination-notice strong {
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.session-termination-notice span {
+  color: #3f2020;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 .inventory-page-grid {
   /* Stock, movement, and recipe screens use focused grids to avoid mixed workflows on one row. */
   display: grid;
