@@ -169,7 +169,6 @@ export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({}),
     })
 
     if (!response.ok) {

@@ -13,6 +13,8 @@ import { getHomePathForUser } from './authz'
 const SESSION_TERMINATED_MESSAGE = 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.'
 const ROLE_CHANGED_MESSAGE = 'Rolunuz dəyişdirildi. Sessiya məlumatları yenilənir.'
 const RESTAURANT_ACCESS_CHANGED_MESSAGE = 'Restoran üzrə icazələr yeniləndi. Səhifə yenilənir.'
+const SESSION_NOTICE_STORAGE_KEY = 'ecafe.sessionNotice'
+const SESSION_RECONCILE_INTERVAL_MS = 60_000
 
 type SessionNotice = {
   title: string
@@ -21,6 +23,7 @@ type SessionNotice = {
 
 type AuthContextValue = {
   user: CurrentUser | null
+  isAuthReady: boolean
   isAuthenticated: boolean
   setSession: (tokens: AuthTokens) => void
   updateUser: (patch: Partial<CurrentUser>) => void
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = getAccessToken()
     return token ? getUserFromToken(token) : null
   })
+  const [isAuthReady, setIsAuthReady] = useState(() => Boolean(getAccessToken()))
 
   const showSessionNotice = useCallback((notice: SessionNotice, autoHideMs: number | false = 2000) => {
     window.clearTimeout(noticeTimerRef.current)
@@ -50,9 +54,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const showPersistentSessionNotice = useCallback((notice: SessionNotice, autoHideMs: number | false = 2000) => {
+    window.sessionStorage.setItem(SESSION_NOTICE_STORAGE_KEY, JSON.stringify(notice))
+    showSessionNotice(notice, autoHideMs)
+  }, [showSessionNotice])
+
   useEffect(() => {
     return () => window.clearTimeout(noticeTimerRef.current)
   }, [])
+
+  useEffect(() => {
+    const storedNotice = window.sessionStorage.getItem(SESSION_NOTICE_STORAGE_KEY)
+    if (!storedNotice) {
+      return
+    }
+
+    window.sessionStorage.removeItem(SESSION_NOTICE_STORAGE_KEY)
+
+    try {
+      const notice = JSON.parse(storedNotice) as Partial<SessionNotice>
+      if (typeof notice.title === 'string' && typeof notice.message === 'string') {
+        showSessionNotice({
+          title: notice.title,
+          message: notice.message,
+        }, 2000)
+      }
+    } catch {
+      window.sessionStorage.removeItem(SESSION_NOTICE_STORAGE_KEY)
+    }
+  }, [showSessionNotice])
 
   useEffect(() => {
     if (didBootstrapSessionRef.current || user || getAccessToken()) {
@@ -63,11 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isCurrent = true
 
     async function restoreSessionFromCookie() {
-      const tokens = await refreshAccessToken({ notifyOnFailure: false })
-      const restoredUser = tokens ? getUserFromToken(tokens.accessToken) : null
+      try {
+        const tokens = await refreshAccessToken({ notifyOnFailure: false })
+        const restoredUser = tokens ? getUserFromToken(tokens.accessToken) : null
 
-      if (isCurrent && restoredUser) {
-        setUser(restoredUser)
+        if (isCurrent && restoredUser) {
+          setUser(restoredUser)
+        }
+      } finally {
+        if (isCurrent) {
+          setIsAuthReady(true)
+        }
       }
     }
 
@@ -112,11 +148,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let isCurrent = true
+    const currentUser = user
 
-    async function validateStoredSession() {
+    async function reconcileStoredSession(showChangeNotice = false) {
       const profile = await ecafeApi.profile.get()
 
       if (!isCurrent || !getAccessToken()) {
+        return
+      }
+
+      if (!profile) {
         return
       }
 
@@ -128,15 +169,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearAuthTokens()
         setUser(null)
         window.setTimeout(() => window.location.assign('/'), 1200)
+        return
+      }
+
+      const profileRoleId = String(profile.roleId || '')
+      const profileRestaurantId = profile.restaurantId || undefined
+      const sessionChanged =
+        (profileRoleId && profileRoleId !== currentUser.roleId) ||
+        profileRestaurantId !== currentUser.restaurantId
+
+      if (!sessionChanged) {
+        return
+      }
+
+      const refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
+      const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
+
+      if (!isCurrent || !refreshedUser) {
+        return
+      }
+
+      setUser(refreshedUser)
+
+      if (showChangeNotice) {
+        showPersistentSessionNotice({
+          title: 'Sessiya yeniləndi',
+          message: 'İcazə və rol məlumatlarınız yeniləndi.',
+        }, 2000)
       }
     }
 
-    void validateStoredSession()
+    function reconcileWhenVisible() {
+      if (document.visibilityState === 'visible') {
+        void reconcileStoredSession(true)
+      }
+    }
+
+    void reconcileStoredSession()
+    window.addEventListener('focus', reconcileWhenVisible)
+    document.addEventListener('visibilitychange', reconcileWhenVisible)
+    const intervalId = window.setInterval(() => {
+      void reconcileStoredSession()
+    }, SESSION_RECONCILE_INTERVAL_MS)
 
     return () => {
       isCurrent = false
+      window.removeEventListener('focus', reconcileWhenVisible)
+      document.removeEventListener('visibilitychange', reconcileWhenVisible)
+      window.clearInterval(intervalId)
     }
-  }, [showSessionNotice, user?.userId])
+  }, [showPersistentSessionNotice, showSessionNotice, user?.restaurantId, user?.roleId, user?.userId])
 
   useEffect(() => {
     if (!user || !getAccessToken()) {
@@ -146,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let logoutTimerId: number | undefined
     const connection = createUserSessionEventsConnection({
       onUserDeactivated: (message) => {
-        showSessionNotice({
+        showPersistentSessionNotice({
           title: 'Giriş dayandırıldı',
           message: message || SESSION_TERMINATED_MESSAGE,
         }, false)
@@ -159,10 +241,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }, 2500)
       },
       onUserRoleChanged: async (message) => {
-        showSessionNotice({
+        const notice = {
           title: 'Rol yeniləndi',
           message: message || ROLE_CHANGED_MESSAGE,
-        }, 2000)
+        }
+
+        showPersistentSessionNotice(notice, 2000)
 
         window.clearTimeout(logoutTimerId)
         const refreshedTokens = await refreshAccessToken()
@@ -184,11 +268,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setUser(refreshedUser)
         logoutTimerId = window.setTimeout(() => {
+          window.sessionStorage.setItem(SESSION_NOTICE_STORAGE_KEY, JSON.stringify(notice))
           navigate(getHomePathForUser(refreshedUser), { replace: true })
         }, 1200)
       },
       onRestaurantAccessChanged: (payload) => {
-        showSessionNotice({
+        showPersistentSessionNotice({
           title: 'Restoran icazələri yeniləndi',
           message: payload.message || RESTAURANT_ACCESS_CHANGED_MESSAGE,
         }, 2000)
@@ -197,25 +282,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.location.reload()
         }, 1800)
       },
+      onConnectionRestored: async () => {
+        const refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
+        const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
+
+        if (refreshedUser) {
+          setUser(refreshedUser)
+        }
+      },
     })
 
-    void connection.start().catch(() => {
-      // Realtime logout is a user-experience layer; token revocation still protects API access.
+    void connection.start().catch((error) => {
+      if (import.meta.env.DEV) {
+        console.error('Realtime session connection failed.', error)
+      }
     })
 
     return () => {
       window.clearTimeout(logoutTimerId)
       void connection.stop()
     }
-  }, [navigate, showSessionNotice, user?.userId])
+  }, [navigate, showPersistentSessionNotice, showSessionNotice, user?.userId])
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      isAuthReady,
       isAuthenticated: user !== null,
       setSession: (tokens) => {
         saveAuthTokens(tokens)
         setUser(getUserFromToken(tokens.accessToken))
+        setIsAuthReady(true)
       },
       updateUser: (patch) => {
         setUser((currentUser) => (currentUser ? { ...currentUser, ...patch } : currentUser))
@@ -226,10 +323,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
           clearAuthTokens()
           setUser(null)
+          setIsAuthReady(true)
         }
       },
     }),
-    [user],
+    [isAuthReady, user],
   )
 
   return (
