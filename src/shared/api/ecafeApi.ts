@@ -29,7 +29,6 @@ import type {
 } from '../../entities/types'
 import { endpoints } from './endpoints'
 import { fetchProtectedBlob, httpClient } from './httpClient'
-import { getRefreshToken } from '../auth/tokenStorage'
 import {
   categoryRow,
   contractRow,
@@ -52,6 +51,16 @@ type LoginRequest = {
   password: string
 }
 
+type ForgotPasswordRequest = {
+  email: string
+}
+
+type ResetPasswordRequest = {
+  token: string
+  password: string
+  confirmPassword: string
+}
+
 type RegisterRequest = {
   name: string
   surname: string
@@ -62,7 +71,7 @@ type RegisterRequest = {
 
 type AuthResponse = {
   accessToken: string
-  refreshToken: string
+  refreshToken?: string
 }
 
 type ContractRecord = {
@@ -381,6 +390,7 @@ function mapLookup(record: AnyRecord): LookupItem {
     id: num(record.id || record.value),
     code: str(record.code || record.key || record.name),
     name: str(record.name || record.label || record.code),
+    isStaffAssignable: record.isStaffAssignable == null ? undefined : bool(record.isStaffAssignable),
   }
 }
 
@@ -651,6 +661,9 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(endpoints.auth.login, {
         method: 'POST',
         body: JSON.stringify(request),
+        authErrorMessage: 'Email və ya parol yanlışdır.',
+        skipAuthRefresh: true,
+        suppressAuthExpiredEvent: true,
       })
       return extractAuthTokens(result.data)
     },
@@ -665,6 +678,8 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(endpoints.auth.register, {
         method: 'POST',
         body: formData,
+        skipAuthRefresh: true,
+        suppressAuthExpiredEvent: true,
       })
       return extractAuthTokens(result.data)
     },
@@ -673,17 +688,28 @@ export const ecafeApi = {
         method: 'POST',
         body: JSON.stringify(request),
         skipAuthRefresh: true,
+        suppressAuthExpiredEvent: true,
+      }),
+    forgotPassword: (request: ForgotPasswordRequest) =>
+      httpClient<{ message: string }>(endpoints.auth.forgotPassword, {
+        method: 'POST',
+        body: JSON.stringify(request),
+        skipAuthRefresh: true,
+        suppressAuthExpiredEvent: true,
+      }),
+    resetPassword: (request: ResetPasswordRequest) =>
+      httpClient<{ message: string }>(endpoints.auth.resetPassword, {
+        method: 'POST',
+        body: JSON.stringify(request),
+        skipAuthRefresh: true,
+        suppressAuthExpiredEvent: true,
       }),
     logout: async () => {
-      const refreshToken = getRefreshToken()
-      if (!refreshToken) {
-        return
-      }
-
       await httpClient<unknown>(endpoints.auth.logout, {
         method: 'POST',
         skipAuthRefresh: true,
-        body: JSON.stringify({ refreshToken }),
+        suppressAuthExpiredEvent: true,
+        body: JSON.stringify({}),
       })
     },
   },

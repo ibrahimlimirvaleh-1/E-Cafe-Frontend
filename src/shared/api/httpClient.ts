@@ -1,4 +1,5 @@
-import { clearAuthTokens, getAccessToken, getRefreshToken, saveAuthTokens } from '../auth/tokenStorage'
+import { clearAuthTokens, getAccessToken, saveAuthTokens } from '../auth/tokenStorage'
+import type { AuthTokens } from '../auth/tokenStorage'
 import { endpoints } from './endpoints'
 
 export type ApiResult<T> = {
@@ -37,7 +38,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN ?? 'http://localhost:8080'
 
 type RequestOptions = RequestInit & {
+  authErrorMessage?: string
   skipAuthRefresh?: boolean
+  suppressAuthExpiredEvent?: boolean
 }
 
 export async function httpClient<T>(path: string, init?: RequestOptions): Promise<ApiResult<T>> {
@@ -50,7 +53,7 @@ export async function httpClient<T>(path: string, init?: RequestOptions): Promis
     }
   }
 
-  return parseResponse<T>(response)
+  return parseResponse<T>(response, init)
 }
 
 export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOptions): Promise<Blob> {
@@ -66,7 +69,7 @@ export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOption
   if (!response.ok) {
     const payload = await response.json().catch(() => null)
     const result = normalizeApiResult<unknown>(payload, response.status, response.ok)
-    throw buildApiError(result, response.status)
+    throw buildApiError(result, response.status, !init?.suppressAuthExpiredEvent, init?.authErrorMessage)
   }
 
   return response.blob()
@@ -81,7 +84,12 @@ async function sendBlobRequest(pathOrUrl: string, init?: RequestOptions) {
 }
 
 async function sendApiRequest(url: string, init?: RequestOptions) {
-  const { skipAuthRefresh: _skipAuthRefresh, ...requestInit } = init ?? {}
+  const {
+    authErrorMessage: _authErrorMessage,
+    skipAuthRefresh: _skipAuthRefresh,
+    suppressAuthExpiredEvent: _suppressAuthExpiredEvent,
+    ...requestInit
+  } = init ?? {}
   const token = getAccessToken()
   const headers = new Headers(requestInit.headers)
   const isFormData = requestInit.body instanceof FormData
@@ -96,6 +104,7 @@ async function sendApiRequest(url: string, init?: RequestOptions) {
 
   return fetch(url, {
     ...requestInit,
+    credentials: requestInit.credentials ?? 'include',
     headers,
   })
 }
@@ -130,7 +139,7 @@ function getApiOrigin() {
   return API_PUBLIC_ORIGIN.replace(/\/$/, '')
 }
 
-async function parseResponse<T>(response: Response): Promise<ApiResult<T>> {
+async function parseResponse<T>(response: Response, init?: RequestOptions): Promise<ApiResult<T>> {
   if (response.status === 204) {
     return {
       success: response.ok,
@@ -144,18 +153,14 @@ async function parseResponse<T>(response: Response): Promise<ApiResult<T>> {
   const result = normalizeApiResult<T>(payload, response.status, response.ok)
 
   if (!response.ok) {
-    throw buildApiError(result, response.status)
+    throw buildApiError(result, response.status, !init?.suppressAuthExpiredEvent, init?.authErrorMessage)
   }
 
   return result
 }
 
-async function refreshAccessToken() {
-  const refreshToken = getRefreshToken()
-  if (!refreshToken) {
-    clearAuthTokens()
-    return false
-  }
+export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }): Promise<AuthTokens | null> {
+  const shouldNotify = options?.notifyOnFailure ?? true
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoints.auth.refresh}`, {
@@ -163,28 +168,37 @@ async function refreshAccessToken() {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'same-origin',
-      body: JSON.stringify({ refreshToken }),
+      credentials: 'include',
+      body: JSON.stringify({}),
     })
 
     if (!response.ok) {
       clearAuthTokens()
-      return false
+      if (shouldNotify) {
+        notifyAuthExpired('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
+      }
+      return null
     }
 
     const payload = await response.json().catch(() => null)
-    const result = normalizeApiResult<{ accessToken: string; refreshToken: string }>(payload, response.status, response.ok)
+    const result = normalizeApiResult<{ accessToken: string }>(payload, response.status, response.ok)
 
-    if (!result.data?.accessToken || !result.data?.refreshToken) {
+    if (!result.data?.accessToken) {
       clearAuthTokens()
-      return false
+      if (shouldNotify) {
+        notifyAuthExpired('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
+      }
+      return null
     }
 
     saveAuthTokens(result.data)
-    return true
+    return result.data
   } catch {
     clearAuthTokens()
-    return false
+    if (shouldNotify) {
+      notifyAuthExpired('Sessiya yenilənmədi. Zəhmət olmasa yenidən daxil olun.')
+    }
+    return null
   }
 }
 
@@ -220,21 +234,25 @@ export function normalizeCaughtApiError(error: unknown, fallbackMessage = 'Sorğ
   }
 }
 
-function buildApiError(result: ApiResult<unknown>, statusCode: number) {
+function buildApiError(result: ApiResult<unknown>, statusCode: number, shouldNotifyAuthExpired = true, authErrorMessage?: string) {
   const details = extractErrorDetails(result.errors)
-  const message = resolveApiErrorMessage(result, statusCode, details)
+  const message = resolveApiErrorMessage(result, statusCode, details, authErrorMessage)
 
-  if (statusCode === 401) {
+  if (statusCode === 401 && shouldNotifyAuthExpired) {
     clearAuthTokens()
-    notifyAuthExpired()
+    notifyAuthExpired(message)
   }
 
   return new ApiError(message, statusCode, details, result.code, result.traceId)
 }
 
-function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, details: ApiErrorDetail[]) {
+function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, details: ApiErrorDetail[], authErrorMessage?: string) {
   if (details.length > 0) {
     return 'Form məlumatlarında səhv var. Zəhmət olmasa işarələnmiş sahələri yoxlayın.'
+  }
+
+  if (statusCode === 401 && authErrorMessage) {
+    return authErrorMessage
   }
 
   if (result.message) {
@@ -350,10 +368,12 @@ function translateMessage(message: string, statusCode?: number) {
   const messages: Record<string, string> = {
     'request failed with status 400': 'Sorğu düzgün deyil. Məlumatları yoxlayıb yenidən cəhd edin.',
     'request failed with status 401': 'Sessiya bitib. Zəhmət olmasa yenidən daxil olun.',
+    'request failed with status 429': 'Çox sayda cəhd edildi. Bir az sonra yenidən yoxlayın.',
     'request failed with status 403': 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.',
     'request failed with status 404': 'Axtarılan məlumat tapılmadı.',
     'request failed with status 409': 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.',
     'request failed with status 500': 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.',
+    'hesabınız deaktiv edilib. sistemə girişiniz dayandırıldı.': 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.',
     'only platform admin can manage restaurant owner accounts.': 'Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.',
     'restaurant already has an active owner.': 'Bu restoran üçün artıq aktiv sahibkar təyin edilib.',
     'user with this email already exists': 'Bu email ilə istifadəçi artıq mövcuddur.',
@@ -377,13 +397,14 @@ function statusMessage(statusCode: number) {
   if (statusCode === 403) return 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.'
   if (statusCode === 404) return 'Axtarılan məlumat tapılmadı.'
   if (statusCode === 409) return 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.'
+  if (statusCode === 429) return 'Çox sayda cəhd edildi. Bir az sonra yenidən yoxlayın.'
   if (statusCode >= 500) return 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.'
   return `Sorğu icra olunmadı. Status: ${statusCode}`
 }
 
-function notifyAuthExpired() {
+function notifyAuthExpired(message?: string) {
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('ecafe:auth-expired'))
+    window.dispatchEvent(new CustomEvent('ecafe:auth-expired', { detail: { message } }))
   }
 }
 

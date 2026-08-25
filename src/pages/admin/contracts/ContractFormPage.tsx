@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../../shared/api/httpClient'
 import { useAuth } from '../../../shared/auth/AuthContext'
@@ -129,19 +129,7 @@ export function ContractFormPage() {
 
 
   if (!canManageContracts) {
-    return (
-      <main className="admin-page narrow">
-        <PageHeader eyebrow="Müqavilələr" title="Müqavilə idarəetməsi bağlıdır" />
-        <section className="form-card">
-          <StatusMessage tone="warning">Sahibkar müqavilə yarada və ya redaktə edə bilməz. Müqaviləni yalnız oxuyub təsdiqləyə bilərsiniz.</StatusMessage>
-          <div className="form-actions">
-            <ButtonLink to="/admin/contracts" variant="secondary">
-              Siyahıya qayıt
-            </ButtonLink>
-          </div>
-        </section>
-      </main>
-    )
+    return <Navigate to="/admin/contracts" replace />
   }
   return (
     <main className="admin-page narrow">

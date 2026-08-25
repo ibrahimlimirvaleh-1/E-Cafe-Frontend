@@ -2,8 +2,8 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { MailWarning } from 'lucide-react'
 import { adminModules } from '../../entities/mockData'
 import { useAuth } from '../auth/AuthContext'
-import { RoleIds, hasAnyPermission, isInRole } from '../auth/authz'
-import { adminModulePermissions } from '../config/adminPermissions'
+import { RoleIds, isInRole } from '../auth/authz'
+import { canAccessAdminModule } from '../config/adminPermissions'
 import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
@@ -17,14 +17,12 @@ const outboxAdminModule = {
 
 export function AdminShell() {
   const { user } = useAuth()
-  const isSuperAdmin = isInRole(user, [RoleIds.PlatformAdmin])
   const configuredModules = [
     ...adminModules.map((module) => ({ ...module, permissionKey: module.key })),
     outboxAdminModule,
   ]
-  const modules = isSuperAdmin
-    ? configuredModules
-    : configuredModules.filter((module) => hasAnyPermission(user, adminModulePermissions[module.permissionKey]))
+  const modules = configuredModules.filter((module) => canAccessAdminModule(user, module.permissionKey))
+  const isPlatformAdmin = isInRole(user, [RoleIds.PlatformAdmin])
 
   return (
     <div className="admin-shell">
@@ -34,10 +32,10 @@ export function AdminShell() {
           <NavLink end to="/admin">
             Dashboard
           </NavLink>
-          {modules.map(({ icon: Icon, route, title }) => (
+          {modules.map(({ icon: Icon, permissionKey, route, title }) => (
             <NavLink key={route} to={route}>
               <Icon size={18} />
-              {title}
+              {permissionKey === 'restaurants' && !isPlatformAdmin ? 'Restoran' : title}
             </NavLink>
           ))}
         </nav>

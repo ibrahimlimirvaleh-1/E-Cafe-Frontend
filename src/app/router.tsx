@@ -4,7 +4,7 @@ import { RequireAuth } from '../shared/auth/RequireAuth'
 import { useAuth } from '../shared/auth/AuthContext'
 import { AdminRoleIds, RoleIds, getHomePathForUser, isInRole } from '../shared/auth/authz'
 import { adminRouteConfig } from '../shared/config/adminRoutes'
-import { adminModulePermissions } from '../shared/config/adminPermissions'
+import { adminModulePermissions, canAccessAdminModule } from '../shared/config/adminPermissions'
 import { AdminShell } from '../shared/layout/AdminShell'
 import { SiteShell } from '../shared/layout/SiteShell'
 import { StaffShell } from '../shared/layout/StaffShell'
@@ -27,6 +27,8 @@ import { OutboxPage } from '../pages/admin/OutboxPage'
 import { StaffCreatePage, StaffManagementPage } from '../pages/admin/StaffManagementPage'
 import { TableCreatePage, TablesManagementPage } from '../pages/admin/TablesManagementPage'
 import { AuthPage } from '../pages/auth/AuthPage'
+import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
 import { SetPasswordPage } from '../pages/auth/SetPasswordPage'
 import { ConfirmationPage } from '../pages/customer/ConfirmationPage'
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
@@ -60,9 +62,19 @@ function RestaurantCatalogEntry() {
 function AdminProtected({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
   return (
     <RequireAuth allowedRoleIds={AdminRoleIds} anyPermission={adminModulePermissions[moduleKey]}>
-      {children}
+      <AdminModuleAccessGuard moduleKey={moduleKey}>{children}</AdminModuleAccessGuard>
     </RequireAuth>
   )
+}
+
+function AdminModuleAccessGuard({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
+  const { user } = useAuth()
+
+  if (!canAccessAdminModule(user, moduleKey)) {
+    return <Navigate to={getHomePathForUser(user)} replace />
+  }
+
+  return <>{children}</>
 }
 
 export function AppRouter() {
@@ -116,6 +128,8 @@ export function AppRouter() {
       <Route path="login" element={<AuthPage mode="login" />} />
       <Route path="register" element={<AuthPage mode="register" />} />
       <Route path="set-password" element={<SetPasswordPage />} />
+      <Route path="forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="reset-password" element={<ResetPasswordPage />} />
 
       <Route
         path="admin"

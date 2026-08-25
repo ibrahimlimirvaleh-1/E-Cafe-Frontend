@@ -3,6 +3,8 @@ export const endpoints = {
     login: '/user/login',
     register: '/user/register',
     setPassword: '/user/set-password',
+    forgotPassword: '/user/forgot-password',
+    resetPassword: '/user/reset-password',
     refresh: '/user/refresh',
     logout: '/user/logout',
   },

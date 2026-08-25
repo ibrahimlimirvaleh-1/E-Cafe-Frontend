@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { NotificationItem } from '../../entities/types'
 import { ecafeApi } from '../api/ecafeApi'
 import { useAuth } from '../auth/AuthContext'
-import { AdminRoleIds, RoleIds, isInRole } from '../auth/authz'
+import { RoleIds, isInRole } from '../auth/authz'
+import { canAccessAdminModule } from '../config/adminPermissions'
 
 function parsePayload(payloadJson?: string) {
   if (!payloadJson) {
@@ -115,7 +116,7 @@ export function NotificationBell() {
       (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
     const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
 
-    if (contractId && isInRole(user, AdminRoleIds)) {
+    if (contractId && canAccessAdminModule(user, 'contracts')) {
       return `/admin/contracts/${contractId}`
     }
 
@@ -135,7 +136,7 @@ export function NotificationBell() {
       return '/admin/reservations'
     }
 
-    if (restaurantId && isInRole(user, AdminRoleIds)) {
+    if (restaurantId && canAccessAdminModule(user, 'restaurants')) {
       return `/admin/restaurants/${restaurantId}`
     }
 
