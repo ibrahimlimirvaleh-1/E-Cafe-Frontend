@@ -1,6 +1,8 @@
 import { Building2, MapPin, Phone } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
@@ -8,7 +10,9 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 
 export function RestaurantDetailPage() {
   const { restaurantId = '' } = useParams()
+  const { user } = useAuth()
   const { data: restaurant, isLoading } = useAsyncData(() => ecafeApi.restaurants.adminDetail(restaurantId), null, [restaurantId])
+  const canCreateContracts = isInRole(user, [RoleIds.PlatformAdmin])
 
   if (isLoading || !restaurant) {
     return (
@@ -78,10 +82,12 @@ export function RestaurantDetailPage() {
         <ButtonLink to="/admin/restaurants" variant="secondary">
           Siyahıya qayıt
         </ButtonLink>
-        <ButtonLink to="/admin/contracts/new">
-          <Building2 size={18} />
-          Müqavilə yarat
-        </ButtonLink>
+        {canCreateContracts ? (
+          <ButtonLink to="/admin/contracts/new">
+            <Building2 size={18} />
+            Müqavilə yarat
+          </ButtonLink>
+        ) : null}
       </div>
     </main>
   )

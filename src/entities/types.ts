@@ -178,6 +178,7 @@ export type LookupItem = {
   id: number
   code: string
   name: string
+  isStaffAssignable?: boolean
 }
 
 export type RestaurantGroup = {

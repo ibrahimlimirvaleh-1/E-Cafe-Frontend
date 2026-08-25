@@ -7,13 +7,14 @@ import { SafeImage } from './SafeImage'
 
 type DataTableProps = {
   baseRoute: string
+  canEdit?: boolean
   columns: string[]
   editable?: boolean
   emptyMessage?: string
   rows: AdminRow[]
 }
 
-export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 'Məlumat tapılmadı.', rows }: DataTableProps) {
+export function DataTable({ baseRoute, canEdit = true, columns, editable = true, emptyMessage = 'Məlumat tapılmadı.', rows }: DataTableProps) {
   return (
     <section className="ui-table" aria-label="Məlumat cədvəli">
       <div className="ui-table-head">
@@ -45,11 +46,11 @@ export function DataTable({ baseRoute, columns, editable = true, emptyMessage = 
               <ActionIconLink label={`${row.title} detalına bax`} to={`${baseRoute}/${row.id}`}>
                 <Eye size={18} />
               </ActionIconLink>
-              {row.canEdit === false ? null : (
+              {canEdit && row.canEdit !== false ? (
                 <ActionIconLink label={`${row.title} redaktə et`} to={`${baseRoute}/${row.id}/edit`}>
                   <Pencil size={17} />
                 </ActionIconLink>
-              )}
+              ) : null}
             </div>
           ) : null}
         </article>

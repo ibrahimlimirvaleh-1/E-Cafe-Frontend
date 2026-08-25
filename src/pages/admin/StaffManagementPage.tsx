@@ -68,7 +68,10 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     [mode, restaurantId, staffId, reloadKey],
   )
   const editingStaff = mode === 'edit' ? staffDetail ?? staff.find((member) => member.id === staffId) : undefined
-  const roleOptions = useMemo(() => roles.filter((role) => role.id > 0), [roles])
+  const roleOptions = useMemo(
+    () => roles.filter((role) => role.id > 0 && role.isStaffAssignable === true),
+    [roles],
+  )
   const isPlatformAdmin = isInRole(user, [RoleIds.PlatformAdmin])
   const visibleRoleOptions = useMemo(
     () => (isPlatformAdmin ? roleOptions : roleOptions.filter((role) => String(role.id) !== RoleIds.Owner)),
@@ -84,6 +87,15 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       setSelectedRestaurantId(searchParams.get('restaurantId') || restaurants[0].id)
     }
   }, [restaurants, searchParams, selectedRestaurantId])
+
+  useEffect(() => {
+    setRoleSelections(
+      staff.reduce<Record<string, string>>((rolesByStaffId, member) => {
+        rolesByStaffId[member.id] = String(currentRoleId(member) || '')
+        return rolesByStaffId
+      }, {}),
+    )
+  }, [staff])
 
   useEffect(() => {
     if (mode === 'edit' && editingStaff) {
@@ -113,6 +125,10 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     return roleSelections[member.id] || String(currentRoleId(member) || '')
   }
 
+  function isStaffAssignableRole(roleId: string) {
+    return visibleRoleOptions.some((role) => String(role.id) === roleId)
+  }
+
   function roleLabel(role: Role) {
     const labels: Record<Role, string> = {
       PlatformAdmin: 'Platforma admini',
@@ -136,6 +152,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
   function setOwnerRestrictionMessage() {
     setMessage('Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.')
+    setMessageDetails([])
+  }
+
+  function setRoleRestrictionMessage() {
+    setMessage('Bu rol restoran personalı üçün seçilə bilməz.')
     setMessageDetails([])
   }
 
@@ -178,8 +199,8 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
         })
         setMessage('Əməkdaş məlumatları yeniləndi.')
       } else {
-        if (!isPlatformAdmin && form.roleId === RoleIds.Owner) {
-          setOwnerRestrictionMessage()
+        if (!isStaffAssignableRole(form.roleId)) {
+          setRoleRestrictionMessage()
           return
         }
 
@@ -209,8 +230,13 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   }
 
   async function handleRoleChange(member: StaffMember) {
-    if (!canManageStaffMember(member) || (!isPlatformAdmin && selectedRoleId(member) === RoleIds.Owner)) {
+    if (!canManageStaffMember(member)) {
       setOwnerRestrictionMessage()
+      return
+    }
+
+    if (!isStaffAssignableRole(selectedRoleId(member))) {
+      setRoleRestrictionMessage()
       return
     }
 
@@ -232,6 +258,10 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
       setMessage('Rol yeniləndi.')
       setMessageDetails([])
+      setRoleSelections((current) => ({
+        ...current,
+        [member.id]: String(roleId),
+      }))
       setReloadKey((value) => value + 1)
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, 'Rol yenilənmədi.')

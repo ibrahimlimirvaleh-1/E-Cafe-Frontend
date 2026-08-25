@@ -1,8 +1,11 @@
 import { Search } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { restaurantRow } from '../../shared/api/mappers'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { DataTable } from '../../shared/ui/DataTable'
@@ -32,6 +35,7 @@ const initialForm = {
 const defaultPageSize = 10
 
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
+  const { user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
@@ -61,6 +65,13 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     hasNextPage: false,
   }, [query, reloadKey])
   const { data: groups } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
+  const canCreateRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
+  const canSearchRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
+  const pageTitle = mode === 'create' ? 'Yeni restoran' : canSearchRestaurants ? 'Restoranlar' : 'Restoran'
+
+  if (mode === 'create' && !canCreateRestaurants) {
+    return <Navigate to="/admin/restaurants" replace />
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -99,42 +110,57 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     <main className="admin-page">
       <PageHeader
         eyebrow="Admin"
-        title={mode === 'create' ? 'Yeni restoran' : 'Restoranlar'}
-        action={mode === 'list' ? <ButtonLink to="/admin/restaurants/new">Yeni restoran</ButtonLink> : <ButtonLink to="/admin/restaurants" variant="secondary">Siyahıya qayıt</ButtonLink>}
+        title={pageTitle}
+        action={
+          mode === 'create' ? (
+            <ButtonLink to="/admin/restaurants" variant="secondary">Siyahıya qayıt</ButtonLink>
+          ) : canCreateRestaurants ? (
+            <ButtonLink to="/admin/restaurants/new">Yeni restoran</ButtonLink>
+          ) : undefined
+        }
       />
 
       {mode === 'list' ? (
         <section>
-          <section className="catalog-toolbar admin-list-toolbar">
-            <label className="site-search catalog-search">
-              <Search size={18} />
-              <input
-                placeholder="Restoran, filial və ya məkan üzrə axtar..."
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value)
-                  setPageNumber(1)
-                }}
-              />
-            </label>
-            <span>{restaurantPage.totalCount} restoran</span>
-          </section>
+          {canSearchRestaurants ? (
+            <section className="catalog-toolbar admin-list-toolbar">
+              <label className="site-search catalog-search">
+                <Search size={18} />
+                <input
+                  placeholder="Restoran, filial və ya məkan üzrə axtar..."
+                  value={search}
+                  onChange={(event) => {
+                    setSearch(event.target.value)
+                    setPageNumber(1)
+                  }}
+                />
+              </label>
+              <span>{restaurantPage.totalCount} restoran</span>
+            </section>
+          ) : null}
           {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
-          <DataTable baseRoute="/admin/restaurants" columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']} rows={restaurantPage.items.map(restaurantRow)} />
-          <PaginationControls
-            ariaLabel="Admin restoran səhifələmə"
-            hasNextPage={restaurantPage.hasNextPage}
-            hasPreviousPage={restaurantPage.hasPreviousPage}
-            pageIndex={restaurantPage.pageIndex}
-            pageSize={pageSize}
-            totalCount={restaurantPage.totalCount}
-            totalPages={restaurantPage.totalPages}
-            onPageChange={setPageNumber}
-            onPageSizeChange={(value) => {
-              setPageSize(value)
-              setPageNumber(1)
-            }}
+          <DataTable
+            baseRoute="/admin/restaurants"
+            canEdit={canCreateRestaurants}
+            columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']}
+            rows={restaurantPage.items.map(restaurantRow)}
           />
+          {canSearchRestaurants ? (
+            <PaginationControls
+              ariaLabel="Admin restoran səhifələmə"
+              hasNextPage={restaurantPage.hasNextPage}
+              hasPreviousPage={restaurantPage.hasPreviousPage}
+              pageIndex={restaurantPage.pageIndex}
+              pageSize={pageSize}
+              totalCount={restaurantPage.totalCount}
+              totalPages={restaurantPage.totalPages}
+              onPageChange={setPageNumber}
+              onPageSizeChange={(value) => {
+                setPageSize(value)
+                setPageNumber(1)
+              }}
+            />
+          ) : null}
         </section>
       ) : (
         <form className="admin-panel admin-single-column" onSubmit={handleSubmit}>

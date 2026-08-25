@@ -1,7 +1,9 @@
 import { type FormEvent, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
@@ -12,6 +14,8 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 export function RestaurantEditPage() {
   const navigate = useNavigate()
   const { restaurantId = '' } = useParams()
+  const { user } = useAuth()
+  const canEditRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
   const { data: restaurant, isLoading } = useAsyncData(() => ecafeApi.restaurants.adminDetail(restaurantId), null, [restaurantId])
   const { data: groups } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [])
   const [fileIds, setFileIds] = useState<number[]>([])
@@ -53,6 +57,10 @@ export function RestaurantEditPage() {
       defaultWaiterTableLimit: restaurant.defaultWaiterTableLimit == null ? '' : String(restaurant.defaultWaiterTableLimit),
     })
   }, [restaurant])
+
+  if (!canEditRestaurants) {
+    return <Navigate to={`/admin/restaurants/${restaurantId || ''}`} replace />
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

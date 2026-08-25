@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import type { NotificationItem, StatusTone } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
-import { AdminRoleIds, RoleIds } from '../../shared/auth/authz'
+import type { CurrentUser } from '../../shared/auth/jwt'
+import { RoleIds } from '../../shared/auth/authz'
+import { canAccessAdminModule } from '../../shared/config/adminPermissions'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
@@ -26,7 +28,7 @@ function valueAsString(value: unknown) {
   return value == null ? '' : String(value)
 }
 
-function notificationRoute(notification: NotificationItem, roleId?: string) {
+function notificationRoute(notification: NotificationItem, user?: CurrentUser | null) {
   const payload = parsePayload(notification.payloadJson)
   const relatedType = `${notification.relatedEntityType || ''} ${notification.typeName || ''}`.toLowerCase()
   const contractId =
@@ -34,16 +36,16 @@ function notificationRoute(notification: NotificationItem, roleId?: string) {
     (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
   const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
 
-  if (contractId && AdminRoleIds.includes(roleId || '')) {
+  if (contractId && canAccessAdminModule(user, 'contracts')) {
     return `/admin/contracts/${contractId}`
   }
 
   if (relatedType.includes('order')) {
-    if (roleId === RoleIds.Kitchen) {
+    if (user?.roleId === RoleIds.Kitchen) {
       return '/kitchen'
     }
 
-    if (roleId === RoleIds.Waiter) {
+    if (user?.roleId === RoleIds.Waiter) {
       return '/waiter/orders'
     }
 
@@ -54,7 +56,7 @@ function notificationRoute(notification: NotificationItem, roleId?: string) {
     return '/admin/reservations'
   }
 
-  if (restaurantId && AdminRoleIds.includes(roleId || '')) {
+  if (restaurantId && canAccessAdminModule(user, 'restaurants')) {
     return `/admin/restaurants/${restaurantId}`
   }
 
@@ -102,7 +104,7 @@ export function NotificationsPage() {
       await ecafeApi.notifications.markAsRead(notification.id)
     }
 
-    const route = notificationRoute(notification, user?.roleId)
+    const route = notificationRoute(notification, user)
     setReloadKey((value) => value + 1)
     if (route) {
       navigate(route)

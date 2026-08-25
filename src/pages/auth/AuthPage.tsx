@@ -46,7 +46,7 @@ export function AuthPage({ mode }: AuthPageProps) {
         ? await ecafeApi.auth.login({ email, password })
         : await ecafeApi.auth.register({ ...splitFullName(fullName), email, phone, password })
 
-      if (!tokens.accessToken || !tokens.refreshToken) {
+      if (!tokens.accessToken) {
         throw new Error('Token məlumatı geri qayıtmadı.')
       }
 
@@ -81,6 +81,7 @@ export function AuthPage({ mode }: AuthPageProps) {
         <TextField label="Şifrə" placeholder="••••••••" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
         {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
         <Button disabled={isSubmitting} type="submit">{isSubmitting ? 'Göndərilir...' : isLogin ? 'Daxil ol' : 'Hesab yarat'}</Button>
+        {isLogin ? <Link to="/forgot-password">Şifrəni unutmusunuz?</Link> : null}
         <Link to={isLogin ? '/register' : '/login'}>{isLogin ? 'Yeni hesab yarat' : 'Hesabım var'}</Link>
       </form>
     </main>
