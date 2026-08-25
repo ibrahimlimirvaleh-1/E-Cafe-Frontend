@@ -1,11 +1,12 @@
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
-import { getApiOrigin } from '../api/httpClient'
+import { API_BASE_URL, getApiOrigin } from '../api/httpClient'
 import { getAccessToken } from '../auth/tokenStorage'
 
 type UserSessionEventsOptions = {
   onUserDeactivated: (message: string) => void
   onUserRoleChanged: (message: string) => void
   onRestaurantAccessChanged: (payload: RestaurantAccessChangedPayload) => void
+  onConnectionRestored?: () => void
 }
 
 type UserEventPayload = {
@@ -30,14 +31,19 @@ export function createUserSessionEventsConnection({
   onUserDeactivated,
   onUserRoleChanged,
   onRestaurantAccessChanged,
+  onConnectionRestored,
 }: UserSessionEventsOptions) {
   const connection = new HubConnectionBuilder()
-    .withUrl(`${getApiOrigin()}${USER_EVENTS_HUB_PATH}`, {
+    .withUrl(getUserEventsHubUrl(), {
       accessTokenFactory: () => getAccessToken() ?? '',
     })
-    .withAutomaticReconnect()
+    .withAutomaticReconnect([0, 2000, 10000, 30000])
     .configureLogging(import.meta.env.DEV ? LogLevel.Information : LogLevel.Warning)
     .build()
+
+  connection.onreconnected(() => {
+    onConnectionRestored?.()
+  })
 
   connection.on(USER_DEACTIVATED_EVENT, (payload?: UserEventPayload) => {
     onUserDeactivated(payload?.message?.trim() || DEFAULT_DEACTIVATION_MESSAGE)
@@ -55,4 +61,12 @@ export function createUserSessionEventsConnection({
   })
 
   return connection
+}
+
+function getUserEventsHubUrl() {
+  if (/^https?:\/\//i.test(API_BASE_URL)) {
+    return `${getApiOrigin()}${USER_EVENTS_HUB_PATH}`
+  }
+
+  return USER_EVENTS_HUB_PATH
 }
