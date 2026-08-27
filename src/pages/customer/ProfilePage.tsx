@@ -1,5 +1,6 @@
-import { Save, ShieldCheck } from 'lucide-react'
+import { LogOut, Save, ShieldCheck } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -7,6 +8,7 @@ import { RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
+import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -22,7 +24,8 @@ function isRestaurantScopedRole(roleId: number) {
 }
 
 export function ProfilePage() {
-  const { setSession, updateUser, user } = useAuth()
+  const { logoutAll, setSession, updateUser, user } = useAuth()
+  const navigate = useNavigate()
   const { data: profile, error, isLoading } = useAsyncData(() => ecafeApi.profile.get(), null, [])
   const { data: roles } = useAsyncData(() => ecafeApi.lookups.roles(), [], [])
   const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '' })
@@ -32,6 +35,8 @@ export function ProfilePage() {
   const [formError, setFormError] = useState('')
   const [formErrorDetails, setFormErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [isLogoutAllConfirmOpen, setIsLogoutAllConfirmOpen] = useState(false)
+  const [isLoggingOutAll, setIsLoggingOutAll] = useState(false)
   const canChangeRole = isSuperAdmin(user?.roleId, user?.roleName)
 
   useEffect(() => {
@@ -97,6 +102,25 @@ export function ProfilePage() {
       setFormErrorDetails(feedback.details)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handleLogoutAllSessions() {
+    setFormError('')
+    setFormErrorDetails([])
+    setStatusMessage('')
+    setIsLoggingOutAll(true)
+
+    try {
+      await logoutAll()
+      navigate('/login', { replace: true })
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Bütün cihazlardan çıxış əməliyyatı icra olunmadı.')
+      setFormError(feedback.message)
+      setFormErrorDetails(feedback.details)
+      setIsLogoutAllConfirmOpen(false)
+    } finally {
+      setIsLoggingOutAll(false)
     }
   }
 
@@ -187,8 +211,35 @@ export function ProfilePage() {
         </section>
       </div>
 
+      <section className="admin-panel profile-security-panel">
+        <div className="section-title">
+          <span>Təhlükəsizlik</span>
+          <h2>Aktiv sessiyalar</h2>
+        </div>
+        <p className="muted-text">
+          Hesabınız başqa cihazlarda açıq qalıbsa, bütün aktiv sessiyaları bir əməliyyatla ləğv edə bilərsiniz.
+        </p>
+        <Button disabled={isLoggingOutAll} onClick={() => setIsLogoutAllConfirmOpen(true)} type="button" variant="danger">
+          <LogOut size={18} />
+          {isLoggingOutAll ? 'Bağlanır...' : 'Bütün cihazlardan çıxış et'}
+        </Button>
+      </section>
+
       {statusMessage ? <StatusMessage>{statusMessage}</StatusMessage> : null}
       {formError ? <StatusMessage details={formErrorDetails} tone="danger">{formError}</StatusMessage> : null}
+      <ConfirmDialog
+        confirmDisabled={isLoggingOutAll}
+        confirmLabel={isLoggingOutAll ? 'Bağlanır...' : 'Bütün cihazlardan çıxış et'}
+        isOpen={isLogoutAllConfirmOpen}
+        message="Bu əməliyyat hesabınızın bütün cihazlardakı aktiv sessiyalarını bağlayacaq. Yenidən istifadə etmək üçün təkrar daxil olmaq lazım olacaq."
+        onCancel={() => {
+          if (!isLoggingOutAll) {
+            setIsLogoutAllConfirmOpen(false)
+          }
+        }}
+        onConfirm={() => void handleLogoutAllSessions()}
+        title="Bütün sessiyalar bağlansın?"
+      />
     </main>
   )
 }

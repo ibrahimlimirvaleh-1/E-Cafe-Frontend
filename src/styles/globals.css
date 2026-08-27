@@ -2203,6 +2203,15 @@ img {
   box-shadow: var(--shadow-sm);
 }
 
+.profile-security-panel {
+  max-width: 720px;
+  margin-top: 24px;
+}
+
+.profile-security-panel .ui-button {
+  justify-self: start;
+}
+
 .section-title {
   display: grid;
   gap: 4px;

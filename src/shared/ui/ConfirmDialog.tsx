@@ -3,6 +3,7 @@ import { Button } from './Button'
 
 type ConfirmDialogProps = {
   confirmLabel?: string
+  confirmDisabled?: boolean
   isOpen: boolean
   isDanger?: boolean
   message: string
@@ -13,6 +14,7 @@ type ConfirmDialogProps = {
 
 export function ConfirmDialog({
   confirmLabel = 'Təsdiqlə',
+  confirmDisabled = false,
   isDanger = true,
   isOpen,
   message,
@@ -41,7 +43,7 @@ export function ConfirmDialog({
           <Button onClick={onCancel} type="button" variant="secondary">
             Ləğv et
           </Button>
-          <Button onClick={onConfirm} type="button" variant={isDanger ? 'danger' : 'primary'}>
+          <Button disabled={confirmDisabled} onClick={onConfirm} type="button" variant={isDanger ? 'danger' : 'primary'}>
             {confirmLabel}
           </Button>
         </footer>

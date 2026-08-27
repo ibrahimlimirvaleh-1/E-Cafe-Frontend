@@ -712,6 +712,11 @@ export const ecafeApi = {
         body: JSON.stringify({}),
       })
     },
+    logoutAll: async () => {
+      await httpClient<unknown>(endpoints.auth.logoutAll, {
+        method: 'POST',
+      })
+    },
   },
 
   profile: {

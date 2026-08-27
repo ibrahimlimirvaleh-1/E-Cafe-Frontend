@@ -7,6 +7,7 @@ export const endpoints = {
     resetPassword: '/user/reset-password',
     refresh: '/user/refresh',
     logout: '/user/logout',
+    logoutAll: '/user/logout-all',
   },
   restaurants: {
     adminList: '/restaurants/getAll',

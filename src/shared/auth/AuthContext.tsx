@@ -28,6 +28,7 @@ type AuthContextValue = {
   setSession: (tokens: AuthTokens) => void
   updateUser: (patch: Partial<CurrentUser>) => void
   logout: () => Promise<void>
+  logoutAll: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -325,6 +326,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null)
           setIsAuthReady(true)
         }
+      },
+      logoutAll: async () => {
+        await ecafeApi.auth.logoutAll()
+        clearAuthTokens()
+        setUser(null)
+        setIsAuthReady(true)
       },
     }),
     [isAuthReady, user],
