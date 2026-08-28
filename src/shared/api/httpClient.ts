@@ -36,6 +36,10 @@ export class ApiError extends Error {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN ?? 'http://localhost:8080'
+const AUTH_EXPIRED_NOTIFICATION_THROTTLE_MS = 2000
+
+let refreshRequestPromise: Promise<AuthTokens | null> | null = null
+let lastAuthExpiredNotificationAt = 0
 
 type RequestOptions = RequestInit & {
   authErrorMessage?: string
@@ -162,6 +166,20 @@ async function parseResponse<T>(response: Response, init?: RequestOptions): Prom
 export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }): Promise<AuthTokens | null> {
   const shouldNotify = options?.notifyOnFailure ?? true
 
+  refreshRequestPromise ??= requestRefreshAccessToken().finally(() => {
+    refreshRequestPromise = null
+  })
+
+  const tokens = await refreshRequestPromise
+
+  if (!tokens && shouldNotify) {
+    notifyAuthExpiredOnce('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
+  }
+
+  return tokens
+}
+
+async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoints.auth.refresh}`, {
       method: 'POST',
@@ -173,9 +191,6 @@ export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }
 
     if (!response.ok) {
       clearAuthTokens()
-      if (shouldNotify) {
-        notifyAuthExpired('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
-      }
       return null
     }
 
@@ -184,9 +199,6 @@ export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }
 
     if (!result.data?.accessToken) {
       clearAuthTokens()
-      if (shouldNotify) {
-        notifyAuthExpired('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
-      }
       return null
     }
 
@@ -194,9 +206,6 @@ export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }
     return result.data
   } catch {
     clearAuthTokens()
-    if (shouldNotify) {
-      notifyAuthExpired('Sessiya yenilənmədi. Zəhmət olmasa yenidən daxil olun.')
-    }
     return null
   }
 }
@@ -405,6 +414,17 @@ function notifyAuthExpired(message?: string) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('ecafe:auth-expired', { detail: { message } }))
   }
+}
+
+function notifyAuthExpiredOnce(message?: string) {
+  const now = Date.now()
+
+  if (now - lastAuthExpiredNotificationAt < AUTH_EXPIRED_NOTIFICATION_THROTTLE_MS) {
+    return
+  }
+
+  lastAuthExpiredNotificationAt = now
+  notifyAuthExpired(message)
 }
 
 export { API_BASE_URL, getApiOrigin }
