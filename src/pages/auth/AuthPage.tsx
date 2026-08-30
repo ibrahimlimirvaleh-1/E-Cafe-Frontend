@@ -72,8 +72,8 @@ export function AuthPage({ mode }: AuthPageProps) {
         </div>
         {!isLogin ? (
           <>
-            <TextField label="Ad" placeholder="Mirtaleh" value={name} onChange={(event) => setName(event.target.value)} />
-            <TextField label="Soyad" placeholder="İbrahimli" value={surname} onChange={(event) => setSurname(event.target.value)} />
+            <TextField label="Ad" placeholder="Adınızı daxil edin" value={name} onChange={(event) => setName(event.target.value)} />
+            <TextField label="Soyad" placeholder="Soyadınızı daxil edin" value={surname} onChange={(event) => setSurname(event.target.value)} />
             <TextField label="Telefon" placeholder="+994501234567" value={phone} onChange={(event) => setPhone(event.target.value)} />
           </>
         ) : null}

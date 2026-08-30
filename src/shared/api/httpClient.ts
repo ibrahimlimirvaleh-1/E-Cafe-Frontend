@@ -254,6 +254,10 @@ function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, 
     return authErrorMessage
   }
 
+  if (result.code) {
+    return translateErrorCode(result.code) || statusMessage(statusCode)
+  }
+
   if (result.message) {
     return translateMessage(result.message, statusCode)
   }
@@ -323,6 +327,38 @@ function normalizeApiResult<T>(payload: unknown, statusCode: number, success: bo
   }
 }
 
+function translateErrorCode(code: string) {
+  const normalized = code.trim()
+  const messages: Record<string, string> = {
+    ActiveStaffAssignmentNotFound: 'Aktiv əməkdaş tapılmadı.',
+    BranchAlreadyExistsInRestaurantGroup: 'Bu restoranda eyni adlı filial artıq mövcuddur.',
+    CannotDeactivateOwnAccount: 'Öz hesabınızı deaktiv edə bilməzsiniz.',
+    CategoryDoesNotBelongToRestaurant: 'Seçilmiş kateqoriya bu restorana aid deyil.',
+    CategoryNameAlreadyExists: 'Bu adda kateqoriya artıq mövcuddur.',
+    FileNotFoundOrAlreadyAttached: 'Seçilmiş fayl tapılmadı və ya artıq istifadə olunub.',
+    InvalidCredentials: 'Email və ya şifrə yanlışdır.',
+    InvalidRestaurantId: 'Restoran seçimi düzgün deyil.',
+    InvalidRoleId: 'Rol seçimi düzgün deyil.',
+    RestaurantActiveContractRequired: 'Bu əməliyyat üçün restoranın aktiv müqaviləsi olmalıdır.',
+    RestaurantAlreadyHasActiveContract: 'Bu restoranın aktiv müqaviləsi var. Yeni müqavilə yaratmaq üçün əvvəl cari müqaviləni dayandırın.',
+    RestaurantAlreadyHasActiveOwner: 'Bu restoran üçün artıq aktiv sahibkar təyin edilib.',
+    RestaurantEmailAlreadyExists: 'Bu email ilə restoran artıq mövcuddur.',
+    RestaurantGroupInactive: 'Seçilmiş restoran qrupu aktiv deyil.',
+    RestaurantGroupNameAlreadyExists: 'Bu adda restoran qrupu artıq mövcuddur.',
+    RestaurantGroupRequired: 'Restoran qrupu seçilməlidir.',
+    RestaurantNameAlreadyExists: 'Bu adda restoran artıq mövcuddur.',
+    RestaurantPhoneAlreadyExists: 'Bu telefonla restoran artıq mövcuddur.',
+    RestaurantScopedRoleRequiresAssignment: 'Bu rol üçün aktiv restoran təyinatı olmalıdır.',
+    StaffAssignmentNotFound: 'Əməkdaş təyinatı tapılmadı.',
+    StaffNotFound: 'Əməkdaş tapılmadı.',
+    TableAlreadyExists: 'Bu nömrəli masa artıq mövcuddur.',
+    UserEmailAlreadyExists: 'Bu email ilə istifadəçi artıq mövcuddur.',
+    UserPhoneAlreadyExists: 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+  }
+
+  return messages[normalized]
+}
+
 function fieldLabel(field: string) {
   const normalized = field.replace(/Request\.|Command\./gi, '')
   const labels: Record<string, string> = {
@@ -375,7 +411,13 @@ function translateMessage(message: string, statusCode?: number) {
     'hesabınız deaktiv edilib. sistemə girişiniz dayandırıldı.': 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.',
     'only platform admin can manage restaurant owner accounts.': 'Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.',
     'restaurant already has an active owner.': 'Bu restoran üçün artıq aktiv sahibkar təyin edilib.',
+    'restaurant already has an active contract. terminate or expire the current contract before creating a new one.': 'Bu restoranın aktiv müqaviləsi var. Yeni müqavilə yaratmaq üçün əvvəl cari müqaviləni dayandırın.',
+    'restaurant-scoped role requires an active restaurant assignment.': 'Bu rol üçün aktiv restoran təyinatı olmalıdır.',
+    'table with the same number already exists.': 'Bu nömrəli masa artıq mövcuddur.',
     'user with this email already exists': 'Bu email ilə istifadəçi artıq mövcuddur.',
+    'user with this phone already exists': 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+    'email or phone already used': 'Email və ya telefon nömrəsi artıq istifadə olunub.',
+    'business rule violation': 'Bu əməliyyat mövcud qaydalara uyğun deyil.',
     'validation failed': 'Form məlumatlarında səhv var.',
   }
 
