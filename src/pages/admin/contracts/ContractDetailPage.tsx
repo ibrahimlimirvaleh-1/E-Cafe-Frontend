@@ -123,7 +123,7 @@ export function ContractDetailPage() {
     setFileError('')
     setFileErrorDetails([])
     setIsOpeningFile(true)
-    const previewWindow = window.open('', '_blank', 'noopener,noreferrer')
+    const previewWindow = window.open('', '_blank')
 
     if (!previewWindow) {
       setFileError('Brauzer sənədi yeni pəncərədə açmağa icazə vermədi. Zəhmət olmasa "Yüklə" düyməsindən istifadə edin.')
@@ -131,10 +131,14 @@ export function ContractDetailPage() {
       return
     }
 
+    previewWindow.opener = null
+    previewWindow.document.title = 'Müqavilə açılır...'
+    previewWindow.document.body.innerHTML = '<p style="font-family: system-ui, sans-serif; padding: 24px;">Müqavilə sənədi açılır...</p>'
+
     try {
       const blob = await ecafeApi.files.viewBlob(contract.fileUrl)
       if (!(await isPdfBlob(blob))) {
-        previewWindow.close()
+        previewWindow.document.body.innerHTML = '<p style="font-family: system-ui, sans-serif; padding: 24px;">Bu müqavilə sənədi PDF formatında deyil. Faylı yükləyin və ya müqaviləni yenidən yaradın.</p>'
         setFileError('Bu müqavilə sənədi PDF formatında deyil. Faylı yükləyin və ya müqaviləni yenidən yaradın.')
         return
       }
@@ -144,7 +148,7 @@ export function ContractDetailPage() {
       previewWindow.location.href = objectUrl
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
     } catch (err) {
-      previewWindow.close()
+      previewWindow.document.body.innerHTML = '<p style="font-family: system-ui, sans-serif; padding: 24px;">Müqavilə sənədi açılmadı. Zəhmət olmasa əvvəlki səhifəyə qayıdın və yenidən cəhd edin.</p>'
       const feedback = normalizeCaughtApiError(err, 'Müqavilə sənədi açılmadı.')
       setFileError(feedback.message)
       setFileErrorDetails(feedback.details)
