@@ -1,4 +1,4 @@
-import { CheckCircle2, Copy, Pencil, Plus, Trash2, UserX, X } from 'lucide-react'
+import { Ban, CheckCircle2, Copy, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -278,8 +278,8 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
                       <Copy size={18} />
                     </ActionIconButton>
                     {table.isActive ? (
-                      <ActionIconButton label={`${table.number} masasını deaktiv et`} onClick={() => void handleDeactivate(table.id)}>
-                        <UserX size={18} />
+                      <ActionIconButton label={`${table.number} masasını deaktiv et`} onClick={() => void handleDeactivate(table.id)} tone="danger">
+                        <Ban size={18} />
                       </ActionIconButton>
                     ) : (
                       <ActionIconButton label={`${table.number} masasını aktiv et`} onClick={() => void handleActivate(table.id)}>

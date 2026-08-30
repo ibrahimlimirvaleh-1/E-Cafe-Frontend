@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Info, Pencil, RefreshCw, Trash2, UserX } from 'lucide-react'
+import { Ban, CheckCircle2, Info, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -574,7 +574,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           title={deactivatingStaffId === member.id ? 'Deaktiv edilir' : 'Deaktiv et'}
                           tone="danger"
                         >
-                          <UserX size={18} />
+                          <Ban size={18} />
                         </ActionIconButton>
                       ) : (
                         <ActionIconButton
