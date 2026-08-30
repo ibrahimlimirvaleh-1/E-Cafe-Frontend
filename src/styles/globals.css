@@ -4527,3 +4527,466 @@ body {
     width: 100%;
   }
 }
+
+/* Mobile and tablet usability overrides. */
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.site-search input,
+.search-box input,
+.ui-field input,
+.ui-field select,
+.ui-field textarea {
+  min-width: 0;
+}
+
+.notification-list button small,
+.notification-page-list small,
+.outbox-message-cell small,
+.compact-list small,
+.restaurant-context-card small,
+.restaurant-context-card span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1080px) {
+  .site-topbar-inner,
+  .staff-topbar {
+    align-items: stretch;
+  }
+
+  .site-topbar-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+
+  .site-topbar-inner .brand {
+    grid-column: 1;
+  }
+
+  .site-topbar-inner .site-nav {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
+  .site-topbar-inner .site-actions {
+    grid-column: 2;
+    width: auto;
+    justify-content: end;
+  }
+
+  .admin-shell {
+    display: block;
+  }
+
+  .admin-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+  }
+
+  .admin-sidebar nav {
+    overscroll-behavior-x: contain;
+  }
+
+  .admin-workspace {
+    overflow-x: hidden;
+  }
+
+  .admin-topbar.compact {
+    position: sticky;
+    top: 86px;
+    z-index: 36;
+    align-items: stretch;
+    padding: 12px 14px;
+  }
+
+  .admin-topbar .site-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .outbox-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .page,
+  .admin-page,
+  .staff-page,
+  .admin-page.narrow,
+  .page.narrow {
+    width: min(100% - 24px, var(--container));
+    padding: 22px 0 44px;
+  }
+
+  .page-header,
+  .admin-page > header,
+  .public-page > header,
+  .section-heading-row {
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .page-header h1,
+  .admin-page h1,
+  .public-page h1,
+  .section-heading h2,
+  .section-heading-row h2 {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .page-header p,
+  .profile-panel p,
+  .success-panel p,
+  .danger-panel p,
+  .placeholder-panel p {
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  .site-topbar-inner {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .site-nav,
+  .admin-sidebar nav {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .site-nav::-webkit-scrollbar,
+  .admin-sidebar nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .site-nav a {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 0 16px;
+    font-size: 14px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .admin-sidebar {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(18px);
+  }
+
+  .admin-sidebar .brand {
+    margin-bottom: 4px;
+  }
+
+  .admin-sidebar nav {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+  }
+
+  .admin-sidebar nav a {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 14px;
+  }
+
+  .admin-topbar.compact {
+    top: 96px;
+    border-bottom-color: rgba(215, 219, 226, 0.7);
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .user-menu {
+    min-width: 0;
+  }
+
+  .user-pill {
+    max-width: min(260px, calc(100vw - 156px));
+    min-height: 42px;
+  }
+
+  .notification-menu {
+    position: static;
+  }
+
+  .notification-popover {
+    position: fixed;
+    top: 150px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: min(430px, calc(100dvh - 176px));
+    overflow: hidden;
+    border-radius: 18px;
+  }
+
+  .notification-list {
+    max-height: min(320px, calc(100dvh - 278px));
+  }
+
+  .notification-list button {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .notification-list time {
+    justify-self: start;
+  }
+
+  .catalog-toolbar,
+  .outbox-toolbar,
+  .audit-toolbar {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .catalog-toolbar {
+    display: grid;
+  }
+
+  .catalog-toolbar > span {
+    justify-self: start;
+  }
+
+  .site-search,
+  .catalog-search {
+    width: 100%;
+  }
+
+  .restaurant-grid,
+  .choice-grid,
+  .metric-grid,
+  .module-grid,
+  .kitchen-board,
+  .admin-alert-grid,
+  .outbox-metrics {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .outbox-metric {
+    min-height: 88px;
+    padding: 16px;
+  }
+
+  .outbox-metric small {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .restaurant-card > img {
+    height: 190px;
+  }
+
+  .restaurant-card-body,
+  .detail-panel,
+  .form-card,
+  .tracking-panel,
+  .operation-card,
+  .kitchen-ticket,
+  .admin-panel {
+    padding: 18px;
+  }
+
+  .restaurant-context-card {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .restaurant-context-card img {
+    width: 72px;
+    height: 72px;
+  }
+
+  .restaurant-context-meta {
+    grid-column: 1 / -1;
+    justify-items: start;
+  }
+
+  .compact-list article.staff-member-row {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .staff-member-row > img {
+    width: 72px;
+    height: 72px;
+  }
+
+  .staff-badges,
+  .staff-role-actions {
+    grid-column: 1 / -1;
+  }
+
+  .staff-role-actions {
+    display: grid;
+    grid-template-columns: 1fr repeat(4, 48px);
+    align-items: center;
+    gap: 10px;
+  }
+
+  .staff-role-actions select {
+    min-width: 0;
+  }
+
+  .staff-role-actions .action-icon-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .compact-list article.table-management-row {
+    grid-template-columns: 1fr;
+  }
+
+  .table-management-info {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .copy-table-row,
+  .audit-list-head,
+  .audit-list article,
+  .outbox-table-head,
+  .outbox-table-row {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-list-head,
+  .outbox-table-head {
+    display: none;
+  }
+
+  .audit-list article,
+  .outbox-table-row {
+    display: grid;
+    gap: 12px;
+    border: 1px solid var(--outline-variant);
+    border-radius: 16px;
+    padding: 16px;
+    background: var(--surface-lowest);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .outbox-table {
+    gap: 12px;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .outbox-table-row > *:not(.outbox-message-cell):not(.ui-row-actions),
+  .outbox-message-cell,
+  .outbox-table-row .ui-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .outbox-table-row > *::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--on-surface-variant);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .outbox-message-cell {
+    display: grid;
+    align-items: start;
+    justify-content: stretch;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--outline-variant);
+  }
+
+  .outbox-message-cell::before {
+    margin-bottom: 4px;
+  }
+
+  .ui-row-actions {
+    justify-content: flex-start;
+  }
+
+  .modal-backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .audit-detail-modal,
+  .copy-table-modal,
+  .inventory-history-modal {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .contract-preview-panel {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    overflow: auto;
+  }
+
+  .contract-preview-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .contract-preview-panel iframe {
+    width: 100%;
+    min-height: 60dvh;
+  }
+
+  .form-message {
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    padding: 12px;
+  }
+
+  .form-message-details {
+    padding-left: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .page,
+  .admin-page,
+  .staff-page,
+  .admin-page.narrow,
+  .page.narrow {
+    width: min(100% - 20px, var(--container));
+  }
+
+  .brand strong {
+    font-size: 20px;
+  }
+
+  .user-pill {
+    max-width: calc(100vw - 142px);
+    padding: 0 10px;
+  }
+
+  .staff-role-actions {
+    grid-template-columns: repeat(4, 48px);
+  }
+
+  .staff-role-actions select {
+    grid-column: 1 / -1;
+  }
+
+  .table-management-info {
+    grid-template-columns: 1fr;
+  }
+}
