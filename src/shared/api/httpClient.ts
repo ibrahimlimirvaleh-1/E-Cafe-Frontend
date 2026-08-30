@@ -46,7 +46,7 @@ type RequestOptions = RequestInit & {
 export async function httpClient<T>(path: string, init?: RequestOptions): Promise<ApiResult<T>> {
   const response = await sendRequest(path, init)
 
-  if (response.status === 401 && !init?.skipAuthRefresh) {
+  if (response.status === 401 && !init?.skipAuthRefresh && getAccessToken()) {
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       return httpClient<T>(path, { ...init, skipAuthRefresh: true })
@@ -59,7 +59,7 @@ export async function httpClient<T>(path: string, init?: RequestOptions): Promis
 export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOptions): Promise<Blob> {
   const response = await sendBlobRequest(pathOrUrl, init)
 
-  if (response.status === 401 && !init?.skipAuthRefresh) {
+  if (response.status === 401 && !init?.skipAuthRefresh && getAccessToken()) {
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       return fetchProtectedBlob(pathOrUrl, { ...init, skipAuthRefresh: true })
