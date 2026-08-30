@@ -1839,6 +1839,45 @@ img {
   font-weight: 700;
 }
 
+.form-guidance {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.06);
+  color: var(--on-surface);
+}
+
+.form-guidance-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.form-guidance strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.form-guidance ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  line-height: 18px;
+}
+
 .form-actions {
   display: flex;
   align-items: center;
