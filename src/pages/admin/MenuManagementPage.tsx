@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Pencil, Trash2, UserX } from 'lucide-react'
+import { Ban, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
@@ -310,8 +310,8 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                         <Pencil size={18} />
                       </ActionIconLink>
                       {category.isActive ? (
-                        <ActionIconButton label={`${category.name} kateqoriyasını deaktiv et`} onClick={() => void handleDeactivateCategory(category.id)}>
-                          <UserX size={18} />
+                        <ActionIconButton label={`${category.name} kateqoriyasını deaktiv et`} onClick={() => void handleDeactivateCategory(category.id)} tone="danger">
+                          <Ban size={18} />
                         </ActionIconButton>
                       ) : (
                         <ActionIconButton label={`${category.name} kateqoriyasını aktiv et`} onClick={() => void handleActivateCategory(category.id)}>

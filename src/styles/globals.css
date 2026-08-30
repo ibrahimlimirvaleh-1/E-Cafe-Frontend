@@ -4990,3 +4990,409 @@ body,
     grid-template-columns: 1fr;
   }
 }
+
+/* Mobile polish pass: compact admin cards, stable action rows, and real viewport modals. */
+@media (max-width: 760px) {
+  .admin-page {
+    font-size: 15px;
+  }
+
+  .admin-panel {
+    border-radius: 14px;
+    box-shadow: 0 14px 36px rgb(15 23 42 / 0.08);
+  }
+
+  .compact-list {
+    gap: 12px;
+  }
+
+  .compact-list article {
+    align-items: start;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .compact-list strong,
+  .compact-list small,
+  .restaurant-context-card strong,
+  .restaurant-context-card span,
+  .restaurant-context-card small,
+  .admin-menu-list strong,
+  .admin-menu-list small,
+  .admin-menu-list span {
+    white-space: normal;
+  }
+
+  .restaurant-context-card {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .restaurant-context-card img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .restaurant-context-meta {
+    display: flex;
+    grid-column: 2;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .restaurant-context-meta small {
+    flex-basis: 100%;
+  }
+
+  .ui-table {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .ui-table-row {
+    position: relative;
+    padding: 16px;
+    border: 1px solid var(--outline-variant);
+    border-radius: 14px;
+    background: var(--surface-lowest);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ui-table-primary {
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .ui-table-thumb {
+    width: 72px;
+    height: 64px;
+  }
+
+  .ui-row-actions,
+  .inline-actions,
+  .staff-role-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .ui-row-actions::-webkit-scrollbar,
+  .inline-actions::-webkit-scrollbar,
+  .staff-role-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .inline-actions .action-icon-button,
+  .inline-actions .action-icon-button-danger,
+  .ui-row-actions .action-icon-button,
+  .staff-role-actions .action-icon-button {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .staff-role-actions select {
+    flex: 1 1 150px;
+    min-width: 132px;
+    height: 44px;
+  }
+
+  .staff-badges {
+    justify-content: flex-start;
+  }
+
+  .compact-list article.staff-member-row {
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .staff-member-row > img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .staff-member-main {
+    gap: 5px;
+  }
+
+  .staff-badges,
+  .staff-role-actions {
+    grid-column: 1 / -1;
+  }
+
+  .compact-list article.table-management-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .table-management-row .inline-actions {
+    grid-column: 1 / -1;
+  }
+
+  .table-management-info {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .table-management-info small {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .table-management-info strong {
+    font-size: 16px;
+    line-height: 21px;
+  }
+
+  .compact-list article:not(.staff-member-row):not(.table-management-row) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .compact-list article:not(.staff-member-row):not(.table-management-row) .inline-actions {
+    grid-column: 1 / -1;
+  }
+
+  .contract-workflow-toolbar {
+    gap: 12px;
+  }
+
+  .contract-status-tabs,
+  .contract-filter-area {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .contract-workflow-head {
+    display: none;
+  }
+
+  .contract-workflow-list {
+    display: grid;
+    gap: 12px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .contract-workflow-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--outline-variant);
+    border-radius: 14px;
+    background: var(--surface-lowest);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .contract-workflow-cell {
+    display: grid;
+    gap: 4px;
+  }
+
+  .contract-workflow-cell::before {
+    content: attr(data-label);
+    color: var(--on-surface-variant);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .contract-workflow-actions {
+    justify-self: end;
+  }
+
+  .contract-status-line {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .contract-file-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .contract-detail-panel dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .contract-detail-panel dd {
+    overflow-wrap: anywhere;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 10px;
+    overflow: hidden;
+  }
+
+  .audit-detail-modal,
+  .copy-table-modal,
+  .inventory-history-modal,
+  .contract-preview-panel {
+    width: 100%;
+    max-width: 720px;
+    max-height: calc(100dvh - 20px);
+    overflow: auto;
+    border-radius: 18px 18px 12px 12px;
+  }
+
+  .audit-detail-header,
+  .contract-preview-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    align-items: flex-start;
+    padding-bottom: 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--outline-variant);
+  }
+
+  .audit-detail-header h2,
+  .contract-preview-header h2 {
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  .audit-detail-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-detail-change,
+  .audit-change-values {
+    overflow-wrap: anywhere;
+  }
+
+  .contract-preview-panel {
+    padding: 14px;
+  }
+
+  .contract-preview-panel iframe {
+    min-height: calc(100dvh - 116px);
+    border-radius: 10px;
+  }
+
+  .audit-list article {
+    position: relative;
+    padding-bottom: 68px;
+  }
+
+  .audit-list article > button:last-child {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .outbox-table-row {
+    position: relative;
+    padding-bottom: 68px;
+  }
+
+  .outbox-table-row .ui-row-actions {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    width: auto;
+  }
+
+  .outbox-table-row .ui-row-actions::before {
+    display: none;
+  }
+
+  .outbox-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .outbox-metric {
+    min-height: 78px;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .outbox-metric > span {
+    width: 34px;
+    height: 34px;
+  }
+
+  .outbox-metric small {
+    font-size: 12px;
+    line-height: 15px;
+  }
+
+  .outbox-metric strong {
+    font-size: 26px;
+    line-height: 30px;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-page h1,
+  .public-page h1,
+  .page-header h1 {
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  .admin-panel,
+  .detail-panel,
+  .form-card {
+    padding: 14px;
+  }
+
+  .compact-list article.staff-member-row {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .staff-member-row > img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .staff-role-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(42px, 1fr));
+  }
+
+  .staff-role-actions select {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .table-management-info {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .contract-detail-panel dl {
+    grid-template-columns: 1fr;
+  }
+
+  .outbox-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -1,4 +1,4 @@
-import { CheckCircle2, Download, Eye, FileText, Send, ShieldCheck, XCircle } from 'lucide-react'
+import { CheckCircle2, Download, Eye, FileText, Send, ShieldCheck, X, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import type { ContractStatus, RestaurantContract, StatusTone, WorkflowAction } from '../../../entities/types'
@@ -244,21 +244,6 @@ export function ContractDetailPage() {
           )}
         </div>
 
-        {previewUrl ? (
-          <div className="contract-preview-panel">
-            <div className="contract-preview-header">
-              <div>
-                <span className="eyebrow">Sənədə baxış</span>
-                <h2>{contract.fileName || contract.contractNumber || 'Müqavilə sənədi'}</h2>
-              </div>
-              <Button variant="secondary" onClick={closePreview} type="button">
-                Bağla
-              </Button>
-            </div>
-            <iframe src={previewUrl} title="Müqavilə sənədi" />
-          </div>
-        ) : null}
-
         <dl>
           <div>
             <dt>Restoran</dt>
@@ -390,6 +375,23 @@ export function ContractDetailPage() {
         {!hasVisibleAction ? <p className="muted-text">Sizin rolunuz üçün bu statusda icra ediləcək əməliyyat yoxdur.</p> : null}
         {actionError ? <StatusMessage details={actionErrorDetails} tone="danger">{actionError}</StatusMessage> : null}
       </section>
+
+      {previewUrl ? (
+        <div className="modal-backdrop contract-preview-backdrop" role="presentation" onClick={closePreview}>
+          <section className="contract-preview-panel" role="dialog" aria-modal="true" aria-label="Müqavilə sənədi" onClick={(event) => event.stopPropagation()}>
+            <div className="contract-preview-header">
+              <div>
+                <span className="eyebrow">Sənədə baxış</span>
+                <h2>{contract.fileName || contract.contractNumber || 'Müqavilə sənədi'}</h2>
+              </div>
+              <button className="ui-button ui-button-secondary action-icon-button" aria-label="Bağla" title="Bağla" onClick={closePreview} type="button">
+                <X size={18} />
+              </button>
+            </div>
+            <iframe src={previewUrl} title="Müqavilə sənədi" />
+          </section>
+        </div>
+      ) : null}
     </main>
   )
 }

@@ -349,11 +349,14 @@ function translateErrorCode(code: string) {
     RestaurantNameAlreadyExists: 'Bu adda restoran artıq mövcuddur.',
     RestaurantPhoneAlreadyExists: 'Bu telefonla restoran artıq mövcuddur.',
     RestaurantScopedRoleRequiresAssignment: 'Bu rol üçün aktiv restoran təyinatı olmalıdır.',
+    RoleAlreadyAssigned: 'Bu istifadəçiyə həmin rol artıq verilib.',
     StaffAssignmentNotFound: 'Əməkdaş təyinatı tapılmadı.',
     StaffNotFound: 'Əməkdaş tapılmadı.',
     TableAlreadyExists: 'Bu nömrəli masa artıq mövcuddur.',
+    TableNameAlreadyExists: 'Bu adda masa artıq mövcuddur.',
     UserEmailAlreadyExists: 'Bu email ilə istifadəçi artıq mövcuddur.',
     UserPhoneAlreadyExists: 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+    UserAlreadyExists: 'Bu email və ya telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
   }
 
   return messages[normalized]
@@ -414,15 +417,46 @@ function translateMessage(message: string, statusCode?: number) {
     'restaurant already has an active contract. terminate or expire the current contract before creating a new one.': 'Bu restoranın aktiv müqaviləsi var. Yeni müqavilə yaratmaq üçün əvvəl cari müqaviləni dayandırın.',
     'restaurant-scoped role requires an active restaurant assignment.': 'Bu rol üçün aktiv restoran təyinatı olmalıdır.',
     'table with the same number already exists.': 'Bu nömrəli masa artıq mövcuddur.',
+    'table already exists.': 'Bu nömrəli masa artıq mövcuddur.',
+    'category already exists.': 'Bu adda kateqoriya artıq mövcuddur.',
+    'restaurant already exists.': 'Bu restoran artıq mövcuddur.',
     'user with this email already exists': 'Bu email ilə istifadəçi artıq mövcuddur.',
+    'user with this email already exists.': 'Bu email ilə istifadəçi artıq mövcuddur.',
     'user with this phone already exists': 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+    'user with this phone already exists.': 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
     'email or phone already used': 'Email və ya telefon nömrəsi artıq istifadə olunub.',
+    'email or phone already used.': 'Email və ya telefon nömrəsi artıq istifadə olunub.',
     'business rule violation': 'Bu əməliyyat mövcud qaydalara uyğun deyil.',
     'validation failed': 'Form məlumatlarında səhv var.',
   }
 
   if (messages[lower]) {
     return messages[lower]
+  }
+
+  const businessMessage = lower.replace(/^business rule violation[:\s-]*/i, '').trim()
+  if (businessMessage && businessMessage !== lower) {
+    return translateMessage(businessMessage, statusCode)
+  }
+
+  if (lower.includes('email') && lower.includes('already')) {
+    return 'Bu email artıq istifadə olunub.'
+  }
+
+  if (lower.includes('phone') && lower.includes('already')) {
+    return 'Bu telefon nömrəsi artıq istifadə olunub.'
+  }
+
+  if ((lower.includes('table') || lower.includes('masa')) && lower.includes('already')) {
+    return 'Bu masa artıq mövcuddur.'
+  }
+
+  if ((lower.includes('category') || lower.includes('kateqoriya')) && lower.includes('already')) {
+    return 'Bu kateqoriya artıq mövcuddur.'
+  }
+
+  if ((lower.includes('restaurant') || lower.includes('restoran')) && lower.includes('already')) {
+    return 'Bu restoran məlumatı artıq mövcuddur.'
   }
 
   if (statusCode && statusCode >= 400) {
