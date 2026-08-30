@@ -15,19 +15,12 @@ type AuthPageProps = {
   mode: 'login' | 'register'
 }
 
-function splitFullName(fullName: string) {
-  const [name = '', ...rest] = fullName.trim().split(/\s+/)
-  return {
-    name,
-    surname: rest.join(' ') || name,
-  }
-}
-
 export function AuthPage({ mode }: AuthPageProps) {
   const isLogin = mode === 'login'
   const navigate = useNavigate()
   const { setSession } = useAuth()
-  const [fullName, setFullName] = useState('')
+  const [name, setName] = useState('')
+  const [surname, setSurname] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
@@ -44,7 +37,13 @@ export function AuthPage({ mode }: AuthPageProps) {
     try {
       const tokens = isLogin
         ? await ecafeApi.auth.login({ email, password })
-        : await ecafeApi.auth.register({ ...splitFullName(fullName), email, phone, password })
+        : await ecafeApi.auth.register({
+            name: name.trim(),
+            surname: surname.trim(),
+            email,
+            phone,
+            password,
+          })
 
       if (!tokens.accessToken) {
         throw new Error('Token məlumatı geri qayıtmadı.')
@@ -73,7 +72,8 @@ export function AuthPage({ mode }: AuthPageProps) {
         </div>
         {!isLogin ? (
           <>
-            <TextField label="Ad və soyad" placeholder="Aysel Məmmədova" value={fullName} onChange={(event) => setFullName(event.target.value)} />
+            <TextField label="Ad" placeholder="Mirtaleh" value={name} onChange={(event) => setName(event.target.value)} />
+            <TextField label="Soyad" placeholder="İbrahimli" value={surname} onChange={(event) => setSurname(event.target.value)} />
             <TextField label="Telefon" placeholder="+994501234567" value={phone} onChange={(event) => setPhone(event.target.value)} />
           </>
         ) : null}
