@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Pencil, RefreshCw, Trash2, UserX } from 'lucide-react'
+import { CheckCircle2, Info, Pencil, RefreshCw, Trash2, UserX } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -38,6 +38,13 @@ const roleIdsByStaffRole: Record<Role, number> = {
   Customer: 5,
   Kitchen: 6,
 }
+
+const staffFormGuidance = [
+  'Email və telefon aktiv əməkdaşlarda təkrar olmamalıdır.',
+  'Telefonu 0501234567 və ya +994501234567 formatında daxil edin.',
+  'Profil şəkli seçilirsə, upload tamamlanandan sonra saxlayın.',
+  'Şifrə təyin etmə linki əməkdaş yaradıldıqdan sonra emailə göndərilir.',
+]
 
 export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode }) {
   const { setSession, user } = useAuth()
@@ -172,9 +179,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!restaurantId || (mode === 'create' && !form.roleId)) {
-      setMessage('Restoran və rol seçilməlidir.')
-      setMessageDetails([])
+    const validationDetails = validateStaffForm(form, restaurantId, mode)
+
+    if (validationDetails.length > 0) {
+      setMessage('Əməkdaş məlumatlarında düzəldilməli sahələr var.')
+      setMessageDetails(validationDetails)
       return
     }
 
@@ -188,10 +197,10 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
         }
 
         await ecafeApi.staff.update(restaurantId, staffId, {
-          name: form.name,
-          surname: form.surname,
-          email: form.email,
-          phone: form.phone,
+          name: form.name.trim(),
+          surname: form.surname.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
           isActive: form.isActive === 'true',
           serviceFeePercent: form.serviceFeePercent ? Number(form.serviceFeePercent) : null,
           maxActiveTableCount: form.maxActiveTableCount ? Number(form.maxActiveTableCount) : null,
@@ -205,10 +214,10 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
         }
 
         await ecafeApi.staff.create({
-          name: form.name,
-          surname: form.surname,
-          email: form.email,
-          phone: form.phone,
+          name: form.name.trim(),
+          surname: form.surname.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
           restaurantId,
           roleId: Number(form.roleId),
           isActive: form.isActive === 'true',
@@ -374,6 +383,21 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni əməkdaş'}</span>
               <h2>Əməkdaş məlumatları</h2>
             </div>
+            {mode === 'create' ? (
+              <div className="form-guidance" role="note">
+                <span className="form-guidance-icon">
+                  <Info size={18} />
+                </span>
+                <div>
+                  <strong>Yaratmazdan əvvəl yoxlayın</strong>
+                  <ul>
+                    {staffFormGuidance.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
             <SelectField
               error={fieldError('RestaurantId')}
               label="Restoran"
@@ -390,6 +414,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <div className="form-grid two">
               <TextField
                 error={fieldError('Name')}
+                hint="Ad ən azı 2 simvol olmalıdır."
                 label="Ad"
                 required
                 value={form.name}
@@ -397,6 +422,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               />
               <TextField
                 error={fieldError('Surname')}
+                hint="Soyad ən azı 2 simvol olmalıdır."
                 label="Soyad"
                 required
                 value={form.surname}
@@ -405,6 +431,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             </div>
             <TextField
               error={fieldError('Email')}
+              hint="Aktiv əməkdaşlarda təkrar email qəbul edilmir."
               label="Email"
               required
               type="email"
@@ -413,6 +440,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             />
             <TextField
               error={fieldError('Phone')}
+              hint="Nümunə: 0501234567 və ya +994501234567."
               label="Telefon"
               required
               value={form.phone}
@@ -421,6 +449,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <SelectField
               disabled={mode === 'edit'}
               error={fieldError('RoleId')}
+              hint={mode === 'edit' ? 'Mövcud əməkdaşın rolunu siyahı səhifəsində dəyişin.' : 'Sahibkar rolunu yalnız platform administratoru yarada bilər.'}
               label="Rol"
               required={mode === 'create'}
               value={form.roleId}
@@ -445,6 +474,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               </SelectField>
               <TextField
                 error={fieldError('ServiceFeePercent')}
+                hint="Boş qalarsa restoran qaydası tətbiq olunur."
                 label="Servis faizi"
                 min={0}
                 step="0.01"
@@ -456,6 +486,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             {isWaiterRoleSelected ? (
               <TextField
                 error={fieldError('MaxActiveTableCount')}
+                hint="Boş qalarsa limitsiz sayılır."
                 label="Ofisiant aktiv masa limiti"
                 min={1}
                 type="number"
@@ -569,6 +600,48 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       </section>
     </main>
   )
+}
+
+function validateStaffForm(form: typeof initialForm, restaurantId: string, mode: StaffPageMode): ApiErrorDetail[] {
+  const details: ApiErrorDetail[] = []
+  const email = form.email.trim()
+  const phone = form.phone.trim()
+  const serviceFee = form.serviceFeePercent ? Number(form.serviceFeePercent) : null
+  const tableLimit = form.maxActiveTableCount ? Number(form.maxActiveTableCount) : null
+
+  if (!restaurantId) {
+    details.push({ field: 'RestaurantId', label: 'Restoran', message: 'Restoran seçilməlidir.' })
+  }
+
+  if (form.name.trim().length < 2) {
+    details.push({ field: 'Name', label: 'Ad', message: 'Ad ən azı 2 simvol olmalıdır.' })
+  }
+
+  if (form.surname.trim().length < 2) {
+    details.push({ field: 'Surname', label: 'Soyad', message: 'Soyad ən azı 2 simvol olmalıdır.' })
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    details.push({ field: 'Email', label: 'Email', message: 'Düzgün email formatı daxil edin.' })
+  }
+
+  if (!/^(\+994|0)(50|51|55|70|77|99|10)\d{7}$/.test(phone.replace(/[\s-]/g, ''))) {
+    details.push({ field: 'Phone', label: 'Telefon', message: 'Telefonu 0501234567 və ya +994501234567 formatında daxil edin.' })
+  }
+
+  if (mode === 'create' && !form.roleId) {
+    details.push({ field: 'RoleId', label: 'Rol', message: 'Əməkdaş üçün rol seçilməlidir.' })
+  }
+
+  if (serviceFee !== null && (!Number.isFinite(serviceFee) || serviceFee < 0 || serviceFee > 100)) {
+    details.push({ field: 'ServiceFeePercent', label: 'Servis faizi', message: 'Servis faizi 0 və 100 arasında olmalıdır.' })
+  }
+
+  if (tableLimit !== null && (!Number.isInteger(tableLimit) || tableLimit < 1)) {
+    details.push({ field: 'MaxActiveTableCount', label: 'Masa limiti', message: 'Masa limiti tam və müsbət rəqəm olmalıdır.' })
+  }
+
+  return details
 }
 
 export function StaffCreatePage() {
