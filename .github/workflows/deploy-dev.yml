@@ -1,0 +1,41 @@
+name: Deploy Frontend Dev
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+concurrency:
+  group: ecafe-frontend-dev
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy frontend to Hetzner
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy frontend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ECAFE_DEV_HOST }}
+          username: ${{ secrets.ECAFE_DEV_USER }}
+          key: ${{ secrets.ECAFE_DEV_SSH_KEY }}
+          script: |
+            set -euo pipefail
+
+            APP_PATH="${{ secrets.ECAFE_DEV_PATH }}"
+            if [ -z "$APP_PATH" ]; then
+              APP_PATH="/opt/ecafe"
+            fi
+
+            cd "$APP_PATH/frontend"
+            git fetch origin
+            git checkout dev
+            git pull --ff-only origin dev
+
+            cd "$APP_PATH"
+            docker compose build frontend
+            docker compose up -d frontend
+            docker compose ps
