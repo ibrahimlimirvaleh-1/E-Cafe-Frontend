@@ -227,7 +227,7 @@ export function ContractDetailPage() {
           <Badge tone={statusTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
           {contract.fileUrl ? (
             <div className="contract-file-actions">
-              <button className="contract-file-link" disabled={isOpeningFile} onClick={openContractFile} type="button">
+              <button className="contract-file-link contract-preview-action" disabled={isOpeningFile} onClick={openContractFile} type="button">
                 <Eye size={18} />
                 {isOpeningFile ? 'Açılır...' : 'Bax'}
               </button>
