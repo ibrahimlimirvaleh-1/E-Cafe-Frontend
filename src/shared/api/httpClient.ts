@@ -36,6 +36,7 @@ export class ApiError extends Error {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN ?? 'http://localhost:8080'
+let refreshTokenRequest: Promise<AuthTokens | null> | null = null
 
 type RequestOptions = RequestInit & {
   authErrorMessage?: string
@@ -160,6 +161,18 @@ async function parseResponse<T>(response: Response, init?: RequestOptions): Prom
 }
 
 export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }): Promise<AuthTokens | null> {
+  if (refreshTokenRequest) {
+    return refreshTokenRequest
+  }
+
+  refreshTokenRequest = refreshAccessTokenCore(options).finally(() => {
+    refreshTokenRequest = null
+  })
+
+  return refreshTokenRequest
+}
+
+async function refreshAccessTokenCore(options?: { notifyOnFailure?: boolean }): Promise<AuthTokens | null> {
   const shouldNotify = options?.notifyOnFailure ?? true
 
   try {
@@ -193,7 +206,6 @@ export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }
     saveAuthTokens(result.data)
     return result.data
   } catch {
-    clearAuthTokens()
     if (shouldNotify) {
       notifyAuthExpired('Sessiya yenilənmədi. Zəhmət olmasa yenidən daxil olun.')
     }
