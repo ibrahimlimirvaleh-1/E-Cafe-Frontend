@@ -1,5 +1,5 @@
-import { CheckCircle2, Download, Eye, FileText, Send, ShieldCheck, X, XCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { CheckCircle2, Download, Eye, FileText, Send, ShieldCheck, XCircle } from 'lucide-react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import type { ContractStatus, RestaurantContract, StatusTone, WorkflowAction } from '../../../entities/types'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
@@ -95,17 +95,8 @@ export function ContractDetailPage() {
   const [fileErrorDetails, setFileErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isOpeningFile, setIsOpeningFile] = useState(false)
   const [isDownloadingFile, setIsDownloadingFile] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState('')
   const { data: record, isLoading } = useAsyncData(() => ecafeApi.contracts.get(contractId), null, [contractId, reloadKey])
   const contract = record?.contract
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl)
-      }
-    }
-  }, [previewUrl])
 
   async function runAction(name: string, action: () => Promise<unknown>) {
     setActionError('')
@@ -132,24 +123,28 @@ export function ContractDetailPage() {
     setFileError('')
     setFileErrorDetails([])
     setIsOpeningFile(true)
+    const previewWindow = window.open('', '_blank', 'noopener,noreferrer')
+
+    if (!previewWindow) {
+      setFileError('Brauzer sənədi yeni pəncərədə açmağa icazə vermədi. Zəhmət olmasa "Yüklə" düyməsindən istifadə edin.')
+      setIsOpeningFile(false)
+      return
+    }
 
     try {
       const blob = await ecafeApi.files.viewBlob(contract.fileUrl)
       if (!(await isPdfBlob(blob))) {
+        previewWindow.close()
         setFileError('Bu müqavilə sənədi PDF formatında deyil. Faylı yükləyin və ya müqaviləni yenidən yaradın.')
         return
       }
 
       const previewBlob = blob.type.toLowerCase().includes('pdf') ? blob : new Blob([blob], { type: 'application/pdf' })
       const objectUrl = URL.createObjectURL(previewBlob)
-      setPreviewUrl((currentUrl) => {
-        if (currentUrl) {
-          URL.revokeObjectURL(currentUrl)
-        }
-
-        return objectUrl
-      })
+      previewWindow.location.href = objectUrl
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
     } catch (err) {
+      previewWindow.close()
       const feedback = normalizeCaughtApiError(err, 'Müqavilə sənədi açılmadı.')
       setFileError(feedback.message)
       setFileErrorDetails(feedback.details)
@@ -185,16 +180,6 @@ export function ContractDetailPage() {
     } finally {
       setIsDownloadingFile(false)
     }
-  }
-
-  function closePreview() {
-    setPreviewUrl((currentUrl) => {
-      if (currentUrl) {
-        URL.revokeObjectURL(currentUrl)
-      }
-
-      return ''
-    })
   }
 
   if (isLoading || !contract) {
@@ -375,23 +360,6 @@ export function ContractDetailPage() {
         {!hasVisibleAction ? <p className="muted-text">Sizin rolunuz üçün bu statusda icra ediləcək əməliyyat yoxdur.</p> : null}
         {actionError ? <StatusMessage details={actionErrorDetails} tone="danger">{actionError}</StatusMessage> : null}
       </section>
-
-      {previewUrl ? (
-        <div className="modal-backdrop contract-preview-backdrop" role="presentation" onClick={closePreview}>
-          <section className="contract-preview-panel" role="dialog" aria-modal="true" aria-label="Müqavilə sənədi" onClick={(event) => event.stopPropagation()}>
-            <div className="contract-preview-header">
-              <div>
-                <span className="eyebrow">Sənədə baxış</span>
-                <h2>{contract.fileName || contract.contractNumber || 'Müqavilə sənədi'}</h2>
-              </div>
-              <button className="ui-button ui-button-secondary action-icon-button" aria-label="Bağla" title="Bağla" onClick={closePreview} type="button">
-                <X size={18} />
-              </button>
-            </div>
-            <iframe src={previewUrl} title="Müqavilə sənədi" />
-          </section>
-        </div>
-      ) : null}
     </main>
   )
 }
