@@ -14,12 +14,10 @@ body {
 @keyframes route-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -4587,6 +4585,9 @@ body,
     position: sticky;
     top: 0;
     z-index: 45;
+    height: auto;
+    min-height: 0;
+    max-height: none;
   }
 
   .admin-sidebar nav {
@@ -4598,8 +4599,8 @@ body,
   }
 
   .admin-topbar.compact {
-    position: sticky;
-    top: 86px;
+    position: relative;
+    top: auto;
     z-index: 36;
     align-items: stretch;
     padding: 12px 14px;
@@ -4704,9 +4705,12 @@ body,
   }
 
   .admin-topbar.compact {
-    top: 96px;
     border-bottom-color: rgba(215, 219, 226, 0.7);
     background: rgba(255, 255, 255, 0.92);
+  }
+
+  .admin-page .page-header .eyebrow {
+    display: none;
   }
 
   .user-menu {
@@ -4724,17 +4728,17 @@ body,
 
   .notification-popover {
     position: fixed;
-    top: 150px;
+    top: 132px;
     right: 12px;
     left: 12px;
     width: auto;
-    max-height: min(430px, calc(100dvh - 176px));
+    max-height: min(430px, calc(100dvh - 152px));
     overflow: hidden;
     border-radius: 18px;
   }
 
   .notification-list {
-    max-height: min(320px, calc(100dvh - 278px));
+    max-height: min(320px, calc(100dvh - 254px));
   }
 
   .notification-list button {
@@ -5230,6 +5234,10 @@ body,
     justify-content: flex-end;
   }
 
+  .contract-preview-action {
+    display: none;
+  }
+
   .contract-detail-panel dl {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
@@ -5375,13 +5383,12 @@ body,
   }
 
   .staff-role-actions {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(42px, 1fr));
+    display: flex;
   }
 
   .staff-role-actions select {
-    grid-column: 1 / -1;
-    width: 100%;
+    flex: 1 1 132px;
+    min-width: 132px;
   }
 
   .table-management-info {
