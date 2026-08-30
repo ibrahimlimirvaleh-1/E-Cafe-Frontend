@@ -422,6 +422,7 @@ function translateMessage(message: string, statusCode?: number) {
     'request failed with status 403': 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.',
     'request failed with status 404': 'Axtarılan məlumat tapılmadı.',
     'request failed with status 409': 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.',
+    'request failed with status 413': 'Fayl çox böyükdür. Maksimum icazə verilən ölçüdə fayl seçin.',
     'request failed with status 500': 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.',
     'hesabınız deaktiv edilib. sistemə girişiniz dayandırıldı.': 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.',
     'only platform admin can manage restaurant owner accounts.': 'Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.',
@@ -484,6 +485,7 @@ function statusMessage(statusCode: number) {
   if (statusCode === 403) return 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.'
   if (statusCode === 404) return 'Axtarılan məlumat tapılmadı.'
   if (statusCode === 409) return 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.'
+  if (statusCode === 413) return 'Fayl çox böyükdür. Maksimum icazə verilən ölçüdə fayl seçin.'
   if (statusCode === 429) return 'Çox sayda cəhd edildi. Bir az sonra yenidən yoxlayın.'
   if (statusCode >= 500) return 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.'
   return `Sorğu icra olunmadı. Status: ${statusCode}`

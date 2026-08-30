@@ -3153,6 +3153,12 @@ img {
   box-shadow: var(--shadow-sm);
 }
 
+.upload-field .upload-error {
+  border-color: rgba(198, 28, 28, 0.3);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
 .form-message-icon {
   display: inline-flex;
   flex: 0 0 auto;
