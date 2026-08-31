@@ -53,6 +53,9 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const activeCategories = useMemo(() => categories.filter((category) => category.isActive), [categories])
   const categoryNameById = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories])
   const editingCategory = mode === 'edit-category' ? categories.find((category) => category.id === categoryId) : undefined
+  const hasActiveContract = selectedRestaurant?.hasActiveContract === true
+  const hasSelectedCategory = activeCategories.some((category) => category.id === itemForm.categoryId)
+  const itemCreateDisabled = !selectedRestaurant || !hasActiveContract || activeCategories.length === 0 || activeStatuses.length === 0
 
   useEffect(() => {
     if (!selectedRestaurantId && restaurants[0]) {
@@ -70,16 +73,29 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   }, [editingCategory, mode])
 
   useEffect(() => {
-    if (!itemForm.categoryId && activeCategories[0]) {
-      setItemForm((current) => ({ ...current, categoryId: activeCategories[0].id }))
-    }
-  }, [activeCategories, itemForm.categoryId])
+    const fallbackCategoryId = activeCategories[0]?.id ?? ''
+
+    setItemForm((current) => {
+      const categoryBelongsToRestaurant = activeCategories.some((category) => category.id === current.categoryId)
+      const nextCategoryId = categoryBelongsToRestaurant ? current.categoryId : fallbackCategoryId
+
+      return current.categoryId === nextCategoryId ? current : { ...current, categoryId: nextCategoryId }
+    })
+  }, [activeCategories])
 
   useEffect(() => {
     if (!itemForm.statusId && activeStatuses[0]) {
       setItemForm((current) => ({ ...current, statusId: String(activeStatuses[0].id) }))
     }
   }, [activeStatuses, itemForm.statusId])
+
+  function handleRestaurantChange(nextRestaurantId: string) {
+    setSelectedRestaurantId(nextRestaurantId)
+    setMessage('')
+    setMessageDetails([])
+    setFileId(null)
+    setItemForm((current) => ({ ...current, categoryId: '' }))
+  }
 
   async function handleCreateCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -198,6 +214,30 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   async function handleCreateItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!selectedRestaurant) {
+      setMessage('Restoran seçilməlidir.')
+      setMessageDetails([])
+      return
+    }
+
+    if (!hasActiveContract) {
+      setMessage('Bu restoranda menyu elementi yaratmaq üçün aktiv müqavilə olmalıdır.')
+      setMessageDetails([{ label: 'Müqavilə', message: 'Əvvəl restoranın müqaviləsini aktivləşdirin, sonra menyu elementi əlavə edin.' }])
+      return
+    }
+
+    if (activeCategories.length === 0) {
+      setMessage('Bu restoran üçün aktiv kateqoriya yoxdur.')
+      setMessageDetails([{ label: 'Kateqoriya', message: 'Menyu elementi yaratmaq üçün əvvəl bu restoranda aktiv kateqoriya yaradın.' }])
+      return
+    }
+
+    if (!hasSelectedCategory) {
+      setMessage('Seçilmiş kateqoriya bu restorana aid deyil.')
+      setMessageDetails([{ label: 'Kateqoriya', message: 'Restoran dəyişibsə, bu restoranın aktiv kateqoriyasını yenidən seçin.' }])
+      return
+    }
+
     if (!restaurantId || !itemForm.categoryId || !itemForm.statusId) {
       setMessage('Restoran, kateqoriya və status seçilməlidir.')
       setMessageDetails([])
@@ -256,7 +296,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       <section className={mode === 'create-item' || mode === 'create-category' || mode === 'edit-category' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
-          <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
+          <SelectField label="Restoran" required value={restaurantId} onChange={(event) => handleRestaurantChange(event.target.value)}>
             {restaurants.map((restaurant) => (
               <option key={restaurant.id} value={restaurant.id}>
                 {restaurantOptionLabel(restaurant)}
@@ -338,6 +378,16 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
               <span className="eyebrow">Yeni yemək</span>
               <h2>Menyu elementi</h2>
             </div>
+            {selectedRestaurant && !hasActiveContract ? (
+              <StatusMessage tone="warning" details={[{ label: 'Müqavilə', message: 'Əvvəl restoranın müqaviləsini aktivləşdirin, sonra menyu elementi əlavə edin.' }]}>
+                Bu restoranda menyu elementi yaratmaq üçün aktiv müqavilə olmalıdır.
+              </StatusMessage>
+            ) : null}
+            {hasActiveContract && activeCategories.length === 0 ? (
+              <StatusMessage tone="warning" details={[{ label: 'Kateqoriya', message: 'Menyu elementi yaratmaq üçün bu restoranda ən azı bir aktiv kateqoriya olmalıdır.' }]}>
+                Bu restoran üçün aktiv kateqoriya yoxdur.
+              </StatusMessage>
+            ) : null}
             <div className="form-grid two">
               <SelectField label="Kateqoriya" required value={itemForm.categoryId} onChange={(event) => setItemForm({ ...itemForm, categoryId: event.target.value })}>
                 {activeCategories.map((category) => (
@@ -363,7 +413,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
               <TextField label="Satışda olmama səbəbi" value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
             ) : null}
             <FileUploadField label="Yemək şəkli" accept="image/*" onUploaded={setFileId} />
-            <Button type="submit">Menyu elementi yarat</Button>
+            <Button disabled={itemCreateDisabled} type="submit">Menyu elementi yarat</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : null}

@@ -354,6 +354,8 @@ function translateErrorCode(code: string) {
     ActiveStaffAssignmentNotFound: 'Aktiv əməkdaş tapılmadı.',
     BranchAlreadyExistsInRestaurantGroup: 'Bu restoranda eyni adlı filial artıq mövcuddur.',
     CannotDeactivateOwnAccount: 'Öz hesabınızı deaktiv edə bilməzsiniz.',
+    CategoryIsEmpty: 'Bu restoran üçün aktiv kateqoriya yoxdur. Menyu elementi əlavə etmək üçün əvvəl kateqoriya yaradın.',
+    CategoryNotFound: 'Seçilmiş kateqoriya tapılmadı. Kateqoriyanı yenidən seçin və ya əvvəl aktiv kateqoriya yaradın.',
     CategoryDoesNotBelongToRestaurant: 'Seçilmiş kateqoriya bu restorana aid deyil.',
     CategoryNameAlreadyExists: 'Bu adda kateqoriya artıq mövcuddur.',
     FileNotFoundOrAlreadyAttached: 'Seçilmiş fayl tapılmadı və ya artıq istifadə olunub.',

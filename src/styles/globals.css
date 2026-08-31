@@ -701,6 +701,7 @@ img {
 
 .restaurant-grid {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: stretch;
 }
 
 .restaurant-card,
@@ -722,6 +723,9 @@ img {
 }
 
 .restaurant-card {
+  display: grid;
+  grid-template-rows: 180px minmax(0, 1fr);
+  height: 100%;
   overflow: hidden;
 }
 
@@ -813,17 +817,27 @@ img {
 
 .restaurant-card-body {
   display: grid;
+  grid-template-rows: auto auto auto minmax(58px, 1fr) auto;
   gap: 10px;
   padding: 18px;
 }
 
 .restaurant-card-body h2 {
+  display: -webkit-box;
+  min-height: 52px;
+  overflow: hidden;
   font-size: 20px;
   line-height: 26px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .restaurant-card-body p {
+  min-height: 22px;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .restaurant-card h2,
@@ -879,10 +893,15 @@ img {
   color: var(--on-surface-variant);
 }
 
+.restaurant-card-body .meta-list {
+  min-height: 56px;
+}
+
 .restaurant-location-button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  max-width: 100%;
   border: 0;
   padding: 0;
   background: transparent;
@@ -890,6 +909,28 @@ img {
   cursor: pointer;
   font: inherit;
   text-align: left;
+}
+
+.restaurant-location-button svg,
+.restaurant-card-body .meta-list span svg {
+  flex: 0 0 auto;
+}
+
+.restaurant-card-body .meta-list span {
+  max-width: 100%;
+}
+
+.restaurant-location-button span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.restaurant-card-body .meta-list > span span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .restaurant-location-button:hover {
