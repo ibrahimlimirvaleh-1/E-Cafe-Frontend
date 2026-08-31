@@ -1,7 +1,7 @@
-import { MapPin } from 'lucide-react'
+import { CheckCircle2, MapPin } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { ecafeApi } from '../../shared/api/ecafeApi'
+import { ecafeApi, type GeocodeAddressResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../shared/auth/authz'
@@ -41,6 +41,7 @@ export function RestaurantEditPage() {
     staffSettlementPeriod: '7',
   })
   const [isGeocoding, setIsGeocoding] = useState(false)
+  const [locationResults, setLocationResults] = useState<GeocodeAddressResponse[]>([])
 
   useEffect(() => {
     if (!restaurant) {
@@ -76,6 +77,13 @@ export function RestaurantEditPage() {
     setErrorDetails([])
     setIsSubmitting(true)
 
+    if (!form.latitude || !form.longitude) {
+      setError('Məkanı xəritə axtarışından seçin.')
+      setErrorDetails([{ label: 'Məkan', message: 'Ünvanı yazdıqdan sonra "Xəritədə axtar" düyməsinə basın və uyğun nəticəni seçin.' }])
+      setIsSubmitting(false)
+      return
+    }
+
     try {
       await ecafeApi.restaurants.update(restaurantId, {
         location: form.location,
@@ -109,16 +117,11 @@ export function RestaurantEditPage() {
     setError('')
     setErrorDetails([])
     setIsGeocoding(true)
+    setLocationResults([])
 
     try {
-      const result = await ecafeApi.restaurants.geocode(form.location)
-      setForm((current) => ({
-        ...current,
-        latitude: String(result.latitude),
-        longitude: String(result.longitude),
-        placeId: result.placeId || '',
-        geocodedAddress: result.displayName,
-      }))
+      const results = await ecafeApi.restaurants.geocode(form.location)
+      setLocationResults(results)
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, 'Məkan xəritədə tapılmadı.')
       setError(feedback.message)
@@ -127,6 +130,25 @@ export function RestaurantEditPage() {
     } finally {
       setIsGeocoding(false)
     }
+  }
+
+  function handleLocationChange(value: string) {
+    setForm({ ...form, location: value, latitude: '', longitude: '', placeId: '', geocodedAddress: '' })
+    setLocationResults([])
+  }
+
+  function handleSelectLocation(result: GeocodeAddressResponse) {
+    setForm((current) => ({
+      ...current,
+      location: result.displayName,
+      latitude: String(result.latitude),
+      longitude: String(result.longitude),
+      placeId: result.placeId || '',
+      geocodedAddress: result.displayName,
+    }))
+    setLocationResults([])
+    setError('')
+    setErrorDetails([])
   }
 
   if (isLoading || !restaurant) {
@@ -148,13 +170,32 @@ export function RestaurantEditPage() {
               label="Məkan"
               required
               value={form.location}
-              onChange={(event) => setForm({ ...form, location: event.target.value, latitude: '', longitude: '', placeId: '', geocodedAddress: '' })}
+              onChange={(event) => handleLocationChange(event.target.value)}
             />
             <Button disabled={isGeocoding || !form.location.trim()} type="button" variant="secondary" onClick={handleGeocode}>
               <MapPin size={17} />
-              {isGeocoding ? 'Axtarılır...' : 'Xəritədə tap'}
+              {isGeocoding ? 'Axtarılır...' : 'Xəritədə axtar'}
             </Button>
-            {form.geocodedAddress ? <small className="field-hint">Tapılan məkan: {form.geocodedAddress}</small> : null}
+            {locationResults.length > 0 ? (
+              <div className="location-results" role="listbox" aria-label="Xəritə nəticələri">
+                {locationResults.map((result) => (
+                  <button
+                    key={`${result.placeId || result.displayName}-${result.latitude}-${result.longitude}`}
+                    type="button"
+                    onClick={() => handleSelectLocation(result)}
+                  >
+                    <MapPin size={16} />
+                    <span>{result.displayName}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {form.geocodedAddress ? (
+              <small className="field-hint selected-location-hint">
+                <CheckCircle2 size={14} />
+                Seçilmiş məkan: {form.geocodedAddress}
+              </small>
+            ) : null}
           </div>
           <TextField label="Filial adı" required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
         </div>

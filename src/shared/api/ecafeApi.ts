@@ -157,7 +157,7 @@ type CreateRestaurantRequest = {
 
 type UpdateRestaurantRequest = CreateRestaurantRequest
 
-type GeocodeAddressResponse = {
+export type GeocodeAddressResponse = {
   displayName: string
   latitude: number
   longitude: number
@@ -420,6 +420,15 @@ function mapUploadedFile(record: AnyRecord): UploadedFile {
     fileName: str(record.fileName || record.name),
     url: str(record.url || record.fileUrl),
     isAttached: bool(record.isAttached),
+  }
+}
+
+function mapGeocodeAddress(record: AnyRecord): GeocodeAddressResponse {
+  return {
+    displayName: str(record.displayName || record.DisplayName),
+    latitude: num(record.latitude ?? record.Latitude),
+    longitude: num(record.longitude ?? record.Longitude),
+    placeId: str(record.placeId || record.PlaceId) || null,
   }
 }
 
@@ -864,16 +873,19 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.restaurants.publicDetail(id))
         return mapRestaurant(result.data as AnyRecord)
       }, getRestaurant(id)),
-    geocode: async (address: string) => {
-      const params = new URLSearchParams({ address })
+    geocode: async (address: string, limit = 5) => {
+      const params = new URLSearchParams({ address, limit: String(limit) })
       const result = await httpClient<unknown>(`${endpoints.restaurants.geocode}?${params.toString()}`)
-      const record = (result.data && typeof result.data === 'object' ? result.data : {}) as AnyRecord
-      return {
-        displayName: str(record.displayName || record.DisplayName),
-        latitude: num(record.latitude ?? record.Latitude),
-        longitude: num(record.longitude ?? record.Longitude),
-        placeId: str(record.placeId || record.PlaceId) || null,
-      } satisfies GeocodeAddressResponse
+      const payload = result.data
+      const records = Array.isArray(payload)
+        ? payload
+        : payload && typeof payload === 'object' && Array.isArray((payload as AnyRecord).items)
+          ? (payload as AnyRecord).items
+          : payload
+            ? [payload]
+            : []
+
+      return asArray<AnyRecord>(records).map(mapGeocodeAddress)
     },
   },
 

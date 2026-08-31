@@ -908,10 +908,47 @@ img {
   min-height: 44px;
 }
 
+.location-results {
+  display: grid;
+  gap: 8px;
+}
+
+.location-results button {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--on-surface);
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.location-results button:hover,
+.location-results button:focus-visible {
+  border-color: var(--primary);
+  background: var(--primary-container);
+  outline: 0;
+}
+
 .field-hint {
   color: var(--on-surface-variant);
   font-size: 13px;
   line-height: 18px;
+}
+
+.selected-location-hint {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--success);
 }
 
 .map-dialog {
