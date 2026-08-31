@@ -404,7 +404,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             <TextareaField label="Tərkib" required value={itemForm.description} onChange={(event) => setItemForm({ ...itemForm, description: event.target.value })} />
             <div className="form-grid two">
               <TextField label="Qiymət" min={0} required step="0.01" type="number" value={itemForm.basePrice} onChange={(event) => setItemForm({ ...itemForm, basePrice: event.target.value })} />
-              <label className="toggle-field">
+              <label className="toggle-field menu-item-availability">
                 <input checked={itemForm.isAvailable} type="checkbox" onChange={(event) => setItemForm({ ...itemForm, isAvailable: event.target.checked })} />
                 <span>Satışdadır</span>
               </label>

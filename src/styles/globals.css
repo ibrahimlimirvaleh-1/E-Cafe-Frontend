@@ -5761,3 +5761,74 @@ body,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Final responsive fixes for catalog, sidebar, and menu create form. */
+.admin-shell {
+  align-items: stretch;
+}
+
+.admin-sidebar {
+  height: auto;
+  min-height: 100dvh;
+  overflow-y: visible;
+}
+
+.menu-item-availability {
+  align-self: end;
+  min-height: 48px;
+}
+
+@media (max-width: 760px) {
+  .admin-sidebar {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .admin-sidebar nav {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
+
+@media (max-width: 640px) {
+  .restaurant-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .restaurant-card {
+    grid-template-columns: 1fr;
+    grid-template-rows: 156px auto;
+    min-height: 0;
+  }
+
+  .restaurant-card-media,
+  .restaurant-card-media > img {
+    width: 100%;
+    height: 156px;
+    min-height: 156px;
+  }
+
+  .restaurant-card-body {
+    grid-template-rows: auto auto auto auto auto;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .restaurant-card-body h2 {
+    min-height: 0;
+  }
+
+  .restaurant-card-body p,
+  .restaurant-card-body .meta-list {
+    min-height: 0;
+  }
+
+  .restaurant-card-body .ui-button {
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .menu-item-availability {
+    align-self: stretch;
+  }
+}
