@@ -290,7 +290,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           </div>
           <FileUploadField
             label="Restoran şəkli"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,image/avif"
             onUploaded={(fileId) => {
               if (fileId) {
                 setFileIds((current) => [...current, fileId])
