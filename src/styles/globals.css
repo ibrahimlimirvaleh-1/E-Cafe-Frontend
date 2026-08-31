@@ -3791,10 +3791,10 @@ img {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 48px;
+  min-height: 42px;
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius);
-  padding: 0 14px;
+  padding: 8px 12px;
   font-weight: 800;
   background: var(--surface-lowest);
 }

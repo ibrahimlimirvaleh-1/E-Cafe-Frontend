@@ -28,7 +28,7 @@ import type {
   WorkflowAction,
 } from '../../entities/types'
 import { endpoints } from './endpoints'
-import { fetchProtectedBlob, httpClient } from './httpClient'
+import { ApiError, fetchProtectedBlob, httpClient } from './httpClient'
 import {
   categoryRow,
   contractRow,
@@ -313,6 +313,18 @@ function extractAuthTokens(data: unknown): AuthResponse {
 async function listRestaurants(query = '') {
   const result = await httpClient<unknown>(`${endpoints.restaurants.adminList}${query}`)
   return asArray<AnyRecord>(result.data).map(mapRestaurant)
+}
+
+async function emptyListOnCategoryEmpty<T>(request: () => Promise<T[]>): Promise<T[]> {
+  try {
+    return await request()
+  } catch (error) {
+    if (error instanceof ApiError && error.code === 'CategoryIsEmpty') {
+      return []
+    }
+
+    throw error
+  }
 }
 
 async function fetchPublicMenu(restaurantId: string) {
@@ -1326,10 +1338,10 @@ export const ecafeApi = {
         return menu.categories
       }, fallbackPublicMenu(restaurantId).categories),
     categories: (restaurantId: string) =>
-      safe(async () => {
+      safe(() => emptyListOnCategoryEmpty(async () => {
         const result = await httpClient<unknown>(endpoints.menu.categories(restaurantId))
         return asArray<AnyRecord>(result.data).map((category) => mapCategory(category, restaurantId))
-      }, menuCategories.filter((category) => category.restaurantId === restaurantId && category.isActive)),
+      }), menuCategories.filter((category) => category.restaurantId === restaurantId && category.isActive)),
     items: (restaurantId: string) =>
       safe(async () => {
         const menu = await fetchPublicMenu(restaurantId)
