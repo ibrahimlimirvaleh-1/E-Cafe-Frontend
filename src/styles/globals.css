@@ -1510,6 +1510,7 @@ img {
 .menu-card input,
 .ui-field input,
 .ui-field select,
+.restaurant-select-trigger,
 .ui-field textarea {
   width: 100%;
   min-height: 42px;
@@ -1525,9 +1526,80 @@ img {
 .menu-card input:focus,
 .ui-field input:focus,
 .ui-field select:focus,
+.restaurant-select-trigger:focus,
 .ui-field textarea:focus {
   background: var(--surface-lowest);
   box-shadow: 0 0 0 1px var(--primary);
+}
+
+.restaurant-select-field {
+  position: relative;
+}
+
+.restaurant-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.restaurant-select-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--on-surface);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.restaurant-select-trigger > svg {
+  flex: 0 0 auto;
+}
+
+.restaurant-select-options {
+  position: absolute;
+  top: calc(100% - 2px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  max-height: 236px;
+  overflow-y: auto;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-lg);
+}
+
+.restaurant-select-options button {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  border-bottom: 1px solid rgba(215, 219, 226, 0.72);
+  padding: 10px 12px;
+  overflow: hidden;
+  color: var(--on-surface);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.restaurant-select-options button:last-child {
+  border-bottom: 0;
+}
+
+.restaurant-select-options button:hover,
+.restaurant-select-options button:focus-visible,
+.restaurant-select-options button.selected {
+  color: var(--primary);
+  background: var(--surface-high);
 }
 
 .quantity-control {
@@ -4496,6 +4568,7 @@ body {
 .ui-field input,
 .ui-field select,
 .ui-field textarea,
+.restaurant-select-trigger,
 .search-box,
 .filter-panel input,
 .filter-panel select,
@@ -4515,6 +4588,7 @@ body {
 .ui-field input:hover,
 .ui-field select:hover,
 .ui-field textarea:hover,
+.restaurant-select-trigger:hover,
 .search-box:hover,
 .filter-panel input:hover,
 .filter-panel select:hover,
@@ -4527,6 +4601,7 @@ body {
 .ui-field input:focus,
 .ui-field select:focus,
 .ui-field textarea:focus,
+.restaurant-select-trigger:focus,
 .search-box:focus-within,
 .filter-panel input:focus,
 .filter-panel select:focus,
@@ -4539,14 +4614,16 @@ body {
 
 .ui-field-invalid input,
 .ui-field-invalid select,
-.ui-field-invalid textarea {
+.ui-field-invalid textarea,
+.ui-field-invalid .restaurant-select-trigger {
   border-color: rgba(198, 28, 28, 0.72);
   background: rgba(255, 239, 239, 0.72);
 }
 
 .ui-field-invalid input:focus,
 .ui-field-invalid select:focus,
-.ui-field-invalid textarea:focus {
+.ui-field-invalid textarea:focus,
+.ui-field-invalid .restaurant-select-trigger:focus {
   border-color: var(--danger);
   box-shadow: 0 0 0 4px rgba(198, 28, 28, 0.14);
 }
@@ -4808,7 +4885,8 @@ body,
 .search-box input,
 .ui-field input,
 .ui-field select,
-.ui-field textarea {
+.ui-field textarea,
+.restaurant-select-trigger {
   min-width: 0;
 }
 

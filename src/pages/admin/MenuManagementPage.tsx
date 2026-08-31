@@ -12,7 +12,8 @@ import { EmptyState } from '../../shared/ui/EmptyState'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
-import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { RestaurantContextCard } from '../../shared/ui/RestaurantContextCard'
+import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { SafeImage } from '../../shared/ui/SafeImage'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
@@ -391,14 +392,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       <section className={mode === 'create-item' || mode === 'edit-item' || mode === 'create-category' || mode === 'edit-category' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
-          <SelectField label="Restoran" required value={restaurantId} onChange={(event) => handleRestaurantChange(event.target.value)}>
-            <option value="">Restoran seçin...</option>
-            {restaurants.map((restaurant) => (
-              <option key={restaurant.id} value={restaurant.id}>
-                {restaurantOptionLabel(restaurant)}
-              </option>
-            ))}
-          </SelectField>
+          <RestaurantSelectField label="Restoran" onChange={handleRestaurantChange} required restaurants={restaurants} value={restaurantId} />
           {selectedRestaurant ? (
             <RestaurantContextCard restaurant={selectedRestaurant} />
           ) : (
