@@ -420,7 +420,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             {!itemForm.isAvailable ? (
               <TextField label="Satışda olmama səbəbi" value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
             ) : null}
-            <FileUploadField label="Yemək şəkli" accept="image/*" onUploaded={setFileId} />
+            <FileUploadField label="Yemək şəkli" accept="image/jpeg,image/png,image/webp" onUploaded={setFileId} />
             <Button disabled={itemCreateDisabled} type="submit">Menyu elementi yarat</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
