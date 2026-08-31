@@ -389,7 +389,15 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
               </StatusMessage>
             ) : null}
             <div className="form-grid two">
-              <SelectField label="Kateqoriya" required value={itemForm.categoryId} onChange={(event) => setItemForm({ ...itemForm, categoryId: event.target.value })}>
+              <SelectField
+                disabled={activeCategories.length === 0}
+                hint={activeCategories.length === 0 ? 'Əvvəl bu restoran üçün aktiv kateqoriya yaradın.' : undefined}
+                label="Kateqoriya"
+                required
+                value={itemForm.categoryId}
+                onChange={(event) => setItemForm({ ...itemForm, categoryId: event.target.value })}
+              >
+                {activeCategories.length === 0 ? <option value="">Aktiv kateqoriya yoxdur</option> : null}
                 {activeCategories.map((category) => (
                   <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
