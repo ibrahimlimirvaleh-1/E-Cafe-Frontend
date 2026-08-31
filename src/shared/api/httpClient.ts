@@ -35,7 +35,7 @@ export class ApiError extends Error {
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
-const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN ?? 'http://localhost:8080'
+const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN
 const AUTH_EXPIRED_NOTIFICATION_THROTTLE_MS = 2000
 
 let refreshRequestPromise: Promise<AuthTokens | null> | null = null
@@ -140,7 +140,15 @@ function getApiOrigin() {
     return new URL(API_BASE_URL).origin
   }
 
-  return API_PUBLIC_ORIGIN.replace(/\/$/, '')
+  if (typeof API_PUBLIC_ORIGIN === 'string' && API_PUBLIC_ORIGIN.trim()) {
+    return API_PUBLIC_ORIGIN.trim().replace(/\/$/, '')
+  }
+
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin
+  }
+
+  return ''
 }
 
 async function parseResponse<T>(response: Response, init?: RequestOptions): Promise<ApiResult<T>> {
