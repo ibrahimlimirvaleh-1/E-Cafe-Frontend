@@ -12,6 +12,7 @@ export const endpoints = {
   restaurants: {
     adminList: '/restaurants/getAll',
     create: '/admin/restaurants',
+    geocode: '/admin/restaurants/geocode',
     adminDetail: (restaurantId: string) => `/restaurant/getById/${restaurantId}`,
     update: (restaurantId: string) => `/admin/restaurants/${restaurantId}`,
     deactivate: (restaurantId: string) => `/admin/restaurants/${restaurantId}/deactivate`,

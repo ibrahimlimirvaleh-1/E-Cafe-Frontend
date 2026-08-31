@@ -126,7 +126,11 @@ export function RestaurantCatalogPage() {
 }
 
 function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; onClose: () => void }) {
-  const query = encodeURIComponent(`${restaurant.address} ${restaurant.name}`)
+  const hasCoordinates = restaurant.latitude != null && restaurant.longitude != null
+  const mapQuery = hasCoordinates
+    ? `${restaurant.latitude},${restaurant.longitude}`
+    : `${restaurant.address} ${restaurant.name}`
+  const query = encodeURIComponent(mapQuery)
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
@@ -144,7 +148,7 @@ function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; 
         <iframe
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          src={`https://maps.google.com/maps?q=${query}&output=embed`}
+          src={`https://maps.google.com/maps?q=${query}&z=${hasCoordinates ? '17' : '15'}&output=embed`}
           title={`${restaurant.name} xəritəsi`}
         />
       </section>

@@ -138,6 +138,9 @@ type CreateRestaurantGroupRequest = {
 
 type CreateRestaurantRequest = {
   location: string
+  latitude?: number | null
+  longitude?: number | null
+  placeId?: string | null
   phone: string
   email: string
   restaurantGroupId?: string
@@ -153,6 +156,13 @@ type CreateRestaurantRequest = {
 }
 
 type UpdateRestaurantRequest = CreateRestaurantRequest
+
+type GeocodeAddressResponse = {
+  displayName: string
+  latitude: number
+  longitude: number
+  placeId?: string | null
+}
 
 type CreateStaffRequest = {
   name: string
@@ -778,6 +788,9 @@ export const ecafeApi = {
     create: async (request: CreateRestaurantRequest) => {
       const formData = new FormData()
       formData.set('Location', request.location)
+      appendIfPresent(formData, 'Latitude', request.latitude)
+      appendIfPresent(formData, 'Longitude', request.longitude)
+      appendIfPresent(formData, 'PlaceId', request.placeId)
       formData.set('Phone', request.phone)
       formData.set('Email', request.email)
       appendIfPresent(formData, 'RestaurantGroupId', request.restaurantGroupId)
@@ -808,6 +821,9 @@ export const ecafeApi = {
         method: 'PUT',
         body: JSON.stringify({
           location: request.location,
+          latitude: request.latitude ?? null,
+          longitude: request.longitude ?? null,
+          placeId: request.placeId ?? null,
           phone: request.phone,
           email: request.email,
           restaurantGroupId: request.restaurantGroupId ? Number(request.restaurantGroupId) : null,
@@ -848,6 +864,17 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.restaurants.publicDetail(id))
         return mapRestaurant(result.data as AnyRecord)
       }, getRestaurant(id)),
+    geocode: async (address: string) => {
+      const params = new URLSearchParams({ address })
+      const result = await httpClient<unknown>(`${endpoints.restaurants.geocode}?${params.toString()}`)
+      const record = (result.data && typeof result.data === 'object' ? result.data : {}) as AnyRecord
+      return {
+        displayName: str(record.displayName || record.DisplayName),
+        latitude: num(record.latitude ?? record.Latitude),
+        longitude: num(record.longitude ?? record.Longitude),
+        placeId: str(record.placeId || record.PlaceId) || null,
+      } satisfies GeocodeAddressResponse
+    },
   },
 
   users: {
