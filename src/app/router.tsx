@@ -39,7 +39,6 @@ import { RestaurantProfilePage } from '../pages/customer/RestaurantProfilePage'
 import { SimpleCustomerPage } from '../pages/customer/SimpleCustomerPage'
 import { TableSelectionPage } from '../pages/customer/TableSelectionPage'
 import { TrackingPage } from '../pages/customer/TrackingPage'
-import { WaiterSelectionPage } from '../pages/customer/WaiterSelectionPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { KitchenBoardPage } from '../pages/staff/KitchenBoardPage'
 import { WaiterDashboardPage } from '../pages/staff/WaiterDashboardPage'
@@ -84,7 +83,7 @@ export function AppRouter() {
         <Route index element={<RestaurantCatalogEntry />} />
         <Route path="restaurants/:restaurantId" element={<RestaurantProfilePage />} />
         <Route path="restaurants/:restaurantId/tables" element={<TableSelectionPage />} />
-        <Route path="restaurants/:restaurantId/waiters" element={<WaiterSelectionPage />} />
+        <Route path="restaurants/:restaurantId/waiters" element={<Navigate to="../menu" replace />} />
         <Route path="restaurants/:restaurantId/menu" element={<MenuSelectionPage />} />
         <Route path="reserve/menu" element={<MenuSelectionPage />} />
         <Route path="confirmation" element={<ConfirmationPage />} />

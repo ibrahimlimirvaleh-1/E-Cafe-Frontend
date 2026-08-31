@@ -17,7 +17,7 @@ export function TableSelectionPage() {
       {!isLoading && tables.length === 0 ? <p className="online-only">Bu restoran üçün masa tapılmadı.</p> : null}
       <section className="choice-grid">
         {tables.map((table) => (
-          <Link className="choice-card" key={table.id} to={`/restaurants/${restaurantId}/waiters`}>
+          <Link className="choice-card" key={table.id} to={`/restaurants/${restaurantId}/menu`}>
             <Users size={26} />
             <strong>{table.number}</strong>
             <span>{table.capacity} nəfərlik masa</span>

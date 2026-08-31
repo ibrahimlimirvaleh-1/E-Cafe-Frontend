@@ -27,7 +27,6 @@ const initialForm = {
   roleId: '',
   isActive: 'true',
   serviceFeePercent: '',
-  maxActiveTableCount: '',
 }
 
 const roleIdsByStaffRole: Record<Role, number> = {
@@ -85,8 +84,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     [isPlatformAdmin, roleOptions],
   )
   const canChangeRoles = isInRole(user, [RoleIds.PlatformAdmin]) || hasPermission(user, 'ManageStaff')
-  const selectedRoleName = roleOptions.find((role) => String(role.id) === form.roleId)?.name.toLowerCase() || ''
-  const isWaiterRoleSelected = selectedRoleName.includes('ofisiant') || selectedRoleName.includes('waiter') || form.roleId === String(roleIdsByStaffRole.Waiter)
   const cannotEditOwnerStaff = mode === 'edit' && editingStaff ? !canManageStaffMember(editingStaff) : false
 
   useEffect(() => {
@@ -119,7 +116,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
         roleId: String(currentRoleId(editingStaff) || ''),
         isActive: editingStaff.status === 'Inactive' ? 'false' : 'true',
         serviceFeePercent: editingStaff.serviceFeePercent == null ? '' : String(editingStaff.serviceFeePercent),
-        maxActiveTableCount: editingStaff.maxActiveTableCount == null ? '' : String(editingStaff.maxActiveTableCount),
       })
     }
   }, [editingStaff, mode])
@@ -203,7 +199,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
           phone: form.phone.trim(),
           isActive: form.isActive === 'true',
           serviceFeePercent: form.serviceFeePercent ? Number(form.serviceFeePercent) : null,
-          maxActiveTableCount: form.maxActiveTableCount ? Number(form.maxActiveTableCount) : null,
           fileId,
         })
         setMessage('Əməkdaş məlumatları yeniləndi.')
@@ -222,7 +217,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
           roleId: Number(form.roleId),
           isActive: form.isActive === 'true',
           serviceFeePercent: form.serviceFeePercent ? Number(form.serviceFeePercent) : null,
-          maxActiveTableCount: form.maxActiveTableCount ? Number(form.maxActiveTableCount) : null,
           fileId,
         })
         setForm(initialForm)
@@ -483,17 +477,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                 onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })}
               />
             </div>
-            {isWaiterRoleSelected ? (
-              <TextField
-                error={fieldError('MaxActiveTableCount')}
-                hint="Boş qalarsa limitsiz sayılır."
-                label="Ofisiant aktiv masa limiti"
-                min={1}
-                type="number"
-                value={form.maxActiveTableCount}
-                onChange={(event) => setForm({ ...form, maxActiveTableCount: event.target.value })}
-              />
-            ) : null}
             <FileUploadField label="Profil şəkli" accept="image/*" onUploaded={setFileId} />
             <Button type="submit">{mode === 'edit' ? 'Yadda saxla' : 'Əməkdaş yarat'}</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
@@ -524,11 +507,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                     <small>
                       {member.phone || 'Telefon yoxdur'} - {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `Servis faizi ${member.serviceFeePercent}%`}
                     </small>
-                    {member.role === 'Waiter' ? (
-                      <small className="staff-capacity">
-                        Masa yükü: {member.activeTableSessionCount ?? 0}/{member.effectiveMaxActiveTableCount ?? 'limitsiz'}
-                      </small>
-                    ) : null}
                   </div>
                   <div className="staff-badges">
                     <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>
@@ -607,7 +585,6 @@ function validateStaffForm(form: typeof initialForm, restaurantId: string, mode:
   const email = form.email.trim()
   const phone = form.phone.trim()
   const serviceFee = form.serviceFeePercent ? Number(form.serviceFeePercent) : null
-  const tableLimit = form.maxActiveTableCount ? Number(form.maxActiveTableCount) : null
 
   if (!restaurantId) {
     details.push({ field: 'RestaurantId', label: 'Restoran', message: 'Restoran seçilməlidir.' })
@@ -635,10 +612,6 @@ function validateStaffForm(form: typeof initialForm, restaurantId: string, mode:
 
   if (serviceFee !== null && (!Number.isFinite(serviceFee) || serviceFee < 0 || serviceFee > 100)) {
     details.push({ field: 'ServiceFeePercent', label: 'Servis faizi', message: 'Servis faizi 0 və 100 arasında olmalıdır.' })
-  }
-
-  if (tableLimit !== null && (!Number.isInteger(tableLimit) || tableLimit < 1)) {
-    details.push({ field: 'MaxActiveTableCount', label: 'Masa limiti', message: 'Masa limiti tam və müsbət rəqəm olmalıdır.' })
   }
 
   return details

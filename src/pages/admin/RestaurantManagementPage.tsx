@@ -29,7 +29,6 @@ const initialForm = {
   cancellationWindowMinutes: '60',
   serviceFeePercent: '0',
   staffSettlementPeriod: '7',
-  defaultWaiterTableLimit: '',
 }
 
 const defaultPageSize = 10
@@ -91,7 +90,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         serviceFeePercent: Number(form.serviceFeePercent),
         staffSettlementPeriod: Number(form.staffSettlementPeriod),
-        defaultWaiterTableLimit: form.defaultWaiterTableLimit ? Number(form.defaultWaiterTableLimit) : null,
+        defaultWaiterTableLimit: null,
         fileIds,
       })
       setForm(initialForm)
@@ -203,7 +202,6 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             <TextField label="Ləğv pəncərəsi dəqiqə" min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
             <TextField label="Personal hesablaşma günü" min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
           </div>
-          <TextField label="Ofisiant default masa limiti" min={1} type="number" value={form.defaultWaiterTableLimit} onChange={(event) => setForm({ ...form, defaultWaiterTableLimit: event.target.value })} />
           <FileUploadField
             label="Restoran şəkli"
             accept="image/*"

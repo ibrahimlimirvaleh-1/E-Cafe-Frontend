@@ -36,7 +36,10 @@ export class ApiError extends Error {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN ?? 'http://localhost:8080'
-let refreshTokenRequest: Promise<AuthTokens | null> | null = null
+const AUTH_EXPIRED_NOTIFICATION_THROTTLE_MS = 2000
+
+let refreshRequestPromise: Promise<AuthTokens | null> | null = null
+let lastAuthExpiredNotificationAt = 0
 
 type RequestOptions = RequestInit & {
   authErrorMessage?: string
@@ -47,7 +50,7 @@ type RequestOptions = RequestInit & {
 export async function httpClient<T>(path: string, init?: RequestOptions): Promise<ApiResult<T>> {
   const response = await sendRequest(path, init)
 
-  if (response.status === 401 && !init?.skipAuthRefresh && getAccessToken()) {
+  if (response.status === 401 && !init?.skipAuthRefresh) {
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       return httpClient<T>(path, { ...init, skipAuthRefresh: true })
@@ -60,7 +63,7 @@ export async function httpClient<T>(path: string, init?: RequestOptions): Promis
 export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOptions): Promise<Blob> {
   const response = await sendBlobRequest(pathOrUrl, init)
 
-  if (response.status === 401 && !init?.skipAuthRefresh && getAccessToken()) {
+  if (response.status === 401 && !init?.skipAuthRefresh) {
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       return fetchProtectedBlob(pathOrUrl, { ...init, skipAuthRefresh: true })
@@ -161,20 +164,22 @@ async function parseResponse<T>(response: Response, init?: RequestOptions): Prom
 }
 
 export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }): Promise<AuthTokens | null> {
-  if (refreshTokenRequest) {
-    return refreshTokenRequest
-  }
-
-  refreshTokenRequest = refreshAccessTokenCore(options).finally(() => {
-    refreshTokenRequest = null
-  })
-
-  return refreshTokenRequest
-}
-
-async function refreshAccessTokenCore(options?: { notifyOnFailure?: boolean }): Promise<AuthTokens | null> {
   const shouldNotify = options?.notifyOnFailure ?? true
 
+  refreshRequestPromise ??= requestRefreshAccessToken().finally(() => {
+    refreshRequestPromise = null
+  })
+
+  const tokens = await refreshRequestPromise
+
+  if (!tokens && shouldNotify) {
+    notifyAuthExpiredOnce('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
+  }
+
+  return tokens
+}
+
+async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoints.auth.refresh}`, {
       method: 'POST',
@@ -186,9 +191,6 @@ async function refreshAccessTokenCore(options?: { notifyOnFailure?: boolean }): 
 
     if (!response.ok) {
       clearAuthTokens()
-      if (shouldNotify) {
-        notifyAuthExpired('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
-      }
       return null
     }
 
@@ -197,18 +199,13 @@ async function refreshAccessTokenCore(options?: { notifyOnFailure?: boolean }): 
 
     if (!result.data?.accessToken) {
       clearAuthTokens()
-      if (shouldNotify) {
-        notifyAuthExpired('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
-      }
       return null
     }
 
     saveAuthTokens(result.data)
     return result.data
   } catch {
-    if (shouldNotify) {
-      notifyAuthExpired('Sessiya yenilənmədi. Zəhmət olmasa yenidən daxil olun.')
-    }
+    clearAuthTokens()
     return null
   }
 }
@@ -497,6 +494,17 @@ function notifyAuthExpired(message?: string) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('ecafe:auth-expired', { detail: { message } }))
   }
+}
+
+function notifyAuthExpiredOnce(message?: string) {
+  const now = Date.now()
+
+  if (now - lastAuthExpiredNotificationAt < AUTH_EXPIRED_NOTIFICATION_THROTTLE_MS) {
+    return
+  }
+
+  lastAuthExpiredNotificationAt = now
+  notifyAuthExpired(message)
 }
 
 export { API_BASE_URL, getApiOrigin }

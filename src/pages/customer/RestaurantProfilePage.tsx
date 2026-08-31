@@ -107,11 +107,6 @@ export function RestaurantProfilePage() {
                   <BadgeCheck size={26} />
                   <strong>{member.name}</strong>
                   <span>{member.role}</span>
-                  <small>
-                    {member.effectiveMaxActiveTableCount == null
-                      ? `${member.activeTableSessionCount ?? 0} aktiv masa`
-                      : `${member.activeTableSessionCount ?? 0}/${member.effectiveMaxActiveTableCount} masa`}
-                  </small>
                   <small>{member.serviceFeePercent == null ? 'Servis faizi restoran qaydasına görədir' : `Servis faizi ${member.serviceFeePercent}%`}</small>
                 </article>
               ))}
