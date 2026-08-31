@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Pencil, RefreshCw, Trash2, UserX } from 'lucide-react'
+import { Ban, CheckCircle2, Info, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -37,6 +37,13 @@ const roleIdsByStaffRole: Record<Role, number> = {
   Customer: 5,
   Kitchen: 6,
 }
+
+const staffFormGuidance = [
+  'Email və telefon aktiv əməkdaşlarda təkrar olmamalıdır.',
+  'Telefonu 0501234567 və ya +994501234567 formatında daxil edin.',
+  'Profil şəkli seçilirsə, upload tamamlanandan sonra saxlayın.',
+  'Şifrə təyin etmə linki əməkdaş yaradıldıqdan sonra emailə göndərilir.',
+]
 
 export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode }) {
   const { setSession, user } = useAuth()
@@ -169,15 +176,10 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const validationDetails = validateStaffForm(form, restaurantId, mode)
-    if (validationDetails.length > 0) {
-      setMessage('Zəhmət olmasa əməkdaş məlumatlarını yoxlayın.')
-      setMessageDetails(validationDetails)
-      return
-    }
 
-    if (!restaurantId || (mode === 'create' && !form.roleId)) {
-      setMessage('Restoran və rol seçilməlidir.')
-      setMessageDetails([])
+    if (validationDetails.length > 0) {
+      setMessage('Əməkdaş məlumatlarında düzəldilməli sahələr var.')
+      setMessageDetails(validationDetails)
       return
     }
 
@@ -375,6 +377,21 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni əməkdaş'}</span>
               <h2>Əməkdaş məlumatları</h2>
             </div>
+            {mode === 'create' ? (
+              <div className="form-guidance" role="note">
+                <span className="form-guidance-icon">
+                  <Info size={18} />
+                </span>
+                <div>
+                  <strong>Yaratmazdan əvvəl yoxlayın</strong>
+                  <ul>
+                    {staffFormGuidance.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
             <SelectField
               error={fieldError('RestaurantId')}
               label="Restoran"
@@ -391,6 +408,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <div className="form-grid two">
               <TextField
                 error={fieldError('Name')}
+                hint="Ad ən azı 2 simvol olmalıdır."
                 label="Ad"
                 required
                 value={form.name}
@@ -398,6 +416,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               />
               <TextField
                 error={fieldError('Surname')}
+                hint="Soyad ən azı 2 simvol olmalıdır."
                 label="Soyad"
                 required
                 value={form.surname}
@@ -406,6 +425,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             </div>
             <TextField
               error={fieldError('Email')}
+              hint="Aktiv əməkdaşlarda təkrar email qəbul edilmir."
               label="Email"
               required
               type="email"
@@ -414,6 +434,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             />
             <TextField
               error={fieldError('Phone')}
+              hint="Nümunə: 0501234567 və ya +994501234567."
               label="Telefon"
               required
               value={form.phone}
@@ -422,6 +443,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <SelectField
               disabled={mode === 'edit'}
               error={fieldError('RoleId')}
+              hint={mode === 'edit' ? 'Mövcud əməkdaşın rolunu siyahı səhifəsində dəyişin.' : 'Sahibkar rolunu yalnız platform administratoru yarada bilər.'}
               label="Rol"
               required={mode === 'create'}
               value={form.roleId}
@@ -446,6 +468,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               </SelectField>
               <TextField
                 error={fieldError('ServiceFeePercent')}
+                hint="Boş qalarsa restoran qaydası tətbiq olunur."
                 label="Servis faizi"
                 min={0}
                 step="0.01"
@@ -529,7 +552,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           title={deactivatingStaffId === member.id ? 'Deaktiv edilir' : 'Deaktiv et'}
                           tone="danger"
                         >
-                          <UserX size={18} />
+                          <Ban size={18} />
                         </ActionIconButton>
                       ) : (
                         <ActionIconButton

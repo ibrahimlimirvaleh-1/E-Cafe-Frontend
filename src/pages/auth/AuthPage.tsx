@@ -15,19 +15,12 @@ type AuthPageProps = {
   mode: 'login' | 'register'
 }
 
-function splitFullName(fullName: string) {
-  const [name = '', ...rest] = fullName.trim().split(/\s+/)
-  return {
-    name,
-    surname: rest.join(' ') || name,
-  }
-}
-
 export function AuthPage({ mode }: AuthPageProps) {
   const isLogin = mode === 'login'
   const navigate = useNavigate()
   const { setSession } = useAuth()
-  const [fullName, setFullName] = useState('')
+  const [name, setName] = useState('')
+  const [surname, setSurname] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
@@ -39,12 +32,26 @@ export function AuthPage({ mode }: AuthPageProps) {
     event.preventDefault()
     setError('')
     setErrorDetails([])
+    const validationDetails = validateAuthForm({ email, isLogin, name, password, phone, surname })
+
+    if (validationDetails.length > 0) {
+      setError(isLogin ? 'Giriş məlumatlarında düzəldilməli sahələr var.' : 'Qeydiyyat məlumatlarında düzəldilməli sahələr var.')
+      setErrorDetails(validationDetails)
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       const tokens = isLogin
         ? await ecafeApi.auth.login({ email, password })
-        : await ecafeApi.auth.register({ ...splitFullName(fullName), email, phone, password })
+        : await ecafeApi.auth.register({
+            name: name.trim(),
+            surname: surname.trim(),
+            email,
+            phone,
+            password,
+          })
 
       if (!tokens.accessToken) {
         throw new Error('Token məlumatı geri qayıtmadı.')
@@ -73,12 +80,13 @@ export function AuthPage({ mode }: AuthPageProps) {
         </div>
         {!isLogin ? (
           <>
-            <TextField label="Ad və soyad" placeholder="Aysel Məmmədova" value={fullName} onChange={(event) => setFullName(event.target.value)} />
+            <TextField label="Ad" placeholder="Adınızı daxil edin" value={name} onChange={(event) => setName(event.target.value)} />
+            <TextField label="Soyad" placeholder="Soyadınızı daxil edin" value={surname} onChange={(event) => setSurname(event.target.value)} />
             <TextField label="Telefon" placeholder="+994501234567" value={phone} onChange={(event) => setPhone(event.target.value)} />
           </>
         ) : null}
-        <TextField label="Email" placeholder="name@example.com" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <TextField label="Şifrə" placeholder="••••••••" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+        <TextField label="Email" placeholder="name@example.com" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <TextField label="Şifrə" placeholder="Ən azı 8 simvol" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
         {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
         <Button disabled={isSubmitting} type="submit">{isSubmitting ? 'Göndərilir...' : isLogin ? 'Daxil ol' : 'Hesab yarat'}</Button>
         {isLogin ? <Link to="/forgot-password">Şifrəni unutmusunuz?</Link> : null}
@@ -86,4 +94,54 @@ export function AuthPage({ mode }: AuthPageProps) {
       </form>
     </main>
   )
+}
+
+function validateAuthForm({
+  email,
+  isLogin,
+  name,
+  password,
+  phone,
+  surname,
+}: {
+  email: string
+  isLogin: boolean
+  name: string
+  password: string
+  phone: string
+  surname: string
+}): ApiErrorDetail[] {
+  const details: ApiErrorDetail[] = []
+  const normalizedEmail = email.trim()
+  const normalizedPhone = phone.replace(/[\s-]/g, '')
+
+  if (!isLogin && name.trim().length < 2) {
+    details.push({ field: 'Name', label: 'Ad', message: 'Ad ən azı 2 simvol olmalıdır.' })
+  }
+
+  if (!isLogin && surname.trim().length < 2) {
+    details.push({ field: 'Surname', label: 'Soyad', message: 'Soyad ən azı 2 simvol olmalıdır.' })
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    details.push({ field: 'Email', label: 'Email', message: 'Düzgün email formatı daxil edin.' })
+  }
+
+  if (!isLogin && !/^(\+994|0)(50|51|55|70|77|99|10)\d{7}$/.test(normalizedPhone)) {
+    details.push({ field: 'Phone', label: 'Telefon', message: 'Telefonu 0501234567 və ya +994501234567 formatında daxil edin.' })
+  }
+
+  if (password.length < 8) {
+    details.push({ field: 'Password', label: 'Şifrə', message: 'Şifrə ən azı 8 simvol olmalıdır.' })
+  }
+
+  if (!isLogin && !/[A-ZƏÖÜĞÇŞİ]/.test(password)) {
+    details.push({ field: 'Password', label: 'Şifrə', message: 'Şifrədə ən azı bir böyük hərf olmalıdır.' })
+  }
+
+  if (!isLogin && !/\d/.test(password)) {
+    details.push({ field: 'Password', label: 'Şifrə', message: 'Şifrədə ən azı bir rəqəm olmalıdır.' })
+  }
+
+  return details
 }

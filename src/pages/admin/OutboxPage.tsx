@@ -252,18 +252,20 @@ export function OutboxPage() {
 
           {messagePage.items.map((message) => (
             <article className="outbox-table-row" key={message.id} role="row">
-              <div className="outbox-message-cell">
+              <div className="outbox-message-cell" data-label="Mesaj">
                 <strong>{message.subject}</strong>
                 <small>{message.recipient}</small>
               </div>
-              <span>{message.channel}</span>
-              <Badge tone={statusTone(message.statusId)}>{message.status}</Badge>
-              <strong>
+              <span data-label="Kanal">{message.channel}</span>
+              <span data-label="Status">
+                <Badge tone={statusTone(message.statusId)}>{message.status}</Badge>
+              </span>
+              <strong data-label="Retry">
                 {message.retryCount}/{message.maxRetryCount}
               </strong>
-              <small>{formatDateTime(message.occurredAt)}</small>
-              <small>{message.lastError || (message.nextRetryAt ? `Növbəti cəhd: ${formatDateTime(message.nextRetryAt)}` : 'Problem yoxdur')}</small>
-              <div className="ui-row-actions">
+              <small data-label="Tarix">{formatDateTime(message.occurredAt)}</small>
+              <small data-label="Qeyd">{message.lastError || (message.nextRetryAt ? `Növbəti cəhd: ${formatDateTime(message.nextRetryAt)}` : 'Problem yoxdur')}</small>
+              <div className="ui-row-actions" data-label="Əməliyyat">
                 <button
                   type="button"
                   className="ui-button ui-button-secondary action-icon-button"

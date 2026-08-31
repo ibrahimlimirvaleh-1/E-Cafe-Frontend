@@ -263,6 +263,10 @@ function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, 
     return authErrorMessage
   }
 
+  if (result.code) {
+    return translateErrorCode(result.code) || statusMessage(statusCode)
+  }
+
   if (result.message) {
     return translateMessage(result.message, statusCode)
   }
@@ -332,6 +336,42 @@ function normalizeApiResult<T>(payload: unknown, statusCode: number, success: bo
   }
 }
 
+function translateErrorCode(code: string) {
+  const normalized = code.trim()
+  const messages: Record<string, string> = {
+    ActiveStaffAssignmentNotFound: 'Aktiv əməkdaş tapılmadı.',
+    BranchAlreadyExistsInRestaurantGroup: 'Bu restoranda eyni adlı filial artıq mövcuddur.',
+    CannotDeactivateOwnAccount: 'Öz hesabınızı deaktiv edə bilməzsiniz.',
+    CategoryDoesNotBelongToRestaurant: 'Seçilmiş kateqoriya bu restorana aid deyil.',
+    CategoryNameAlreadyExists: 'Bu adda kateqoriya artıq mövcuddur.',
+    FileNotFoundOrAlreadyAttached: 'Seçilmiş fayl tapılmadı və ya artıq istifadə olunub.',
+    InvalidCredentials: 'Email və ya şifrə yanlışdır.',
+    InvalidRestaurantId: 'Restoran seçimi düzgün deyil.',
+    InvalidRoleId: 'Rol seçimi düzgün deyil.',
+    RestaurantActiveContractRequired: 'Bu əməliyyat üçün restoranın aktiv müqaviləsi olmalıdır.',
+    RestaurantAlreadyHasActiveContract: 'Bu restoranın aktiv müqaviləsi var. Yeni müqavilə yaratmaq üçün əvvəl cari müqaviləni dayandırın.',
+    RestaurantAlreadyHasActiveOwner: 'Bu restoran üçün artıq aktiv sahibkar təyin edilib.',
+    RestaurantOwnerNotAssigned: 'Restorana aktiv sahibkar təyin edilməyib. Müqaviləni təsdiqə göndərmək üçün əvvəl restoran sahibkarı əlavə edin.',
+    RestaurantEmailAlreadyExists: 'Bu email ilə restoran artıq mövcuddur.',
+    RestaurantGroupInactive: 'Seçilmiş restoran qrupu aktiv deyil.',
+    RestaurantGroupNameAlreadyExists: 'Bu adda restoran qrupu artıq mövcuddur.',
+    RestaurantGroupRequired: 'Restoran qrupu seçilməlidir.',
+    RestaurantNameAlreadyExists: 'Bu adda restoran artıq mövcuddur.',
+    RestaurantPhoneAlreadyExists: 'Bu telefonla restoran artıq mövcuddur.',
+    RestaurantScopedRoleRequiresAssignment: 'Bu rol üçün aktiv restoran təyinatı olmalıdır.',
+    RoleAlreadyAssigned: 'Bu istifadəçiyə həmin rol artıq verilib.',
+    StaffAssignmentNotFound: 'Əməkdaş təyinatı tapılmadı.',
+    StaffNotFound: 'Əməkdaş tapılmadı.',
+    TableAlreadyExists: 'Bu nömrəli masa artıq mövcuddur.',
+    TableNameAlreadyExists: 'Bu adda masa artıq mövcuddur.',
+    UserEmailAlreadyExists: 'Bu email ilə istifadəçi artıq mövcuddur.',
+    UserPhoneAlreadyExists: 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+    UserAlreadyExists: 'Bu email və ya telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+  }
+
+  return messages[normalized]
+}
+
 function fieldLabel(field: string) {
   const normalized = field.replace(/Request\.|Command\./gi, '')
   const labels: Record<string, string> = {
@@ -380,16 +420,55 @@ function translateMessage(message: string, statusCode?: number) {
     'request failed with status 403': 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.',
     'request failed with status 404': 'Axtarılan məlumat tapılmadı.',
     'request failed with status 409': 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.',
+    'request failed with status 413': 'Fayl çox böyükdür. Maksimum icazə verilən ölçüdə fayl seçin.',
     'request failed with status 500': 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.',
     'hesabınız deaktiv edilib. sistemə girişiniz dayandırıldı.': 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.',
     'only platform admin can manage restaurant owner accounts.': 'Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.',
     'restaurant already has an active owner.': 'Bu restoran üçün artıq aktiv sahibkar təyin edilib.',
+    'restaurant already has an active contract. terminate or expire the current contract before creating a new one.': 'Bu restoranın aktiv müqaviləsi var. Yeni müqavilə yaratmaq üçün əvvəl cari müqaviləni dayandırın.',
+    'restaurant owner is not assigned.': 'Restorana aktiv sahibkar təyin edilməyib. Müqaviləni təsdiqə göndərmək üçün əvvəl restoran sahibkarı əlavə edin.',
+    'restaurant-scoped role requires an active restaurant assignment.': 'Bu rol üçün aktiv restoran təyinatı olmalıdır.',
+    'table with the same number already exists.': 'Bu nömrəli masa artıq mövcuddur.',
+    'table already exists.': 'Bu nömrəli masa artıq mövcuddur.',
+    'category already exists.': 'Bu adda kateqoriya artıq mövcuddur.',
+    'restaurant already exists.': 'Bu restoran artıq mövcuddur.',
     'user with this email already exists': 'Bu email ilə istifadəçi artıq mövcuddur.',
+    'user with this email already exists.': 'Bu email ilə istifadəçi artıq mövcuddur.',
+    'user with this phone already exists': 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+    'user with this phone already exists.': 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+    'email or phone already used': 'Email və ya telefon nömrəsi artıq istifadə olunub.',
+    'email or phone already used.': 'Email və ya telefon nömrəsi artıq istifadə olunub.',
+    'business rule violation': 'Bu əməliyyat mövcud qaydalara uyğun deyil.',
     'validation failed': 'Form məlumatlarında səhv var.',
   }
 
   if (messages[lower]) {
     return messages[lower]
+  }
+
+  const businessMessage = lower.replace(/^business rule violation[:\s-]*/i, '').trim()
+  if (businessMessage && businessMessage !== lower) {
+    return translateMessage(businessMessage, statusCode)
+  }
+
+  if (lower.includes('email') && lower.includes('already')) {
+    return 'Bu email artıq istifadə olunub.'
+  }
+
+  if (lower.includes('phone') && lower.includes('already')) {
+    return 'Bu telefon nömrəsi artıq istifadə olunub.'
+  }
+
+  if ((lower.includes('table') || lower.includes('masa')) && lower.includes('already')) {
+    return 'Bu masa artıq mövcuddur.'
+  }
+
+  if ((lower.includes('category') || lower.includes('kateqoriya')) && lower.includes('already')) {
+    return 'Bu kateqoriya artıq mövcuddur.'
+  }
+
+  if ((lower.includes('restaurant') || lower.includes('restoran')) && lower.includes('already')) {
+    return 'Bu restoran məlumatı artıq mövcuddur.'
   }
 
   if (statusCode && statusCode >= 400) {
@@ -405,6 +484,7 @@ function statusMessage(statusCode: number) {
   if (statusCode === 403) return 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.'
   if (statusCode === 404) return 'Axtarılan məlumat tapılmadı.'
   if (statusCode === 409) return 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.'
+  if (statusCode === 413) return 'Fayl çox böyükdür. Maksimum icazə verilən ölçüdə fayl seçin.'
   if (statusCode === 429) return 'Çox sayda cəhd edildi. Bir az sonra yenidən yoxlayın.'
   if (statusCode >= 500) return 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.'
   return `Sorğu icra olunmadı. Status: ${statusCode}`

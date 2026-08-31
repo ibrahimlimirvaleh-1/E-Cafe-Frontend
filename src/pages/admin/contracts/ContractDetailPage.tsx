@@ -187,16 +187,6 @@ export function ContractDetailPage() {
     }
   }
 
-  function closePreview() {
-    setPreviewUrl((currentUrl) => {
-      if (currentUrl) {
-        URL.revokeObjectURL(currentUrl)
-      }
-
-      return ''
-    })
-  }
-
   if (isLoading || !contract) {
     return (
       <main className="admin-page narrow">
@@ -213,6 +203,16 @@ export function ContractDetailPage() {
   const terminateAction = availableActions.find((action) => action.code === 'terminate')
   const hasVisibleAction = availableActions.length > 0
 
+  function closePreview() {
+    setPreviewUrl((currentUrl) => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl)
+      }
+
+      return ''
+    })
+  }
+
   return (
     <main className="admin-page narrow">
       <PageHeader
@@ -227,7 +227,7 @@ export function ContractDetailPage() {
           <Badge tone={statusTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
           {contract.fileUrl ? (
             <div className="contract-file-actions">
-              <button className="contract-file-link" disabled={isOpeningFile} onClick={openContractFile} type="button">
+              <button className="contract-file-link contract-preview-action" disabled={isOpeningFile} onClick={openContractFile} type="button">
                 <Eye size={18} />
                 {isOpeningFile ? 'Açılır...' : 'Bax'}
               </button>
@@ -243,21 +243,6 @@ export function ContractDetailPage() {
             </span>
           )}
         </div>
-
-        {previewUrl ? (
-          <div className="contract-preview-panel">
-            <div className="contract-preview-header">
-              <div>
-                <span className="eyebrow">Sənədə baxış</span>
-                <h2>{contract.fileName || contract.contractNumber || 'Müqavilə sənədi'}</h2>
-              </div>
-              <Button variant="secondary" onClick={closePreview} type="button">
-                Bağla
-              </Button>
-            </div>
-            <iframe src={previewUrl} title="Müqavilə sənədi" />
-          </div>
-        ) : null}
 
         <dl>
           <div>
@@ -311,6 +296,21 @@ export function ContractDetailPage() {
         </dl>
         {fileError ? <StatusMessage details={fileErrorDetails} tone="danger">{fileError}</StatusMessage> : null}
       </section>
+
+      {previewUrl ? (
+        <section className="contract-preview-panel" aria-label="Müqavilə PDF baxışı">
+          <div className="contract-preview-header">
+            <div>
+              <span className="eyebrow">Sənədə baxış</span>
+              <h2>{contract.contractNumber || `Müqavilə #${contract.id}`}</h2>
+            </div>
+            <Button onClick={closePreview} type="button" variant="secondary">
+              Bağla
+            </Button>
+          </div>
+          <iframe src={previewUrl} title={`${contract.contractNumber || `Müqavilə #${contract.id}`} sənədi`} />
+        </section>
+      ) : null}
 
       <section className="contract-action-panel">
         <div>
