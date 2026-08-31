@@ -1,9 +1,9 @@
-import { MapPin, Phone, Search, Star } from 'lucide-react'
+import { MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
-import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { SafeImage } from '../../shared/ui/SafeImage'
@@ -14,6 +14,7 @@ export function RestaurantCatalogPage() {
   const [search, setSearch] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
+  const [mapRestaurant, setMapRestaurant] = useState<Restaurant | null>(null)
   const query = useMemo(() => {
     const params = new URLSearchParams({
       pageNumber: String(pageNumber),
@@ -61,28 +62,38 @@ export function RestaurantCatalogPage() {
       <section className="restaurant-grid">
         {restaurantPage.items.map((restaurant) => (
           <article className="restaurant-card" key={restaurant.id}>
-            <SafeImage src={restaurant.image} alt={restaurant.name} />
-            <div className="restaurant-card-body">
-              <div className="card-kicker">
-                <span>
-                  <Star size={16} fill="currentColor" />
+            <div className="restaurant-card-media">
+              <SafeImage src={restaurant.image} alt={restaurant.name} />
+              <div className="restaurant-card-overlay">
+                <span className="restaurant-rating">
+                  <Star size={15} fill="currentColor" />
                   {restaurant.rating}
                 </span>
+                <span
+                  aria-label={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
+                  className={restaurant.hasActiveContract ? 'restaurant-availability active' : 'restaurant-availability blocked'}
+                  title={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
+                >
+                  {restaurant.hasActiveContract ? <ShieldCheck size={16} /> : <ShieldX size={16} />}
+                </span>
+              </div>
+            </div>
+            <div className="restaurant-card-body">
+              <div className="card-kicker">
                 <strong>{restaurant.depositAmount} ₼ depozit</strong>
               </div>
               <h2>{restaurant.name}</h2>
               <p>{restaurant.cuisine}</p>
               <div className="meta-list">
-                <span>
+                <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
                   <MapPin size={16} />
                   {restaurant.address}
-                </span>
+                </button>
                 <span>
                   <Phone size={16} />
                   {restaurant.phone}
                 </span>
               </div>
-              <ContractGuardNotice active={restaurant.hasActiveContract} />
               <Link
                 className={`ui-button ${restaurant.hasActiveContract ? 'ui-button-primary' : 'ui-button-secondary'}`}
                 to={`/restaurants/${restaurant.id}`}
@@ -108,6 +119,35 @@ export function RestaurantCatalogPage() {
           setPageNumber(1)
         }}
       />
+
+      {mapRestaurant ? <RestaurantMapDialog restaurant={mapRestaurant} onClose={() => setMapRestaurant(null)} /> : null}
     </main>
+  )
+}
+
+function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; onClose: () => void }) {
+  const query = encodeURIComponent(`${restaurant.address} ${restaurant.name}`)
+
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <section className="map-dialog" role="dialog" aria-modal="true" aria-label={`${restaurant.name} xəritəsi`} onClick={(event) => event.stopPropagation()}>
+        <header>
+          <div>
+            <span className="eyebrow">Məkan</span>
+            <h2>{restaurant.name}</h2>
+            <p>{restaurant.address}</p>
+          </div>
+          <button aria-label="Xəritəni bağla" type="button" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </header>
+        <iframe
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          src={`https://maps.google.com/maps?q=${query}&output=embed`}
+          title={`${restaurant.name} xəritəsi`}
+        />
+      </section>
+    </div>
   )
 }
