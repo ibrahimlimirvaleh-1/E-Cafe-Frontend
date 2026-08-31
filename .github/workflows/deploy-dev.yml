@@ -33,9 +33,9 @@ jobs:
             fi
 
             cd "$APP_PATH/frontend"
-            git fetch origin
+            git fetch --prune origin dev
             git checkout dev
-            git pull --ff-only origin dev
+            git reset --hard origin/dev
 
             cd "$APP_PATH"
             docker compose build frontend
