@@ -33,7 +33,7 @@ export function MenuSelectionPage() {
 
   return (
     <main className="page">
-      <ReservationStepper activeStep={4} />
+      <ReservationStepper activeStep={3} />
       <section className="menu-layout">
         <div className="menu-main">
           <PageHeader title="Menyu seçimi" />

@@ -8,7 +8,6 @@ export const stitchPages: StitchPageMeta[] = [
   { id: 'restoran_kataloqu', title: 'Restoran kataloqu', route: '/' },
   { id: 'restoran_profili', title: 'Restoran profili', route: '/restaurants/:restaurantId' },
   { id: 'masa_se_imi', title: 'Masa seçimi', route: '/restaurants/:restaurantId/tables' },
-  { id: 'ofisiant_se_imi', title: 'Ofisiant seçimi', route: '/restaurants/:restaurantId/waiters' },
   { id: 'menyu_se_imi', title: 'Menyu seçimi', route: '/restaurants/:restaurantId/menu' },
   { id: 'd_ni_v_t_sdiq', title: 'Ödəniş və təsdiq', route: '/confirmation' },
   { id: 'i_dar_etm_paneli_naviqasiya_yenil_ndi', title: 'Admin dashboard', route: '/admin' },

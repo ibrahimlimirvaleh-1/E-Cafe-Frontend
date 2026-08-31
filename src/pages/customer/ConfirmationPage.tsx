@@ -6,9 +6,9 @@ export function ConfirmationPage() {
     <main className="center-page">
       <article className="success-panel">
         <CheckCircle2 size={56} />
-        <h1>Rezervasiya təsdiqləndi</h1>
-        <p>Masa və seçilən ofisiant rezervasiya vaxtı üçün saxlanıldı. Restoran komandası məlumatlandırıldı.</p>
-        <ButtonLink to="/tracking/demo-token">Order tracking səhifəsinə keç</ButtonLink>
+        <h1>Rezervasiya qeydə alındı</h1>
+        <p>Masa seçimi və sifariş məlumatları restorana göndərildi. Menecer ödəniş təsdiqi üçün sizinlə əlaqə saxlayacaq.</p>
+        <ButtonLink to="/tracking/demo-token">Rezervasiyanı izlə</ButtonLink>
       </article>
     </main>
   )
