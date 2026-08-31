@@ -131,6 +131,7 @@ export type MenuItem = {
   price: number
   image: string
   isActive: boolean
+  statusId?: number
   statusName?: string
   salesCount?: number
 }

@@ -177,6 +177,7 @@ export function mapMenuItem(record: AnyRecord, restaurantId: string): MenuItem {
     price: num(record.price || record.basePrice),
     image: imageUrl(record, 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'),
     isActive: bool(record.isActive, true),
+    statusId: record.statusId == null ? undefined : num(record.statusId),
     statusName: str(record.statusName || record.status),
     salesCount: num(record.salesCount),
   }
