@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { createRestaurantMapEmbedUrl } from '../../shared/config/mapConfig'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
@@ -126,11 +127,7 @@ export function RestaurantCatalogPage() {
 }
 
 function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; onClose: () => void }) {
-  const hasCoordinates = restaurant.latitude != null && restaurant.longitude != null
-  const mapQuery = hasCoordinates
-    ? `${restaurant.latitude},${restaurant.longitude}`
-    : `${restaurant.address} ${restaurant.name}`
-  const query = encodeURIComponent(mapQuery)
+  const mapUrl = createRestaurantMapEmbedUrl(restaurant)
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
@@ -148,7 +145,7 @@ function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; 
         <iframe
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          src={`https://maps.google.com/maps?q=${query}&z=${hasCoordinates ? '17' : '15'}&output=embed`}
+          src={mapUrl}
           title={`${restaurant.name} xəritəsi`}
         />
       </section>
