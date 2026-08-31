@@ -219,6 +219,10 @@ type CreateMenuItemRequest = {
   fileId?: number | null
 }
 
+type UpdateMenuItemRequest = CreateMenuItemRequest & {
+  salesCount?: number
+}
+
 type CreateInventoryItemRequest = {
   name: string
   unitId: number
@@ -1412,6 +1416,31 @@ export const ecafeApi = {
         body: formData,
       })
     },
+    updateItem: (restaurantId: string, itemId: string, request: UpdateMenuItemRequest) => {
+      const formData = new FormData()
+      formData.set('CategoryId', request.categoryId)
+      formData.set('StatusId', String(request.statusId))
+      formData.set('Name', request.name)
+      formData.set('Description', request.description)
+      formData.set('BasePrice', String(request.basePrice))
+      formData.set('IsAvailable', String(request.isAvailable))
+      formData.set('SalesCount', String(request.salesCount ?? 0))
+      appendIfPresent(formData, 'UnavailableReason', request.unavailableReason)
+      appendIfPresent(formData, 'FileId', request.fileId)
+
+      return httpClient<unknown>(endpoints.menu.updateItem(restaurantId, itemId), {
+        method: 'PUT',
+        body: formData,
+      })
+    },
+    deactivateItem: (restaurantId: string, itemId: string) =>
+      httpClient<unknown>(endpoints.menu.deactivateItem(restaurantId, itemId), {
+        method: 'PATCH',
+      }),
+    deleteItem: (restaurantId: string, itemId: string) =>
+      httpClient<unknown>(endpoints.menu.deleteItem(restaurantId, itemId), {
+        method: 'DELETE',
+      }),
   },
 
   reservations: {

@@ -3149,10 +3149,9 @@ img {
 
 .admin-menu-list article {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) minmax(150px, 0.45fr) minmax(94px, auto) minmax(72px, auto);
+  grid-template-columns: 56px minmax(0, 1fr) minmax(140px, 0.38fr) minmax(94px, auto) minmax(72px, auto) minmax(86px, auto) auto;
   grid-template-areas:
-    "image info category status price"
-    "image info sales status price";
+    "image info category status sales price actions";
   gap: 12px;
   align-items: center;
   max-width: 100%;
@@ -3197,6 +3196,11 @@ img {
   grid-area: price;
   justify-self: end;
   white-space: nowrap;
+}
+
+.admin-menu-list .menu-item-row-actions {
+  grid-area: actions;
+  justify-content: flex-end;
 }
 
 .admin-menu-list strong,
@@ -4117,7 +4121,8 @@ img {
     grid-template-areas:
       "image info price"
       "image category category"
-      "image status sales";
+      "image status sales"
+      "image actions actions";
   }
 
   .admin-menu-list article > span,
@@ -4235,7 +4240,7 @@ img {
       "image info"
       "image category"
       "status sales"
-      "price price";
+      "price actions";
   }
 
   .admin-menu-list article > b {
