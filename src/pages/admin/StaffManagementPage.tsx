@@ -10,6 +10,7 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
+import { EmptyState } from '../../shared/ui/EmptyState'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -61,7 +62,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const { data: roles } = useAsyncData(() => ecafeApi.lookups.roles(), [], [])
-  const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const restaurantId = selectedRestaurantId
   const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: staff, isLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.staff.byRestaurant(restaurantId) : Promise.resolve([])),
@@ -87,8 +88,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   const cannotEditOwnerStaff = mode === 'edit' && editingStaff ? !canManageStaffMember(editingStaff) : false
 
   useEffect(() => {
-    if (!selectedRestaurantId && restaurants[0]) {
-      setSelectedRestaurantId(searchParams.get('restaurantId') || restaurants[0].id)
+    const restaurantIdFromUrl = searchParams.get('restaurantId')
+    if (!selectedRestaurantId && restaurantIdFromUrl) {
+      setSelectedRestaurantId(restaurantIdFromUrl)
     }
   }, [restaurants, searchParams, selectedRestaurantId])
 
@@ -399,6 +401,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               value={restaurantId}
               onChange={(event) => setSelectedRestaurantId(event.target.value)}
             >
+              <option value="">Restoran seçin...</option>
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
                   {restaurantOptionLabel(restaurant)}
@@ -489,6 +492,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <h2>Restoran personalı</h2>
             </div>
             <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
+              <option value="">Restoran seçin...</option>
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
                   {restaurantOptionLabel(restaurant)}
@@ -496,7 +500,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               ))}
             </SelectField>
             {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
-            <RestaurantContextCard restaurant={selectedRestaurant} />
+            {selectedRestaurant ? (
+              <RestaurantContextCard restaurant={selectedRestaurant} />
+            ) : (
+              <EmptyState title="Restoran seçilməyib" message="Personal siyahısını görmək üçün əvvəlcə restoran seçin." />
+            )}
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             <div className="compact-list">
               {staff.map((member) => (
@@ -571,7 +579,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                   ) : null}
                 </article>
               ))}
-              {!isLoading && staff.length === 0 ? <p className="online-only">Bu restoran üçün personal tapılmadı.</p> : null}
+              {!selectedRestaurant ? null : !isLoading && staff.length === 0 ? (
+                <EmptyState title="Personal tapılmadı" message="Bu restoran üçün hələ personal yaradılmayıb." />
+              ) : null}
             </div>
           </section>
         )}

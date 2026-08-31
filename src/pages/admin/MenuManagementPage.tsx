@@ -39,7 +39,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   })
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const { data: itemStatuses } = useAsyncData(() => ecafeApi.lookups.itemStatuses(), [], [])
-  const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const restaurantId = selectedRestaurantId
   const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: categories } = useAsyncData(
     () => (restaurantId ? ecafeApi.menu.categories(restaurantId) : Promise.resolve([])),
@@ -61,8 +61,9 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const itemFormDisabled = !selectedRestaurant || !hasActiveContract || activeCategories.length === 0 || activeStatuses.length === 0 || (mode === 'edit-item' && !editingItem)
 
   useEffect(() => {
-    if (!selectedRestaurantId && restaurants[0]) {
-      setSelectedRestaurantId(searchParams.get('restaurantId') || restaurants[0].id)
+    const restaurantIdFromUrl = searchParams.get('restaurantId')
+    if (!selectedRestaurantId && restaurantIdFromUrl) {
+      setSelectedRestaurantId(restaurantIdFromUrl)
     }
   }, [restaurants, searchParams, selectedRestaurantId])
 
@@ -391,13 +392,23 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
           <SelectField label="Restoran" required value={restaurantId} onChange={(event) => handleRestaurantChange(event.target.value)}>
+            <option value="">Restoran seçin...</option>
             {restaurants.map((restaurant) => (
               <option key={restaurant.id} value={restaurant.id}>
                 {restaurantOptionLabel(restaurant)}
               </option>
             ))}
           </SelectField>
-          <RestaurantContextCard restaurant={selectedRestaurant} />
+          {selectedRestaurant ? (
+            <RestaurantContextCard restaurant={selectedRestaurant} />
+          ) : (
+            <EmptyState
+              title="Restoran seçilməyib"
+              message={mode === 'categories' || mode === 'create-category' || mode === 'edit-category'
+                ? 'Kateqoriyaları görmək üçün əvvəlcə restoran seçin.'
+                : 'Menyu elementlərini görmək üçün əvvəlcə restoran seçin.'}
+            />
+          )}
         </section>
 
         {mode === 'create-category' ? (
@@ -458,7 +469,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                     </div>
                   </article>
                 ))}
-                {categories.length === 0 ? (
+                {!selectedRestaurant ? null : categories.length === 0 ? (
                   <EmptyState title="Kateqoriya yoxdur" message="Bu restoran üçün hələ kateqoriya yaradılmayıb." />
                 ) : null}
               </div>
@@ -562,7 +573,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                   </div>
                 </article>
               ))}
-              {!isLoading && items.length === 0 ? (
+              {!selectedRestaurant ? null : !isLoading && items.length === 0 ? (
                 <EmptyState title="Menyu elementi yoxdur" message="Bu restoran üçün hələ menyu elementi yaradılmayıb." />
               ) : null}
             </div>

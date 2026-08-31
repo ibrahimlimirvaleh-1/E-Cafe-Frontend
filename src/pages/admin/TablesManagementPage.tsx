@@ -7,6 +7,7 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
+import { EmptyState } from '../../shared/ui/EmptyState'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
@@ -28,7 +29,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const [copyMessage, setCopyMessage] = useState('')
   const [copyMessageDetails, setCopyMessageDetails] = useState<ApiErrorDetail[]>([])
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
-  const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const restaurantId = selectedRestaurantId
   const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: tables, isLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.tables.list(restaurantId) : Promise.resolve([])),
@@ -50,8 +51,9 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   }
 
   useEffect(() => {
-    if (!selectedRestaurantId && restaurants[0]) {
-      setSelectedRestaurantId(searchParams.get('restaurantId') || restaurants[0].id)
+    const restaurantIdFromUrl = searchParams.get('restaurantId')
+    if (!selectedRestaurantId && restaurantIdFromUrl) {
+      setSelectedRestaurantId(restaurantIdFromUrl)
     }
   }, [restaurants, searchParams, selectedRestaurantId])
 
@@ -220,6 +222,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <h2>{mode === 'edit' ? 'Masa məlumatlarını yenilə' : 'Masa məlumatları'}</h2>
             </div>
             <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
+              <option value="">Restoran seçin...</option>
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
                   {restaurantOptionLabel(restaurant)}
@@ -241,6 +244,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <h2>Mövcud masalar</h2>
             </div>
             <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
+              <option value="">Restoran seçin...</option>
               {restaurants.map((restaurant) => (
                 <option key={restaurant.id} value={restaurant.id}>
                   {restaurantOptionLabel(restaurant)}
@@ -248,7 +252,11 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               ))}
             </SelectField>
             {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
-            <RestaurantContextCard restaurant={selectedRestaurant} />
+            {selectedRestaurant ? (
+              <RestaurantContextCard restaurant={selectedRestaurant} />
+            ) : (
+              <EmptyState title="Restoran seçilməyib" message="Masaları görmək üçün əvvəlcə restoran seçin." />
+            )}
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             <div className="compact-list">
               {tables.map((table) => (
@@ -292,7 +300,9 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
                   </div>
                 </article>
               ))}
-              {!isLoading && tables.length === 0 ? <p className="online-only">Bu restoran üçün masa yoxdur.</p> : null}
+              {!selectedRestaurant ? null : !isLoading && tables.length === 0 ? (
+                <EmptyState title="Masa yoxdur" message="Bu restoran üçün hələ masa yaradılmayıb." />
+              ) : null}
             </div>
           </section>
         )}
