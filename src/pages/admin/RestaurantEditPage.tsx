@@ -227,7 +227,7 @@ export function RestaurantEditPage() {
         </div>
         <FileUploadField
           label="Restoran şəkli"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           onUploaded={(fileId) => {
             if (fileId) {
               setFileIds((current) => [...current, fileId])

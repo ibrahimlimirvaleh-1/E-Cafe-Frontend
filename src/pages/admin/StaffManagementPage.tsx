@@ -477,7 +477,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                 onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })}
               />
             </div>
-            <FileUploadField label="Profil şəkli" accept="image/*" onUploaded={setFileId} />
+            <FileUploadField label="Profil şəkli" accept="image/jpeg,image/png,image/webp" onUploaded={setFileId} />
             <Button type="submit">{mode === 'edit' ? 'Yadda saxla' : 'Əməkdaş yarat'}</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
