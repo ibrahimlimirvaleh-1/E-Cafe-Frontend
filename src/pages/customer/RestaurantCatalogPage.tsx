@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { createRestaurantMapEmbedUrl } from '../../shared/config/mapConfig'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
@@ -126,7 +127,7 @@ export function RestaurantCatalogPage() {
 }
 
 function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; onClose: () => void }) {
-  const query = encodeURIComponent(`${restaurant.address} ${restaurant.name}`)
+  const mapUrl = createRestaurantMapEmbedUrl(restaurant)
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
@@ -144,7 +145,7 @@ function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; 
         <iframe
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          src={`https://maps.google.com/maps?q=${query}&output=embed`}
+          src={mapUrl}
           title={`${restaurant.name} xəritəsi`}
         />
       </section>

@@ -898,6 +898,22 @@ img {
   text-underline-offset: 3px;
 }
 
+.location-lookup-field {
+  display: grid;
+  gap: 10px;
+}
+
+.location-lookup-field .ui-button {
+  justify-self: start;
+  min-height: 44px;
+}
+
+.field-hint {
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  line-height: 18px;
+}
+
 .map-dialog {
   display: grid;
   width: min(920px, calc(100vw - 32px));

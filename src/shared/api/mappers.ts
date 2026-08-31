@@ -49,6 +49,15 @@ function imageUrl(record: AnyRecord, fallback: string) {
   return resolvePublicApiAssetUrl(str(record.fileUrl || record.imageUrl || record.image || urls[0], fallback))
 }
 
+function nullableNum(value: unknown) {
+  if (value == null || value === '') {
+    return null
+  }
+
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 export function mapRestaurant(record: AnyRecord): Restaurant {
   const restaurant = (record.restaurant && typeof record.restaurant === 'object' ? record.restaurant : record) as AnyRecord
 
@@ -56,6 +65,9 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
     id: str(restaurant.id || restaurant.restaurantId),
     name: str(restaurant.name),
     address: str(restaurant.address || restaurant.location),
+    latitude: nullableNum(restaurant.latitude),
+    longitude: nullableNum(restaurant.longitude),
+    placeId: str(restaurant.placeId || restaurant.place_id) || null,
     phone: str(restaurant.phone),
     email: str(restaurant.email),
     rating: num(restaurant.rating || restaurant.ratingAverage, 4.8),

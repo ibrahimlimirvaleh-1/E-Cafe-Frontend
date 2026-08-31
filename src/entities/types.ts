@@ -25,6 +25,9 @@ export type Restaurant = {
   id: string
   name: string
   address: string
+  latitude?: number | null
+  longitude?: number | null
+  placeId?: string | null
   phone: string
   email?: string
   rating: number

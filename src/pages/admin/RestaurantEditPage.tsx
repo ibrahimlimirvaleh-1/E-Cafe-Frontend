@@ -1,3 +1,4 @@
+import { MapPin } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -24,6 +25,10 @@ export function RestaurantEditPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form, setForm] = useState({
     location: '',
+    latitude: '',
+    longitude: '',
+    placeId: '',
+    geocodedAddress: '',
     phone: '',
     email: '',
     restaurantGroupId: '',
@@ -35,6 +40,7 @@ export function RestaurantEditPage() {
     serviceFeePercent: '0',
     staffSettlementPeriod: '7',
   })
+  const [isGeocoding, setIsGeocoding] = useState(false)
 
   useEffect(() => {
     if (!restaurant) {
@@ -43,6 +49,10 @@ export function RestaurantEditPage() {
 
     setForm({
       location: restaurant.address,
+      latitude: restaurant.latitude == null ? '' : String(restaurant.latitude),
+      longitude: restaurant.longitude == null ? '' : String(restaurant.longitude),
+      placeId: restaurant.placeId || '',
+      geocodedAddress: restaurant.latitude != null && restaurant.longitude != null ? restaurant.address : '',
       phone: restaurant.phone,
       email: restaurant.email || '',
       restaurantGroupId: restaurant.restaurantGroupId || '',
@@ -69,6 +79,9 @@ export function RestaurantEditPage() {
     try {
       await ecafeApi.restaurants.update(restaurantId, {
         location: form.location,
+        latitude: form.latitude ? Number(form.latitude) : null,
+        longitude: form.longitude ? Number(form.longitude) : null,
+        placeId: form.placeId || null,
         phone: form.phone,
         email: form.email,
         restaurantGroupId: form.restaurantGroupId || undefined,
@@ -92,6 +105,30 @@ export function RestaurantEditPage() {
     }
   }
 
+  async function handleGeocode() {
+    setError('')
+    setErrorDetails([])
+    setIsGeocoding(true)
+
+    try {
+      const result = await ecafeApi.restaurants.geocode(form.location)
+      setForm((current) => ({
+        ...current,
+        latitude: String(result.latitude),
+        longitude: String(result.longitude),
+        placeId: result.placeId || '',
+        geocodedAddress: result.displayName,
+      }))
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Məkan xəritədə tapılmadı.')
+      setError(feedback.message)
+      setErrorDetails(feedback.details)
+      setForm((current) => ({ ...current, latitude: '', longitude: '', placeId: '', geocodedAddress: '' }))
+    } finally {
+      setIsGeocoding(false)
+    }
+  }
+
   if (isLoading || !restaurant) {
     return (
       <main className="admin-page narrow">
@@ -106,7 +143,19 @@ export function RestaurantEditPage() {
 
       <form className="admin-panel" onSubmit={handleSubmit}>
         <div className="form-grid two">
-          <TextField label="Məkan" required value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
+          <div className="location-lookup-field">
+            <TextField
+              label="Məkan"
+              required
+              value={form.location}
+              onChange={(event) => setForm({ ...form, location: event.target.value, latitude: '', longitude: '', placeId: '', geocodedAddress: '' })}
+            />
+            <Button disabled={isGeocoding || !form.location.trim()} type="button" variant="secondary" onClick={handleGeocode}>
+              <MapPin size={17} />
+              {isGeocoding ? 'Axtarılır...' : 'Xəritədə tap'}
+            </Button>
+            {form.geocodedAddress ? <small className="field-hint">Tapılan məkan: {form.geocodedAddress}</small> : null}
+          </div>
           <TextField label="Filial adı" required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
         </div>
         <div className="form-grid two">
