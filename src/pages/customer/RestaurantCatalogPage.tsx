@@ -88,11 +88,11 @@ export function RestaurantCatalogPage() {
               <div className="meta-list">
                 <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
                   <MapPin size={16} />
-                  {restaurant.address}
+                  <span>{restaurant.address}</span>
                 </button>
                 <span>
                   <Phone size={16} />
-                  {restaurant.phone}
+                  <span>{restaurant.phone}</span>
                 </span>
               </div>
               <Link
