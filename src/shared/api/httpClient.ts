@@ -1,4 +1,4 @@
-import { clearAuthTokens, getAccessToken, saveAuthTokens } from '../auth/tokenStorage'
+import { clearAuthTokens, getAccessToken, hasManualLogoutMarker, saveAuthTokens } from '../auth/tokenStorage'
 import type { AuthTokens } from '../auth/tokenStorage'
 import { endpoints } from './endpoints'
 
@@ -172,6 +172,10 @@ async function parseResponse<T>(response: Response, init?: RequestOptions): Prom
 }
 
 export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }): Promise<AuthTokens | null> {
+  if (hasManualLogoutMarker()) {
+    return null
+  }
+
   const shouldNotify = options?.notifyOnFailure ?? true
 
   refreshRequestPromise ??= requestRefreshAccessToken().finally(() => {

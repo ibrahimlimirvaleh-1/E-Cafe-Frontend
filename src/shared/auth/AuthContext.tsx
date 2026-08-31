@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUserFromToken } from './jwt'
 import type { CurrentUser } from './jwt'
-import { clearAuthTokens, getAccessToken, saveAuthTokens } from './tokenStorage'
+import { clearAuthTokens, getAccessToken, hasManualLogoutMarker, markManualLogout, saveAuthTokens } from './tokenStorage'
 import type { AuthTokens } from './tokenStorage'
 import { ecafeApi } from '../api/ecafeApi'
 import { refreshAccessToken } from '../api/httpClient'
@@ -87,6 +87,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (didBootstrapSessionRef.current || user || getAccessToken()) {
+      return
+    }
+
+    if (hasManualLogoutMarker()) {
+      setIsAuthReady(true)
       return
     }
 
@@ -319,6 +324,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser((currentUser) => (currentUser ? { ...currentUser, ...patch } : currentUser))
       },
       logout: async () => {
+        markManualLogout()
         try {
           await ecafeApi.auth.logout()
         } finally {
@@ -328,10 +334,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       logoutAll: async () => {
-        await ecafeApi.auth.logoutAll()
-        clearAuthTokens()
-        setUser(null)
-        setIsAuthReady(true)
+        markManualLogout()
+        try {
+          await ecafeApi.auth.logoutAll()
+        } finally {
+          clearAuthTokens()
+          setUser(null)
+          setIsAuthReady(true)
+        }
       },
     }),
     [isAuthReady, user],
