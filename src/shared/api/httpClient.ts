@@ -362,7 +362,7 @@ function translateErrorCode(code: string) {
     InvalidCredentials: 'Email və ya şifrə yanlışdır.',
     InvalidRestaurantId: 'Restoran seçimi düzgün deyil.',
     InvalidRoleId: 'Rol seçimi düzgün deyil.',
-    RestaurantActiveContractRequired: 'Bu əməliyyat üçün restoranın aktiv müqaviləsi olmalıdır.',
+    RestaurantActiveContractRequired: 'Bu restoranın aktiv müqaviləsi yoxdur. Əvvəl müqaviləni aktivləşdirin, sonra əməliyyatı icra edin.',
     RestaurantAlreadyHasActiveContract: 'Bu restoranın aktiv müqaviləsi var. Yeni müqavilə yaratmaq üçün əvvəl cari müqaviləni dayandırın.',
     RestaurantAlreadyHasActiveOwner: 'Bu restoran üçün artıq aktiv sahibkar təyin edilib.',
     RestaurantOwnerNotAssigned: 'Restorana aktiv sahibkar təyin edilməyib. Müqaviləni təsdiqə göndərmək üçün əvvəl restoran sahibkarı əlavə edin.',
