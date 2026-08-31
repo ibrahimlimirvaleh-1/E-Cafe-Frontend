@@ -1,4 +1,4 @@
-import { BadgeCheck, BookOpen, Clock, MapPin, Phone, ShieldCheck, Star, Table2, Users } from 'lucide-react'
+import { BookOpen, Clock, MapPin, Phone, ShieldCheck, Star, Table2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
@@ -8,14 +8,13 @@ import { Button } from '../../shared/ui/Button'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { SafeImage } from '../../shared/ui/SafeImage'
 
-type ProfilePanel = 'staff' | 'tables' | 'menu'
+type ProfilePanel = 'tables' | 'menu'
 
 export function RestaurantProfilePage() {
   const { restaurantId = 'saffron-premium' } = useParams()
-  const [activePanel, setActivePanel] = useState<ProfilePanel>('staff')
+  const [activePanel, setActivePanel] = useState<ProfilePanel>('tables')
   const [activeCategoryId, setActiveCategoryId] = useState('')
   const { data: restaurant } = useAsyncData<Restaurant | null>(() => ecafeApi.restaurants.detail(restaurantId), null, [restaurantId])
-  const { data: staff, isLoading: staffLoading } = useAsyncData(() => ecafeApi.staff.waiters(restaurantId), [], [restaurantId])
   const { data: tables, isLoading: tablesLoading } = useAsyncData(() => ecafeApi.tables.listPublic(restaurantId), [], [restaurantId])
   const { data: menuData, isLoading: menuLoading } = useAsyncData(
     () => ecafeApi.menu.publicMenu(restaurantId),
@@ -76,10 +75,6 @@ export function RestaurantProfilePage() {
             <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/tables`}>
               Rezervasiyaya başla
             </Link>
-            <Button variant={activePanel === 'staff' ? 'primary' : 'secondary'} type="button" onClick={() => setActivePanel('staff')}>
-              <Users size={18} />
-              İşçilər
-            </Button>
             <Button variant={activePanel === 'tables' ? 'primary' : 'secondary'} type="button" onClick={() => setActivePanel('tables')}>
               <Table2 size={18} />
               Stollar
@@ -93,27 +88,6 @@ export function RestaurantProfilePage() {
       </section>
 
       <section className="public-profile-section">
-        {activePanel === 'staff' ? (
-          <>
-            <div className="section-heading">
-              <span className="eyebrow">İşçilər</span>
-              <h2>İşçilər</h2>
-            </div>
-            {staffLoading ? <p className="online-only">İşçilər yüklənir...</p> : null}
-            {!staffLoading && staff.length === 0 ? <p className="online-only">Bu restoran üçün işçi tapılmadı.</p> : null}
-            <div className="choice-grid public-profile-grid">
-              {staff.map((member) => (
-                <article className="choice-card" key={member.id}>
-                  <BadgeCheck size={26} />
-                  <strong>{member.name}</strong>
-                  <span>{member.role}</span>
-                  <small>{member.serviceFeePercent == null ? 'Servis faizi restoran qaydasına görədir' : `Servis faizi ${member.serviceFeePercent}%`}</small>
-                </article>
-              ))}
-            </div>
-          </>
-        ) : null}
-
         {activePanel === 'tables' ? (
           <>
             <div className="section-heading">
