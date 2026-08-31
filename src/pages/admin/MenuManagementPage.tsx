@@ -519,7 +519,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             {!itemForm.isAvailable ? (
               <TextField label="Satışda olmama səbəbi" value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
             ) : null}
-            <FileUploadField label="Yemək şəkli" accept="image/jpeg,image/png,image/webp" onUploaded={setFileId} />
+            <FileUploadField label="Yemək şəkli" accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
             <div className="inline-actions">
               <Button disabled={itemFormDisabled} type="submit">{mode === 'edit-item' ? 'Menyu elementini yenilə' : 'Menyu elementi yarat'}</Button>
               {mode === 'edit-item' ? (

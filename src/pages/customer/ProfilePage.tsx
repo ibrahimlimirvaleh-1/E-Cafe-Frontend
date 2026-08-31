@@ -160,7 +160,7 @@ export function ProfilePage() {
           </div>
           <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
           <TextField label="Telefon" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-          <FileUploadField label="Profil şəkli" accept="image/jpeg,image/png,image/webp" onUploaded={setFileId} />
+          <FileUploadField label="Profil şəkli" accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
 
           <Button disabled={isSaving} type="submit">
             <Save size={18} />
