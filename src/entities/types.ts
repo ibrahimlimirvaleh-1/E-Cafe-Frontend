@@ -207,6 +207,16 @@ export type UserProfile = {
   fileUrl?: string
 }
 
+export type UserSession = {
+  sessionId: string
+  device: string
+  ipAddress?: string
+  createdAt: string
+  lastSeenAt: string
+  expiresAt: string
+  isCurrent: boolean
+}
+
 export type AuditLogEntry = {
   id: string
   action: string

@@ -24,6 +24,7 @@ import type {
   Recipe,
   RestaurantContract,
   RestaurantGroup,
+  UserSession,
   UserProfile,
   WorkflowAction,
 } from '../../entities/types'
@@ -465,6 +466,18 @@ function mapUserProfile(record: AnyRecord): UserProfile {
   }
 }
 
+function mapUserSession(record: AnyRecord): UserSession {
+  return {
+    sessionId: str(record.sessionId),
+    device: str(record.device, 'Naməlum cihaz'),
+    ipAddress: str(record.ipAddress) || undefined,
+    createdAt: str(record.createdAt),
+    lastSeenAt: str(record.lastSeenAt),
+    expiresAt: str(record.expiresAt),
+    isCurrent: bool(record.isCurrent),
+  }
+}
+
 function mapWorkflowAction(record: AnyRecord): WorkflowAction {
   return {
     code: str(record.code || record.actionCode),
@@ -773,6 +786,18 @@ export const ecafeApi = {
         body: formData,
       })
     },
+  },
+
+  userSessions: {
+    list: () =>
+      safe(async () => {
+        const result = await httpClient<unknown>(endpoints.userSessions.list)
+        return asArray<AnyRecord>(result.data).map(mapUserSession)
+      }, [] as UserSession[]),
+    revoke: (sessionId: string) =>
+      httpClient<unknown>(endpoints.userSessions.revoke(sessionId), {
+        method: 'DELETE',
+      }),
   },
 
   notifications: {

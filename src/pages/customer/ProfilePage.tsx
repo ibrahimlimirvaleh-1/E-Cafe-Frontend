@@ -1,6 +1,7 @@
-import { LogOut, Save, ShieldCheck } from 'lucide-react'
+import { LogOut, MonitorSmartphone, Save, ShieldCheck } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { UserSession } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -24,19 +25,23 @@ function isRestaurantScopedRole(roleId: number) {
 }
 
 export function ProfilePage() {
-  const { logoutAll, setSession, updateUser, user } = useAuth()
+  const { logout, logoutAll, setSession, updateUser, user } = useAuth()
   const navigate = useNavigate()
   const { data: profile, error, isLoading } = useAsyncData(() => ecafeApi.profile.get(), null, [])
   const { data: roles } = useAsyncData(() => ecafeApi.lookups.roles(), [], [])
   const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '' })
   const [roleId, setRoleId] = useState('')
   const [fileId, setFileId] = useState<number | null>(null)
+  const [sessions, setSessions] = useState<UserSession[]>([])
+  const [sessionsError, setSessionsError] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
   const [formError, setFormError] = useState('')
   const [formErrorDetails, setFormErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [isSessionsLoading, setIsSessionsLoading] = useState(true)
   const [isLogoutAllConfirmOpen, setIsLogoutAllConfirmOpen] = useState(false)
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false)
+  const [revokingSessionId, setRevokingSessionId] = useState('')
   const canChangeRole = isSuperAdmin(user?.roleId, user?.roleName)
 
   useEffect(() => {
@@ -52,6 +57,36 @@ export function ProfilePage() {
     })
     setRoleId(String(profile.roleId || user?.roleId || ''))
   }, [profile, user?.roleId])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadSessions() {
+      setIsSessionsLoading(true)
+      setSessionsError('')
+
+      try {
+        const result = await ecafeApi.userSessions.list()
+        if (isMounted) {
+          setSessions(result)
+        }
+      } catch (err) {
+        if (isMounted) {
+          setSessionsError(normalizeCaughtApiError(err, 'Aktiv sessiyalar yüklənmədi.').message)
+        }
+      } finally {
+        if (isMounted) {
+          setIsSessionsLoading(false)
+        }
+      }
+    }
+
+    void loadSessions()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -121,6 +156,31 @@ export function ProfilePage() {
       setIsLogoutAllConfirmOpen(false)
     } finally {
       setIsLoggingOutAll(false)
+    }
+  }
+
+  async function handleRevokeSession(session: UserSession) {
+    setFormError('')
+    setFormErrorDetails([])
+    setStatusMessage('')
+    setRevokingSessionId(session.sessionId)
+
+    try {
+      if (session.isCurrent) {
+        await logout()
+        navigate('/login', { replace: true })
+        return
+      }
+
+      await ecafeApi.userSessions.revoke(session.sessionId)
+      setSessions((currentSessions) => currentSessions.filter((item) => item.sessionId !== session.sessionId))
+      setStatusMessage('Seçilmiş sessiya bağlandı.')
+    } catch (err) {
+      const feedback = normalizeCaughtApiError(err, 'Sessiya bağlanmadı.')
+      setFormError(feedback.message)
+      setFormErrorDetails(feedback.details)
+    } finally {
+      setRevokingSessionId('')
     }
   }
 
@@ -217,8 +277,43 @@ export function ProfilePage() {
           <h2>Aktiv sessiyalar</h2>
         </div>
         <p className="muted-text">
-          Hesabınız başqa cihazlarda açıq qalıbsa, bütün aktiv sessiyaları bir əməliyyatla ləğv edə bilərsiniz.
+          Hesabınızın açıq olduğu cihazları yoxlayın və tanımadığınız sessiyaları bağlayın.
         </p>
+
+        <div className="session-list">
+          {isSessionsLoading ? (
+            <div className="empty-state compact">Aktiv sessiyalar yüklənir.</div>
+          ) : sessionsError ? (
+            <div className="empty-state compact">{sessionsError}</div>
+          ) : sessions.length === 0 ? (
+            <div className="empty-state compact">Aktiv sessiya tapılmadı.</div>
+          ) : (
+            sessions.map((session) => (
+              <article className="session-row" key={session.sessionId}>
+                <span className="session-row-icon">
+                  <MonitorSmartphone size={20} />
+                </span>
+                <div>
+                  <strong>{session.device}</strong>
+                  <span>
+                    {session.ipAddress || 'IP qeyd olunmayıb'} · Son aktivlik: {formatSessionDate(session.lastSeenAt)}
+                  </span>
+                </div>
+                {session.isCurrent ? <Badge tone="success">Cari sessiya</Badge> : null}
+                <Button
+                  disabled={revokingSessionId === session.sessionId}
+                  onClick={() => void handleRevokeSession(session)}
+                  type="button"
+                  variant={session.isCurrent ? 'danger' : 'secondary'}
+                >
+                  <LogOut size={18} />
+                  {revokingSessionId === session.sessionId ? 'Bağlanır...' : 'Bağla'}
+                </Button>
+              </article>
+            ))
+          )}
+        </div>
+
         <Button disabled={isLoggingOutAll} onClick={() => setIsLogoutAllConfirmOpen(true)} type="button" variant="danger">
           <LogOut size={18} />
           {isLoggingOutAll ? 'Bağlanır...' : 'Bütün cihazlardan çıxış et'}
@@ -242,4 +337,23 @@ export function ProfilePage() {
       />
     </main>
   )
+}
+
+function formatSessionDate(value: string) {
+  if (!value) {
+    return '-'
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return '-'
+  }
+
+  return new Intl.DateTimeFormat('az-Latn-AZ', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date)
 }

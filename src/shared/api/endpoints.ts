@@ -109,6 +109,10 @@ export const endpoints = {
     get: '/profile',
     update: '/profile',
   },
+  userSessions: {
+    list: '/user/sessions',
+    revoke: (sessionId: string) => `/user/sessions/${encodeURIComponent(sessionId)}`,
+  },
   notifications: {
     list: '/notifications',
     unreadCount: '/notifications/unread-count',

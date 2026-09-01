@@ -2577,6 +2577,60 @@ img {
   justify-self: start;
 }
 
+.session-list {
+  display: grid;
+  gap: 10px;
+}
+
+.session-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  background: var(--surface-low);
+}
+
+.session-row-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--primary);
+  background: var(--secondary-container);
+}
+
+.session-row div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.session-row strong,
+.session-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-row div > span {
+  color: var(--on-surface-variant);
+  font-size: 13px;
+}
+
+.session-row .ui-button {
+  justify-self: end;
+}
+
+.empty-state.compact {
+  display: block;
+  padding: 14px;
+  color: var(--on-surface-variant);
+}
+
 .section-title {
   display: grid;
   gap: 4px;
@@ -3980,6 +4034,20 @@ img {
   .admin-resource-layout.wide,
   .inventory-page-grid {
     grid-template-columns: 1fr;
+  }
+
+  .session-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .session-row .badge {
+    justify-self: start;
+  }
+
+  .session-row .ui-button {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
   }
 
   .contract-filter-area {
