@@ -167,7 +167,11 @@ export function ProfilePage() {
 
       <section className="profile-summary-card">
         <div className="profile-summary-avatar" aria-hidden="true">
-          {getInitials(profile.name, profile.surname)}
+          {profile.fileUrl ? (
+            <img src={profile.fileUrl} alt="" />
+          ) : (
+            getInitials(profile.name, profile.surname)
+          )}
         </div>
         <div className="profile-summary-content">
           <h2>{profile.name} {profile.surname}</h2>

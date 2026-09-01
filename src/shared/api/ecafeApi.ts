@@ -29,7 +29,7 @@ import type {
   WorkflowAction,
 } from '../../entities/types'
 import { endpoints } from './endpoints'
-import { ApiError, fetchProtectedBlob, httpClient } from './httpClient'
+import { ApiError, fetchProtectedBlob, getApiOrigin, httpClient } from './httpClient'
 import {
   categoryRow,
   contractRow,
@@ -449,6 +449,36 @@ function mapGeocodeAddress(record: AnyRecord): GeocodeAddressResponse {
   }
 }
 
+function resolvePublicApiAssetUrl(value: string) {
+  if (!value) {
+    return value
+  }
+
+  const apiPath = extractApiPath(value)
+  if (!apiPath) {
+    return value
+  }
+
+  return `${getApiOrigin()}${apiPath}`
+}
+
+function extractApiPath(value: string) {
+  if (value.startsWith('/api/')) {
+    return value
+  }
+
+  if (!/^https?:\/\//i.test(value)) {
+    return ''
+  }
+
+  try {
+    const url = new URL(value)
+    return url.pathname.startsWith('/api/') ? `${url.pathname}${url.search}` : ''
+  } catch {
+    return ''
+  }
+}
+
 function mapUserProfile(record: AnyRecord): UserProfile {
   return {
     id: str(record.id || record.userId),
@@ -462,7 +492,7 @@ function mapUserProfile(record: AnyRecord): UserProfile {
     role: str(record.role || record.roleName),
     restaurantId: record.restaurantId ? str(record.restaurantId) : undefined,
     restaurantName: str(record.restaurantName),
-    fileUrl: str(record.fileUrl) || undefined,
+    fileUrl: resolvePublicApiAssetUrl(str(record.fileUrl)) || undefined,
   }
 }
 
