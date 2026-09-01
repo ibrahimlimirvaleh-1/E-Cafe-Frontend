@@ -2554,6 +2554,68 @@ img {
   align-items: start;
 }
 
+.profile-summary-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 22px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 22px 26px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-summary-avatar {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--on-surface);
+  color: var(--surface-lowest);
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.profile-summary-content {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.profile-summary-content h2,
+.profile-summary-content p {
+  margin: 0;
+}
+
+.profile-summary-content h2 {
+  font-size: 22px;
+  line-height: 28px;
+}
+
+.profile-summary-content p {
+  overflow: hidden;
+  color: var(--on-surface-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-summary-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-account-grid {
+  grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+}
+
+.profile-account-form {
+  grid-row: span 2;
+}
+
 .admin-panel,
 .detail-list {
   display: grid;
@@ -2569,8 +2631,8 @@ img {
 }
 
 .profile-security-panel {
-  max-width: 720px;
-  margin-top: 24px;
+  max-width: none;
+  margin-top: 0;
 }
 
 .profile-security-panel .ui-button {
@@ -3998,8 +4060,29 @@ img {
   .profile-layout,
   .menu-layout,
   .form-layout,
-  .admin-grid {
+  .admin-grid,
+  .profile-account-grid {
     grid-template-columns: 1fr;
+  }
+
+  .profile-account-form {
+    grid-row: auto;
+  }
+
+  .profile-summary-card {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    padding: 18px;
+  }
+
+  .profile-summary-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 22px;
+  }
+
+  .profile-summary-content p {
+    white-space: normal;
   }
 
   .admin-sidebar {

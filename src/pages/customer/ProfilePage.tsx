@@ -1,36 +1,24 @@
-import { LogOut, MonitorSmartphone, Save, ShieldCheck } from 'lucide-react'
+import { LogOut, MonitorSmartphone, Save } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { UserSession } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
-import { RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
-import { SelectField, TextField } from '../../shared/ui/FormField'
+import { TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
-function isSuperAdmin(roleId?: string, roleName = '') {
-  const normalizedRoleName = roleName.toLowerCase()
-  return roleId === RoleIds.PlatformAdmin || normalizedRoleName.includes('super')
-}
-
-function isRestaurantScopedRole(roleId: number) {
-  return [2, 3, 4, 6].includes(roleId)
-}
-
 export function ProfilePage() {
-  const { logout, logoutAll, setSession, updateUser, user } = useAuth()
+  const { logout, logoutAll, updateUser, user } = useAuth()
   const navigate = useNavigate()
   const { data: profile, error, isLoading } = useAsyncData(() => ecafeApi.profile.get(), null, [])
-  const { data: roles } = useAsyncData(() => ecafeApi.lookups.roles(), [], [])
   const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '' })
-  const [roleId, setRoleId] = useState('')
   const [fileId, setFileId] = useState<number | null>(null)
   const [sessions, setSessions] = useState<UserSession[]>([])
   const [sessionsError, setSessionsError] = useState('')
@@ -42,7 +30,6 @@ export function ProfilePage() {
   const [isLogoutAllConfirmOpen, setIsLogoutAllConfirmOpen] = useState(false)
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false)
   const [revokingSessionId, setRevokingSessionId] = useState('')
-  const canChangeRole = isSuperAdmin(user?.roleId, user?.roleName)
 
   useEffect(() => {
     if (!profile) {
@@ -55,8 +42,7 @@ export function ProfilePage() {
       email: profile.email,
       phone: profile.phone,
     })
-    setRoleId(String(profile.roleId || user?.roleId || ''))
-  }, [profile, user?.roleId])
+  }, [profile])
 
   useEffect(() => {
     let isMounted = true
@@ -105,34 +91,6 @@ export function ProfilePage() {
       setStatusMessage('Profil məlumatları yeniləndi.')
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, 'Profil yenilənmədi.')
-      setFormError(feedback.message)
-      setFormErrorDetails(feedback.details)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  async function handleRoleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (!profile || !roleId) {
-      return
-    }
-
-    setFormError('')
-    setFormErrorDetails([])
-    setStatusMessage('')
-    setIsSaving(true)
-
-    try {
-      const tokens = await ecafeApi.users.updateRole(profile.id, Number(roleId))
-      if (tokens.accessToken) {
-        setSession(tokens)
-        setStatusMessage('Rol dəyişdirildi və token yeniləndi.')
-      } else {
-        setStatusMessage('Rol dəyişdirildi.')
-      }
-    } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Rol dəyişdirilmədi.')
       setFormError(feedback.message)
       setFormErrorDetails(feedback.details)
     } finally {
@@ -205,10 +163,24 @@ export function ProfilePage() {
 
   return (
     <main className="page">
-      <PageHeader eyebrow="Hesab" title="Profil" description="Şəxsi məlumatlarını yenilə və aktiv rolunu yoxla." />
+      <PageHeader eyebrow="Hesab" title="Profil" description="Şəxsi məlumatlarını yenilə, rolunu və hesab təhlükəsizliyini idarə et." />
 
-      <div className="admin-grid">
-        <form className="admin-panel" onSubmit={handleProfileSubmit}>
+      <section className="profile-summary-card">
+        <div className="profile-summary-avatar" aria-hidden="true">
+          {getInitials(profile.name, profile.surname)}
+        </div>
+        <div className="profile-summary-content">
+          <h2>{profile.name} {profile.surname}</h2>
+          <p>{profile.email} · {profile.phone || 'Telefon qeyd olunmayıb'}</p>
+          <div className="profile-summary-badges">
+            <Badge tone={profile.isActive ? 'success' : 'danger'}>{profile.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+            <Badge tone="info">{profile.role || user?.roleName || `Rol #${profile.roleId}`}</Badge>
+          </div>
+        </div>
+      </section>
+
+      <div className="admin-grid profile-account-grid">
+        <form className="admin-panel profile-account-form" onSubmit={handleProfileSubmit}>
           <div className="section-title">
             <span>Profil məlumatları</span>
             <h2>{profile.name} {profile.surname}</h2>
@@ -230,8 +202,8 @@ export function ProfilePage() {
 
         <section className="admin-panel">
           <div className="section-title">
-            <span>Rol və status</span>
-            <h2>İcazə məlumatları</h2>
+            <span>Rol və icazə</span>
+            <h2>Giriş səlahiyyəti</h2>
           </div>
           <div className="detail-list compact">
             <div>
@@ -249,76 +221,58 @@ export function ProfilePage() {
               </div>
             ) : null}
           </div>
+          <p className="muted-text">Rol dəyişiklikləri profil səhifəsindən aparılmır. Bu məlumat yalnız cari giriş səlahiyyətini göstərir.</p>
+        </section>
 
-          {canChangeRole ? (
-            <form className="stacked-form" onSubmit={handleRoleSubmit}>
-              <SelectField label="Rolu dəyiş" required value={roleId} onChange={(event) => setRoleId(event.target.value)}>
-                <option value="">Rol seç</option>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id} disabled={!profile.restaurantId && isRestaurantScopedRole(role.id)}>
-                    {role.name}
-                  </option>
-                ))}
-              </SelectField>
-              <Button disabled={isSaving || !roleId} type="submit" variant="secondary">
-                <ShieldCheck size={18} />
-                Rolu yenilə
-              </Button>
-            </form>
-          ) : (
-            <p className="muted-text">Rol dəyişiklikləri yalnız platforma administratoru tərəfindən edilir.</p>
-          )}
+        <section className="admin-panel profile-security-panel">
+          <div className="section-title">
+            <span>Təhlükəsizlik</span>
+            <h2>Aktiv sessiyalar</h2>
+          </div>
+          <p className="muted-text">
+            Hesabınızın açıq olduğu cihazları yoxlayın və tanımadığınız sessiyaları bağlayın.
+          </p>
+
+          <div className="session-list">
+            {isSessionsLoading ? (
+              <div className="empty-state compact">Aktiv sessiyalar yüklənir.</div>
+            ) : sessionsError ? (
+              <div className="empty-state compact">{sessionsError}</div>
+            ) : sessions.length === 0 ? (
+              <div className="empty-state compact">Aktiv sessiya tapılmadı.</div>
+            ) : (
+              sessions.map((session) => (
+                <article className="session-row" key={session.sessionId}>
+                  <span className="session-row-icon">
+                    <MonitorSmartphone size={20} />
+                  </span>
+                  <div>
+                    <strong>{session.device}</strong>
+                    <span>
+                      {session.ipAddress || 'IP qeyd olunmayıb'} · Son aktivlik: {formatSessionDate(session.lastSeenAt)}
+                    </span>
+                  </div>
+                  {session.isCurrent ? <Badge tone="success">Cari sessiya</Badge> : null}
+                  <Button
+                    disabled={revokingSessionId === session.sessionId}
+                    onClick={() => void handleRevokeSession(session)}
+                    type="button"
+                    variant={session.isCurrent ? 'danger' : 'secondary'}
+                  >
+                    <LogOut size={18} />
+                    {revokingSessionId === session.sessionId ? 'Bağlanır...' : 'Bağla'}
+                  </Button>
+                </article>
+              ))
+            )}
+          </div>
+
+          <Button disabled={isLoggingOutAll} onClick={() => setIsLogoutAllConfirmOpen(true)} type="button" variant="danger">
+            <LogOut size={18} />
+            {isLoggingOutAll ? 'Bağlanır...' : 'Bütün cihazlardan çıxış et'}
+          </Button>
         </section>
       </div>
-
-      <section className="admin-panel profile-security-panel">
-        <div className="section-title">
-          <span>Təhlükəsizlik</span>
-          <h2>Aktiv sessiyalar</h2>
-        </div>
-        <p className="muted-text">
-          Hesabınızın açıq olduğu cihazları yoxlayın və tanımadığınız sessiyaları bağlayın.
-        </p>
-
-        <div className="session-list">
-          {isSessionsLoading ? (
-            <div className="empty-state compact">Aktiv sessiyalar yüklənir.</div>
-          ) : sessionsError ? (
-            <div className="empty-state compact">{sessionsError}</div>
-          ) : sessions.length === 0 ? (
-            <div className="empty-state compact">Aktiv sessiya tapılmadı.</div>
-          ) : (
-            sessions.map((session) => (
-              <article className="session-row" key={session.sessionId}>
-                <span className="session-row-icon">
-                  <MonitorSmartphone size={20} />
-                </span>
-                <div>
-                  <strong>{session.device}</strong>
-                  <span>
-                    {session.ipAddress || 'IP qeyd olunmayıb'} · Son aktivlik: {formatSessionDate(session.lastSeenAt)}
-                  </span>
-                </div>
-                {session.isCurrent ? <Badge tone="success">Cari sessiya</Badge> : null}
-                <Button
-                  disabled={revokingSessionId === session.sessionId}
-                  onClick={() => void handleRevokeSession(session)}
-                  type="button"
-                  variant={session.isCurrent ? 'danger' : 'secondary'}
-                >
-                  <LogOut size={18} />
-                  {revokingSessionId === session.sessionId ? 'Bağlanır...' : 'Bağla'}
-                </Button>
-              </article>
-            ))
-          )}
-        </div>
-
-        <Button disabled={isLoggingOutAll} onClick={() => setIsLogoutAllConfirmOpen(true)} type="button" variant="danger">
-          <LogOut size={18} />
-          {isLoggingOutAll ? 'Bağlanır...' : 'Bütün cihazlardan çıxış et'}
-        </Button>
-      </section>
 
       {statusMessage ? <StatusMessage>{statusMessage}</StatusMessage> : null}
       {formError ? <StatusMessage details={formErrorDetails} tone="danger">{formError}</StatusMessage> : null}
@@ -337,6 +291,11 @@ export function ProfilePage() {
       />
     </main>
   )
+}
+
+function getInitials(name: string, surname: string) {
+  const initials = `${name?.trim().charAt(0) || ''}${surname?.trim().charAt(0) || ''}`.toUpperCase()
+  return initials || 'U'
 }
 
 function formatSessionDate(value: string) {
