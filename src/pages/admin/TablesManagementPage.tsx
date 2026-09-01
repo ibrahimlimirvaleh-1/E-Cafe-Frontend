@@ -8,9 +8,10 @@ import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButt
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { EmptyState } from '../../shared/ui/EmptyState'
-import { SelectField, TextField } from '../../shared/ui/FormField'
+import { TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
-import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { RestaurantContextCard } from '../../shared/ui/RestaurantContextCard'
+import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type TablesPageMode = 'list' | 'create' | 'edit'
@@ -221,14 +222,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni masa'}</span>
               <h2>{mode === 'edit' ? 'Masa məlumatlarını yenilə' : 'Masa məlumatları'}</h2>
             </div>
-            <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
-              <option value="">Restoran seçin...</option>
-              {restaurants.map((restaurant) => (
-                <option key={restaurant.id} value={restaurant.id}>
-                  {restaurantOptionLabel(restaurant)}
-                </option>
-              ))}
-            </SelectField>
+            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={restaurants} value={restaurantId} />
             <div className="form-grid two">
               <TextField label="Masa nömrəsi" required value={form.tableNo} onChange={(event) => setForm({ ...form, tableNo: event.target.value })} />
               <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
@@ -243,14 +237,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <span className="eyebrow">Siyahı</span>
               <h2>Mövcud masalar</h2>
             </div>
-            <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
-              <option value="">Restoran seçin...</option>
-              {restaurants.map((restaurant) => (
-                <option key={restaurant.id} value={restaurant.id}>
-                  {restaurantOptionLabel(restaurant)}
-                </option>
-              ))}
-            </SelectField>
+            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={restaurants} value={restaurantId} />
             {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
             {selectedRestaurant ? (
               <RestaurantContextCard restaurant={selectedRestaurant} />

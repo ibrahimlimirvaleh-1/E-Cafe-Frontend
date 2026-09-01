@@ -7,6 +7,7 @@ import { Badge } from '../../shared/ui/Badge'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
+import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 
 const defaultPageSize = 10
 
@@ -123,13 +124,14 @@ export function AuditLogPage() {
       <PageHeader eyebrow="Admin" title="Audit loglar" />
 
       <section className="admin-panel audit-toolbar">
-        <SelectField label="Restoran" required value={restaurantId} onChange={(event) => resetPageAnd(setSelectedRestaurantId, event.target.value)}>
-          {restaurants.map((restaurant) => (
-            <option key={restaurant.id} value={restaurant.id}>
-              {restaurant.name}
-            </option>
-          ))}
-        </SelectField>
+        <RestaurantSelectField
+          emptyOption={null}
+          label="Restoran"
+          onChange={(nextRestaurantId) => resetPageAnd(setSelectedRestaurantId, nextRestaurantId)}
+          required
+          restaurants={restaurants}
+          value={restaurantId}
+        />
         <div className="filter-popover">
           <button type="button" className="ui-button ui-button-secondary filter-trigger" onClick={openFilterPanel}>
             <SlidersHorizontal size={18} />

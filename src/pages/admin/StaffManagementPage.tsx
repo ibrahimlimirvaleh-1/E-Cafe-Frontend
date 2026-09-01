@@ -14,7 +14,8 @@ import { EmptyState } from '../../shared/ui/EmptyState'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
-import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { RestaurantContextCard } from '../../shared/ui/RestaurantContextCard'
+import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { SafeImage } from '../../shared/ui/SafeImage'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
@@ -394,20 +395,14 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                 </div>
               </div>
             ) : null}
-            <SelectField
+            <RestaurantSelectField
               error={fieldError('RestaurantId')}
               label="Restoran"
+              onChange={setSelectedRestaurantId}
               required
+              restaurants={restaurants}
               value={restaurantId}
-              onChange={(event) => setSelectedRestaurantId(event.target.value)}
-            >
-              <option value="">Restoran seçin...</option>
-              {restaurants.map((restaurant) => (
-                <option key={restaurant.id} value={restaurant.id}>
-                  {restaurantOptionLabel(restaurant)}
-                </option>
-              ))}
-            </SelectField>
+            />
             <div className="form-grid two">
               <TextField
                 error={fieldError('Name')}
@@ -491,14 +486,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <span className="eyebrow">Siyahı</span>
               <h2>Restoran personalı</h2>
             </div>
-            <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
-              <option value="">Restoran seçin...</option>
-              {restaurants.map((restaurant) => (
-                <option key={restaurant.id} value={restaurant.id}>
-                  {restaurantOptionLabel(restaurant)}
-                </option>
-              ))}
-            </SelectField>
+            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={restaurants} value={restaurantId} />
             {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
             {selectedRestaurant ? (
               <RestaurantContextCard restaurant={selectedRestaurant} />

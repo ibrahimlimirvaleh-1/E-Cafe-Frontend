@@ -10,6 +10,7 @@ import { ActionIconLink } from '../../../shared/ui/ActionIconButton'
 import { Badge } from '../../../shared/ui/Badge'
 import { ButtonLink } from '../../../shared/ui/Button'
 import { PageHeader } from '../../../shared/ui/PageHeader'
+import { RestaurantSelectField } from '../../../shared/ui/RestaurantSelectField'
 
 type ContractFilterState = {
   dateFrom: string
@@ -184,20 +185,13 @@ export function ContractListPage() {
           <div className="contract-filter-panel">
             <span>Sırala</span>
             {isPlatformAdmin ? (
-              <label>
-                Restoran
-                <select
-                  onChange={(event) => setFilters((current) => ({ ...current, restaurantId: event.target.value }))}
-                  value={filters.restaurantId}
-                >
-                  <option value="all">Bütün restoranlar</option>
-                  {restaurantOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <RestaurantSelectField
+                emptyOption={null}
+                label="Restoran"
+                onChange={(restaurantId) => setFilters((current) => ({ ...current, restaurantId }))}
+                options={[{ label: 'Bütün restoranlar', value: 'all' }, ...restaurantOptions]}
+                value={filters.restaurantId}
+              />
             ) : null}
             <label>
               Bitmə tarixi başlanğıc
