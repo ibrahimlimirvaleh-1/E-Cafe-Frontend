@@ -4842,6 +4842,16 @@ body {
   font-weight: 800;
 }
 
+.contract-filter-panel .restaurant-select-field {
+  gap: 7px;
+}
+
+.contract-filter-panel .restaurant-select-field > span {
+  color: var(--on-surface);
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .contract-filter-panel input,
 .contract-filter-panel select {
   min-height: 48px;

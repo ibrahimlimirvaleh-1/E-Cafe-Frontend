@@ -14,7 +14,8 @@ import { EmptyState } from '../../shared/ui/EmptyState'
 import { SelectField, TextareaField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
-import { RestaurantContextCard, restaurantOptionLabel } from '../../shared/ui/RestaurantContextCard'
+import { RestaurantContextCard } from '../../shared/ui/RestaurantContextCard'
+import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { InventoryItem, InventoryMovement, MenuItem, Recipe } from '../../entities/types'
 
@@ -495,13 +496,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       <section className={`inventory-page-grid inventory-page-grid-${mode}`}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
-          <SelectField label="Restoran" required value={restaurantId} onChange={(event) => setSelectedRestaurantId(event.target.value)}>
-            {restaurants.map((restaurant) => (
-              <option key={restaurant.id} value={restaurant.id}>
-                {restaurantOptionLabel(restaurant)}
-              </option>
-            ))}
-          </SelectField>
+          <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={restaurants} value={restaurantId} />
           <RestaurantContextCard restaurant={selectedRestaurant} />
         </section>
 

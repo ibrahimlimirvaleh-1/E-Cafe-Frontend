@@ -7,8 +7,9 @@ import { useAuth } from '../../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../../shared/auth/authz'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../../shared/ui/Button'
-import { SelectField, TextField } from '../../../shared/ui/FormField'
+import { TextField } from '../../../shared/ui/FormField'
 import { PageHeader } from '../../../shared/ui/PageHeader'
+import { RestaurantSelectField } from '../../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../../shared/ui/StatusMessage'
 
 function todayInputValue() {
@@ -136,18 +137,14 @@ export function ContractFormPage() {
       <PageHeader eyebrow={isEditMode ? 'Müqavilə redaktəsi' : 'Yeni müqavilə'} title={isEditMode ? 'Müqaviləni redaktə et' : 'Müqavilə yarat'} />
 
       <form className="form-card" onSubmit={handleSubmit}>
-        <SelectField
+        <RestaurantSelectField
           disabled={isEditMode || isLoading || restaurants.length === 0}
+          emptyOption={null}
           label="Restoran"
-          onChange={(event) => setRestaurantId(event.target.value)}
+          onChange={setRestaurantId}
+          restaurants={restaurants}
           value={selectedRestaurantId}
-        >
-          {restaurants.map((restaurant) => (
-            <option key={restaurant.id} value={restaurant.id}>
-              {restaurant.name}
-            </option>
-          ))}
-        </SelectField>
+        />
 
         <div className="form-row">
           <TextField label="Başlama tarixi" onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />

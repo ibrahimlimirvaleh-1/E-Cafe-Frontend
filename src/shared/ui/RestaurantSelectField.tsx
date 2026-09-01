@@ -5,30 +5,39 @@ import { restaurantOptionLabel } from './RestaurantContextCard'
 
 type RestaurantSelectFieldProps = {
   disabled?: boolean
+  emptyOption?: { label: string; value: string } | null
   error?: string
   label?: string
   onChange: (restaurantId: string) => void
+  options?: Array<{ label: string; value: string }>
   placeholder?: string
   required?: boolean
-  restaurants: Restaurant[]
+  restaurants?: Restaurant[]
   value: string
 }
 
 export function RestaurantSelectField({
   disabled = false,
+  emptyOption,
   error,
   label = 'Restoran',
   onChange,
+  options,
   placeholder = 'Restoran seçin...',
   required = false,
-  restaurants,
+  restaurants = [],
   value,
 }: RestaurantSelectFieldProps) {
   const listboxId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === value)
-  const selectedLabel = selectedRestaurant ? restaurantOptionLabel(selectedRestaurant) : ''
+  const restaurantOptions = options ?? restaurants.map((restaurant) => ({
+    label: restaurantOptionLabel(restaurant),
+    value: restaurant.id,
+  }))
+  const fallbackOption = emptyOption === undefined ? { label: placeholder, value: '' } : emptyOption
+  const selectedOption = restaurantOptions.find((option) => option.value === value)
+  const selectedLabel = selectedOption?.label ?? (fallbackOption?.value === value ? fallbackOption.label : '')
 
   useEffect(() => {
     if (!isOpen) {
@@ -83,28 +92,30 @@ export function RestaurantSelectField({
       </button>
       {isOpen ? (
         <div className="restaurant-select-options" id={listboxId} role="listbox">
-          <button
-            className={!value ? 'selected' : undefined}
-            onClick={() => selectRestaurant('')}
-            role="option"
-            title={placeholder}
-            type="button"
-          >
-            {placeholder}
-          </button>
-          {restaurants.map((restaurant) => {
-            const optionLabel = restaurantOptionLabel(restaurant)
+          {fallbackOption ? (
+            <button
+              aria-selected={fallbackOption.value === value}
+              className={fallbackOption.value === value ? 'selected' : undefined}
+              onClick={() => selectRestaurant(fallbackOption.value)}
+              role="option"
+              title={fallbackOption.label}
+              type="button"
+            >
+              {fallbackOption.label}
+            </button>
+          ) : null}
+          {restaurantOptions.map((option) => {
             return (
               <button
-                aria-selected={restaurant.id === value}
-                className={restaurant.id === value ? 'selected' : undefined}
-                key={restaurant.id}
-                onClick={() => selectRestaurant(restaurant.id)}
+                aria-selected={option.value === value}
+                className={option.value === value ? 'selected' : undefined}
+                key={option.value}
+                onClick={() => selectRestaurant(option.value)}
                 role="option"
-                title={optionLabel}
+                title={option.label}
                 type="button"
               >
-                {optionLabel}
+                {option.label}
               </button>
             )
           })}
