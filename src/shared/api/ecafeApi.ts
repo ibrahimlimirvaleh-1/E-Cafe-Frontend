@@ -1212,9 +1212,9 @@ export const ecafeApi = {
       }, contracts.filter((contract) => contract.restaurantId === restaurantId)),
     records: (query: ContractRecordQuery = {}) =>
       safe(() => fetchContractRecords(query), contracts.map((contract) => ({ contract, restaurantName: contract.restaurantId }))),
-    get: (contractId: string) =>
+    get: (contractId: string, restaurantId?: string) =>
       safe(async () => {
-        const records = await fetchContractRecords()
+        const records = await fetchContractRecords(restaurantId ? { restaurantId } : {})
         return records.find((entry) => entry.contract.id === contractId) ?? null
       }, null),
     listAll: () =>
