@@ -9,7 +9,14 @@ export type CurrentUser = {
   roleId: string
   roleName: string
   restaurantId?: string
+  restaurantIds: string[]
+  restaurantRoles: RestaurantRoleAssignment[]
   permissions: string[]
+}
+
+export type RestaurantRoleAssignment = {
+  restaurantId: string
+  roleId: string
 }
 
 const roleClaim = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
@@ -20,7 +27,25 @@ function claimArray(value: unknown): string[] {
   }
 
   const singleValue = str(value)
-  return singleValue ? [singleValue] : []
+  return singleValue
+    ? singleValue
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : []
+}
+
+function unique(values: string[]) {
+  return [...new Set(values.filter(Boolean))]
+}
+
+function parseRestaurantRoles(value: unknown): RestaurantRoleAssignment[] {
+  return claimArray(value)
+    .map((item) => {
+      const [restaurantId, roleId] = item.split(':').map((part) => part.trim())
+      return restaurantId && roleId ? { restaurantId, roleId } : null
+    })
+    .filter((item): item is RestaurantRoleAssignment => item !== null)
 }
 
 export function decodeJwtPayload(token: string): AnyRecord | null {
@@ -46,14 +71,24 @@ export function getUserFromToken(token: string): CurrentUser | null {
     return null
   }
 
+  const restaurantId = str(payload.restaurantId) || undefined
+  const restaurantRoles = parseRestaurantRoles(payload.restaurantRoles)
+  const restaurantIds = unique([
+    ...claimArray(payload.restaurantIds),
+    ...restaurantRoles.map((assignment) => assignment.restaurantId),
+    restaurantId || '',
+  ])
+
   return {
     userId: str(payload.userId),
     name: str(payload.name),
     surname: str(payload.surname),
     email: str(payload.email),
-    roleId: str(payload[roleClaim]),
+    roleId: str(payload[roleClaim] || payload.roleId),
     roleName: str(payload.roleName),
-    restaurantId: str(payload.restaurantId) || undefined,
+    restaurantId,
+    restaurantIds,
+    restaurantRoles,
     permissions: claimArray(payload.permission || payload.permissions),
   }
 }

@@ -153,6 +153,14 @@ type CreateRestaurantRequest = {
   serviceFeePercent: number
   staffSettlementPeriod: number
   defaultWaiterTableLimit?: number | null
+  owner?: {
+    id?: string | number | null
+    searchText?: string | null
+    email?: string | null
+    phone?: string | null
+    firstName?: string | null
+    lastName?: string | null
+  }
   fileIds?: number[]
 }
 
@@ -882,6 +890,12 @@ export const ecafeApi = {
       formData.set('ServiceFeePercent', String(request.serviceFeePercent))
       formData.set('StaffSettlementPeriod', String(request.staffSettlementPeriod))
       appendIfPresent(formData, 'DefaultWaiterTableLimit', request.defaultWaiterTableLimit)
+      appendIfPresent(formData, 'Owner.Id', request.owner?.id)
+      appendIfPresent(formData, 'Owner.SearchText', request.owner?.searchText)
+      appendIfPresent(formData, 'Owner.Email', request.owner?.email)
+      appendIfPresent(formData, 'Owner.Phone', request.owner?.phone)
+      appendIfPresent(formData, 'Owner.FirstName', request.owner?.firstName)
+      appendIfPresent(formData, 'Owner.LastName', request.owner?.lastName)
       request.fileIds?.forEach((fileId) => formData.append('FileIds', String(fileId)))
 
       const result = await httpClient<unknown>(endpoints.restaurants.create, {

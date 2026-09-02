@@ -3,7 +3,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
-import { hasPermission } from '../../shared/auth/authz'
+import { getAccessibleItems, hasPermission } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { useFormFeedback } from '../../shared/hooks/useFormFeedback'
 import { ActionIconButton } from '../../shared/ui/ActionIconButton'
@@ -123,8 +123,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   })
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
-  const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
-  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
+  const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
+  const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId)
+    ? selectedRestaurantId
+    : accessibleRestaurants[0]?.id || ''
+  const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
 
   const { data: inventoryItems, isLoading: inventoryLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.inventory.list(restaurantId, { onlyLowStock }) : Promise.resolve([])),
@@ -185,10 +188,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   const movements = movementPage.items
 
   useEffect(() => {
-    if (!selectedRestaurantId && restaurants[0]) {
-      setSelectedRestaurantId(restaurants[0].id)
+    if (!selectedRestaurantId && accessibleRestaurants[0]) {
+      setSelectedRestaurantId(accessibleRestaurants[0].id)
     }
-  }, [restaurants, selectedRestaurantId])
+  }, [accessibleRestaurants, selectedRestaurantId])
 
   useEffect(() => {
     if (inventorySelectionItems[0] && !inventorySelectionItems.some((item) => item.id === selectedInventoryId)) {
@@ -496,7 +499,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       <section className={`inventory-page-grid inventory-page-grid-${mode}`}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
-          <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={restaurants} value={restaurantId} />
+          <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
           <RestaurantContextCard restaurant={selectedRestaurant} />
         </section>
 

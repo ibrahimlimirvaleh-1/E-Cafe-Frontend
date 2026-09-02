@@ -33,6 +33,11 @@ const initialForm = {
   cancellationWindowMinutes: '60',
   serviceFeePercent: '0',
   staffSettlementPeriod: '7',
+  ownerId: '',
+  ownerEmail: '',
+  ownerPhone: '',
+  ownerFirstName: '',
+  ownerLastName: '',
 }
 
 const defaultPageSize = 10
@@ -106,6 +111,14 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         serviceFeePercent: Number(form.serviceFeePercent),
         staffSettlementPeriod: Number(form.staffSettlementPeriod),
         defaultWaiterTableLimit: null,
+        owner: {
+          id: form.ownerId || null,
+          searchText: form.ownerEmail || null,
+          email: form.ownerEmail || null,
+          phone: form.ownerPhone || null,
+          firstName: form.ownerFirstName || null,
+          lastName: form.ownerLastName || null,
+        },
         fileIds,
       })
       setForm(initialForm)
@@ -287,6 +300,20 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           <div className="form-grid two">
             <TextField label="Ləğv pəncərəsi dəqiqə" min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
             <TextField label="Personal hesablaşma günü" min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
+          </div>
+          <div>
+            <span className="eyebrow">Sahibkar</span>
+            <h2>Sahibkar məlumatları</h2>
+            <p className="form-helper">Mövcud sahibkarın emailini daxil edin. Email sistemdə yoxdursa, aşağıdakı məlumatlarla yeni sahibkar yaradılacaq.</p>
+          </div>
+          <div className="form-grid two">
+            <TextField label="Mövcud sahibkar ID" min={1} type="number" value={form.ownerId} onChange={(event) => setForm({ ...form, ownerId: event.target.value })} />
+            <TextField label="Sahibkar email" required type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
+          </div>
+          <div className="form-grid three">
+            <TextField label="Yeni sahibkar adı" value={form.ownerFirstName} onChange={(event) => setForm({ ...form, ownerFirstName: event.target.value })} />
+            <TextField label="Yeni sahibkar soyadı" value={form.ownerLastName} onChange={(event) => setForm({ ...form, ownerLastName: event.target.value })} />
+            <TextField label="Yeni sahibkar telefonu" value={form.ownerPhone} onChange={(event) => setForm({ ...form, ownerPhone: event.target.value })} />
           </div>
           <FileUploadField
             label="Restoran şəkli"

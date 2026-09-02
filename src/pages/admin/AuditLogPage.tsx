@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Eye, SlidersHorizontal, X } from 'lucide-react'
 import type { AuditLogEntry } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { getAccessibleItems } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { SelectField, TextField } from '../../shared/ui/FormField'
@@ -43,6 +45,7 @@ function toLocalDateTime(value: string) {
 }
 
 export function AuditLogPage() {
+  const { user } = useAuth()
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
@@ -52,7 +55,10 @@ export function AuditLogPage() {
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null)
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const { data: auditActions } = useAsyncData(() => ecafeApi.lookups.auditActions(), [], [])
-  const restaurantId = selectedRestaurantId || restaurants[0]?.id || ''
+  const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
+  const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId)
+    ? selectedRestaurantId
+    : accessibleRestaurants[0]?.id || ''
   const query = useMemo(
     () => ({
       action: filters.action,
@@ -87,10 +93,10 @@ export function AuditLogPage() {
   )
 
   useEffect(() => {
-    if (!selectedRestaurantId && restaurants[0]) {
-      setSelectedRestaurantId(restaurants[0].id)
+    if (!selectedRestaurantId && accessibleRestaurants[0]) {
+      setSelectedRestaurantId(accessibleRestaurants[0].id)
     }
-  }, [restaurants, selectedRestaurantId])
+  }, [accessibleRestaurants, selectedRestaurantId])
 
   function resetPageAnd(setter: (value: string) => void, value: string) {
     setter(value)
@@ -129,7 +135,7 @@ export function AuditLogPage() {
           label="Restoran"
           onChange={(nextRestaurantId) => resetPageAnd(setSelectedRestaurantId, nextRestaurantId)}
           required
-          restaurants={restaurants}
+          restaurants={accessibleRestaurants}
           value={restaurantId}
         />
         <div className="filter-popover">

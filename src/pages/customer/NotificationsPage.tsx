@@ -5,7 +5,7 @@ import type { NotificationItem, StatusTone } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import type { CurrentUser } from '../../shared/auth/jwt'
-import { RoleIds } from '../../shared/auth/authz'
+import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { canAccessAdminModule } from '../../shared/config/adminPermissions'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
@@ -36,16 +36,16 @@ function notificationRoute(notification: NotificationItem, user?: CurrentUser | 
     (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
   const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
 
-  if (contractId && canAccessAdminModule(user, 'contracts')) {
+  if (contractId && canAccessAdminModule(user, 'contracts', restaurantId)) {
     return `/admin/contracts/${contractId}`
   }
 
   if (relatedType.includes('order')) {
-    if (user?.roleId === RoleIds.Kitchen) {
+    if (isInRole(user, [RoleIds.Kitchen], restaurantId)) {
       return '/kitchen'
     }
 
-    if (user?.roleId === RoleIds.Waiter) {
+    if (isInRole(user, [RoleIds.Waiter], restaurantId)) {
       return '/waiter/orders'
     }
 
@@ -56,7 +56,7 @@ function notificationRoute(notification: NotificationItem, user?: CurrentUser | 
     return '/admin/reservations'
   }
 
-  if (restaurantId && canAccessAdminModule(user, 'restaurants')) {
+  if (restaurantId && canAccessAdminModule(user, 'restaurants', restaurantId)) {
     return `/admin/restaurants/${restaurantId}`
   }
 

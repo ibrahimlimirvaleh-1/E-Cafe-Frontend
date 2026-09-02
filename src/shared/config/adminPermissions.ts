@@ -1,6 +1,6 @@
 import type { AdminModuleKey } from '../../entities/types'
 import type { CurrentUser } from '../auth/jwt'
-import { RoleIds, hasAnyPermission, isInRole } from '../auth/authz'
+import { RoleIds, canAccessRestaurant, hasAnyPermission, isInRole, isPlatformAdmin } from '../auth/authz'
 
 export const adminModulePermissions: Record<AdminModuleKey, string[]> = {
   restaurants: ['ManageRestaurants', 'ViewRestaurantInfo'],
@@ -25,11 +25,15 @@ const adminModuleRoleAccess: Partial<Record<AdminModuleKey, readonly string[]>> 
   'restaurant-groups': [RoleIds.PlatformAdmin],
 }
 
-export function canAccessAdminModule(user: CurrentUser | null | undefined, moduleKey: AdminModuleKey) {
-  const allowedRoles = adminModuleRoleAccess[moduleKey]
-  if (allowedRoles?.length && !isInRole(user, allowedRoles)) {
+export function canAccessAdminModule(user: CurrentUser | null | undefined, moduleKey: AdminModuleKey, restaurantId?: string | null) {
+  if (restaurantId && !canAccessRestaurant(user, restaurantId)) {
     return false
   }
 
-  return isInRole(user, [RoleIds.PlatformAdmin]) || hasAnyPermission(user, adminModulePermissions[moduleKey])
+  const allowedRoles = adminModuleRoleAccess[moduleKey]
+  if (allowedRoles?.length && !isInRole(user, allowedRoles, restaurantId)) {
+    return false
+  }
+
+  return isPlatformAdmin(user) || hasAnyPermission(user, adminModulePermissions[moduleKey])
 }
