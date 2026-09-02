@@ -3141,6 +3141,115 @@ img {
   gap: 12px;
 }
 
+.owner-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.owner-mode-switch button,
+.owner-results button {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  padding: 14px;
+  color: var(--text);
+  background: var(--surface-low);
+  text-align: left;
+  cursor: pointer;
+}
+
+.owner-mode-switch button.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-lowest));
+}
+
+.owner-mode-switch button > span,
+.owner-results button > span,
+.owner-selected-card > div:not(.owner-avatar) {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.owner-mode-switch strong,
+.owner-results strong,
+.owner-selected-card strong {
+  color: var(--text);
+}
+
+.owner-mode-switch small,
+.owner-results small,
+.owner-selected-card span,
+.owner-empty-message {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.owner-picker,
+.new-owner-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.owner-results {
+  display: grid;
+  gap: 8px;
+}
+
+.owner-results button,
+.owner-selected-card {
+  align-items: center;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.owner-results button:hover,
+.owner-results button:focus-visible {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-lowest));
+}
+
+.owner-selected-card {
+  gap: 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: var(--surface-low);
+}
+
+.owner-selected-card > small {
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 12%, var(--surface-lowest));
+  font-weight: 700;
+}
+
+.owner-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  color: var(--surface-lowest);
+  background: var(--text);
+  font-weight: 800;
+}
+
+.owner-empty-message {
+  margin: 0;
+  border: 1px dashed var(--outline-variant);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: var(--surface-low);
+}
+
 .stack-form {
   display: grid;
   gap: 14px;
@@ -4438,6 +4547,21 @@ img {
   .form-grid.two,
   .form-grid.three {
     grid-template-columns: 1fr;
+  }
+
+  .owner-mode-switch,
+  .owner-results button,
+  .owner-selected-card {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-mode-switch button {
+    align-items: center;
+  }
+
+  .owner-results button,
+  .owner-selected-card {
+    justify-items: start;
   }
 
   .copy-table-row {
