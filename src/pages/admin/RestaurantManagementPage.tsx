@@ -1,6 +1,7 @@
-import { CheckCircle2, MapPin, Search } from 'lucide-react'
+import { CheckCircle2, MapPin, Search, UserPlus } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import type { UserProfile } from '../../entities/types'
 import { ecafeApi, type GeocodeAddressResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { restaurantRow } from '../../shared/api/mappers'
@@ -41,6 +42,38 @@ const initialForm = {
 }
 
 const defaultPageSize = 10
+type OwnerMode = 'existing' | 'new'
+type RestaurantFormState = typeof initialForm
+
+function isOwnerProfile(user: UserProfile) {
+  return user.roleId === Number(RoleIds.Owner) || user.role.toLowerCase().includes('sahibkar') || user.role.toLowerCase().includes('owner')
+}
+
+function ownerInitials(owner: Pick<UserProfile, 'name' | 'surname'>) {
+  return `${owner.name.charAt(0)}${owner.surname.charAt(0)}`.toUpperCase() || 'S'
+}
+
+function ownerPayload(ownerMode: OwnerMode, form: RestaurantFormState) {
+  if (ownerMode === 'existing') {
+    return {
+      id: form.ownerId || null,
+      searchText: form.ownerEmail || null,
+      email: form.ownerEmail || null,
+      phone: null,
+      firstName: null,
+      lastName: null,
+    }
+  }
+
+  return {
+    id: null,
+    searchText: form.ownerEmail || null,
+    email: form.ownerEmail || null,
+    phone: form.ownerPhone || null,
+    firstName: form.ownerFirstName || null,
+    lastName: form.ownerLastName || null,
+  }
+}
 
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
   const { user } = useAuth()
@@ -54,6 +87,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   const [form, setForm] = useState(initialForm)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [locationResults, setLocationResults] = useState<GeocodeAddressResponse[]>([])
+  const [ownerMode, setOwnerMode] = useState<OwnerMode>('existing')
   const query = useMemo(() => {
     const params = new URLSearchParams({
       pageNumber: String(pageNumber),
@@ -77,7 +111,33 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   const { data: groups } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
   const canCreateRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
   const canSearchRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
+  const { data: users } = useAsyncData(
+    () => (mode === 'create' && canCreateRestaurants ? ecafeApi.users.list() : Promise.resolve([])),
+    [],
+    [canCreateRestaurants, mode, reloadKey],
+  )
   const pageTitle = mode === 'create' ? 'Yeni restoran' : canSearchRestaurants ? 'Restoranlar' : 'Restoran'
+  const ownerSearch = form.ownerEmail.trim().toLowerCase()
+  const ownerCandidates = useMemo(
+    () =>
+      users
+        .filter((candidate) => isOwnerProfile(candidate))
+        .filter((candidate) => {
+          if (!ownerSearch) {
+            return false
+          }
+
+          return [
+            candidate.name,
+            candidate.surname,
+            candidate.email,
+            candidate.phone,
+          ].some((value) => value?.toLowerCase().includes(ownerSearch))
+        })
+        .slice(0, 4),
+    [ownerSearch, users],
+  )
+  const selectedOwner = users.find((candidate) => candidate.id === form.ownerId)
 
   if (mode === 'create' && !canCreateRestaurants) {
     return <Navigate to="/admin/restaurants" replace />
@@ -91,6 +151,18 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     if (!form.latitude || !form.longitude) {
       setMessage('Məkanı xəritə axtarışından seçin.')
       setMessageDetails([{ label: 'Məkan', message: 'Ünvanı yazdıqdan sonra "Xəritədə axtar" düyməsinə basın və uyğun nəticəni seçin.' }])
+      return
+    }
+
+    if (ownerMode === 'existing' && !form.ownerId && !form.ownerEmail.trim()) {
+      setMessage('Sahibkar seçilməlidir.')
+      setMessageDetails([{ label: 'Sahibkar', message: 'Mövcud sahibkarı axtarıb seçin və ya yeni sahibkar yarat bölməsinə keçin.' }])
+      return
+    }
+
+    if (ownerMode === 'new' && (!form.ownerEmail.trim() || !form.ownerPhone.trim() || !form.ownerFirstName.trim() || !form.ownerLastName.trim())) {
+      setMessage('Yeni sahibkar məlumatları tamamlanmalıdır.')
+      setMessageDetails([{ label: 'Sahibkar', message: 'Yeni sahibkar yaratmaq üçün ad, soyad, email və telefon sahələrini doldurun.' }])
       return
     }
 
@@ -111,18 +183,12 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         serviceFeePercent: Number(form.serviceFeePercent),
         staffSettlementPeriod: Number(form.staffSettlementPeriod),
         defaultWaiterTableLimit: null,
-        owner: {
-          id: form.ownerId || null,
-          searchText: form.ownerEmail || null,
-          email: form.ownerEmail || null,
-          phone: form.ownerPhone || null,
-          firstName: form.ownerFirstName || null,
-          lastName: form.ownerLastName || null,
-        },
+        owner: ownerPayload(ownerMode, form),
         fileIds,
       })
       setForm(initialForm)
       setFileIds([])
+      setOwnerMode('existing')
       setMessage('Restoran yaradıldı.')
       setMessageDetails([])
       setReloadKey((value) => value + 1)
@@ -171,6 +237,29 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     setLocationResults([])
     setMessage('Məkan seçildi.')
     setMessageDetails([{ label: 'Seçilmiş məkan', message: result.displayName }])
+  }
+
+  function handleOwnerModeChange(nextMode: OwnerMode) {
+    setOwnerMode(nextMode)
+    setForm((current) => ({
+      ...current,
+      ownerId: '',
+      ownerEmail: '',
+      ownerPhone: '',
+      ownerFirstName: '',
+      ownerLastName: '',
+    }))
+  }
+
+  function handleSelectOwner(owner: UserProfile) {
+    setForm((current) => ({
+      ...current,
+      ownerId: owner.id,
+      ownerEmail: owner.email,
+      ownerPhone: owner.phone,
+      ownerFirstName: owner.name,
+      ownerLastName: owner.surname,
+    }))
   }
 
   return (
@@ -303,18 +392,80 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           </div>
           <div>
             <span className="eyebrow">Sahibkar</span>
-            <h2>Sahibkar məlumatları</h2>
-            <p className="form-helper">Mövcud sahibkarın emailini daxil edin. Email sistemdə yoxdursa, aşağıdakı məlumatlarla yeni sahibkar yaradılacaq.</p>
+            <h2>Sahibkarı restorana bağla</h2>
+            <p className="form-helper">Mövcud sahibkarı email və ya telefonla tapın. Tapılmasa, yeni sahibkar məlumatlarını eyni səhifədə yaradın.</p>
           </div>
-          <div className="form-grid two">
-            <TextField label="Mövcud sahibkar ID" min={1} type="number" value={form.ownerId} onChange={(event) => setForm({ ...form, ownerId: event.target.value })} />
-            <TextField label="Sahibkar email" required type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
+          <div className="owner-mode-switch" role="group" aria-label="Sahibkar seçimi">
+            <button
+              className={ownerMode === 'existing' ? 'active' : ''}
+              onClick={() => handleOwnerModeChange('existing')}
+              type="button"
+            >
+              <CheckCircle2 size={18} />
+              <span>
+                <strong>Mövcud sahibkar</strong>
+                <small>Sistemdə olan sahibkarı seç</small>
+              </span>
+            </button>
+            <button
+              className={ownerMode === 'new' ? 'active' : ''}
+              onClick={() => handleOwnerModeChange('new')}
+              type="button"
+            >
+              <UserPlus size={18} />
+              <span>
+                <strong>Yeni sahibkar</strong>
+                <small>Yeni sahibkar hesabı yarat</small>
+              </span>
+            </button>
           </div>
-          <div className="form-grid three">
-            <TextField label="Yeni sahibkar adı" value={form.ownerFirstName} onChange={(event) => setForm({ ...form, ownerFirstName: event.target.value })} />
-            <TextField label="Yeni sahibkar soyadı" value={form.ownerLastName} onChange={(event) => setForm({ ...form, ownerLastName: event.target.value })} />
-            <TextField label="Yeni sahibkar telefonu" value={form.ownerPhone} onChange={(event) => setForm({ ...form, ownerPhone: event.target.value })} />
-          </div>
+          {ownerMode === 'existing' ? (
+            <div className="owner-picker">
+              <TextField
+                hint="Email, telefon, ad və ya soyad yazın. Tapılan sahibkarı aşağıdan seçin."
+                label="Sahibkar emaili və ya telefonu"
+                required
+                value={form.ownerEmail}
+                onChange={(event) => setForm({ ...form, ownerEmail: event.target.value, ownerId: '' })}
+              />
+              {selectedOwner ? (
+                <article className="owner-selected-card">
+                  <div className="owner-avatar">{ownerInitials(selectedOwner)}</div>
+                  <div>
+                    <strong>{selectedOwner.name} {selectedOwner.surname}</strong>
+                    <span>{selectedOwner.email} - {selectedOwner.phone}</span>
+                  </div>
+                  <small>Seçildi</small>
+                </article>
+              ) : ownerCandidates.length > 0 ? (
+                <div className="owner-results" aria-label="Sahibkar axtarış nəticələri">
+                  {ownerCandidates.map((candidate) => (
+                    <button key={candidate.id} onClick={() => handleSelectOwner(candidate)} type="button">
+                      <div className="owner-avatar">{ownerInitials(candidate)}</div>
+                      <span>
+                        <strong>{candidate.name} {candidate.surname}</strong>
+                        <small>{candidate.email} - {candidate.phone}</small>
+                      </span>
+                      <small>Seç</small>
+                    </button>
+                  ))}
+                </div>
+              ) : ownerSearch ? (
+                <p className="owner-empty-message">Bu məlumatla sahibkar tapılmadı. Yeni sahibkar yarat bölməsinə keçə bilərsiniz.</p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="new-owner-fields">
+              <div className="form-grid two">
+                <TextField label="Sahibkar emaili" required type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
+                <TextField label="Telefon" required value={form.ownerPhone} onChange={(event) => setForm({ ...form, ownerPhone: event.target.value })} />
+              </div>
+              <div className="form-grid two">
+                <TextField label="Ad" required value={form.ownerFirstName} onChange={(event) => setForm({ ...form, ownerFirstName: event.target.value })} />
+                <TextField label="Soyad" required value={form.ownerLastName} onChange={(event) => setForm({ ...form, ownerLastName: event.target.value })} />
+              </div>
+            </div>
+          )}
           <FileUploadField
             label="Restoran şəkli"
             accept="image/jpeg,image/png,image/webp,image/avif"
