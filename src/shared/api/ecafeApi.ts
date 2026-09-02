@@ -488,6 +488,8 @@ function extractApiPath(value: string) {
 }
 
 function mapUserProfile(record: AnyRecord): UserProfile {
+  const role = record.role && typeof record.role === 'object' ? record.role as AnyRecord : null
+
   return {
     id: str(record.id || record.userId),
     name: str(record.name),
@@ -496,8 +498,8 @@ function mapUserProfile(record: AnyRecord): UserProfile {
     phone: str(record.phone),
     isActive: bool(record.isActive, true),
     rating: num(record.rating),
-    roleId: num(record.roleId),
-    role: str(record.role || record.roleName),
+    roleId: num(record.roleId ?? role?.id),
+    role: str(record.roleName || role?.name || record.role),
     restaurantId: record.restaurantId ? str(record.restaurantId) : undefined,
     restaurantName: str(record.restaurantName),
     fileUrl: resolvePublicApiAssetUrl(str(record.fileUrl)) || undefined,
