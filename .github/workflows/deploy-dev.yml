@@ -31,7 +31,8 @@ jobs:
             --exclude='dist' \
             --exclude='.env' \
             --exclude='.env.*' \
-            -czf frontend-source.tar.gz .
+            -czf "$RUNNER_TEMP/frontend-source.tar.gz" .
+          cp "$RUNNER_TEMP/frontend-source.tar.gz" frontend-source.tar.gz
 
       - name: Upload frontend source
         uses: appleboy/scp-action@v0.1.7
