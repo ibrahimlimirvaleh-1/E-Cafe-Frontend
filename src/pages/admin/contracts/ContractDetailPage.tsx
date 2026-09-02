@@ -1,6 +1,6 @@
 import { CheckCircle2, Download, Eye, FileText, Send, ShieldCheck, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import type { ContractStatus, RestaurantContract, StatusTone, WorkflowAction } from '../../../entities/types'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../../shared/api/httpClient'
@@ -85,6 +85,8 @@ async function isPdfBlob(blob: Blob) {
 
 export function ContractDetailPage() {
   const { contractId = '' } = useParams()
+  const [searchParams] = useSearchParams()
+  const restaurantIdFromQuery = searchParams.get('restaurantId') || undefined
   const [reloadKey, setReloadKey] = useState(0)
   const [hasAcceptedContractTerms, setHasAcceptedContractTerms] = useState(false)
   const [acceptanceText, setAcceptanceText] = useState('Müqaviləni oxudum və şərtlərini qəbul edirəm.')
@@ -96,7 +98,11 @@ export function ContractDetailPage() {
   const [isOpeningFile, setIsOpeningFile] = useState(false)
   const [isDownloadingFile, setIsDownloadingFile] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
-  const { data: record, isLoading } = useAsyncData(() => ecafeApi.contracts.get(contractId), null, [contractId, reloadKey])
+  const { data: record, isLoading } = useAsyncData(
+    () => ecafeApi.contracts.get(contractId, restaurantIdFromQuery),
+    null,
+    [contractId, restaurantIdFromQuery, reloadKey],
+  )
   const contract = record?.contract
 
   useEffect(() => {
@@ -187,10 +193,26 @@ export function ContractDetailPage() {
     }
   }
 
-  if (isLoading || !contract) {
+  if (isLoading) {
     return (
       <main className="admin-page narrow">
         <p className="online-only">Müqavilə məlumatları yüklənir...</p>
+      </main>
+    )
+  }
+
+  if (!contract) {
+    return (
+      <main className="admin-page narrow">
+        <PageHeader
+          eyebrow="Müqavilə"
+          title="Müqavilə tapılmadı"
+          description="Bu müqavilə silinmiş ola bilər və ya cari hesabınızın həmin restorana icazəsi yoxdur."
+          action={<ButtonLink to="/admin/contracts" variant="secondary">Siyahıya qayıt</ButtonLink>}
+        />
+        <StatusMessage tone="warning">
+          Bildirişdən keçid etmisinizsə, restoran icazələriniz yenilənməyibsə sistemdən çıxıb yenidən daxil olun.
+        </StatusMessage>
       </main>
     )
   }

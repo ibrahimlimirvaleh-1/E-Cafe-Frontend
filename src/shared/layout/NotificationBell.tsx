@@ -4,24 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { NotificationItem } from '../../entities/types'
 import { ecafeApi } from '../api/ecafeApi'
 import { useAuth } from '../auth/AuthContext'
-import { RoleIds, isInRole } from '../auth/authz'
-import { canAccessAdminModule } from '../config/adminPermissions'
-
-function parsePayload(payloadJson?: string) {
-  if (!payloadJson) {
-    return {} as Record<string, unknown>
-  }
-
-  try {
-    return JSON.parse(payloadJson) as Record<string, unknown>
-  } catch {
-    return {}
-  }
-}
-
-function valueAsString(value: unknown) {
-  return value == null ? '' : String(value)
-}
+import { getNotificationTarget } from '../notifications/notificationTarget'
 
 function formatNotificationDate(value: string) {
   if (!value) {
@@ -108,41 +91,6 @@ export function NotificationBell() {
     return null
   }
 
-  const buildTarget = (notification: NotificationItem) => {
-    const payload = parsePayload(notification.payloadJson)
-    const relatedType = `${notification.relatedEntityType || ''} ${notification.typeName || ''}`.toLowerCase()
-    const contractId =
-      valueAsString(payload.contractId || payload.ContractId) ||
-      (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
-    const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
-
-    if (contractId && canAccessAdminModule(user, 'contracts', restaurantId)) {
-      return `/admin/contracts/${contractId}`
-    }
-
-    if (relatedType.includes('order')) {
-      if (isInRole(user, [RoleIds.Kitchen])) {
-        return '/kitchen'
-      }
-
-      if (isInRole(user, [RoleIds.Waiter])) {
-        return '/waiter/orders'
-      }
-
-      return '/admin/orders'
-    }
-
-    if (relatedType.includes('reservation')) {
-      return '/admin/reservations'
-    }
-
-    if (restaurantId && canAccessAdminModule(user, 'restaurants', restaurantId)) {
-      return `/admin/restaurants/${restaurantId}`
-    }
-
-    return ''
-  }
-
   const onToggle = () => {
     setIsOpen((current) => !current)
     if (!isOpen) {
@@ -157,7 +105,7 @@ export function NotificationBell() {
       setUnreadCount((count) => Math.max(0, count - 1))
     }
 
-    const target = buildTarget(notification)
+    const target = getNotificationTarget(notification, user)
     setIsOpen(false)
     if (target) {
       navigate(target)
