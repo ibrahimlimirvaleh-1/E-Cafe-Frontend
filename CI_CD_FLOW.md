@@ -14,7 +14,9 @@ This repository uses a branch-based deployment flow.
 
 Pushing to `dev` runs `Deploy Frontend Dev`.
 
-The workflow connects to the Hetzner server by SSH, pulls `/opt/ecafe/frontend`, builds the frontend container, and restarts the frontend container.
+The workflow checks out the repository in GitHub Actions, packages the frontend source, uploads that package to the Hetzner server, refreshes `/opt/ecafe/frontend`, builds the frontend container, and restarts the frontend container.
+
+The server does not run `git pull` during deployment. This keeps private repository credentials out of the server and avoids deployment failures caused by missing GitHub credentials on Hetzner.
 
 ## Pull Request Flow
 
