@@ -116,7 +116,7 @@ export function NotificationBell() {
       (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
     const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
 
-    if (contractId && canAccessAdminModule(user, 'contracts')) {
+    if (contractId && canAccessAdminModule(user, 'contracts', restaurantId)) {
       return `/admin/contracts/${contractId}`
     }
 
@@ -136,7 +136,7 @@ export function NotificationBell() {
       return '/admin/reservations'
     }
 
-    if (restaurantId && canAccessAdminModule(user, 'restaurants')) {
+    if (restaurantId && canAccessAdminModule(user, 'restaurants', restaurantId)) {
       return `/admin/restaurants/${restaurantId}`
     }
 

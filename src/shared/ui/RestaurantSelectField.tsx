@@ -1,6 +1,8 @@
 import { ChevronDown } from 'lucide-react'
-import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react'
+import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { Restaurant } from '../../entities/types'
+import { useAuth } from '../auth/AuthContext'
+import { canAccessRestaurant } from '../auth/authz'
 import { restaurantOptionLabel } from './RestaurantContextCard'
 
 type RestaurantSelectFieldProps = {
@@ -28,16 +30,37 @@ export function RestaurantSelectField({
   restaurants = [],
   value,
 }: RestaurantSelectFieldProps) {
+  const { user } = useAuth()
   const listboxId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const restaurantOptions = options ?? restaurants.map((restaurant) => ({
-    label: restaurantOptionLabel(restaurant),
-    value: restaurant.id,
-  }))
+  const restaurantOptions = useMemo(
+    () =>
+      options ??
+      restaurants
+        .filter((restaurant) => canAccessRestaurant(user, restaurant.id))
+        .map((restaurant) => ({
+          label: restaurantOptionLabel(restaurant),
+          value: restaurant.id,
+        })),
+    [options, restaurants, user],
+  )
   const fallbackOption = emptyOption === undefined ? { label: placeholder, value: '' } : emptyOption
   const selectedOption = restaurantOptions.find((option) => option.value === value)
   const selectedLabel = selectedOption?.label ?? (fallbackOption?.value === value ? fallbackOption.label : '')
+
+  useEffect(() => {
+    if (!value || disabled) {
+      return
+    }
+
+    const hasSelectedRestaurant = restaurantOptions.some((option) => option.value === value)
+    const hasFallbackValue = fallbackOption?.value === value
+
+    if (!hasSelectedRestaurant && !hasFallbackValue) {
+      onChange(fallbackOption?.value ?? '')
+    }
+  }, [disabled, fallbackOption?.value, onChange, restaurantOptions, value])
 
   useEffect(() => {
     if (!isOpen) {

@@ -3119,6 +3119,14 @@ img {
   line-height: 26px;
 }
 
+.form-helper {
+  margin: 6px 0 0;
+  max-width: 760px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
 .form-grid.two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -4,6 +4,8 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { MenuItem } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { getAccessibleItems } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
@@ -20,6 +22,7 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 type MenuPageMode = 'categories' | 'create-category' | 'edit-category' | 'items' | 'create-item' | 'edit-item'
 
 export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) {
+  const { user } = useAuth()
   const { categoryId = '', itemId = '' } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -40,8 +43,9 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   })
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const { data: itemStatuses } = useAsyncData(() => ecafeApi.lookups.itemStatuses(), [], [])
-  const restaurantId = selectedRestaurantId
-  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
+  const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
+  const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
+  const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: categories } = useAsyncData(
     () => (restaurantId ? ecafeApi.menu.categories(restaurantId) : Promise.resolve([])),
     [],
@@ -63,10 +67,10 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   useEffect(() => {
     const restaurantIdFromUrl = searchParams.get('restaurantId')
-    if (!selectedRestaurantId && restaurantIdFromUrl) {
+    if (!selectedRestaurantId && restaurantIdFromUrl && accessibleRestaurants.some((restaurant) => restaurant.id === restaurantIdFromUrl)) {
       setSelectedRestaurantId(restaurantIdFromUrl)
     }
-  }, [restaurants, searchParams, selectedRestaurantId])
+  }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
   useEffect(() => {
     if (mode === 'edit-category' && editingCategory) {
@@ -392,7 +396,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       <section className={mode === 'create-item' || mode === 'edit-item' || mode === 'create-category' || mode === 'edit-category' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
-          <RestaurantSelectField label="Restoran" onChange={handleRestaurantChange} required restaurants={restaurants} value={restaurantId} />
+          <RestaurantSelectField label="Restoran" onChange={handleRestaurantChange} required restaurants={accessibleRestaurants} value={restaurantId} />
           {selectedRestaurant ? (
             <RestaurantContextCard restaurant={selectedRestaurant} />
           ) : (

@@ -1,8 +1,10 @@
 import { Ban, CheckCircle2, Copy, Pencil, Plus, Trash2, X } from 'lucide-react'
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { getAccessibleItems } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
@@ -18,6 +20,7 @@ type TablesPageMode = 'list' | 'create' | 'edit'
 type CopyTableRow = { tableNo: string; name: string }
 
 export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode }) {
+  const { user } = useAuth()
   const { tableId = '' } = useParams()
   const [searchParams] = useSearchParams()
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
@@ -30,8 +33,9 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const [copyMessage, setCopyMessage] = useState('')
   const [copyMessageDetails, setCopyMessageDetails] = useState<ApiErrorDetail[]>([])
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
-  const restaurantId = selectedRestaurantId
-  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
+  const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
+  const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
+  const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: tables, isLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.tables.list(restaurantId) : Promise.resolve([])),
     [],
@@ -53,10 +57,10 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
 
   useEffect(() => {
     const restaurantIdFromUrl = searchParams.get('restaurantId')
-    if (!selectedRestaurantId && restaurantIdFromUrl) {
+    if (!selectedRestaurantId && restaurantIdFromUrl && accessibleRestaurants.some((restaurant) => restaurant.id === restaurantIdFromUrl)) {
       setSelectedRestaurantId(restaurantIdFromUrl)
     }
-  }, [restaurants, searchParams, selectedRestaurantId])
+  }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
   useEffect(() => {
     if (mode === 'edit' && editingTable) {
@@ -222,7 +226,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni masa'}</span>
               <h2>{mode === 'edit' ? 'Masa məlumatlarını yenilə' : 'Masa məlumatları'}</h2>
             </div>
-            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={restaurants} value={restaurantId} />
+            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
             <div className="form-grid two">
               <TextField label="Masa nömrəsi" required value={form.tableNo} onChange={(event) => setForm({ ...form, tableNo: event.target.value })} />
               <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
@@ -237,7 +241,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <span className="eyebrow">Siyahı</span>
               <h2>Mövcud masalar</h2>
             </div>
-            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={restaurants} value={restaurantId} />
+            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
             {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
             {selectedRestaurant ? (
               <RestaurantContextCard restaurant={selectedRestaurant} />

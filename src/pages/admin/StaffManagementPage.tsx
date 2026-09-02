@@ -5,7 +5,7 @@ import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
-import { RoleIds, hasPermission, isInRole } from '../../shared/auth/authz'
+import { RoleIds, getAccessibleItems, hasPermission, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
@@ -63,8 +63,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const { data: roles } = useAsyncData(() => ecafeApi.lookups.roles(), [], [])
-  const restaurantId = selectedRestaurantId
-  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantId)
+  const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
+  const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
+  const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
   const { data: staff, isLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.staff.byRestaurant(restaurantId) : Promise.resolve([])),
     [],
@@ -90,10 +91,10 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
   useEffect(() => {
     const restaurantIdFromUrl = searchParams.get('restaurantId')
-    if (!selectedRestaurantId && restaurantIdFromUrl) {
+    if (!selectedRestaurantId && restaurantIdFromUrl && accessibleRestaurants.some((restaurant) => restaurant.id === restaurantIdFromUrl)) {
       setSelectedRestaurantId(restaurantIdFromUrl)
     }
-  }, [restaurants, searchParams, selectedRestaurantId])
+  }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
   useEffect(() => {
     setRoleSelections(
@@ -400,7 +401,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               label="Restoran"
               onChange={setSelectedRestaurantId}
               required
-              restaurants={restaurants}
+              restaurants={accessibleRestaurants}
               value={restaurantId}
             />
             <div className="form-grid two">
@@ -486,7 +487,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <span className="eyebrow">Siyahı</span>
               <h2>Restoran personalı</h2>
             </div>
-            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={restaurants} value={restaurantId} />
+            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
             {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
             {selectedRestaurant ? (
               <RestaurantContextCard restaurant={selectedRestaurant} />
