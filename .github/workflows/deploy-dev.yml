@@ -16,8 +16,33 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     timeout-minutes: 20
+    env:
+      APP_PATH: ${{ secrets.ECAFE_DEV_PATH || '/opt/ecafe' }}
 
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Package frontend source
+        run: |
+          tar \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='dist' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            -czf frontend-source.tar.gz .
+
+      - name: Upload frontend source
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ECAFE_DEV_HOST }}
+          username: ${{ secrets.ECAFE_DEV_USER }}
+          key: ${{ secrets.ECAFE_DEV_SSH_KEY }}
+          source: frontend-source.tar.gz
+          target: ${{ env.APP_PATH }}/deploy-packages/${{ github.sha }}
+          rm: true
+
       - name: Deploy frontend
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -26,16 +51,13 @@ jobs:
           key: ${{ secrets.ECAFE_DEV_SSH_KEY }}
           script: |
             set -euo pipefail
+            APP_PATH="${{ env.APP_PATH }}"
+            PACKAGE_DIR="$APP_PATH/deploy-packages/${{ github.sha }}"
 
-            APP_PATH="${{ secrets.ECAFE_DEV_PATH }}"
-            if [ -z "$APP_PATH" ]; then
-              APP_PATH="/opt/ecafe"
-            fi
-
-            cd "$APP_PATH/frontend"
-            git fetch --prune origin dev
-            git checkout dev
-            git reset --hard origin/dev
+            rm -rf "$APP_PATH/frontend"
+            mkdir -p "$APP_PATH/frontend"
+            tar -xzf "$PACKAGE_DIR/frontend-source.tar.gz" -C "$APP_PATH/frontend"
+            rm -rf "$PACKAGE_DIR"
 
             cd "$APP_PATH"
             docker compose build frontend
