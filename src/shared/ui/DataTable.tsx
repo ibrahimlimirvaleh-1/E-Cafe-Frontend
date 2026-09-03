@@ -11,10 +11,11 @@ type DataTableProps = {
   columns: string[]
   editable?: boolean
   emptyMessage?: string
+  onActionNavigate?: (row: AdminRow) => void
   rows: AdminRow[]
 }
 
-export function DataTable({ baseRoute, canEdit = true, columns, editable = true, emptyMessage = 'Məlumat tapılmadı.', rows }: DataTableProps) {
+export function DataTable({ baseRoute, canEdit = true, columns, editable = true, emptyMessage = 'Məlumat tapılmadı.', onActionNavigate, rows }: DataTableProps) {
   return (
     <section className="ui-table" aria-label="Məlumat cədvəli">
       <div className="ui-table-head">
@@ -43,11 +44,11 @@ export function DataTable({ baseRoute, canEdit = true, columns, editable = true,
           </strong>
           {editable ? (
             <div className="ui-row-actions" data-label="Əməliyyat">
-              <ActionIconLink label={`${row.title} detalına bax`} to={`${baseRoute}/${row.id}`}>
+              <ActionIconLink label={`${row.title} detalına bax`} onClick={() => onActionNavigate?.(row)} to={`${baseRoute}/${row.id}`}>
                 <Eye size={18} />
               </ActionIconLink>
               {canEdit && row.canEdit !== false ? (
-                <ActionIconLink label={`${row.title} redaktə et`} to={`${baseRoute}/${row.id}/edit`}>
+                <ActionIconLink label={`${row.title} redaktə et`} onClick={() => onActionNavigate?.(row)} to={`${baseRoute}/${row.id}/edit`}>
                   <Pencil size={17} />
                 </ActionIconLink>
               ) : null}
