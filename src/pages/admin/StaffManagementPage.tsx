@@ -93,6 +93,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     const restaurantIdFromUrl = searchParams.get('restaurantId')
     if (!selectedRestaurantId && restaurantIdFromUrl && accessibleRestaurants.some((restaurant) => restaurant.id === restaurantIdFromUrl)) {
       setSelectedRestaurantId(restaurantIdFromUrl)
+      return
+    }
+
+    if (!selectedRestaurantId && accessibleRestaurants.length === 1) {
+      setSelectedRestaurantId(accessibleRestaurants[0].id)
     }
   }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
@@ -397,6 +402,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               </div>
             ) : null}
             <RestaurantSelectField
+              emptyOption={null}
               error={fieldError('RestaurantId')}
               label="Restoran"
               onChange={setSelectedRestaurantId}
@@ -487,7 +493,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <span className="eyebrow">Siyahı</span>
               <h2>Restoran personalı</h2>
             </div>
-            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
+            <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
             {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
             {selectedRestaurant ? (
               <RestaurantContextCard restaurant={selectedRestaurant} />

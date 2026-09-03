@@ -69,6 +69,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     const restaurantIdFromUrl = searchParams.get('restaurantId')
     if (!selectedRestaurantId && restaurantIdFromUrl && accessibleRestaurants.some((restaurant) => restaurant.id === restaurantIdFromUrl)) {
       setSelectedRestaurantId(restaurantIdFromUrl)
+      return
+    }
+
+    if (!selectedRestaurantId && accessibleRestaurants.length === 1) {
+      setSelectedRestaurantId(accessibleRestaurants[0].id)
     }
   }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
@@ -396,7 +401,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       <section className={mode === 'create-item' || mode === 'edit-item' || mode === 'create-category' || mode === 'edit-category' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         <section className="admin-panel">
           <span className="eyebrow">Restoran</span>
-          <RestaurantSelectField label="Restoran" onChange={handleRestaurantChange} required restaurants={accessibleRestaurants} value={restaurantId} />
+          <RestaurantSelectField emptyOption={null} label="Restoran" onChange={handleRestaurantChange} required restaurants={accessibleRestaurants} value={restaurantId} />
           {selectedRestaurant ? (
             <RestaurantContextCard restaurant={selectedRestaurant} />
           ) : (

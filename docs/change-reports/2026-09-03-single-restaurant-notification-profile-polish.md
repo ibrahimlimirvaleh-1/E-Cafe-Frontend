@@ -13,12 +13,17 @@ Sahibkar, menecer, mətbəx, ofisiant kimi restoran kontekstli istifadəçilərd
 - `src/shared/auth/AuthContext.tsx`
 - `src/shared/auth/jwt.ts`
 - `src/styles/globals.css`
+- `src/pages/admin/StaffManagementPage.tsx`
+- `src/pages/admin/TablesManagementPage.tsx`
+- `src/pages/admin/MenuManagementPage.tsx`
 
 ## Görülən işlər
 
 ### Tək restoran olduqda seçim ləğv edildi
 
 `RestaurantSelectField` artıq yalnız bir restoran seçimi varsa dropdown açmır. Bunun əvəzinə read-only restoran konteksti göstərir. Bu, admin olmayan istifadəçilər üçün daha təmiz flow yaradır və uzun restoran adları ilə dropdown daşması riskini azaldır.
+
+Personal, masalar və menyu idarəetməsi səhifələrində də eyni qayda tətbiq edildi. Səhifə URL-ində etibarlı `restaurantId` varsa həmin kontekst saxlanılır; yoxdursa və istifadəçinin yalnız bir əlçatan restoranı varsa həmin restoran avtomatik seçilir. Beləliklə tək restoranlı istifadəçi əlavə seçim görmür və siyahılar/formlar boş restaurant state-də ilişib qalmır.
 
 ### Menyu məhsulu boş olduqda mesaj göstərildi
 

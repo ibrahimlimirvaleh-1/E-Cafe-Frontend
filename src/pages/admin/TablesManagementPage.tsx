@@ -59,6 +59,11 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     const restaurantIdFromUrl = searchParams.get('restaurantId')
     if (!selectedRestaurantId && restaurantIdFromUrl && accessibleRestaurants.some((restaurant) => restaurant.id === restaurantIdFromUrl)) {
       setSelectedRestaurantId(restaurantIdFromUrl)
+      return
+    }
+
+    if (!selectedRestaurantId && accessibleRestaurants.length === 1) {
+      setSelectedRestaurantId(accessibleRestaurants[0].id)
     }
   }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
@@ -226,7 +231,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni masa'}</span>
               <h2>{mode === 'edit' ? 'Masa məlumatlarını yenilə' : 'Masa məlumatları'}</h2>
             </div>
-            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
+            <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
             <div className="form-grid two">
               <TextField label="Masa nömrəsi" required value={form.tableNo} onChange={(event) => setForm({ ...form, tableNo: event.target.value })} />
               <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
@@ -241,7 +246,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
               <span className="eyebrow">Siyahı</span>
               <h2>Mövcud masalar</h2>
             </div>
-            <RestaurantSelectField label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
+            <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
             {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
             {selectedRestaurant ? (
               <RestaurantContextCard restaurant={selectedRestaurant} />
