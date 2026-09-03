@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Navigate, Route, Routes, useParams, useSearchParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { RequireAuth } from '../shared/auth/RequireAuth'
@@ -60,17 +61,33 @@ function RestaurantCatalogEntry() {
 
 function AdminProtected({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
   return (
-    <RequireAuth allowedRoleIds={AdminRoleIds} anyPermission={adminModulePermissions[moduleKey]}>
+    <RequireAuth>
       <AdminModuleAccessGuard moduleKey={moduleKey}>{children}</AdminModuleAccessGuard>
     </RequireAuth>
   )
 }
 
-function AdminModuleAccessGuard({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
+function AdminDashboardEntry() {
   const { user } = useAuth()
+
+  if (!isInRole(user, AdminRoleIds)) {
+    return <Navigate to={getHomePathForUser(user)} replace />
+  }
+
+  return <AdminDashboardPage />
+}
+
+function AdminModuleAccessGuard({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
+  const { selectProfileForRestaurant, user } = useAuth()
   const { restaurantId } = useParams()
   const [searchParams] = useSearchParams()
   const scopedRestaurantId = restaurantId || searchParams.get('restaurantId')
+
+  useEffect(() => {
+    if (scopedRestaurantId && user?.restaurantId !== scopedRestaurantId) {
+      selectProfileForRestaurant(scopedRestaurantId)
+    }
+  }, [scopedRestaurantId, selectProfileForRestaurant, user?.restaurantId])
 
   if (!canAccessAdminModule(user, moduleKey, scopedRestaurantId)) {
     return <Navigate to={getHomePathForUser(user)} replace />
@@ -136,12 +153,12 @@ export function AppRouter() {
       <Route
         path="admin"
         element={
-          <RequireAuth allowedRoleIds={AdminRoleIds}>
+          <RequireAuth>
             <AdminShell />
           </RequireAuth>
         }
       >
-        <Route index element={<AdminDashboardPage />} />
+        <Route index element={<AdminDashboardEntry />} />
         <Route path="contracts">
           <Route index element={<AdminProtected moduleKey="contracts"><ContractListPage /></AdminProtected>} />
           <Route path="new" element={<AdminProtected moduleKey="contracts"><ContractFormPage /></AdminProtected>} />

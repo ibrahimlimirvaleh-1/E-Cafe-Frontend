@@ -1,6 +1,6 @@
 import type { AdminModuleKey } from '../../entities/types'
 import type { CurrentUser } from '../auth/jwt'
-import { RoleIds, canAccessRestaurant, hasAnyPermission, isInRole, isPlatformAdmin } from '../auth/authz'
+import { RoleIds, canAccessRestaurant, getRestaurantRoleId, hasAnyPermission, hasAnyPermissionForRole, isInRole, isPlatformAdmin } from '../auth/authz'
 
 export const adminModulePermissions: Record<AdminModuleKey, string[]> = {
   restaurants: ['ManageRestaurants', 'ViewRestaurantInfo'],
@@ -30,10 +30,17 @@ export function canAccessAdminModule(user: CurrentUser | null | undefined, modul
     return false
   }
 
+  if (isPlatformAdmin(user)) {
+    return true
+  }
+
+  const scopedRoleId = restaurantId ? getRestaurantRoleId(user, restaurantId) : undefined
   const allowedRoles = adminModuleRoleAccess[moduleKey]
-  if (allowedRoles?.length && !isInRole(user, allowedRoles, restaurantId)) {
+  if (allowedRoles?.length && !(scopedRoleId ? allowedRoles.includes(scopedRoleId) : isInRole(user, allowedRoles))) {
     return false
   }
 
-  return isPlatformAdmin(user) || hasAnyPermission(user, adminModulePermissions[moduleKey])
+  return scopedRoleId
+    ? hasAnyPermissionForRole(scopedRoleId, adminModulePermissions[moduleKey])
+    : hasAnyPermission(user, adminModulePermissions[moduleKey])
 }
