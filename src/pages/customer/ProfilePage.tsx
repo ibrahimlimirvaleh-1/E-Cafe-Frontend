@@ -15,7 +15,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function ProfilePage() {
-  const { logout, logoutAll, updateUser, user } = useAuth()
+  const { logout, logoutAll, selectProfile, updateUser, user } = useAuth()
   const navigate = useNavigate()
   const { data: profile, error, isLoading } = useAsyncData(() => ecafeApi.profile.get(), null, [])
   const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '' })
@@ -161,6 +161,17 @@ export function ProfilePage() {
     )
   }
 
+  const accessProfiles = profile.profiles.length > 0
+    ? profile.profiles
+    : user?.profiles.map((item) => ({
+        restaurantId: item.restaurantId,
+        restaurantName: item.restaurantName || `Restoran #${item.restaurantId}`,
+        roleId: Number(item.roleId),
+        roleName: item.roleName || `Rol #${item.roleId}`,
+        isActive: item.isActive !== false,
+      })) ?? []
+  const activeProfile = accessProfiles.find((item) => String(item.restaurantId) === user?.restaurantId && String(item.roleId) === user?.roleId)
+
   return (
     <main className="page">
       <PageHeader eyebrow="Hesab" title="Profil" description="Şəxsi məlumatlarını yenilə, rolunu və hesab təhlükəsizliyini idarə et." />
@@ -178,7 +189,7 @@ export function ProfilePage() {
           <p>{profile.email} · {profile.phone || 'Telefon qeyd olunmayıb'}</p>
           <div className="profile-summary-badges">
             <Badge tone={profile.isActive ? 'success' : 'danger'}>{profile.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
-            <Badge tone="info">{profile.role || user?.roleName || `Rol #${profile.roleId}`}</Badge>
+            <Badge tone="info">{activeProfile?.roleName || user?.roleName || profile.role || `Rol #${profile.roleId}`}</Badge>
           </div>
         </div>
       </section>
@@ -207,25 +218,44 @@ export function ProfilePage() {
         <section className="admin-panel">
           <div className="section-title">
             <span>Rol və icazə</span>
-            <h2>Giriş səlahiyyəti</h2>
+            <h2>Giriş profilləri</h2>
           </div>
-          <div className="detail-list compact">
-            <div>
-              <span>Status</span>
-              <Badge tone={profile.isActive ? 'success' : 'danger'}>{profile.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
-            </div>
-            <div>
-              <span>Cari rol</span>
-              <strong>{profile.role || user?.roleName || `Rol #${profile.roleId}`}</strong>
-            </div>
-            {profile.restaurantId ? (
-              <div>
-                <span>Restoran</span>
-                <strong>{profile.restaurantName || `#${profile.restaurantId}`}</strong>
-              </div>
-            ) : null}
+          <div className="access-profile-list">
+            {accessProfiles.length > 0 ? (
+              accessProfiles.map((item) => {
+                const isActiveProfile = String(item.restaurantId) === user?.restaurantId && String(item.roleId) === user?.roleId
+
+                return (
+                  <article className={isActiveProfile ? 'access-profile-card active' : 'access-profile-card'} key={`${item.restaurantId}:${item.roleId}`}>
+                    <span className="access-profile-icon" aria-hidden="true">
+                      {(item.restaurantName || 'R').slice(0, 1).toUpperCase()}
+                    </span>
+                    <div>
+                      <strong>{item.restaurantName || `Restoran #${item.restaurantId}`}</strong>
+                      <small>{item.roleName || `Rol #${item.roleId}`}</small>
+                    </div>
+                    {isActiveProfile ? (
+                      <Badge tone="success">Cari profil</Badge>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          selectProfile({ restaurantId: String(item.restaurantId), roleId: String(item.roleId) })
+                          navigate(getHomePathForProfile(String(item.roleId)))
+                        }}
+                        type="button"
+                        variant="secondary"
+                      >
+                        Bu profillə keç
+                      </Button>
+                    )}
+                  </article>
+                )
+              })
+            ) : (
+              <div className="empty-state compact">Bu hesab üçün restoran profili yoxdur.</div>
+            )}
           </div>
-          <p className="muted-text">Rol dəyişiklikləri profil səhifəsindən aparılmır. Bu məlumat yalnız cari giriş səlahiyyətini göstərir.</p>
+          <p className="muted-text">Seçdiyiniz profilə görə menyular, icazələr və restoran məlumatları dəyişir.</p>
         </section>
 
         <section className="admin-panel profile-security-panel">
@@ -295,6 +325,22 @@ export function ProfilePage() {
       />
     </main>
   )
+}
+
+function getHomePathForProfile(roleId: string) {
+  if (roleId === '4') {
+    return '/waiter'
+  }
+
+  if (roleId === '6') {
+    return '/kitchen'
+  }
+
+  if (['1', '2', '3'].includes(roleId)) {
+    return '/admin'
+  }
+
+  return '/'
 }
 
 function getInitials(name: string, surname: string) {

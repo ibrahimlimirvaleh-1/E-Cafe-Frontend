@@ -19,6 +19,9 @@ export function UserMenu() {
     navigate('/login')
   }
 
+  const activeProfile = user.profiles.find((profile) => profile.restaurantId === user.restaurantId && profile.roleId === user.roleId)
+  const profileLabel = [user.roleName || `Rol #${user.roleId}`, activeProfile?.restaurantName].filter(Boolean).join(' · ')
+
   return (
     <div className="user-menu">
       <Link className="user-pill" to="/account" title="Profil">
@@ -27,7 +30,7 @@ export function UserMenu() {
           <strong>
             {user.name} {user.surname}
           </strong>
-          <small>{user.roleName || `Rol #${user.roleId}`}</small>
+          <small>{profileLabel}</small>
         </span>
       </Link>
       <button className="icon-action logout-action" type="button" title="Çıxış" onClick={() => void onLogout()}>

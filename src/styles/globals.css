@@ -2646,6 +2646,86 @@ img {
   justify-self: start;
 }
 
+.access-profile-list,
+.profile-selection-list {
+  display: grid;
+  gap: 12px;
+}
+
+.access-profile-card,
+.profile-selection-list button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  background: var(--surface-low);
+}
+
+.access-profile-card.active {
+  border-color: rgba(255, 161, 22, 0.56);
+  background: rgba(255, 161, 22, 0.1);
+}
+
+.access-profile-card strong,
+.access-profile-card small,
+.profile-selection-list strong,
+.profile-selection-list small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.access-profile-card small,
+.profile-selection-list small {
+  margin-top: 3px;
+  color: var(--on-surface-variant);
+}
+
+.access-profile-icon,
+.profile-selection-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--on-surface);
+  color: var(--surface-lowest);
+  font-weight: 900;
+}
+
+.profile-selection-backdrop {
+  z-index: 120;
+}
+
+.profile-selection-modal {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-xl);
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-elevated);
+}
+
+.profile-selection-list button {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-selection-list button:hover {
+  border-color: rgba(255, 161, 22, 0.62);
+  background: rgba(255, 161, 22, 0.08);
+}
+
 .session-list {
   display: grid;
   gap: 10px;

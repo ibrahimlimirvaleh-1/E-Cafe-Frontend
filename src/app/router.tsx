@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams, useSearchParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { RequireAuth } from '../shared/auth/RequireAuth'
 import { useAuth } from '../shared/auth/AuthContext'
@@ -69,8 +69,10 @@ function AdminProtected({ moduleKey, children }: { moduleKey: keyof typeof admin
 function AdminModuleAccessGuard({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
   const { user } = useAuth()
   const { restaurantId } = useParams()
+  const [searchParams] = useSearchParams()
+  const scopedRestaurantId = restaurantId || searchParams.get('restaurantId')
 
-  if (!canAccessAdminModule(user, moduleKey, restaurantId)) {
+  if (!canAccessAdminModule(user, moduleKey, scopedRestaurantId)) {
     return <Navigate to={getHomePathForUser(user)} replace />
   }
 

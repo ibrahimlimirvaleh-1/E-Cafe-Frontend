@@ -23,7 +23,7 @@ function formatNotificationDate(value: string) {
 }
 
 export function NotificationBell() {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, selectProfileForRestaurant, user } = useAuth()
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -108,6 +108,11 @@ export function NotificationBell() {
     const target = getNotificationTarget(notification, user)
     setIsOpen(false)
     if (target) {
+      const restaurantId = new URLSearchParams(target.split('?')[1] || '').get('restaurantId')
+      if (restaurantId) {
+        selectProfileForRestaurant(restaurantId)
+      }
+
       navigate(target)
     }
   }

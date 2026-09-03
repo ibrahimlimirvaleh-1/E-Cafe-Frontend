@@ -11,12 +11,19 @@ export type CurrentUser = {
   restaurantId?: string
   restaurantIds: string[]
   restaurantRoles: RestaurantRoleAssignment[]
+  profiles: UserAccessProfile[]
   permissions: string[]
 }
 
 export type RestaurantRoleAssignment = {
   restaurantId: string
   roleId: string
+}
+
+export type UserAccessProfile = RestaurantRoleAssignment & {
+  restaurantName?: string
+  roleName?: string
+  isActive?: boolean
 }
 
 const roleClaim = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
@@ -73,6 +80,7 @@ export function getUserFromToken(token: string): CurrentUser | null {
 
   const restaurantId = str(payload.restaurantId) || undefined
   const restaurantRoles = parseRestaurantRoles(payload.restaurantRoles)
+  const profiles = restaurantRoles.map((assignment) => ({ ...assignment }))
   const restaurantIds = unique([
     ...claimArray(payload.restaurantIds),
     ...restaurantRoles.map((assignment) => assignment.restaurantId),
@@ -89,6 +97,7 @@ export function getUserFromToken(token: string): CurrentUser | null {
     restaurantId,
     restaurantIds,
     restaurantRoles,
+    profiles,
     permissions: claimArray(payload.permission || payload.permissions),
   }
 }

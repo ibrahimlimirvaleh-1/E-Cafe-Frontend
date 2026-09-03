@@ -489,6 +489,7 @@ function extractApiPath(value: string) {
 
 function mapUserProfile(record: AnyRecord): UserProfile {
   const role = record.role && typeof record.role === 'object' ? record.role as AnyRecord : null
+  const profileRecords = asArray<AnyRecord>(record.profiles || record.assignments || record.restaurantRoles)
 
   return {
     id: str(record.id || record.userId),
@@ -503,6 +504,24 @@ function mapUserProfile(record: AnyRecord): UserProfile {
     restaurantId: record.restaurantId ? str(record.restaurantId) : undefined,
     restaurantName: str(record.restaurantName),
     fileUrl: resolvePublicApiAssetUrl(str(record.fileUrl)) || undefined,
+    profiles: profileRecords
+      .map((profileRecord) => {
+        const restaurant = profileRecord.restaurant && typeof profileRecord.restaurant === 'object'
+          ? profileRecord.restaurant as AnyRecord
+          : null
+        const profileRole = profileRecord.role && typeof profileRecord.role === 'object'
+          ? profileRecord.role as AnyRecord
+          : null
+
+        return {
+          restaurantId: str(profileRecord.restaurantId),
+          restaurantName: str(profileRecord.restaurantName || restaurant?.name),
+          roleId: num(profileRecord.roleId || profileRole?.id),
+          roleName: str(profileRecord.roleName || profileRole?.name),
+          isActive: bool(profileRecord.isActive, true),
+        }
+      })
+      .filter((profileRecord) => profileRecord.restaurantId && profileRecord.roleId),
   }
 }
 

@@ -205,6 +205,15 @@ export type UserProfile = {
   restaurantId?: string
   restaurantName?: string
   fileUrl?: string
+  profiles: UserAccessProfile[]
+}
+
+export type UserAccessProfile = {
+  restaurantId: string
+  restaurantName: string
+  roleId: number
+  roleName: string
+  isActive: boolean
 }
 
 export type UserSession = {
