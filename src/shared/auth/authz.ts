@@ -11,12 +11,57 @@ export const RoleIds = {
 
 export const AdminRoleIds: readonly string[] = [RoleIds.PlatformAdmin, RoleIds.Owner, RoleIds.Manager]
 
+const permissionsByRoleId: Record<string, readonly string[]> = {
+  [RoleIds.Customer]: ['ViewRestaurantInfo'],
+  [RoleIds.PlatformAdmin]: [
+    'ManageStaff',
+    'ManageUsers',
+    'ManageRestaurants',
+    'ManageCatalog',
+    'ManageTables',
+    'ManageReservations',
+    'ManageOrders',
+    'ManagePayments',
+    'ViewReports',
+    'ViewAuditLogs',
+    'ViewRestaurantInfo',
+    'ManageRestaurantContracts',
+    'ViewRestaurantContracts',
+    'ViewInventory',
+    'ManageInventory',
+    'ViewRecipes',
+    'ManageRecipes',
+    'AssignRoles',
+  ],
+  [RoleIds.Owner]: ['ManageStaff', 'ViewReports', 'ViewRestaurantInfo', 'ViewRestaurantContracts', 'ViewInventory', 'ViewRecipes'],
+  [RoleIds.Manager]: [
+    'ManageStaff',
+    'ManageCatalog',
+    'ManageTables',
+    'ManageReservations',
+    'ManageOrders',
+    'ManagePayments',
+    'ViewReports',
+    'ViewRestaurantInfo',
+    'ViewRestaurantContracts',
+    'ViewInventory',
+    'ManageInventory',
+    'ViewRecipes',
+    'ManageRecipes',
+  ],
+  [RoleIds.Waiter]: ['ViewRestaurantInfo', 'ViewAssignedReservations', 'ManageOrders', 'ManagePayments', 'ViewOwnWallet'],
+  [RoleIds.Kitchen]: ['ViewRestaurantInfo', 'ManageKitchenOrders', 'ViewInventory', 'ViewRecipes', 'ManageRecipes'],
+}
+
 export function getRestaurantRoleId(user: CurrentUser | null | undefined, restaurantId: string | null | undefined) {
   if (!user || !restaurantId) {
     return undefined
   }
 
-  return user.restaurantRoles.find((assignment) => assignment.restaurantId === restaurantId)?.roleId
+  return (
+    user.profiles.find((assignment) => assignment.restaurantId === restaurantId)?.roleId ||
+    user.restaurantRoles.find((assignment) => assignment.restaurantId === restaurantId)?.roleId
+  )
 }
 
 export function getRoleIds(user: CurrentUser | null | undefined, restaurantId?: string | null) {
@@ -27,7 +72,7 @@ export function getRoleIds(user: CurrentUser | null | undefined, restaurantId?: 
   const scopedRoleId = getRestaurantRoleId(user, restaurantId)
   const roleIds = restaurantId
     ? [scopedRoleId]
-    : [user.roleId, ...user.restaurantRoles.map((assignment) => assignment.roleId)]
+    : [user.roleId]
 
   return [...new Set(roleIds.filter((roleId): roleId is string => Boolean(roleId)))]
 }
@@ -53,7 +98,16 @@ export function getAccessibleItems<T extends { id: string }>(user: CurrentUser |
 }
 
 export function hasPermission(user: CurrentUser | null | undefined, permission: string) {
-  return Boolean(user?.permissions.includes(permission))
+  if (!user) {
+    return false
+  }
+
+  if (isPlatformAdmin(user)) {
+    return true
+  }
+
+  const activeRolePermissions = permissionsByRoleId[user.roleId]
+  return activeRolePermissions ? activeRolePermissions.includes(permission) : user.permissions.includes(permission)
 }
 
 export function hasAnyPermission(user: CurrentUser | null | undefined, permissions: readonly string[]) {

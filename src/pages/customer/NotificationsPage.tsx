@@ -41,7 +41,7 @@ function tone(notification: NotificationItem): StatusTone {
 
 export function NotificationsPage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { selectProfileForRestaurant, user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
   const { data: notifications, isLoading } = useAsyncData(() => ecafeApi.notifications.list(), [], [reloadKey])
   const unreadCount = useMemo(() => notifications.filter((notification) => !notification.isRead).length, [notifications])
@@ -54,6 +54,11 @@ export function NotificationsPage() {
     const route = getNotificationTarget(notification, user)
     setReloadKey((value) => value + 1)
     if (route) {
+      const restaurantId = new URLSearchParams(route.split('?')[1] || '').get('restaurantId')
+      if (restaurantId) {
+        selectProfileForRestaurant(restaurantId)
+      }
+
       navigate(route)
     }
   }
