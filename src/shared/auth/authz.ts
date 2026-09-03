@@ -90,7 +90,11 @@ export function canAccessRestaurant(user: CurrentUser | null | undefined, restau
     return false
   }
 
-  return isPlatformAdmin(user) || user?.restaurantIds.includes(restaurantId) === true
+  if (isPlatformAdmin(user)) {
+    return true
+  }
+
+  return user?.restaurantId === restaurantId
 }
 
 export function getAccessibleItems<T extends { id: string }>(user: CurrentUser | null | undefined, items: T[]) {

@@ -9,12 +9,12 @@ import { ecafeApi } from '../api/ecafeApi'
 import { refreshAccessToken } from '../api/httpClient'
 import { createUserSessionEventsConnection } from '../realtime/userSessionEvents'
 import { getHomePathForUser } from './authz'
+import { profileKey, readStoredProfileKey, writeStoredProfileKey } from './activeProfileStorage'
 
 const SESSION_TERMINATED_MESSAGE = 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.'
 const ROLE_CHANGED_MESSAGE = 'Rolunuz dəyişdirildi. Sessiya məlumatları yenilənir.'
 const RESTAURANT_ACCESS_CHANGED_MESSAGE = 'Restoran üzrə icazələr yeniləndi. Səhifə yenilənir.'
 const SESSION_NOTICE_STORAGE_KEY = 'ecafe.sessionNotice'
-const ACTIVE_PROFILE_STORAGE_KEY = 'ecafe.activeProfile'
 const SESSION_RECONCILE_INTERVAL_MS = 60_000
 
 const roleNamesById: Record<string, string> = {
@@ -44,18 +44,6 @@ type AuthContextValue = {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
-
-function profileKey(profile: Pick<UserAccessProfile, 'restaurantId' | 'roleId'>) {
-  return `${profile.restaurantId}:${profile.roleId}`
-}
-
-function readStoredProfileKey(userId: string) {
-  return window.localStorage.getItem(`${ACTIVE_PROFILE_STORAGE_KEY}.${userId}`) || ''
-}
-
-function writeStoredProfileKey(userId: string, profile: Pick<UserAccessProfile, 'restaurantId' | 'roleId'>) {
-  window.localStorage.setItem(`${ACTIVE_PROFILE_STORAGE_KEY}.${userId}`, profileKey(profile))
-}
 
 function hasStoredProfile(user: CurrentUser) {
   const storedProfileKey = readStoredProfileKey(user.userId)

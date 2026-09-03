@@ -6,7 +6,7 @@ import { ecafeApi, type GeocodeAddressResponse } from '../../shared/api/ecafeApi
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { restaurantRow } from '../../shared/api/mappers'
 import { useAuth } from '../../shared/auth/AuthContext'
-import { RoleIds, isInRole } from '../../shared/auth/authz'
+import { RoleIds, isInRole, isPlatformAdmin } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { DataTable } from '../../shared/ui/DataTable'
@@ -117,6 +117,9 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     [canCreateRestaurants, mode, reloadKey],
   )
   const pageTitle = mode === 'create' ? 'Yeni restoran' : canSearchRestaurants ? 'Restoranlar' : 'Restoran'
+  const visibleRestaurants = isPlatformAdmin(user)
+    ? restaurantPage.items
+    : restaurantPage.items.filter((restaurant) => restaurant.id === user?.restaurantId)
   const ownerSearch = form.ownerEmail.trim().toLowerCase()
   const ownerCandidates = useMemo(
     () =>
@@ -300,7 +303,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             canEdit={canCreateRestaurants}
             columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']}
             onActionNavigate={(row) => selectProfileForRestaurant(row.id)}
-            rows={restaurantPage.items.map(restaurantRow)}
+            rows={visibleRestaurants.map(restaurantRow)}
           />
           {canSearchRestaurants ? (
             <PaginationControls
