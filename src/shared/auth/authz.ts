@@ -110,8 +110,20 @@ export function hasPermission(user: CurrentUser | null | undefined, permission: 
   return activeRolePermissions ? activeRolePermissions.includes(permission) : user.permissions.includes(permission)
 }
 
+export function hasPermissionForRole(roleId: string | null | undefined, permission: string) {
+  if (!roleId) {
+    return false
+  }
+
+  return permissionsByRoleId[roleId]?.includes(permission) === true
+}
+
 export function hasAnyPermission(user: CurrentUser | null | undefined, permissions: readonly string[]) {
   return permissions.length === 0 || permissions.some((permission) => hasPermission(user, permission))
+}
+
+export function hasAnyPermissionForRole(roleId: string | null | undefined, permissions: readonly string[]) {
+  return permissions.length === 0 || permissions.some((permission) => hasPermissionForRole(roleId, permission))
 }
 
 export function canAccess(user: CurrentUser | null | undefined, options: { roleIds?: readonly string[]; permissions?: readonly string[] }) {
