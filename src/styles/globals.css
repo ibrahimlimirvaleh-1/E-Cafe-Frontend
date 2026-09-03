@@ -544,6 +544,7 @@ img {
   background: var(--on-surface);
   font-size: 12px;
   font-weight: 900;
+  line-height: 1;
 }
 
 .user-pill-avatar img,
@@ -562,7 +563,7 @@ img {
   background: transparent;
 }
 
-.user-pill > span {
+.user-pill > span:not(.user-pill-avatar) {
   display: grid;
   gap: 1px;
   min-width: 0;

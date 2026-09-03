@@ -37,6 +37,8 @@ Profil seçimi əvvəl `details` elementinin default davranışına bağlı idi 
 
 Profil siyahısında restoran baş hərfi göstərildiyi üçün istifadəçi restoran dəyişəndə profil şəkli dəyişirmiş kimi görünürdü. İndi header və profil siyahısı istifadəçinin öz avatarını, avatar yoxdursa istifadəçi ad-soyad initial-larını göstərir. `fileUrl` auth state-də saxlanır və profil refresh zamanı qorunur.
 
+Header-də profil pill-in içindəki avatar `span` elementi ümumi mətn `span` CSS qaydasını da götürürdü. Bu səbəbdən `EE` kimi iki hərfli initial-lar dairənin içində sıxılıb kəsilmiş görünürdü. Selector daraldıldı və mətn layout qaydası yalnız avatar olmayan `span`-ə tətbiq edildi. Avatarın özünə sabit `line-height` verildi ki, profil şəkli olmayan halda initial-lar mərkəzdə və oxunaqlı qalsın.
+
 ### Bildiriş popover-i yüngülləşdirildi
 
 Bildirişlərdə eyni anda təkrarlanan list/count sorğularını azaltmaq üçün request id və local loaded state əlavə edildi. Popover açılışı mövcud məlumatla dərhal görünür, refresh isə fon rejimində işləyir. Aktiv profil dəyişəndə cache sıfırlanır və bildirişlər yeni restoran kontekstinə görə yenilənir.
