@@ -58,7 +58,8 @@ export function UserMenu() {
   const profileLabel = [user.roleName || `Rol #${user.roleId}`, activeProfile?.restaurantName].filter(Boolean).join(' · ')
   const canSwitchProfile = user.profiles.length > 1
   const userInitials = getUserInitials(user.name, user.surname)
-  const renderUserAvatar = () => (user.fileUrl ? <SafeImage src={user.fileUrl} alt="" /> : userInitials)
+  const avatarAlt = `${user.name} ${user.surname}`.trim() || 'Profil'
+  const renderUserAvatar = () => (user.fileUrl ? <SafeImage src={user.fileUrl} alt={avatarAlt} /> : <span className="user-avatar-initials">{userInitials}</span>)
 
   return (
     <div className="user-menu">
@@ -72,7 +73,7 @@ export function UserMenu() {
               setIsProfileMenuOpen((current) => !current)
             }}
           >
-            <span className="user-pill-avatar">{renderUserAvatar()}</span>
+            <div className="user-pill-avatar">{renderUserAvatar()}</div>
             <span>
               <strong>
                 {user.name} {user.surname}
@@ -108,7 +109,7 @@ export function UserMenu() {
                     }}
                     type="button"
                   >
-                    <span className="user-profile-avatar">{renderUserAvatar()}</span>
+                    <div className="user-profile-avatar">{renderUserAvatar()}</div>
                     <span>
                       <strong>{profile.restaurantName || `Restoran #${profile.restaurantId}`}</strong>
                       <small>{profile.roleName || `Rol #${profile.roleId}`}</small>
@@ -132,7 +133,7 @@ export function UserMenu() {
         </details>
       ) : (
         <Link className="user-pill" to="/account" title="Profil">
-          <span className="user-pill-avatar">{renderUserAvatar()}</span>
+          <div className="user-pill-avatar">{renderUserAvatar()}</div>
           <span>
             <strong>
               {user.name} {user.surname}
