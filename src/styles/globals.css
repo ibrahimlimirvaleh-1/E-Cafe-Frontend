@@ -1368,11 +1368,12 @@ img {
 
 .map-dialog {
   display: grid;
-  width: min(920px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
+  grid-template-rows: auto minmax(320px, 1fr);
+  width: min(920px, calc(100dvw - 40px));
+  max-height: calc(100dvh - 40px);
   overflow: hidden;
   border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-lg);
+  border-radius: 18px;
   background: var(--surface-lowest);
   box-shadow: var(--shadow-lg);
 }
@@ -1383,7 +1384,11 @@ img {
   justify-content: space-between;
   gap: 16px;
   border-bottom: 1px solid var(--outline-variant);
-  padding: 18px 20px;
+  padding: 22px 24px 18px;
+}
+
+.map-dialog header > div {
+  min-width: 0;
 }
 
 .map-dialog h2,
@@ -1391,17 +1396,27 @@ img {
   margin: 0;
 }
 
+.map-dialog h2 {
+  overflow-wrap: anywhere;
+  color: var(--on-surface);
+  font-size: clamp(22px, 2.2vw, 28px);
+  line-height: 1.16;
+}
+
 .map-dialog p {
-  margin-top: 4px;
+  margin-top: 6px;
   color: var(--on-surface-variant);
+  font-size: 16px;
+  line-height: 1.45;
 }
 
 .map-dialog header button {
   display: inline-flex;
+  flex: 0 0 44px;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--outline-variant);
   border-radius: 999px;
   background: var(--surface-lowest);
@@ -1410,8 +1425,8 @@ img {
 
 .map-dialog iframe {
   width: 100%;
-  height: min(62vh, 560px);
-  min-height: 360px;
+  height: clamp(360px, 62dvh, 560px);
+  min-height: 0;
   border: 0;
 }
 
@@ -5811,13 +5826,12 @@ body,
   .map-dialog {
     align-self: end;
     width: 100%;
-    max-height: 86vh;
+    max-height: min(86dvh, 720px);
     border-radius: 18px 18px 0 0;
   }
 
   .map-dialog iframe {
-    height: 58vh;
-    min-height: 300px;
+    height: clamp(300px, 58dvh, 520px);
   }
 }
 
@@ -6014,17 +6028,25 @@ body,
 
   .map-dialog {
     width: calc(100vw - 20px);
-    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
     border-radius: 18px;
   }
 
   .map-dialog header {
-    padding: 14px 16px;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .map-dialog h2 {
+    font-size: 22px;
+  }
+
+  .map-dialog p {
+    font-size: 14px;
   }
 
   .map-dialog iframe {
-    height: 58vh;
-    min-height: 320px;
+    height: clamp(320px, 58dvh, 520px);
   }
 
   .restaurant-context-card {
