@@ -547,6 +547,11 @@ img {
   line-height: 1;
 }
 
+.user-avatar-initials {
+  display: block;
+  line-height: 1;
+}
+
 .user-pill-avatar img,
 .user-profile-avatar img {
   width: 100%;
