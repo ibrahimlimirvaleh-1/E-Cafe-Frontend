@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
+import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 import { useAuth } from '../auth/AuthContext'
 import { RoleIds, isInRole } from '../auth/authz'
 
@@ -35,6 +36,7 @@ export function StaffShell({ title }: StaffShellProps) {
           ) : null}
         </nav>
         <div className="site-actions">
+          <WorkspaceSwitcher mode="workspace" />
           <NotificationBell />
           <UserMenu />
         </div>

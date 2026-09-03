@@ -7,6 +7,7 @@ import { canAccessAdminModule } from '../config/adminPermissions'
 import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
+import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
 const outboxAdminModule = {
   permissionKey: 'audit-logs',
@@ -43,6 +44,7 @@ export function AdminShell() {
       <div className="admin-workspace">
         <header className="admin-topbar compact">
           <div className="site-actions">
+            <WorkspaceSwitcher mode="workspace" />
             <NotificationBell />
             <UserMenu />
           </div>
