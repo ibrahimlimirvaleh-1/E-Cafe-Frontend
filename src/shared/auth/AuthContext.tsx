@@ -88,7 +88,13 @@ function profileSignature(profiles: UserAccessProfile[]) {
     .join('|')
 }
 
-function mergeProfileDetails(user: CurrentUser, profileDetails: { profiles?: Array<{ restaurantId: string; restaurantName: string; roleId: number; roleName: string; isActive: boolean }> }) {
+function mergeProfileDetails(
+  user: CurrentUser,
+  profileDetails: {
+    fileUrl?: string
+    profiles?: Array<{ restaurantId: string; restaurantName: string; roleId: number; roleName: string; isActive: boolean }>
+  },
+) {
   const detailedProfiles = (profileDetails.profiles || [])
     .filter((profile) => profile.isActive && profile.restaurantId && profile.roleId)
     .map((profile) => ({
@@ -103,7 +109,7 @@ function mergeProfileDetails(user: CurrentUser, profileDetails: { profiles?: Arr
     return user
   }
 
-  const nextUser = withSelectedProfile({ ...user, profiles: detailedProfiles })
+  const nextUser = withSelectedProfile({ ...user, fileUrl: profileDetails.fileUrl || user.fileUrl, profiles: detailedProfiles })
   return nextUser ?? user
 }
 

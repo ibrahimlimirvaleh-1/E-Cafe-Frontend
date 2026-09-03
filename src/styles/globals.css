@@ -234,10 +234,34 @@ img {
 
 .user-profile-menu header {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 3px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--outline-variant);
   background: var(--surface-low);
+}
+
+.user-profile-menu header > span {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.user-profile-menu header em {
+  overflow: hidden;
+  color: var(--brand-accent);
+  text-overflow: ellipsis;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 14px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.user-profile-menu header svg {
+  color: var(--on-surface-variant);
 }
 
 .user-profile-menu header strong,
@@ -267,14 +291,14 @@ img {
 
 .user-profile-option {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 18px;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  min-height: 64px;
+  gap: 12px;
+  min-height: 72px;
   width: 100%;
   border: 0;
   border-bottom: 1px solid var(--outline-variant);
-  padding: 10px 14px;
+  padding: 12px 16px;
   color: var(--on-surface);
   background: transparent;
   text-align: left;
@@ -297,14 +321,41 @@ img {
 
 .user-profile-avatar {
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   place-items: center;
   border-radius: 999px;
   color: var(--surface-lowest);
   background: var(--on-surface);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.user-profile-current,
+.user-profile-switch-label {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 0 10px;
   font-size: 12px;
   font-weight: 900;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.user-profile-current {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.user-profile-switch-label {
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  background: var(--surface-lowest);
 }
 
 .user-profile-account-link {
@@ -479,6 +530,36 @@ img {
   border-radius: 999px;
   color: var(--on-surface-variant);
   background: var(--surface-low);
+}
+
+.user-pill-avatar {
+  display: grid;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  color: var(--surface-lowest);
+  background: var(--on-surface);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.user-pill-avatar img,
+.user-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-pill > svg:last-child {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  color: var(--on-surface-variant);
+  background: transparent;
 }
 
 .user-pill > span {
@@ -1808,6 +1889,30 @@ img {
 
 .restaurant-select-trigger > svg {
   flex: 0 0 auto;
+}
+
+.restaurant-select-readonly {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  color: var(--on-surface);
+  background: var(--surface-highest);
+}
+
+.restaurant-select-readonly > svg {
+  flex: 0 0 auto;
+  color: var(--on-surface-variant);
+}
+
+.restaurant-select-readonly > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .restaurant-select-options {
@@ -5189,6 +5294,7 @@ body {
 .ui-field select,
 .ui-field textarea,
 .restaurant-select-trigger,
+.restaurant-select-readonly,
 .search-box,
 .filter-panel input,
 .filter-panel select,
@@ -5516,7 +5622,8 @@ body,
 .ui-field input,
 .ui-field select,
 .ui-field textarea,
-.restaurant-select-trigger {
+.restaurant-select-trigger,
+.restaurant-select-readonly {
   min-width: 0;
 }
 

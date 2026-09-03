@@ -26,31 +26,43 @@ export function NotificationBell() {
   const { isAuthenticated, selectProfileForRestaurant, user } = useAuth()
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const requestIdRef = useRef(0)
+  const hasLoadedRef = useRef(false)
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const activeProfileKey = `${user?.restaurantId || ''}:${user?.roleId || ''}`
 
   const loadNotifications = useCallback(async () => {
     if (!isAuthenticated) {
       setNotifications([])
       setUnreadCount(0)
+      hasLoadedRef.current = false
       return
     }
 
-    setIsLoading(true)
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
+    setIsLoading(!hasLoadedRef.current)
     try {
       const [items, count] = await Promise.all([ecafeApi.notifications.list(), ecafeApi.notifications.unreadCount()])
-      setNotifications(items)
-      setUnreadCount(count)
+      if (requestIdRef.current === requestId) {
+        setNotifications(items)
+        setUnreadCount(count)
+        hasLoadedRef.current = true
+      }
     } finally {
-      setIsLoading(false)
+      if (requestIdRef.current === requestId) {
+        setIsLoading(false)
+      }
     }
-  }, [isAuthenticated])
+  }, [activeProfileKey, isAuthenticated])
 
   useEffect(() => {
+    hasLoadedRef.current = false
     void loadNotifications()
-  }, [loadNotifications])
+  }, [activeProfileKey, loadNotifications])
 
   useEffect(() => {
     const onRefresh = () => {
@@ -93,7 +105,7 @@ export function NotificationBell() {
 
   const onToggle = () => {
     setIsOpen((current) => !current)
-    if (!isOpen) {
+    if (!isOpen && !hasLoadedRef.current) {
       void loadNotifications()
     }
   }

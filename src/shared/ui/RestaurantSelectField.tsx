@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Store } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { Restaurant } from '../../entities/types'
 import { useAuth } from '../auth/AuthContext'
@@ -48,6 +48,7 @@ export function RestaurantSelectField({
   const fallbackOption = emptyOption === undefined ? { label: placeholder, value: '' } : emptyOption
   const selectedOption = restaurantOptions.find((option) => option.value === value)
   const selectedLabel = selectedOption?.label ?? (fallbackOption?.value === value ? fallbackOption.label : '')
+  const shouldRenderReadOnly = !disabled && !fallbackOption && restaurantOptions.length === 1
 
   useEffect(() => {
     if (!value || disabled) {
@@ -97,22 +98,29 @@ export function RestaurantSelectField({
   return (
     <div className={`ui-field restaurant-select-field${error ? ' ui-field-invalid' : ''}`} ref={rootRef}>
       <span>{label}</span>
-      <button
-        aria-controls={isOpen ? listboxId : undefined}
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        aria-invalid={Boolean(error)}
-        aria-required={required}
-        className="restaurant-select-trigger"
-        disabled={disabled}
-        onClick={() => setIsOpen((current) => !current)}
-        onKeyDown={handleKeyDown}
-        title={selectedLabel || placeholder}
-        type="button"
-      >
-        <span>{selectedLabel || placeholder}</span>
-        <ChevronDown size={18} />
-      </button>
+      {shouldRenderReadOnly ? (
+        <div className="restaurant-select-readonly" title={selectedLabel || placeholder}>
+          <Store size={18} />
+          <span>{selectedLabel || placeholder}</span>
+        </div>
+      ) : (
+        <button
+          aria-controls={isOpen ? listboxId : undefined}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          aria-invalid={Boolean(error)}
+          aria-required={required}
+          className="restaurant-select-trigger"
+          disabled={disabled}
+          onClick={() => setIsOpen((current) => !current)}
+          onKeyDown={handleKeyDown}
+          title={selectedLabel || placeholder}
+          type="button"
+        >
+          <span>{selectedLabel || placeholder}</span>
+          <ChevronDown size={18} />
+        </button>
+      )}
       {isOpen ? (
         <div className="restaurant-select-options" id={listboxId} role="listbox">
           {fallbackOption ? (

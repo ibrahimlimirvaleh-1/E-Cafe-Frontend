@@ -43,7 +43,8 @@ export function NotificationsPage() {
   const navigate = useNavigate()
   const { selectProfileForRestaurant, user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
-  const { data: notifications, isLoading } = useAsyncData(() => ecafeApi.notifications.list(), [], [reloadKey])
+  const activeProfileKey = `${user?.restaurantId || ''}:${user?.roleId || ''}`
+  const { data: notifications, isLoading } = useAsyncData(() => ecafeApi.notifications.list(), [], [activeProfileKey, reloadKey])
   const unreadCount = useMemo(() => notifications.filter((notification) => !notification.isRead).length, [notifications])
 
   const openNotification = async (notification: NotificationItem) => {
