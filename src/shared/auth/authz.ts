@@ -148,3 +148,23 @@ export function getHomePathForUser(user: CurrentUser | null | undefined) {
 
   return '/'
 }
+
+export function getHomePathForRoleId(roleId: string | null | undefined) {
+  if (!roleId) {
+    return ''
+  }
+
+  if (AdminRoleIds.includes(roleId)) {
+    return '/admin'
+  }
+
+  if (roleId === RoleIds.Waiter) {
+    return '/waiter'
+  }
+
+  if (roleId === RoleIds.Kitchen) {
+    return '/kitchen'
+  }
+
+  return ''
+}

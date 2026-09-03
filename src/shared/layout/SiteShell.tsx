@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext'
 import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { UserMenu } from './UserMenu'
+import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
 export function SiteShell() {
   const { isAuthenticated } = useAuth()
@@ -20,6 +21,7 @@ export function SiteShell() {
             </nav>
           ) : null}
           <div className="site-actions">
+            <WorkspaceSwitcher mode="site" />
             <NotificationBell />
             <UserMenu />
           </div>
