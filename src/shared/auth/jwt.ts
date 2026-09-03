@@ -6,6 +6,7 @@ export type CurrentUser = {
   name: string
   surname: string
   email: string
+  fileUrl?: string
   roleId: string
   roleName: string
   restaurantId?: string
@@ -92,6 +93,7 @@ export function getUserFromToken(token: string): CurrentUser | null {
     name: str(payload.name),
     surname: str(payload.surname),
     email: str(payload.email),
+    fileUrl: str(payload.fileUrl) || undefined,
     roleId: str(payload[roleClaim] || payload.roleId),
     roleName: str(payload.roleName),
     restaurantId,

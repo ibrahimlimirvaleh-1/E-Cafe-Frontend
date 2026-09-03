@@ -733,44 +733,50 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           <>
             <section className="admin-panel">
               <span className="eyebrow">Menyu mehsulu</span>
-              <SelectField label="Menyu mehsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
-                {menuItems.map((item: MenuItem) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </SelectField>
+              {menuItems.length > 0 ? (
+                <SelectField label="Menyu mehsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
+                  {menuItems.map((item: MenuItem) => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
+                </SelectField>
+              ) : (
+                <EmptyState title="Menyu məhsulu yoxdur" message="Resept tərkibi yaratmaq üçün əvvəl bu restoranın menyusunda məhsul yaradın." />
+              )}
             </section>
 
-            <section className="admin-panel recipe-panel">
-              <span className="eyebrow">Terkib</span>
-              <h2>Resept ingredientleri</h2>
-              <div className="recipe-list">
-                {recipes.map((recipe: Recipe) => (
-                  <article key={recipe.id}>
-                    <div>
-                      <strong>{recipe.inventoryItemName}</strong>
-                      <small>{recipe.quantity} {recipe.unitCode || recipe.unitName}</small>
-                    </div>
-                    <Badge tone={recipe.isActive ? 'success' : 'neutral'}>{recipe.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
-                    {canManageRecipes ? (
-                      <div className="inline-actions">
-                        <ActionIconButton label={`${recipe.inventoryItemName} redaktə et`} onClick={() => startRecipeEdit(recipe)}>
-                          <Pencil size={17} />
-                        </ActionIconButton>
-                        <ActionIconButton label={`${recipe.inventoryItemName} aktiv/deaktiv et`} onClick={() => toggleRecipe(recipe)}>
-                          <Power size={17} />
-                        </ActionIconButton>
-                        <ActionIconButton label={`${recipe.inventoryItemName} sil`} tone="danger" onClick={() => setPendingDelete({ id: recipe.id, label: recipe.inventoryItemName, type: 'recipe' })}>
-                          <Trash2 size={17} />
-                        </ActionIconButton>
+            {menuItems.length > 0 ? (
+              <section className="admin-panel recipe-panel">
+                <span className="eyebrow">Terkib</span>
+                <h2>Resept ingredientleri</h2>
+                <div className="recipe-list">
+                  {recipes.map((recipe: Recipe) => (
+                    <article key={recipe.id}>
+                      <div>
+                        <strong>{recipe.inventoryItemName}</strong>
+                        <small>{recipe.quantity} {recipe.unitCode || recipe.unitName}</small>
                       </div>
-                    ) : null}
-                  </article>
-                ))}
-                {menuItem && recipes.length === 0 ? (
-                  <EmptyState title="Resept tərkibi yoxdur" message="Bu məhsul üçün hələ ingredient əlavə edilməyib." />
-                ) : null}
-              </div>
-            </section>
+                      <Badge tone={recipe.isActive ? 'success' : 'neutral'}>{recipe.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                      {canManageRecipes ? (
+                        <div className="inline-actions">
+                          <ActionIconButton label={`${recipe.inventoryItemName} redaktə et`} onClick={() => startRecipeEdit(recipe)}>
+                            <Pencil size={17} />
+                          </ActionIconButton>
+                          <ActionIconButton label={`${recipe.inventoryItemName} aktiv/deaktiv et`} onClick={() => toggleRecipe(recipe)}>
+                            <Power size={17} />
+                          </ActionIconButton>
+                          <ActionIconButton label={`${recipe.inventoryItemName} sil`} tone="danger" onClick={() => setPendingDelete({ id: recipe.id, label: recipe.inventoryItemName, type: 'recipe' })}>
+                            <Trash2 size={17} />
+                          </ActionIconButton>
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                  {menuItem && recipes.length === 0 ? (
+                    <EmptyState title="Resept tərkibi yoxdur" message="Bu məhsul üçün hələ ingredient əlavə edilməyib." />
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
           </>
         ) : null}
 
@@ -779,13 +785,18 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             <>
               <section className="admin-panel">
                 <span className="eyebrow">Menyu mehsulu</span>
-                <SelectField label="Menyu mehsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
-                  {menuItems.map((item: MenuItem) => (
-                    <option key={item.id} value={item.id}>{item.name}</option>
-                  ))}
-                </SelectField>
+                {menuItems.length > 0 ? (
+                  <SelectField label="Menyu mehsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
+                    {menuItems.map((item: MenuItem) => (
+                      <option key={item.id} value={item.id}>{item.name}</option>
+                    ))}
+                  </SelectField>
+                ) : (
+                  <EmptyState title="Menyu məhsulu yoxdur" message="Resept yaratmaq üçün əvvəl menyu bölməsində məhsul əlavə edin." />
+                )}
               </section>
 
+              {menuItems.length > 0 ? (
               <section className="admin-panel recipe-editor-panel">
                 <form className="stack-form" onSubmit={handleSaveRecipe}>
                   <span className="eyebrow">{editingRecipeId ? 'Redakte' : 'Yeni terkib'}</span>
@@ -813,6 +824,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                   </div>
                 </form>
               </section>
+              ) : null}
             </>
           ) : (
             <section className="admin-panel">
