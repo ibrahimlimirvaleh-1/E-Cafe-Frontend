@@ -1,5 +1,6 @@
 import { clearAuthTokens, getAccessToken, hasManualLogoutMarker, saveAuthTokens } from '../auth/tokenStorage'
 import type { AuthTokens } from '../auth/tokenStorage'
+import { getActiveProfileContext } from '../auth/activeProfileStorage'
 import { endpoints } from './endpoints'
 
 export type ApiResult<T> = {
@@ -104,6 +105,12 @@ async function sendApiRequest(url: string, init?: RequestOptions) {
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`)
+
+    const activeProfile = getActiveProfileContext()
+    if (activeProfile) {
+      headers.set('X-Active-Restaurant-Id', activeProfile.restaurantId)
+      headers.set('X-Active-Role-Id', activeProfile.roleId)
+    }
   }
 
   return fetch(url, {
