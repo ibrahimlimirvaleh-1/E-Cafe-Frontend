@@ -76,7 +76,7 @@ function ownerPayload(ownerMode: OwnerMode, form: RestaurantFormState) {
 }
 
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
-  const { user } = useAuth()
+  const { selectProfileForRestaurant, user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
@@ -299,6 +299,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             baseRoute="/admin/restaurants"
             canEdit={canCreateRestaurants}
             columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']}
+            onActionNavigate={(row) => selectProfileForRestaurant(row.id)}
             rows={restaurantPage.items.map(restaurantRow)}
           />
           {canSearchRestaurants ? (
