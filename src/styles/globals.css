@@ -6676,6 +6676,13 @@ body,
   }
 }
 
+@media (max-width: 1080px) {
+  .admin-sidebar {
+    min-height: auto;
+    overflow: visible;
+  }
+}
+
 @media (max-width: 640px) {
   .restaurant-grid {
     grid-template-columns: 1fr;
