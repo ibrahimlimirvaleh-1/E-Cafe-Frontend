@@ -19,6 +19,7 @@ Backend-ə göndərilən dəyər əvvəlki kimi tam formada qalır: `+9945012345
   - Operator kodları: `50`, `51`, `55`, `70`, `77`, `99`, `10`, `60`.
   - Mövcud `+994...` və `0...` formatlı dəyərləri parse edib UI-da uyğun operator və 7 rəqəm kimi göstərir.
   - Dəyişiklik olanda parent formaya yenə tam `+994` formatlı telefon qaytarır.
+  - Nömrə hissəsi boş olanda operator seçiminin `50`-yə qayıtması düzəldildi; seçilmiş operator komponent daxilində saxlanılır və istifadəçi 7 rəqəmi yazanda düzgün tam nömrə formalaşır.
 
 - `src/pages/auth/AuthPage.tsx`
   - Qeydiyyat telefon sahəsi `PhoneField` komponentinə keçirildi.
