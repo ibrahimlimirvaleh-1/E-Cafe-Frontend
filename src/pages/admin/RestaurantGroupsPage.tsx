@@ -10,6 +10,10 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type RestaurantGroupsPageMode = 'list' | 'create'
 
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase()
+}
+
 export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroupsPageMode }) {
   const [reloadKey, setReloadKey] = useState(0)
   const [name, setName] = useState('')
@@ -18,6 +22,7 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const { data: groups, isLoading } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
+  const duplicateGroupEmail = groups.filter((group) => normalizeEmail(group.email || '') === normalizeEmail(email) && normalizeEmail(email).length > 0)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -57,6 +62,15 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
             <TextField label="Qrup adı" required value={name} onChange={(event) => setName(event.target.value)} />
             <TextField label="Legal ad" value={legalName} onChange={(event) => setLegalName(event.target.value)} />
             <TextField label="Qrup əlaqə emaili" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+            {duplicateGroupEmail.length > 0 ? (
+              <div className="soft-warning-panel" role="status">
+                <strong>Bu email artıq başqa qrupda istifadə olunur.</strong>
+                <span>
+                  {duplicateGroupEmail.map((group) => group.name).join(', ')} qrupu ilə eyni əlaqə emaili yazılıb.
+                  Düzgündürsə qrup yaratmağa davam edə bilərsiniz.
+                </span>
+              </div>
+            ) : null}
             <Button type="submit">Qrup yarat</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>

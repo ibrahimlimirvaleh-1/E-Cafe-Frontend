@@ -75,6 +75,10 @@ function ownerPayload(ownerMode: OwnerMode, form: RestaurantFormState) {
   }
 }
 
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase()
+}
+
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
   const { selectProfileForRestaurant, user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
@@ -142,6 +146,15 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   )
   const selectedOwner = users.find((candidate) => candidate.id === form.ownerId)
   const selectedGroup = groups.find((group) => group.id === form.restaurantGroupId)
+  const duplicateGroupEmail = useMemo(() => {
+    const email = normalizeEmail(form.restaurantGroupEmail)
+
+    if (!email || form.restaurantGroupId) {
+      return []
+    }
+
+    return groups.filter((group) => normalizeEmail(group.email || '') === email)
+  }, [form.restaurantGroupEmail, form.restaurantGroupId, groups])
 
   if (mode === 'create' && !canCreateRestaurants) {
     return <Navigate to="/admin/restaurants" replace />
@@ -384,13 +397,24 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             <div className="form-grid two">
               <TextField label="Yeni qrup adı" required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
               <TextField label="Yeni qrup legal adı" value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
-              <TextField
-                label="Qrup əlaqə emaili"
-                required
-                type="email"
-                value={form.restaurantGroupEmail}
-                onChange={(event) => setForm({ ...form, restaurantGroupEmail: event.target.value })}
-              />
+              <div className="form-grid-full">
+                <TextField
+                  label="Qrup əlaqə emaili"
+                  required
+                  type="email"
+                  value={form.restaurantGroupEmail}
+                  onChange={(event) => setForm({ ...form, restaurantGroupEmail: event.target.value })}
+                />
+                {duplicateGroupEmail.length > 0 ? (
+                  <div className="soft-warning-panel" role="status">
+                    <strong>Bu email artıq başqa qrupda istifadə olunur.</strong>
+                    <span>
+                      {duplicateGroupEmail.map((group) => group.name).join(', ')} qrupu ilə eyni əlaqə emaili yazılıb.
+                      Düzgündürsə davam edə bilərsiniz.
+                    </span>
+                  </div>
+                ) : null}
+              </div>
             </div>
           ) : selectedGroup ? (
             <div className="selected-group-contact">
