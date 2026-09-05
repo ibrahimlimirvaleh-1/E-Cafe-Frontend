@@ -12,6 +12,7 @@ import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function ProfilePage() {
@@ -206,7 +207,7 @@ export function ProfilePage() {
             <TextField label="Soyad" required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
           </div>
           <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-          <TextField label="Telefon" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+          <PhoneField label="Telefon" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           <FileUploadField label="Profil şəkli" accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
 
           <Button disabled={isSaving} type="submit">

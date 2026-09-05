@@ -14,6 +14,7 @@ import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
+import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type RestaurantPageMode = 'list' | 'create'
@@ -378,7 +379,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             <TextField label="Filial adı" required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
           </div>
           <div className="form-grid two">
-            <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+            <PhoneField label="Telefon" required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </div>
           <SelectField
             label="Mövcud restoran qrupu"
@@ -498,7 +499,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             <div className="new-owner-fields">
               <div className="form-grid two">
                 <TextField label="Sahibkar emaili" required type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
-                <TextField label="Telefon" required value={form.ownerPhone} onChange={(event) => setForm({ ...form, ownerPhone: event.target.value })} />
+                <PhoneField label="Telefon" required value={form.ownerPhone} onChange={(ownerPhone) => setForm({ ...form, ownerPhone })} />
               </div>
               <div className="form-grid two">
                 <TextField label="Ad" required value={form.ownerFirstName} onChange={(event) => setForm({ ...form, ownerFirstName: event.target.value })} />

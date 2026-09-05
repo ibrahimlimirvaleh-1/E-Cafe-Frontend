@@ -14,6 +14,7 @@ import { EmptyState } from '../../shared/ui/EmptyState'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { PhoneField } from '../../shared/ui/PhoneField'
 import { RestaurantContextCard } from '../../shared/ui/RestaurantContextCard'
 import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { SafeImage } from '../../shared/ui/SafeImage'
@@ -42,7 +43,7 @@ const roleIdsByStaffRole: Record<Role, number> = {
 
 const staffFormGuidance = [
   'Email və telefon aktiv əməkdaşlarda təkrar olmamalıdır.',
-  'Telefonu 0501234567 və ya +994501234567 formatında daxil edin.',
+  'Telefon üçün operator kodunu seçin və 7 rəqəmli nömrəni daxil edin.',
   'Profil şəkli seçilirsə, upload tamamlanandan sonra saxlayın.',
   'Şifrə təyin etmə linki əməkdaş yaradıldıqdan sonra emailə göndərilir.',
 ]
@@ -437,13 +438,13 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
             />
-            <TextField
+            <PhoneField
               error={fieldError('Phone')}
-              hint="Nümunə: 0501234567 və ya +994501234567."
+              hint="Nümunə: +994 50 1234567."
               label="Telefon"
               required
               value={form.phone}
-              onChange={(event) => setForm({ ...form, phone: event.target.value })}
+              onChange={(phone) => setForm({ ...form, phone })}
             />
             <SelectField
               disabled={mode === 'edit'}
@@ -608,7 +609,7 @@ function validateStaffForm(form: typeof initialForm, restaurantId: string, mode:
   }
 
   if (!/^(\+994|0)(50|51|55|70|77|99|10)\d{7}$/.test(phone.replace(/[\s-]/g, ''))) {
-    details.push({ field: 'Phone', label: 'Telefon', message: 'Telefonu 0501234567 və ya +994501234567 formatında daxil edin.' })
+    details.push({ field: 'Phone', label: 'Telefon', message: 'Operator kodunu seçin və 7 rəqəmli nömrəni daxil edin.' })
   }
 
   if (mode === 'create' && !form.roleId) {
