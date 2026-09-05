@@ -2553,6 +2553,71 @@ img {
   font-weight: 700;
 }
 
+.phone-field-control {
+  display: grid;
+  grid-template-columns: auto 82px minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--surface-low);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.phone-country-code {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 0 12px;
+  color: var(--on-surface);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.phone-field-control select,
+.phone-field-control input {
+  min-height: 48px;
+  border: 0;
+  border-left: 1px solid var(--outline-variant);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.phone-field-control select {
+  padding: 0 8px;
+  font-weight: 800;
+}
+
+.phone-field-control input {
+  padding: 0 12px;
+}
+
+.phone-field-control:hover {
+  border-color: var(--outline-variant);
+  background: #ffffff;
+}
+
+.phone-field:focus-within .phone-field-control {
+  border-color: rgba(17, 19, 23, 0.8);
+  background: #ffffff;
+  box-shadow: var(--focus-ring);
+}
+
+.phone-field:focus-within .phone-field-control select,
+.phone-field:focus-within .phone-field-control input {
+  box-shadow: none;
+}
+
+.ui-field-invalid .phone-field-control {
+  border-color: rgba(198, 28, 28, 0.72);
+  background: rgba(255, 239, 239, 0.72);
+}
+
 .form-guidance {
   display: flex;
   align-items: flex-start;
@@ -5442,6 +5507,30 @@ body {
 .ui-field-invalid .restaurant-select-trigger:focus {
   border-color: var(--danger);
   box-shadow: 0 0 0 4px rgba(198, 28, 28, 0.14);
+}
+
+.phone-field .phone-field-control select,
+.phone-field .phone-field-control input {
+  min-height: 48px;
+  border: 0;
+  border-left: 1px solid var(--outline-variant);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.phone-field .phone-field-control select:hover,
+.phone-field .phone-field-control input:hover,
+.phone-field .phone-field-control select:focus,
+.phone-field .phone-field-control input:focus {
+  border-color: var(--outline-variant);
+  background: transparent;
+  box-shadow: none;
+}
+
+.phone-field.ui-field-invalid .phone-field-control {
+  border-color: rgba(198, 28, 28, 0.72);
+  background: rgba(255, 239, 239, 0.72);
 }
 
 .ui-button,

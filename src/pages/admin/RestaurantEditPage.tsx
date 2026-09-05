@@ -10,6 +10,7 @@ import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function RestaurantEditPage() {
@@ -200,7 +201,7 @@ export function RestaurantEditPage() {
           <TextField label="Filial adı" required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
         </div>
         <div className="form-grid two">
-          <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+          <PhoneField label="Telefon" required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
         </div>
         <SelectField label="Restoran qrupu" value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}>
           <option value="">Yeni qrup yarat</option>

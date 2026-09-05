@@ -9,6 +9,7 @@ import { getUserFromToken } from '../../shared/auth/jwt'
 import { Brand } from '../../shared/layout/Brand'
 import { Button } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
+import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 type AuthPageProps = {
@@ -82,7 +83,7 @@ export function AuthPage({ mode }: AuthPageProps) {
           <>
             <TextField label="Ad" placeholder="Adınızı daxil edin" value={name} onChange={(event) => setName(event.target.value)} />
             <TextField label="Soyad" placeholder="Soyadınızı daxil edin" value={surname} onChange={(event) => setSurname(event.target.value)} />
-            <TextField label="Telefon" placeholder="+994501234567" value={phone} onChange={(event) => setPhone(event.target.value)} />
+            <PhoneField label="Telefon" value={phone} onChange={setPhone} />
           </>
         ) : null}
         <TextField label="Email" placeholder="name@example.com" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
@@ -128,7 +129,7 @@ function validateAuthForm({
   }
 
   if (!isLogin && !/^(\+994|0)(50|51|55|70|77|99|10)\d{7}$/.test(normalizedPhone)) {
-    details.push({ field: 'Phone', label: 'Telefon', message: 'Telefonu 0501234567 və ya +994501234567 formatında daxil edin.' })
+    details.push({ field: 'Phone', label: 'Telefon', message: 'Operator kodunu seçin və 7 rəqəmli nömrəni daxil edin.' })
   }
 
   if (password.length < 8) {
