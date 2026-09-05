@@ -41,6 +41,19 @@ Backend-ə göndərilən dəyər əvvəlki kimi tam formada qalır: `+9945012345
 - `src/styles/globals.css`
   - Telefon inputu üçün ölkə kodu, operator seçimi və nömrə inputundan ibarət responsive layout əlavə edildi.
   - Hover, focus və error state-ləri mövcud form field dizaynına uyğunlaşdırıldı.
+  - Telefon control-u vizual olaraq yeniləndi: ayrı-ayrı boz bloklar əvəzinə tək ağ input səthi, incə ayrıcılar və səliqəli operator seçimi istifadə olunur.
+
+## Son dizayn düzəlişi
+
+İlk versiyada `+994`, operator select-i və nömrə inputu vizual olaraq ayrı boz qutular kimi görünürdü. Bu, formanın ümumi premium/admin dizaynına uyğun deyildi.
+
+Yenilənmiş versiyada:
+
+- `+994` sakit prefix kimi göstərilir.
+- Operator seçimi ayrıca sərt qutu kimi yox, input daxilində segment kimi görünür.
+- Native select oxu əvəzinə səliqəli ikon istifadə olunur.
+- Control ağ fonda, incə border və focus state ilə göstərilir.
+- Telefon sahəsi bütün formalarda eyni ölçü və ritmdə qalır.
 
 ## UX nəticəsi
 
@@ -56,4 +69,3 @@ Backend-ə göndərilən dəyər əvvəlki kimi tam formada qalır: `+9945012345
 - Yeni sahibkar yaradanda sahibkar telefonu düzgün göndərilməlidir.
 - Personal yaradanda və redaktə edəndə telefon düzgün göndərilməlidir.
 - Profil yeniləyəndə telefon düzgün saxlanmalıdır.
-
