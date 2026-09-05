@@ -69,7 +69,7 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
     longitude: nullableNum(restaurant.longitude),
     placeId: str(restaurant.placeId || restaurant.place_id) || null,
     phone: str(restaurant.phone),
-    email: str(restaurant.email),
+    restaurantGroupEmail: str(restaurant.restaurantGroupEmail || restaurant.email) || undefined,
     rating: num(restaurant.rating || restaurant.ratingAverage, 4.8),
     cuisine: str(restaurant.cuisine || restaurant.cuisineName || restaurant.restaurantGroupName, 'Restoran'),
     branchName: str(restaurant.branchName),

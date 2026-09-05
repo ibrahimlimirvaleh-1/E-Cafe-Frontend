@@ -30,7 +30,7 @@ export function RestaurantEditPage() {
     placeId: '',
     geocodedAddress: '',
     phone: '',
-    email: '',
+    restaurantGroupEmail: '',
     restaurantGroupId: '',
     restaurantGroupName: '',
     restaurantGroupLegalName: '',
@@ -55,7 +55,7 @@ export function RestaurantEditPage() {
       placeId: restaurant.placeId || '',
       geocodedAddress: restaurant.latitude != null && restaurant.longitude != null ? restaurant.address : '',
       phone: restaurant.phone,
-      email: restaurant.email || '',
+      restaurantGroupEmail: '',
       restaurantGroupId: restaurant.restaurantGroupId || '',
       restaurantGroupName: restaurant.restaurantGroupName || '',
       restaurantGroupLegalName: '',
@@ -91,10 +91,10 @@ export function RestaurantEditPage() {
         longitude: form.longitude ? Number(form.longitude) : null,
         placeId: form.placeId || null,
         phone: form.phone,
-        email: form.email,
         restaurantGroupId: form.restaurantGroupId || undefined,
         restaurantGroupName: form.restaurantGroupId ? undefined : form.restaurantGroupName,
         restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
+        restaurantGroupEmail: form.restaurantGroupId ? undefined : form.restaurantGroupEmail,
         branchName: form.branchName,
         depositAmount: Number(form.depositAmount),
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
@@ -201,9 +201,8 @@ export function RestaurantEditPage() {
         </div>
         <div className="form-grid two">
           <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-          <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
         </div>
-        <SelectField label="Restoran qrupu" value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value })}>
+        <SelectField label="Restoran qrupu" value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}>
           <option value="">Yeni qrup yarat</option>
           {groups.map((group) => (
             <option key={group.id} value={group.id}>
@@ -213,8 +212,15 @@ export function RestaurantEditPage() {
         </SelectField>
         {!form.restaurantGroupId ? (
           <div className="form-grid two">
-            <TextField label="Yeni qrup adı" value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
+            <TextField label="Yeni qrup adı" required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
             <TextField label="Yeni qrup legal adı" value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
+            <TextField
+              label="Qrup əlaqə emaili"
+              required
+              type="email"
+              value={form.restaurantGroupEmail}
+              onChange={(event) => setForm({ ...form, restaurantGroupEmail: event.target.value })}
+            />
           </div>
         ) : null}
         <div className="form-grid two">

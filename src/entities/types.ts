@@ -29,7 +29,7 @@ export type Restaurant = {
   longitude?: number | null
   placeId?: string | null
   phone: string
-  email?: string
+  restaurantGroupEmail?: string
   rating: number
   cuisine: string
   branchName?: string
@@ -189,6 +189,7 @@ export type RestaurantGroup = {
   id: string
   name: string
   legalName: string
+  email?: string
   isActive: boolean
 }
 

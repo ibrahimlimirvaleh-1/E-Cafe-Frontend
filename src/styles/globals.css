@@ -324,6 +324,8 @@ img {
   width: 40px;
   height: 40px;
   min-width: 40px;
+  align-items: center;
+  justify-items: center;
   place-items: center;
   border-radius: 999px;
   color: var(--surface-lowest);
@@ -537,6 +539,8 @@ img {
   flex: 0 0 30px;
   width: 30px;
   height: 30px;
+  align-items: center;
+  justify-items: center;
   place-items: center;
   overflow: hidden;
   border-radius: 999px;
@@ -548,8 +552,16 @@ img {
 }
 
 .user-avatar-initials {
-  display: block;
+  display: inline-flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--surface-lowest);
+  font-size: inherit;
+  font-weight: inherit;
   line-height: 1;
+  text-align: center;
 }
 
 .user-pill-avatar img,
@@ -2146,13 +2158,13 @@ img {
   justify-content: flex-end;
 }
 
-.admin-topbar span {
+.admin-topbar > span {
   display: block;
   color: var(--on-surface-variant);
   font-size: 12px;
 }
 
-.admin-topbar strong {
+.admin-topbar > strong {
   display: block;
 }
 
@@ -3704,6 +3716,32 @@ img {
   border-radius: var(--radius);
   padding: 12px 14px;
   background: var(--surface-low);
+}
+
+.selected-group-contact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  background: var(--surface-low);
+  padding: 12px 14px;
+}
+
+.selected-group-contact span {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+.selected-group-contact strong {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .stack-form {
