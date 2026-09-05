@@ -1,5 +1,7 @@
-import { ArrowRight, LayoutDashboard, Store } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { ArrowRight, LayoutDashboard, Store, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import type { UserAccessProfile } from '../auth/jwt'
 import { RoleIds, getHomePathForRoleId } from '../auth/authz'
@@ -26,6 +28,24 @@ function isWorkspaceProfile(profile: UserAccessProfile) {
 
 export function WorkspaceSwitcher({ mode }: WorkspaceSwitcherProps) {
   const { isAuthenticated, selectProfile, user } = useAuth()
+  const navigate = useNavigate()
+  const [isPanelModalOpen, setIsPanelModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (!isPanelModalOpen) {
+      return undefined
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsPanelModalOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [isPanelModalOpen])
 
   if (!isAuthenticated || !user) {
     return null
@@ -57,42 +77,65 @@ export function WorkspaceSwitcher({ mode }: WorkspaceSwitcherProps) {
     )
   }
 
+  const panelModal = isPanelModalOpen ? (
+    <div className="modal-backdrop workspace-panel-backdrop" role="presentation" onClick={() => setIsPanelModalOpen(false)}>
+      <section
+        aria-labelledby="workspace-panel-title"
+        className="workspace-panel-modal"
+        role="dialog"
+        aria-modal="true"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header>
+          <span>
+            <strong id="workspace-panel-title">İş paneli seç</strong>
+            <small>Rol və restoran kontekstini seç.</small>
+          </span>
+          <button className="icon-action" type="button" title="Bağla" onClick={() => setIsPanelModalOpen(false)}>
+            <X size={18} />
+          </button>
+        </header>
+        <div className="workspace-panel-list">
+          {profiles.map((profile) => {
+            const isCurrent = currentProfile
+              ? currentProfile.restaurantId === profile.restaurantId && currentProfile.roleId === profile.roleId
+              : user.restaurantId === profile.restaurantId && user.roleId === profile.roleId
+            const targetPath = getHomePathForRoleId(profile.roleId) || '/'
+
+            return (
+              <button
+                className={isCurrent ? 'workspace-panel-row active' : 'workspace-panel-row'}
+                key={`${profile.restaurantId}:${profile.roleId}`}
+                onClick={() => {
+                  selectProfile(profile)
+                  setIsPanelModalOpen(false)
+                  navigate(targetPath)
+                }}
+                type="button"
+              >
+                <span className="workspace-switcher-avatar">
+                  {(profile.restaurantName || profile.roleName || 'P').slice(0, 1).toUpperCase()}
+                </span>
+                <span>
+                  <strong>{profile.restaurantName || `Restoran #${profile.restaurantId}`}</strong>
+                  <small>{profileLabel(profile)}</small>
+                </span>
+                {isCurrent ? <em>Cari</em> : <ArrowRight size={16} />}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+    </div>
+  ) : null
+
   return (
-    <details className="workspace-switcher">
-      <summary>
+    <div className="workspace-switcher">
+      <button className="workspace-switcher-trigger" type="button" onClick={() => setIsPanelModalOpen(true)}>
         <LayoutDashboard size={16} />
         <span>İş panelinə keç</span>
-      </summary>
-      <div className="workspace-switcher-menu">
-        <header>
-          <strong>Keçid seç</strong>
-          <small>Rol və restoran kontekstini seç.</small>
-        </header>
-        {profiles.map((profile) => {
-          const isCurrent = currentProfile
-            ? currentProfile.restaurantId === profile.restaurantId && currentProfile.roleId === profile.roleId
-            : user.restaurantId === profile.restaurantId && user.roleId === profile.roleId
-          const targetPath = getHomePathForRoleId(profile.roleId) || '/'
-
-          return (
-            <Link
-              className="workspace-switcher-row"
-              key={`${profile.restaurantId}:${profile.roleId}`}
-              onClick={() => selectProfile(profile)}
-              to={targetPath}
-            >
-              <span className="workspace-switcher-avatar">
-                {(profile.restaurantName || profile.roleName || 'P').slice(0, 1).toUpperCase()}
-              </span>
-              <span>
-                <strong>{profile.restaurantName || `Restoran #${profile.restaurantId}`}</strong>
-                <small>{profileLabel(profile)}</small>
-              </span>
-              {isCurrent ? <em>Cari</em> : <ArrowRight size={16} />}
-            </Link>
-          )
-        })}
-      </div>
-    </details>
+      </button>
+      {panelModal ? createPortal(panelModal, document.body) : null}
+    </div>
   )
 }

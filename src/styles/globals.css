@@ -378,7 +378,7 @@ img {
   flex: 0 0 auto;
 }
 
-.workspace-switcher summary,
+.workspace-switcher-trigger,
 .workspace-switcher-home {
   display: inline-flex;
   min-height: 42px;
@@ -398,20 +398,12 @@ img {
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
 
-.workspace-switcher summary:hover,
+.workspace-switcher-trigger:hover,
 .workspace-switcher-home:hover {
   border-color: rgba(152, 162, 179, 0.75);
   color: var(--primary);
   background: #ffffff;
   box-shadow: 0 14px 34px rgb(15 23 42 / 0.08);
-}
-
-.workspace-switcher summary::-webkit-details-marker {
-  display: none;
-}
-
-.workspace-switcher summary::marker {
-  content: '';
 }
 
 .workspace-switcher-menu {
@@ -501,6 +493,125 @@ img {
   font-size: 11px;
   font-style: normal;
   font-weight: 800;
+}
+
+.workspace-panel-backdrop {
+  z-index: 130;
+}
+
+.workspace-panel-modal {
+  display: grid;
+  width: min(460px, 100%);
+  max-height: min(620px, calc(100dvh - 48px));
+  overflow: hidden;
+  border: 1px solid var(--outline-variant);
+  border-radius: 18px;
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-lg);
+}
+
+.workspace-panel-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+  border-bottom: 1px solid var(--outline-variant);
+  background: var(--surface-low);
+}
+
+.workspace-panel-modal header span {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.workspace-panel-modal header strong {
+  color: var(--on-surface);
+  font-size: 20px;
+  line-height: 26px;
+}
+
+.workspace-panel-modal header small {
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.workspace-panel-list {
+  display: grid;
+  max-height: min(460px, calc(100dvh - 174px));
+  overflow-y: auto;
+}
+
+.workspace-panel-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 76px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--outline-variant);
+  padding: 12px 16px;
+  color: var(--on-surface);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workspace-panel-row:last-child {
+  border-bottom: 0;
+}
+
+.workspace-panel-row:hover {
+  background: var(--surface-low);
+}
+
+.workspace-panel-row.active {
+  background: rgba(255, 161, 22, 0.12);
+}
+
+.workspace-panel-row > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.workspace-panel-row strong,
+.workspace-panel-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-panel-row strong {
+  color: var(--on-surface);
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.workspace-panel-row small {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.workspace-panel-row em {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--success);
+  background: var(--success-bg);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 16px;
 }
 
 .user-pill {
@@ -7004,14 +7115,14 @@ body,
     gap: 8px;
   }
 
-  .site-topbar .workspace-switcher summary,
+  .site-topbar .workspace-switcher-trigger,
   .site-topbar .workspace-switcher-home {
     width: 42px;
     min-width: 42px;
     padding: 0;
   }
 
-  .site-topbar .workspace-switcher summary span,
+  .site-topbar .workspace-switcher-trigger span,
   .site-topbar .workspace-switcher-home span {
     display: none;
   }
@@ -7031,6 +7142,37 @@ body,
 
   .site-topbar .logout-action {
     display: none;
+  }
+
+  .workspace-panel-backdrop {
+    align-items: end;
+    padding: 0 10px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .workspace-panel-modal {
+    width: 100%;
+    max-height: min(78dvh, 560px);
+    border-radius: 20px 20px 16px 16px;
+  }
+
+  .workspace-panel-modal header {
+    padding: 16px;
+  }
+
+  .workspace-panel-modal header strong {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .workspace-panel-list {
+    max-height: min(430px, calc(78dvh - 92px));
+  }
+
+  .workspace-panel-row {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 10px;
+    min-height: 74px;
+    padding: 12px;
   }
 
   .user-profile-menu {
