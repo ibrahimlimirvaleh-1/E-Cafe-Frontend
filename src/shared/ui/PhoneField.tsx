@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 const operatorCodes = ['50', '51', '55', '70', '77', '99', '10', '60']
 
@@ -31,6 +31,21 @@ function buildPhoneValue(operator: string, number: string) {
 
 export function PhoneField({ error, hint, label, onChange, required, value }: PhoneFieldProps) {
   const parsed = parseAzerbaijanPhone(value)
+  const [selectedOperator, setSelectedOperator] = useState(parsed.operator)
+
+  useEffect(() => {
+    if (value.replace(/\D/g, '').length > 0) {
+      setSelectedOperator(parsed.operator)
+    }
+  }, [parsed.operator, value])
+
+  function handleOperatorChange(operator: string) {
+    setSelectedOperator(operator)
+
+    if (parsed.number) {
+      onChange(buildPhoneValue(operator, parsed.number))
+    }
+  }
 
   return (
     <label className={`ui-field phone-field${error ? ' ui-field-invalid' : ''}`}>
@@ -40,8 +55,8 @@ export function PhoneField({ error, hint, label, onChange, required, value }: Ph
         <span className="phone-operator-select">
           <select
             aria-label={`${label} operator kodu`}
-            value={parsed.operator}
-            onChange={(event) => onChange(buildPhoneValue(event.target.value, parsed.number))}
+            value={selectedOperator}
+            onChange={(event) => handleOperatorChange(event.target.value)}
           >
             {operatorCodes.map((code) => (
               <option key={code} value={code}>
@@ -59,7 +74,7 @@ export function PhoneField({ error, hint, label, onChange, required, value }: Ph
           placeholder="1234567"
           required={required}
           value={parsed.number}
-          onChange={(event) => onChange(buildPhoneValue(parsed.operator, event.target.value))}
+          onChange={(event) => onChange(buildPhoneValue(selectedOperator, event.target.value))}
         />
       </div>
       {error ? <small className="ui-field-error">{error}</small> : null}
