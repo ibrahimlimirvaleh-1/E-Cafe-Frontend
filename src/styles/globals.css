@@ -3602,6 +3602,13 @@ img {
   gap: 12px;
 }
 
+.form-grid-full {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 10px;
+  min-width: 0;
+}
+
 .form-grid.three {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3716,6 +3723,30 @@ img {
   border-radius: var(--radius);
   padding: 12px 14px;
   background: var(--surface-low);
+}
+
+.soft-warning-panel {
+  display: grid;
+  gap: 4px;
+  border: 1px solid color-mix(in srgb, var(--warning) 32%, var(--outline-variant));
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  color: var(--on-surface);
+  background: color-mix(in srgb, var(--warning-bg) 72%, var(--surface-lowest));
+}
+
+.soft-warning-panel strong {
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+.soft-warning-panel span {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 19px;
+  overflow-wrap: anywhere;
 }
 
 .selected-group-contact {
