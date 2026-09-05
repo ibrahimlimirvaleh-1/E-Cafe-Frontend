@@ -1,4 +1,4 @@
-import { MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
+import { CircleDollarSign, MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
@@ -63,13 +63,19 @@ export function RestaurantCatalogPage() {
       <section className="restaurant-grid">
         {restaurantPage.items.map((restaurant) => (
           <article className="restaurant-card" key={restaurant.id}>
-            <div className="restaurant-card-media">
+            <Link className="restaurant-card-media" to={`/restaurants/${restaurant.id}`} aria-label={`${restaurant.name} restoranına bax`}>
               <SafeImage src={restaurant.image} alt={restaurant.name} />
               <div className="restaurant-card-overlay">
-                <span className="restaurant-rating">
-                  <Star size={15} fill="currentColor" />
-                  {restaurant.rating}
-                </span>
+                <div className="restaurant-overlay-badges">
+                  <span className="restaurant-rating">
+                    <Star size={15} fill="currentColor" />
+                    {restaurant.rating}
+                  </span>
+                  <span className="restaurant-deposit-badge">
+                    <CircleDollarSign size={15} />
+                    {restaurant.depositAmount} ₼
+                  </span>
+                </div>
                 <span
                   aria-label={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
                   className={restaurant.hasActiveContract ? 'restaurant-availability active' : 'restaurant-availability blocked'}
@@ -78,12 +84,13 @@ export function RestaurantCatalogPage() {
                   {restaurant.hasActiveContract ? <ShieldCheck size={16} /> : <ShieldX size={16} />}
                 </span>
               </div>
-            </div>
+            </Link>
             <div className="restaurant-card-body">
-              <div className="card-kicker">
-                <strong>{restaurant.depositAmount} ₼ depozit</strong>
-              </div>
-              <h2>{restaurant.name}</h2>
+              <h2>
+                <Link className="restaurant-title-link" to={`/restaurants/${restaurant.id}`}>
+                  {restaurant.name}
+                </Link>
+              </h2>
               <p>{restaurant.cuisine}</p>
               <div className="meta-list">
                 <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
@@ -95,12 +102,6 @@ export function RestaurantCatalogPage() {
                   <span>{restaurant.phone}</span>
                 </span>
               </div>
-              <Link
-                className={`ui-button ${restaurant.hasActiveContract ? 'ui-button-primary' : 'ui-button-secondary'}`}
-                to={`/restaurants/${restaurant.id}`}
-              >
-                {restaurant.hasActiveContract ? 'Profilə bax' : 'Profilə bax, rezervasiya bağlıdır'}
-              </Link>
             </div>
           </article>
         ))}
