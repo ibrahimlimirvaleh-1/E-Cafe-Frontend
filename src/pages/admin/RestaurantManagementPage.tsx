@@ -1,4 +1,4 @@
-import { CheckCircle2, MapPin, Search, UserPlus } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, MapPin, Search, UserPlus } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import type { UserProfile } from '../../entities/types'
@@ -165,12 +165,6 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     event.preventDefault()
     setMessage('')
     setMessageDetails([])
-
-    if (!form.latitude || !form.longitude) {
-      setMessage('Məkanı xəritə axtarışından seçin.')
-      setMessageDetails([{ label: 'Məkan', message: 'Ünvanı yazdıqdan sonra "Xəritədə axtar" düyməsinə basın və uyğun nəticəni seçin.' }])
-      return
-    }
 
     if (ownerMode === 'existing' && !form.ownerId && !form.ownerEmail.trim()) {
       setMessage('Sahibkar seçilməlidir.')
@@ -353,7 +347,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
               />
               <Button disabled={isGeocoding || !form.location.trim()} type="button" variant="secondary" onClick={handleGeocode}>
                 <MapPin size={17} />
-                {isGeocoding ? 'Axtarılır...' : 'Xəritədə axtar'}
+                {isGeocoding ? 'Axtarılır...' : 'Xəritədə təsdiqlə'}
               </Button>
               {locationResults.length > 0 ? (
                 <div className="location-results" role="listbox" aria-label="Xəritə nəticələri">
@@ -373,6 +367,11 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
                 <small className="field-hint selected-location-hint">
                   <CheckCircle2 size={14} />
                   Seçilmiş məkan: {form.geocodedAddress}
+                </small>
+              ) : form.location.trim() ? (
+                <small className="field-hint unverified-location-hint">
+                  <AlertTriangle size={14} />
+                  Ünvan xəritədə təsdiqlənməyib. Restoran yaradıla bilər, amma public tərəfdə xəritə açılmayacaq.
                 </small>
               ) : null}
             </div>

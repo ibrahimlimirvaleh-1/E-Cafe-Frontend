@@ -1,4 +1,4 @@
-import { Building2, MapPin, Phone } from 'lucide-react'
+import { AlertTriangle, Building2, CheckCircle2, MapPin, Phone } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -54,6 +54,13 @@ export function RestaurantDetailPage() {
           <div>
             <dt>Məkan</dt>
             <dd><MapPin size={16} /> {restaurant.address}</dd>
+          </div>
+          <div>
+            <dt>Xəritə statusu</dt>
+            <dd className={restaurant.latitude != null && restaurant.longitude != null ? 'location-status verified' : 'location-status unverified'}>
+              {restaurant.latitude != null && restaurant.longitude != null ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+              {restaurant.latitude != null && restaurant.longitude != null ? 'Ünvan xəritədə təsdiqlənib' : 'Ünvan xəritədə təsdiqlənməyib'}
+            </dd>
           </div>
           <div>
             <dt>Telefon</dt>

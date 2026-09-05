@@ -1,4 +1,4 @@
-import { CheckCircle2, MapPin } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, MapPin } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ecafeApi, type GeocodeAddressResponse } from '../../shared/api/ecafeApi'
@@ -77,13 +77,6 @@ export function RestaurantEditPage() {
     setError('')
     setErrorDetails([])
     setIsSubmitting(true)
-
-    if (!form.latitude || !form.longitude) {
-      setError('Məkanı xəritə axtarışından seçin.')
-      setErrorDetails([{ label: 'Məkan', message: 'Ünvanı yazdıqdan sonra "Xəritədə axtar" düyməsinə basın və uyğun nəticəni seçin.' }])
-      setIsSubmitting(false)
-      return
-    }
 
     try {
       await ecafeApi.restaurants.update(restaurantId, {
@@ -175,7 +168,7 @@ export function RestaurantEditPage() {
             />
             <Button disabled={isGeocoding || !form.location.trim()} type="button" variant="secondary" onClick={handleGeocode}>
               <MapPin size={17} />
-              {isGeocoding ? 'Axtarılır...' : 'Xəritədə axtar'}
+              {isGeocoding ? 'Axtarılır...' : 'Xəritədə təsdiqlə'}
             </Button>
             {locationResults.length > 0 ? (
               <div className="location-results" role="listbox" aria-label="Xəritə nəticələri">
@@ -195,6 +188,11 @@ export function RestaurantEditPage() {
               <small className="field-hint selected-location-hint">
                 <CheckCircle2 size={14} />
                 Seçilmiş məkan: {form.geocodedAddress}
+              </small>
+            ) : form.location.trim() ? (
+              <small className="field-hint unverified-location-hint">
+                <AlertTriangle size={14} />
+                Ünvan xəritədə təsdiqlənməyib. Restoran saxlanıla bilər, amma public tərəfdə xəritə açılmayacaq.
               </small>
             ) : null}
           </div>
