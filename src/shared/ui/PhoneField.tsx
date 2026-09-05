@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 const operatorCodes = ['50', '51', '55', '70', '77', '99', '10', '60']
@@ -36,17 +37,20 @@ export function PhoneField({ error, hint, label, onChange, required, value }: Ph
       <span>{label}</span>
       <div className="phone-field-control">
         <span className="phone-country-code">+994</span>
-        <select
-          aria-label={`${label} operator kodu`}
-          value={parsed.operator}
-          onChange={(event) => onChange(buildPhoneValue(event.target.value, parsed.number))}
-        >
-          {operatorCodes.map((code) => (
-            <option key={code} value={code}>
-              {code}
-            </option>
-          ))}
-        </select>
+        <span className="phone-operator-select">
+          <select
+            aria-label={`${label} operator kodu`}
+            value={parsed.operator}
+            onChange={(event) => onChange(buildPhoneValue(event.target.value, parsed.number))}
+          >
+            {operatorCodes.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={16} aria-hidden="true" />
+        </span>
         <input
           aria-invalid={Boolean(error)}
           inputMode="numeric"
