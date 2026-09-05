@@ -40,7 +40,7 @@ export function RestaurantCatalogPage() {
 
   return (
     <main className="page">
-      <PageHeader eyebrow="Restoran kataloqu" title="Restoran seç və rezervasiyaya başla" />
+      <PageHeader title="Restoran seç və rezervasiyaya başla" />
 
       <section className="catalog-toolbar">
         <label className="site-search catalog-search">
