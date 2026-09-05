@@ -1430,6 +1430,10 @@ img {
   text-align: left;
 }
 
+.restaurant-location-text {
+  color: var(--on-surface-variant);
+}
+
 .restaurant-location-button svg,
 .restaurant-card-body .meta-list span svg {
   flex: 0 0 auto;
@@ -1504,11 +1508,38 @@ img {
   line-height: 18px;
 }
 
-.selected-location-hint {
+.selected-location-hint,
+.unverified-location-hint {
   display: inline-flex;
   align-items: flex-start;
   gap: 6px;
+  font-weight: 800;
+}
+
+.selected-location-hint {
   color: var(--success);
+}
+
+.unverified-location-hint {
+  color: var(--warning);
+}
+
+.selected-location-hint svg,
+.unverified-location-hint svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.location-status {
+  font-weight: 800;
+}
+
+.location-status.verified {
+  color: var(--success);
+}
+
+.location-status.unverified {
+  color: var(--warning);
 }
 
 .map-dialog {
@@ -7044,6 +7075,7 @@ body,
   }
 
   .restaurant-location-button,
+  .restaurant-location-text,
   .restaurant-card-body .meta-list > span {
     display: grid;
     grid-template-columns: 18px minmax(0, 1fr);
@@ -7053,13 +7085,15 @@ body,
   }
 
   .restaurant-location-button svg,
+  .restaurant-location-text svg,
   .restaurant-card-body .meta-list > span svg {
     width: 17px;
     height: 17px;
     margin-top: 1px;
   }
 
-  .restaurant-location-button span {
+  .restaurant-location-button span,
+  .restaurant-location-text span {
     -webkit-line-clamp: 2;
   }
 
