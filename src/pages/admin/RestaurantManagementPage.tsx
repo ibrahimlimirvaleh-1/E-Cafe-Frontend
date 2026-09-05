@@ -25,7 +25,7 @@ const initialForm = {
   placeId: '',
   geocodedAddress: '',
   phone: '',
-  email: '',
+  restaurantGroupEmail: '',
   restaurantGroupId: '',
   restaurantGroupName: '',
   restaurantGroupLegalName: '',
@@ -141,6 +141,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     [ownerSearch, users],
   )
   const selectedOwner = users.find((candidate) => candidate.id === form.ownerId)
+  const selectedGroup = groups.find((group) => group.id === form.restaurantGroupId)
 
   if (mode === 'create' && !canCreateRestaurants) {
     return <Navigate to="/admin/restaurants" replace />
@@ -176,10 +177,10 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         longitude: form.longitude ? Number(form.longitude) : null,
         placeId: form.placeId || null,
         phone: form.phone,
-        email: form.email,
         restaurantGroupId: form.restaurantGroupId || undefined,
         restaurantGroupName: form.restaurantGroupId ? undefined : form.restaurantGroupName,
         restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
+        restaurantGroupEmail: form.restaurantGroupId ? undefined : form.restaurantGroupEmail,
         branchName: form.branchName,
         depositAmount: Number(form.depositAmount),
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
@@ -365,12 +366,11 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           </div>
           <div className="form-grid two">
             <TextField label="Telefon" required value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-            <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
           </div>
           <SelectField
             label="Mövcud restoran qrupu"
             value={form.restaurantGroupId}
-            onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value })}
+            onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}
             hint="Boş qalsa aşağıdakı qrup adı ilə yeni qrup yaradılır."
           >
             <option value="">Yeni qrup yarat</option>
@@ -382,8 +382,20 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           </SelectField>
           {!form.restaurantGroupId ? (
             <div className="form-grid two">
-              <TextField label="Yeni qrup adı" value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
+              <TextField label="Yeni qrup adı" required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
               <TextField label="Yeni qrup legal adı" value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
+              <TextField
+                label="Qrup əlaqə emaili"
+                required
+                type="email"
+                value={form.restaurantGroupEmail}
+                onChange={(event) => setForm({ ...form, restaurantGroupEmail: event.target.value })}
+              />
+            </div>
+          ) : selectedGroup ? (
+            <div className="selected-group-contact">
+              <span>Qrup əlaqə emaili</span>
+              <strong>{selectedGroup.email || 'Email qeyd edilməyib'}</strong>
             </div>
           ) : null}
           <div className="form-grid two">

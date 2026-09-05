@@ -14,6 +14,7 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
   const [reloadKey, setReloadKey] = useState(0)
   const [name, setName] = useState('')
   const [legalName, setLegalName] = useState('')
+  const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const { data: groups, isLoading } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
@@ -24,9 +25,10 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
     setMessageDetails([])
 
     try {
-      await ecafeApi.restaurantGroups.create({ name, legalName })
+      await ecafeApi.restaurantGroups.create({ name, legalName, email })
       setName('')
       setLegalName('')
+      setEmail('')
       setMessage('Restoran qrupu yaradıldı.')
       setMessageDetails([])
       setReloadKey((value) => value + 1)
@@ -54,6 +56,7 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
             </div>
             <TextField label="Qrup adı" required value={name} onChange={(event) => setName(event.target.value)} />
             <TextField label="Legal ad" value={legalName} onChange={(event) => setLegalName(event.target.value)} />
+            <TextField label="Qrup əlaqə emaili" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
             <Button type="submit">Qrup yarat</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
@@ -70,6 +73,7 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
                   <div>
                     <strong>{group.name}</strong>
                     <small>{group.legalName || 'Legal ad qeyd edilməyib'}</small>
+                    <small>{group.email || 'Email qeyd edilməyib'}</small>
                   </div>
                   <Badge tone={group.isActive ? 'success' : 'neutral'}>{group.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
                 </article>

@@ -41,6 +41,8 @@ Header-də profil pill-in içindəki avatar `span` elementi ümumi mətn `span` 
 
 Sonrakı yoxlamada avatarın `span` kimi qalmasının gələcək CSS qaydaları ilə yenidən konflikt riski saxladığı göründü. Buna görə header və profil dropdown daxilində avatar wrapper-i `div` elementinə keçirildi, initial mətn isə ayrıca `.user-avatar-initials` elementi ilə göstərildi. Bu struktur avatarı mətn blokunun ümumi selector-larından ayırır və həm real profil şəkli, həm də initial fallback üçün sabit mərkəzləmə verir.
 
+Admin header-də `.admin-topbar span` və `.admin-topbar strong` selector-ları çox geniş idi və nested komponentlərin, xüsusilə profil pill-i içindəki avatar initial `span`-inin stillərini də override edirdi. Bu selector-lar yalnız topbar-ın birbaşa child elementlərinə tətbiq olunacaq formada daraldıldı. `.user-avatar-initials` isə `inline-flex`, tam en/hündürlük və öz rəng/font inherit qaydaları ilə gücləndirildi ki, `EE` kimi initial-lar dairənin tam ortasında qalsın.
+
 ### Bildiriş popover-i yüngülləşdirildi
 
 Bildirişlərdə eyni anda təkrarlanan list/count sorğularını azaltmaq üçün request id və local loaded state əlavə edildi. Popover açılışı mövcud məlumatla dərhal görünür, refresh isə fon rejimində işləyir. Aktiv profil dəyişəndə cache sıfırlanır və bildirişlər yeni restoran kontekstinə görə yenilənir.

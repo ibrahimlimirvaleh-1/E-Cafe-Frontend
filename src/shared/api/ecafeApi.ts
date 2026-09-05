@@ -135,6 +135,7 @@ function normalizeWorkflowActionEndpoint(endpoint: string) {
 type CreateRestaurantGroupRequest = {
   name: string
   legalName?: string
+  email?: string
 }
 
 type CreateRestaurantRequest = {
@@ -143,10 +144,10 @@ type CreateRestaurantRequest = {
   longitude?: number | null
   placeId?: string | null
   phone: string
-  email: string
   restaurantGroupId?: string
   restaurantGroupName?: string
   restaurantGroupLegalName?: string
+  restaurantGroupEmail?: string
   branchName?: string
   depositAmount: number
   cancellationWindowMinutes: number
@@ -434,6 +435,7 @@ function mapRestaurantGroup(record: AnyRecord): RestaurantGroup {
     id: str(record.id || record.restaurantGroupId),
     name: str(record.name),
     legalName: str(record.legalName || record.restaurantGroupLegalName),
+    email: str(record.email) || undefined,
     isActive: bool(record.isActive, true),
   }
 }
@@ -901,10 +903,10 @@ export const ecafeApi = {
       appendIfPresent(formData, 'Longitude', request.longitude)
       appendIfPresent(formData, 'PlaceId', request.placeId)
       formData.set('Phone', request.phone)
-      formData.set('Email', request.email)
       appendIfPresent(formData, 'RestaurantGroupId', request.restaurantGroupId)
       appendIfPresent(formData, 'RestaurantGroupName', request.restaurantGroupName)
       appendIfPresent(formData, 'RestaurantGroupLegalName', request.restaurantGroupLegalName)
+      appendIfPresent(formData, 'RestaurantGroupEmail', request.restaurantGroupEmail)
       appendIfPresent(formData, 'BranchName', request.branchName)
       formData.set('DepositAmount', String(request.depositAmount))
       formData.set('CancellationWindowMinutes', String(request.cancellationWindowMinutes))
@@ -940,10 +942,10 @@ export const ecafeApi = {
           longitude: request.longitude ?? null,
           placeId: request.placeId ?? null,
           phone: request.phone,
-          email: request.email,
           restaurantGroupId: request.restaurantGroupId ? Number(request.restaurantGroupId) : null,
           restaurantGroupName: request.restaurantGroupName,
           restaurantGroupLegalName: request.restaurantGroupLegalName,
+          restaurantGroupEmail: request.restaurantGroupEmail,
           branchName: request.branchName,
           depositAmount: request.depositAmount,
           cancellationWindowMinutes: request.cancellationWindowMinutes,

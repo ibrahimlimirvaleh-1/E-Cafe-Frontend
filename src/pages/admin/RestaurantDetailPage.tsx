@@ -59,10 +59,12 @@ export function RestaurantDetailPage() {
             <dt>Telefon</dt>
             <dd><Phone size={16} /> {restaurant.phone}</dd>
           </div>
-          <div>
-            <dt>Email</dt>
-            <dd>{restaurant.email || '-'}</dd>
-          </div>
+          {restaurant.restaurantGroupEmail ? (
+            <div>
+              <dt>Qrup emaili</dt>
+              <dd>{restaurant.restaurantGroupEmail}</dd>
+            </div>
+          ) : null}
           <div>
             <dt>Depozit</dt>
             <dd>{restaurant.depositAmount} ₼</dd>
