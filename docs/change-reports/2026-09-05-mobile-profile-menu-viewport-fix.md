@@ -2,7 +2,9 @@
 
 ## Deyisikliklerin xulasesi
 
-- Mobil header daxilindeki profil secim paneli `site-topbar` kontekstinde viewport-a baglandi.
+- Mobil header daxilindeki profil secim paneli `document.body` uzerinden portal kimi render edildi.
+- Panel artiq header/topbar konteyneri terefinden kesilmir.
+- Panelin desktop yerlesmesi tetikleyen user pill-in olcusune gore hesablanir.
 - 480px ve daha dar ekranlarda panelin sag-sol mesafesi `safe-area` deyerleri ile hesablanir.
 - Panelin eni `auto` ve `max-width: none` edildi ki, evvelki desktop en qaydasi mobil ekranda kesilme yaratmasin.
 - Header daxilindeki uzun metnler mobilde tek setirde ellipsis yerine kontrollu wrap olur.
@@ -11,11 +13,13 @@
 
 ## Toxunulan fayllar
 
+- `src/shared/layout/UserMenu.tsx`
 - `src/styles/globals.css`
 
 ## UX neticesi
 
 - Profil dropdown-u mobil ekranda soldan kesilmir.
+- Dropdown parent layout-dan asili olmadigi ucun real mobil browser chrome ile de viewport icinde qalir.
 - `Cari` ve `Kec` hisseleri ekran kenarina sixilib yarim gorunmur.
 - Uzun restoran adlari ve izah metnleri daha oxunaqli qalir.
 
