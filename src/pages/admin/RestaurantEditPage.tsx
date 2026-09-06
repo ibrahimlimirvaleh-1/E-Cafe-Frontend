@@ -13,12 +13,46 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
-function buildGeocodeSearchText(form: { location: string; branchName: string; restaurantGroupName: string }) {
-  return [form.branchName, form.location, form.restaurantGroupName, 'Bakı', 'Azərbaycan']
+type GeocodeFormFields = { location: string; branchName: string; restaurantGroupName: string }
+
+function joinUniqueSearchParts(parts: string[]) {
+  return parts
     .map((value) => value.trim())
     .filter(Boolean)
     .filter((value, index, values) => values.findIndex((item) => item.toLowerCase() === value.toLowerCase()) === index)
     .join(' ')
+}
+
+function buildGeocodeSearchTexts(form: GeocodeFormFields) {
+  const rawLocation = form.location.trim()
+  const searches = [
+    joinUniqueSearchParts([rawLocation, form.branchName, form.restaurantGroupName, 'Bakı', 'Azərbaycan']),
+    joinUniqueSearchParts([rawLocation, 'Bakı', 'Azərbaycan']),
+    rawLocation,
+    joinUniqueSearchParts([form.branchName, form.restaurantGroupName, 'Bakı', 'Azərbaycan']),
+  ]
+
+  return searches
+    .filter(Boolean)
+    .filter((value, index, values) => values.findIndex((item) => item.toLowerCase() === value.toLowerCase()) === index)
+}
+
+async function geocodeWithFallback(form: GeocodeFormFields) {
+  let lastError: unknown
+
+  for (const searchText of buildGeocodeSearchTexts(form)) {
+    try {
+      const results = await ecafeApi.restaurants.geocode(searchText)
+
+      if (results.length > 0) {
+        return results
+      }
+    } catch (err) {
+      lastError = err
+    }
+  }
+
+  throw lastError || new Error('Məkan xəritədə tapılmadı.')
 }
 
 export function RestaurantEditPage() {
@@ -122,7 +156,7 @@ export function RestaurantEditPage() {
     setLocationResults([])
 
     try {
-      const results = await ecafeApi.restaurants.geocode(buildGeocodeSearchText(form))
+      const results = await geocodeWithFallback(form)
       setLocationResults(results)
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, 'Məkan xəritədə tapılmadı.')
