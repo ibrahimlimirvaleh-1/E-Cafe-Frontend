@@ -11,10 +11,6 @@ import { SafeImage } from '../../shared/ui/SafeImage'
 
 const defaultPageSize = 10
 
-function hasMapCoordinates(restaurant: Restaurant) {
-  return restaurant.latitude != null && restaurant.longitude != null
-}
-
 export function RestaurantCatalogPage() {
   const [search, setSearch] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
@@ -97,17 +93,10 @@ export function RestaurantCatalogPage() {
               </h2>
               <p>{restaurant.cuisine}</p>
               <div className="meta-list">
-                {hasMapCoordinates(restaurant) ? (
-                  <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
-                    <MapPin size={16} />
-                    <span>{restaurant.address}</span>
-                  </button>
-                ) : (
-                  <span className="restaurant-location-text">
-                    <MapPin size={16} />
-                    <span>{restaurant.address}</span>
-                  </span>
-                )}
+                <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
+                  <MapPin size={16} />
+                  <span>{restaurant.address}</span>
+                </button>
                 <span>
                   <Phone size={16} />
                   <span>{restaurant.phone}</span>

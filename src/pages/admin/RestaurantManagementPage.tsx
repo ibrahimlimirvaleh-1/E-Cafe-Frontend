@@ -268,7 +268,6 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
       const feedback = normalizeCaughtApiError(err, 'Məkan xəritədə tapılmadı.')
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
-      setForm((current) => ({ ...current, latitude: '', longitude: '', placeId: '', geocodedAddress: '' }))
     } finally {
       setIsGeocoding(false)
     }
@@ -413,7 +412,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
               ) : form.location.trim() ? (
                 <small className="field-hint unverified-location-hint">
                   <AlertTriangle size={14} />
-                  Ünvan xəritədə təsdiqlənməyib. Restoran yaradıla bilər, amma public tərəfdə xəritə açılmayacaq.
+                  Ünvan xəritədə təsdiqlənməyib. Restoran yaradıla bilər, public xəritə ünvanla açılacaq, amma pin dəqiq olmaya bilər.
                 </small>
               ) : null}
             </div>
