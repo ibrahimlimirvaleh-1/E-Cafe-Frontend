@@ -13,6 +13,14 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
+function buildGeocodeSearchText(form: { location: string; branchName: string; restaurantGroupName: string }) {
+  return [form.branchName, form.location, form.restaurantGroupName, 'Bakı', 'Azərbaycan']
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .filter((value, index, values) => values.findIndex((item) => item.toLowerCase() === value.toLowerCase()) === index)
+    .join(' ')
+}
+
 export function RestaurantEditPage() {
   const navigate = useNavigate()
   const { restaurantId = '' } = useParams()
@@ -114,7 +122,7 @@ export function RestaurantEditPage() {
     setLocationResults([])
 
     try {
-      const results = await ecafeApi.restaurants.geocode(form.location)
+      const results = await ecafeApi.restaurants.geocode(buildGeocodeSearchText(form))
       setLocationResults(results)
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, 'Məkan xəritədə tapılmadı.')

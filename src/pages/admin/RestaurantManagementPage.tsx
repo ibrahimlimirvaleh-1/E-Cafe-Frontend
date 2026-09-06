@@ -80,6 +80,14 @@ function normalizeEmail(value: string) {
   return value.trim().toLowerCase()
 }
 
+function buildGeocodeSearchText(form: Pick<RestaurantFormState, 'location' | 'branchName' | 'restaurantGroupName'>) {
+  return [form.branchName, form.location, form.restaurantGroupName, 'Bakı', 'Azərbaycan']
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .filter((value, index, values) => values.findIndex((item) => item.toLowerCase() === value.toLowerCase()) === index)
+    .join(' ')
+}
+
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
   const { selectProfileForRestaurant, user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
@@ -218,7 +226,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     setLocationResults([])
 
     try {
-      const results = await ecafeApi.restaurants.geocode(form.location)
+      const results = await ecafeApi.restaurants.geocode(buildGeocodeSearchText(form))
       setLocationResults(results)
       setMessage(results.length > 1 ? 'Uyğun məkanı seçin.' : 'Məkan xəritədə tapıldı. Davam etmək üçün nəticəni seçin.')
       setMessageDetails([])

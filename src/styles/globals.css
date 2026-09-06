@@ -7175,7 +7175,9 @@ body,
   }
 
   .site-topbar .logout-action {
-    display: none;
+    display: inline-flex;
+    width: 42px;
+    min-width: 42px;
   }
 
   .workspace-panel-backdrop {
