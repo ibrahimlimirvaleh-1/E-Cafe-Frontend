@@ -162,7 +162,6 @@ export function RestaurantEditPage() {
       const feedback = normalizeCaughtApiError(err, 'Məkan xəritədə tapılmadı.')
       setError(feedback.message)
       setErrorDetails(feedback.details)
-      setForm((current) => ({ ...current, latitude: '', longitude: '', placeId: '', geocodedAddress: '' }))
     } finally {
       setIsGeocoding(false)
     }
@@ -234,7 +233,7 @@ export function RestaurantEditPage() {
             ) : form.location.trim() ? (
               <small className="field-hint unverified-location-hint">
                 <AlertTriangle size={14} />
-                Ünvan xəritədə təsdiqlənməyib. Restoran saxlanıla bilər, amma public tərəfdə xəritə açılmayacaq.
+                Ünvan xəritədə təsdiqlənməyib. Restoran saxlanıla bilər, public xəritə ünvanla açılacaq, amma pin dəqiq olmaya bilər.
               </small>
             ) : null}
           </div>
