@@ -80,12 +80,46 @@ function normalizeEmail(value: string) {
   return value.trim().toLowerCase()
 }
 
-function buildGeocodeSearchText(form: Pick<RestaurantFormState, 'location' | 'branchName' | 'restaurantGroupName'>) {
-  return [form.branchName, form.location, form.restaurantGroupName, 'Bakı', 'Azərbaycan']
+type GeocodeFormFields = Pick<RestaurantFormState, 'location' | 'branchName' | 'restaurantGroupName'>
+
+function joinUniqueSearchParts(parts: string[]) {
+  return parts
     .map((value) => value.trim())
     .filter(Boolean)
     .filter((value, index, values) => values.findIndex((item) => item.toLowerCase() === value.toLowerCase()) === index)
     .join(' ')
+}
+
+function buildGeocodeSearchTexts(form: GeocodeFormFields) {
+  const rawLocation = form.location.trim()
+  const searches = [
+    joinUniqueSearchParts([rawLocation, form.branchName, form.restaurantGroupName, 'Bakı', 'Azərbaycan']),
+    joinUniqueSearchParts([rawLocation, 'Bakı', 'Azərbaycan']),
+    rawLocation,
+    joinUniqueSearchParts([form.branchName, form.restaurantGroupName, 'Bakı', 'Azərbaycan']),
+  ]
+
+  return searches
+    .filter(Boolean)
+    .filter((value, index, values) => values.findIndex((item) => item.toLowerCase() === value.toLowerCase()) === index)
+}
+
+async function geocodeWithFallback(form: GeocodeFormFields) {
+  let lastError: unknown
+
+  for (const searchText of buildGeocodeSearchTexts(form)) {
+    try {
+      const results = await ecafeApi.restaurants.geocode(searchText)
+
+      if (results.length > 0) {
+        return results
+      }
+    } catch (err) {
+      lastError = err
+    }
+  }
+
+  throw lastError || new Error('Məkan xəritədə tapılmadı.')
 }
 
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
@@ -226,7 +260,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     setLocationResults([])
 
     try {
-      const results = await ecafeApi.restaurants.geocode(buildGeocodeSearchText(form))
+      const results = await geocodeWithFallback(form)
       setLocationResults(results)
       setMessage(results.length > 1 ? 'Uyğun məkanı seçin.' : 'Məkan xəritədə tapıldı. Davam etmək üçün nəticəni seçin.')
       setMessageDetails([])
