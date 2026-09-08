@@ -67,6 +67,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
+  const restaurantQuery = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
+  const createStaffPath = `/admin/staff/new${restaurantQuery}`
+  const staffListPath = `/admin/staff${restaurantQuery}`
   const { data: staff, isLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.staff.byRestaurant(restaurantId) : Promise.resolve([])),
     [],
@@ -367,7 +370,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       <PageHeader
         eyebrow="Admin"
         title={mode === 'create' ? 'Yeni əməkdaş' : mode === 'edit' ? 'Əməkdaşı redaktə et' : 'Personal'}
-        action={mode === 'list' ? <ButtonLink to="/admin/staff/new">Yeni əməkdaş</ButtonLink> : <ButtonLink to="/admin/staff" variant="secondary">Siyahıya qayıt</ButtonLink>}
+        action={mode === 'list' ? <ButtonLink to={createStaffPath}>Yeni əməkdaş</ButtonLink> : <ButtonLink to={staffListPath} variant="secondary">Siyahıya qayıt</ButtonLink>}
       />
 
       <section className={mode === 'create' || mode === 'edit' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
@@ -379,7 +382,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <h2>Bu əməkdaşı yalnız platform administratoru idarə edə bilər</h2>
             </div>
             <StatusMessage tone="danger">Sahibkar hesabının redaktəsi, deaktiv edilməsi, silinməsi və rol dəyişikliyi yalnız platform administratoruna açıqdır.</StatusMessage>
-            <ButtonLink to="/admin/staff" variant="secondary">Siyahıya qayıt</ButtonLink>
+            <ButtonLink to={staffListPath} variant="secondary">Siyahıya qayıt</ButtonLink>
           </section>
           ) : (
           <form className="admin-panel" onSubmit={handleSubmit}>
