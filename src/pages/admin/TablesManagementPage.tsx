@@ -36,6 +36,9 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
+  const restaurantQuery = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
+  const createTablePath = `/admin/tables/new${restaurantQuery}`
+  const tablesListPath = `/admin/tables${restaurantQuery}`
   const { data: tables, isLoading } = useAsyncData(
     () => (restaurantId ? ecafeApi.tables.list(restaurantId) : Promise.resolve([])),
     [],
@@ -221,7 +224,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
       <PageHeader
         eyebrow="Admin"
         title={mode === 'create' ? 'Yeni masa' : mode === 'edit' ? 'Masanı redaktə et' : 'Masalar'}
-        action={mode === 'list' ? <ButtonLink to="/admin/tables/new">Yeni masa</ButtonLink> : <ButtonLink to="/admin/tables" variant="secondary">Siyahıya qayıt</ButtonLink>}
+        action={mode === 'list' ? <ButtonLink to={createTablePath}>Yeni masa</ButtonLink> : <ButtonLink to={tablesListPath} variant="secondary">Siyahıya qayıt</ButtonLink>}
       />
 
       <section className={mode === 'create' || mode === 'edit' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>

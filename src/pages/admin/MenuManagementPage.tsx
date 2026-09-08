@@ -46,6 +46,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
+  const restaurantQuery = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
+  const menuListPath = `/admin/menu${restaurantQuery}`
+  const menuCreatePath = `/admin/menu/new${restaurantQuery}`
+  const categoriesListPath = `/admin/categories${restaurantQuery}`
+  const categoryCreatePath = `/admin/categories/new${restaurantQuery}`
   const { data: categories } = useAsyncData(
     () => (restaurantId ? ecafeApi.menu.categories(restaurantId) : Promise.resolve([])),
     [],
@@ -385,13 +390,13 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const title = mode === 'categories' ? 'Kateqoriyalar' : mode === 'create-category' ? 'Yeni kateqoriya' : mode === 'edit-category' ? 'Kateqoriyanı redaktə et' : mode === 'create-item' ? 'Yeni menyu elementi' : mode === 'edit-item' ? 'Menyu elementini redaktə et' : 'Menyu'
   const action =
     mode === 'items' ? (
-      <ButtonLink to="/admin/menu/new">Yeni menyu elementi</ButtonLink>
+      <ButtonLink to={menuCreatePath}>Yeni menyu elementi</ButtonLink>
     ) : mode === 'create-item' || mode === 'edit-item' ? (
-      <ButtonLink to="/admin/menu" variant="secondary">Siyahıya qayıt</ButtonLink>
+      <ButtonLink to={menuListPath} variant="secondary">Siyahıya qayıt</ButtonLink>
     ) : mode === 'categories' ? (
-      <ButtonLink to="/admin/categories/new">Yeni kateqoriya</ButtonLink>
+      <ButtonLink to={categoryCreatePath}>Yeni kateqoriya</ButtonLink>
     ) : mode === 'create-category' || mode === 'edit-category' ? (
-      <ButtonLink to="/admin/categories" variant="secondary">Siyahıya qayıt</ButtonLink>
+      <ButtonLink to={categoriesListPath} variant="secondary">Siyahıya qayıt</ButtonLink>
     ) : null
 
   return (
@@ -537,7 +542,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             <div className="inline-actions">
               <Button disabled={itemFormDisabled} type="submit">{mode === 'edit-item' ? 'Menyu elementini yenilə' : 'Menyu elementi yarat'}</Button>
               {mode === 'edit-item' ? (
-                <Button type="button" variant="secondary" onClick={() => navigate('/admin/menu')}>Ləğv et</Button>
+                <Button type="button" variant="secondary" onClick={() => navigate(menuListPath)}>Ləğv et</Button>
               ) : null}
             </div>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
