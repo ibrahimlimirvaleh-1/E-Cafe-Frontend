@@ -36,6 +36,11 @@ export type Restaurant = {
   restaurantGroupId?: string
   restaurantGroupName?: string
   cancellationWindowMinutes?: number
+  timeZone?: string
+  workingHours: RestaurantWorkingHour[]
+  isOpen?: boolean
+  openStatus?: 'Open' | 'Closed' | string
+  todayWorkingHours?: RestaurantWorkingHour | null
   image: string
   isActive: boolean
   hasActiveContract: boolean
@@ -92,6 +97,13 @@ export type Table = {
   isActive: boolean
   isPublic: boolean
   image?: string
+}
+
+export type RestaurantWorkingHour = {
+  dayOfWeek: number
+  opensAt: string
+  closesAt: string
+  isClosed: boolean
 }
 
 export type StaffMember = {

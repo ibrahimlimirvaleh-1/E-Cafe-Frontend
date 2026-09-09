@@ -1,4 +1,4 @@
-import { AlertTriangle, Building2, CheckCircle2, MapPin, Phone } from 'lucide-react'
+import { AlertTriangle, Building2, CheckCircle2, Clock, MapPin, Phone } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -7,6 +7,8 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { WorkingHoursList } from '../../shared/ui/WorkingHoursField'
+import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
 
 export function RestaurantDetailPage() {
   const { restaurantId = '' } = useParams()
@@ -22,6 +24,8 @@ export function RestaurantDetailPage() {
     )
   }
 
+  const openState = getRestaurantOpenState(restaurant.workingHours, restaurant.timeZone, restaurant.isOpen)
+
   return (
     <main className="admin-page narrow">
       <PageHeader
@@ -36,6 +40,7 @@ export function RestaurantDetailPage() {
           <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>
             {restaurant.hasActiveContract ? 'Aktiv müqavilə var' : 'Müqavilə yoxdur'}
           </Badge>
+          <Badge tone={openState.tone}>{openState.label}</Badge>
         </div>
 
         <dl>
@@ -65,6 +70,14 @@ export function RestaurantDetailPage() {
           <div>
             <dt>Telefon</dt>
             <dd><Phone size={16} /> {restaurant.phone}</dd>
+          </div>
+          <div>
+            <dt>İş saatı</dt>
+            <dd><Clock size={16} /> {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}</dd>
+          </div>
+          <div>
+            <dt>Həftəlik qrafik</dt>
+            <dd><WorkingHoursList workingHours={restaurant.workingHours} /></dd>
           </div>
           {restaurant.restaurantGroupEmail ? (
             <div>

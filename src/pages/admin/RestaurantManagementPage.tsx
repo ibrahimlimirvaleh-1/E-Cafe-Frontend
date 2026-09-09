@@ -16,6 +16,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
+import { WorkingHoursField, createDefaultWorkingHours } from '../../shared/ui/WorkingHoursField'
 
 type RestaurantPageMode = 'list' | 'create'
 
@@ -35,6 +36,8 @@ const initialForm = {
   cancellationWindowMinutes: '60',
   serviceFeePercent: '0',
   staffSettlementPeriod: '7',
+  timeZone: '',
+  workingHours: createDefaultWorkingHours(),
   ownerId: '',
   ownerEmail: '',
   ownerPhone: '',
@@ -236,6 +239,8 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         serviceFeePercent: Number(form.serviceFeePercent),
         staffSettlementPeriod: Number(form.staffSettlementPeriod),
+        timeZone: form.timeZone,
+        workingHours: form.workingHours,
         defaultWaiterTableLimit: null,
         owner: ownerPayload(ownerMode, form),
         fileIds,
@@ -274,7 +279,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   }
 
   function handleLocationChange(value: string) {
-    setForm({ ...form, location: value, latitude: '', longitude: '', placeId: '', geocodedAddress: '' })
+    setForm({ ...form, location: value, latitude: '', longitude: '', placeId: '', geocodedAddress: '', timeZone: '' })
     setLocationResults([])
   }
 
@@ -286,6 +291,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
       longitude: String(result.longitude),
       placeId: result.placeId || '',
       geocodedAddress: result.displayName,
+      timeZone: result.timeZone || current.timeZone,
     }))
     setLocationResults([])
     setMessage('Məkan seçildi.')
@@ -421,6 +427,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           <div className="form-grid two">
             <PhoneField label="Telefon" required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </div>
+          <WorkingHoursField value={form.workingHours} onChange={(workingHours) => setForm({ ...form, workingHours })} />
           <SelectField
             label="Mövcud restoran qrupu"
             value={form.restaurantGroupId}
