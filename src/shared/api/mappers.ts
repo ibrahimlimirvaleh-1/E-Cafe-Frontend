@@ -121,7 +121,7 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
     restaurantGroupId: restaurant.restaurantGroupId == null ? undefined : str(restaurant.restaurantGroupId),
     restaurantGroupName: str(restaurant.restaurantGroupName),
     cancellationWindowMinutes: restaurant.cancellationWindowMinutes == null ? undefined : num(restaurant.cancellationWindowMinutes),
-    timeZone: str(restaurant.timeZone || restaurant.time_zone, 'UTC'),
+    timeZone: str(restaurant.timeZone || restaurant.time_zone) || undefined,
     workingHours: workingHours(restaurant),
     isOpen: restaurant.isOpen == null && restaurant.is_open == null ? undefined : bool(restaurant.isOpen ?? restaurant.is_open),
     openStatus: str(restaurant.openStatus || restaurant.open_status) || undefined,

@@ -2,13 +2,21 @@ import type { RestaurantWorkingHour } from '../../entities/types'
 import { dayLabels, normalizeWorkingHours } from '../lib/workingHours'
 export { createDefaultWorkingHours, formatWorkingHoursSummary } from '../lib/workingHours'
 
+const compactDayLabels = ['Bazar', 'Bazar ert.', 'Çərş. axş.', 'Çərşənbə', 'Cümə axş.', 'Cümə', 'Şənbə']
+
+const timeOptions = Array.from({ length: 48 }, (_, index) => {
+  const hours = String(Math.floor(index / 2)).padStart(2, '0')
+  const minutes = index % 2 === 0 ? '00' : '30'
+  return `${hours}:${minutes}`
+})
+
 export function WorkingHoursList({ workingHours }: { workingHours: RestaurantWorkingHour[] }) {
   return (
     <div className="working-hours-display">
       {normalizeWorkingHours(workingHours).map((hour) => (
         <span key={hour.dayOfWeek}>
           <strong>{dayLabels[hour.dayOfWeek]}</strong>
-          {hour.isClosed ? 'Bağlıdır' : `${hour.opensAt} - ${hour.closesAt}`}
+          <em>{hour.isClosed ? 'Bağlıdır' : `${hour.opensAt} - ${hour.closesAt}`}</em>
         </span>
       ))}
     </div>
@@ -39,25 +47,53 @@ export function WorkingHoursField({ onChange, value }: WorkingHoursFieldProps) {
                 onChange={(event) => updateDay(hour.dayOfWeek, { isClosed: !event.target.checked })}
                 type="checkbox"
               />
-              <span>{dayLabels[hour.dayOfWeek]}</span>
+              <span>{compactDayLabels[hour.dayOfWeek]}</span>
             </label>
-            <input
-              aria-label={`${dayLabels[hour.dayOfWeek]} açılma vaxtı`}
-              disabled={hour.isClosed}
-              onChange={(event) => updateDay(hour.dayOfWeek, { opensAt: event.target.value })}
-              type="time"
+            <TimeSelect
+              label={`${dayLabels[hour.dayOfWeek]} açılma vaxtı`}
               value={hour.opensAt}
-            />
-            <input
-              aria-label={`${dayLabels[hour.dayOfWeek]} bağlanma vaxtı`}
               disabled={hour.isClosed}
-              onChange={(event) => updateDay(hour.dayOfWeek, { closesAt: event.target.value })}
-              type="time"
+              onChange={(opensAt) => updateDay(hour.dayOfWeek, { opensAt })}
+            />
+            <TimeSelect
+              label={`${dayLabels[hour.dayOfWeek]} bağlanma vaxtı`}
               value={hour.closesAt}
+              disabled={hour.isClosed}
+              onChange={(closesAt) => updateDay(hour.dayOfWeek, { closesAt })}
             />
           </div>
         ))}
       </div>
     </fieldset>
+  )
+}
+
+function TimeSelect({
+  disabled,
+  label,
+  onChange,
+  value,
+}: {
+  disabled?: boolean
+  label: string
+  onChange: (value: string) => void
+  value: string
+}) {
+  const options = timeOptions.includes(value) ? timeOptions : [value, ...timeOptions]
+
+  return (
+    <select
+      aria-label={label}
+      className="working-hours-time-select"
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      value={value}
+    >
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
   )
 }

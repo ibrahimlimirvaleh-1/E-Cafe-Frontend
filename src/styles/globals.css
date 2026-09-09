@@ -3899,73 +3899,90 @@ img {
 
 .working-hours-field {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius);
-  padding: 14px;
+  padding: 10px 12px 12px;
 }
 
 .working-hours-field legend {
   padding: 0 6px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
 .working-hours-list {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .working-hours-row {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(104px, 130px) minmax(104px, 130px);
+  grid-template-columns: minmax(104px, 1fr) 88px 88px;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .working-day-toggle {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   color: var(--text);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .working-day-toggle input {
-  width: 18px;
-  height: 18px;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
   accent-color: var(--accent);
 }
 
-.working-hours-row > input[type='time'] {
+.working-hours-time-select {
+  width: 100%;
   min-width: 0;
   border: 1px solid var(--outline-variant);
-  border-radius: var(--radius);
-  padding: 10px 12px;
+  border-radius: 8px;
+  padding: 8px 8px;
   background: var(--surface-muted);
   color: var(--text);
   font: inherit;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .working-hours-display {
   display: grid;
-  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 16px;
   min-width: 0;
 }
 
 .working-hours-display span {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(96px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
+  font-size: 13px;
+  line-height: 1.25;
 }
 
 .working-hours-display strong {
   color: var(--text);
+  min-width: 0;
+}
+
+.working-hours-display em {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .owner-mode-switch {
