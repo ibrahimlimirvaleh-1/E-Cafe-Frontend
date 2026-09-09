@@ -34,9 +34,8 @@ export function RestaurantDetailPage() {
         description={restaurant.restaurantGroupName || restaurant.branchName || restaurant.address}
       />
 
-      <section className="detail-panel contract-detail-panel">
+      <section className="detail-panel restaurant-detail-panel">
         <div className="contract-status-line">
-          <Badge tone={restaurant.isActive ? 'success' : 'danger'}>{restaurant.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
           <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>
             {restaurant.hasActiveContract ? 'Aktiv müqavilə var' : 'Müqavilə yoxdur'}
           </Badge>
@@ -56,9 +55,9 @@ export function RestaurantDetailPage() {
             <dt>Qrup</dt>
             <dd>{restaurant.restaurantGroupName || '-'}</dd>
           </div>
-          <div>
+          <div className="restaurant-detail-wide">
             <dt>Məkan</dt>
-            <dd><MapPin size={16} /> {restaurant.address}</dd>
+            <dd className="restaurant-detail-inline"><MapPin size={16} /> {restaurant.address}</dd>
           </div>
           <div>
             <dt>Xəritə statusu</dt>
@@ -69,15 +68,11 @@ export function RestaurantDetailPage() {
           </div>
           <div>
             <dt>Telefon</dt>
-            <dd><Phone size={16} /> {restaurant.phone}</dd>
+            <dd className="restaurant-detail-inline"><Phone size={16} /> {restaurant.phone}</dd>
           </div>
           <div>
             <dt>İş saatı</dt>
-            <dd><Clock size={16} /> {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}</dd>
-          </div>
-          <div>
-            <dt>Həftəlik qrafik</dt>
-            <dd><WorkingHoursList workingHours={restaurant.workingHours} /></dd>
+            <dd className="restaurant-detail-inline"><Clock size={16} /> {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}</dd>
           </div>
           {restaurant.restaurantGroupEmail ? (
             <div>
@@ -85,6 +80,10 @@ export function RestaurantDetailPage() {
               <dd>{restaurant.restaurantGroupEmail}</dd>
             </div>
           ) : null}
+          <div className="restaurant-detail-schedule">
+            <dt>Həftəlik qrafik</dt>
+            <dd><WorkingHoursList workingHours={restaurant.workingHours} /></dd>
+          </div>
           <div>
             <dt>Depozit</dt>
             <dd>{restaurant.depositAmount} ₼</dd>
