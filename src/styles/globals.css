@@ -3985,6 +3985,17 @@ img {
   white-space: nowrap;
 }
 
+.contract-detail-panel .working-hours-display {
+  grid-template-columns: 1fr;
+  gap: 5px;
+  max-width: 210px;
+}
+
+.contract-detail-panel .working-hours-display span {
+  grid-template-columns: minmax(80px, 1fr) auto;
+  gap: 10px;
+}
+
 .owner-mode-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

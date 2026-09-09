@@ -15,7 +15,7 @@ export function WorkingHoursList({ workingHours }: { workingHours: RestaurantWor
     <div className="working-hours-display">
       {normalizeWorkingHours(workingHours).map((hour) => (
         <span key={hour.dayOfWeek}>
-          <strong>{dayLabels[hour.dayOfWeek]}</strong>
+          <strong>{compactDayLabels[hour.dayOfWeek]}</strong>
           <em>{hour.isClosed ? 'Bağlıdır' : `${hour.opensAt} - ${hour.closesAt}`}</em>
         </span>
       ))}
