@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react'
 import { AlertTriangle, Building2, CheckCircle2, Clock, MapPin, Phone } from 'lucide-react'
 import { useParams } from 'react-router-dom'
+import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../shared/auth/authz'
@@ -35,67 +37,35 @@ export function RestaurantDetailPage() {
       />
 
       <section className="detail-panel restaurant-detail-panel">
-        <div className="contract-status-line">
-          <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>
-            {restaurant.hasActiveContract ? 'Aktiv müqavilə var' : 'Müqavilə yoxdur'}
-          </Badge>
-          <Badge tone={openState.tone}>{openState.label}</Badge>
-        </div>
+        <RestaurantStatusBadges restaurant={restaurant} openState={openState} />
 
         <dl>
-          <div>
-            <dt>Restoran</dt>
-            <dd>{restaurant.name}</dd>
-          </div>
-          <div>
-            <dt>Filial</dt>
-            <dd>{restaurant.branchName || '-'}</dd>
-          </div>
-          <div>
-            <dt>Qrup</dt>
-            <dd>{restaurant.restaurantGroupName || '-'}</dd>
-          </div>
-          <div className="restaurant-detail-wide">
-            <dt>Məkan</dt>
-            <dd className="restaurant-detail-inline"><MapPin size={16} /> {restaurant.address}</dd>
-          </div>
-          <div>
-            <dt>Xəritə statusu</dt>
-            <dd className={restaurant.latitude != null && restaurant.longitude != null ? 'location-status verified' : 'location-status unverified'}>
-              {restaurant.latitude != null && restaurant.longitude != null ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-              {restaurant.latitude != null && restaurant.longitude != null ? 'Ünvan xəritədə təsdiqlənib' : 'Ünvan xəritədə təsdiqlənməyib'}
-            </dd>
-          </div>
-          <div>
-            <dt>Telefon</dt>
-            <dd className="restaurant-detail-inline"><Phone size={16} /> {restaurant.phone}</dd>
-          </div>
-          <div>
-            <dt>İş saatı</dt>
-            <dd className="restaurant-detail-inline"><Clock size={16} /> {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}</dd>
-          </div>
+          <DetailItem label="Restoran">{restaurant.name}</DetailItem>
+          <DetailItem label="Filial">{restaurant.branchName || '-'}</DetailItem>
+          <DetailItem label="Qrup">{restaurant.restaurantGroupName || '-'}</DetailItem>
+          <DetailItem label="Məkan" className="restaurant-detail-wide">
+            <InlineDetail icon={<MapPin size={16} />}>{restaurant.address}</InlineDetail>
+          </DetailItem>
+          <DetailItem label="Xəritə statusu">
+            <LocationStatus restaurant={restaurant} />
+          </DetailItem>
+          <DetailItem label="Telefon">
+            <InlineDetail icon={<Phone size={16} />}>{restaurant.phone}</InlineDetail>
+          </DetailItem>
+          <DetailItem label="İş saatı">
+            <InlineDetail icon={<Clock size={16} />}>
+              {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}
+            </InlineDetail>
+          </DetailItem>
           {restaurant.restaurantGroupEmail ? (
-            <div>
-              <dt>Qrup emaili</dt>
-              <dd>{restaurant.restaurantGroupEmail}</dd>
-            </div>
+            <DetailItem label="Qrup emaili">{restaurant.restaurantGroupEmail}</DetailItem>
           ) : null}
-          <div className="restaurant-detail-schedule">
-            <dt>Həftəlik qrafik</dt>
-            <dd><WorkingHoursList workingHours={restaurant.workingHours} /></dd>
-          </div>
-          <div>
-            <dt>Depozit</dt>
-            <dd>{restaurant.depositAmount} ₼</dd>
-          </div>
-          <div>
-            <dt>Servis faizi</dt>
-            <dd>{restaurant.defaultServiceFeePercent}%</dd>
-          </div>
-          <div>
-            <dt>Ləğv pəncərəsi</dt>
-            <dd>{restaurant.cancellationWindowMinutes ?? '-'} dəqiqə</dd>
-          </div>
+          <DetailItem label="Həftəlik qrafik" className="restaurant-detail-schedule">
+            <WorkingHoursList workingHours={restaurant.workingHours} />
+          </DetailItem>
+          <DetailItem label="Depozit">{restaurant.depositAmount} ₼</DetailItem>
+          <DetailItem label="Servis faizi">{restaurant.defaultServiceFeePercent}%</DetailItem>
+          <DetailItem label="Ləğv pəncərəsi">{restaurant.cancellationWindowMinutes ?? '-'} dəqiqə</DetailItem>
         </dl>
       </section>
 
@@ -111,5 +81,47 @@ export function RestaurantDetailPage() {
         ) : null}
       </div>
     </main>
+  )
+}
+
+type OpenState = ReturnType<typeof getRestaurantOpenState>
+
+function RestaurantStatusBadges({ restaurant, openState }: { restaurant: Restaurant; openState: OpenState }) {
+  return (
+    <div className="contract-status-line">
+      <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>
+        {restaurant.hasActiveContract ? 'Aktiv müqavilə var' : 'Müqavilə yoxdur'}
+      </Badge>
+      <Badge tone={openState.tone}>{openState.label}</Badge>
+    </div>
+  )
+}
+
+function DetailItem({ children, className, label }: { children: ReactNode; className?: string; label: string }) {
+  return (
+    <div className={className}>
+      <dt>{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  )
+}
+
+function InlineDetail({ children, icon }: { children: ReactNode; icon: ReactNode }) {
+  return (
+    <span className="restaurant-detail-inline">
+      {icon}
+      {children}
+    </span>
+  )
+}
+
+function LocationStatus({ restaurant }: { restaurant: Restaurant }) {
+  const isVerified = restaurant.latitude != null && restaurant.longitude != null
+
+  return (
+    <span className={isVerified ? 'location-status verified' : 'location-status unverified'}>
+      {isVerified ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+      {isVerified ? 'Ünvan xəritədə təsdiqlənib' : 'Ünvan xəritədə təsdiqlənməyib'}
+    </span>
   )
 }
