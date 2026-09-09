@@ -5,6 +5,7 @@ import type {
   MenuItem,
   Restaurant,
   RestaurantContract,
+  RestaurantWorkingHour,
   StaffMember,
   StatusTone,
   Table,
@@ -12,6 +13,7 @@ import type {
 } from '../../entities/types'
 import type { AnyRecord } from './responseUtils'
 import { getApiOrigin } from './httpClient'
+import { getRestaurantOpenState } from '../lib/workingHours'
 import { bool, num, str } from './responseUtils'
 
 function resolvePublicApiAssetUrl(value: string) {
@@ -58,6 +60,49 @@ function nullableNum(value: unknown) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function timeText(value: unknown, fallback = '') {
+  const raw = str(value)
+
+  if (!raw) {
+    return fallback
+  }
+
+  return raw.slice(0, 5)
+}
+
+function mapWorkingHour(record: AnyRecord): RestaurantWorkingHour {
+  return {
+    dayOfWeek: num(record.dayOfWeek ?? record.day_of_week),
+    opensAt: timeText(record.opensAt || record.opens_at, '09:00'),
+    closesAt: timeText(record.closesAt || record.closes_at, '00:00'),
+    isClosed: bool(record.isClosed ?? record.is_closed),
+  }
+}
+
+function workingHours(record: AnyRecord) {
+  const records = Array.isArray(record.workingHours)
+    ? record.workingHours
+    : Array.isArray(record.working_hours)
+      ? record.working_hours
+      : []
+
+  const mapped = records.map((item) => mapWorkingHour(item as AnyRecord))
+  if (mapped.length > 0) {
+    return mapped.sort((first, second) => first.dayOfWeek - second.dayOfWeek)
+  }
+
+  return [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+    dayOfWeek,
+    opensAt: '09:00',
+    closesAt: '00:00',
+    isClosed: false,
+  }))
+}
+
+function optionalWorkingHour(value: unknown) {
+  return value && typeof value === 'object' ? mapWorkingHour(value as AnyRecord) : null
+}
+
 export function mapRestaurant(record: AnyRecord): Restaurant {
   const restaurant = (record.restaurant && typeof record.restaurant === 'object' ? record.restaurant : record) as AnyRecord
 
@@ -76,6 +121,11 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
     restaurantGroupId: restaurant.restaurantGroupId == null ? undefined : str(restaurant.restaurantGroupId),
     restaurantGroupName: str(restaurant.restaurantGroupName),
     cancellationWindowMinutes: restaurant.cancellationWindowMinutes == null ? undefined : num(restaurant.cancellationWindowMinutes),
+    timeZone: str(restaurant.timeZone || restaurant.time_zone, 'UTC'),
+    workingHours: workingHours(restaurant),
+    isOpen: restaurant.isOpen == null && restaurant.is_open == null ? undefined : bool(restaurant.isOpen ?? restaurant.is_open),
+    openStatus: str(restaurant.openStatus || restaurant.open_status) || undefined,
+    todayWorkingHours: optionalWorkingHour(restaurant.todayWorkingHours || restaurant.today_working_hours),
     image: imageUrl(restaurant, 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80'),
     isActive: bool(restaurant.isActive, true),
     hasActiveContract: bool(restaurant.hasActiveContract, true),
@@ -288,13 +338,15 @@ function tone(status: string): StatusTone {
 }
 
 export function restaurantRow(restaurant: Restaurant): AdminRow {
+  const openState = getRestaurantOpenState(restaurant.workingHours, restaurant.timeZone, restaurant.isOpen)
+
   return {
     id: restaurant.id,
     title: restaurant.name,
     subtitle: `${restaurant.address} · ${restaurant.phone}`,
     image: restaurant.image,
-    status: restaurant.isActive ? 'Aktiv' : 'Deaktiv',
-    tone: restaurant.isActive ? 'success' : 'danger',
+    status: restaurant.isActive ? openState.label : 'Deaktiv',
+    tone: restaurant.isActive ? openState.tone : 'danger',
     meta: restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur',
     value: `${restaurant.depositAmount} ₼ depozit`,
   }

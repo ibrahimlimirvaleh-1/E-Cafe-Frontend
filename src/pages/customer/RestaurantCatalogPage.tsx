@@ -1,4 +1,4 @@
-import { CircleDollarSign, MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
+import { CircleDollarSign, Clock, MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
@@ -8,6 +8,7 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { SafeImage } from '../../shared/ui/SafeImage'
+import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
 
 const defaultPageSize = 10
 
@@ -61,50 +62,62 @@ export function RestaurantCatalogPage() {
       {!isLoading && restaurantPage.items.length === 0 ? <p className="online-only">Axtarışa uyğun restoran tapılmadı.</p> : null}
 
       <section className="restaurant-grid">
-        {restaurantPage.items.map((restaurant) => (
-          <article className="restaurant-card" key={restaurant.id}>
-            <Link className="restaurant-card-media" to={`/restaurants/${restaurant.id}`} aria-label={`${restaurant.name} restoranına bax`}>
-              <SafeImage src={restaurant.image} alt={restaurant.name} />
-              <div className="restaurant-card-overlay">
-                <div className="restaurant-overlay-badges">
-                  <span className="restaurant-rating">
-                    <Star size={15} fill="currentColor" />
-                    {restaurant.rating}
-                  </span>
-                  <span className="restaurant-deposit-badge">
-                    <CircleDollarSign size={15} />
-                    {restaurant.depositAmount} ₼
+        {restaurantPage.items.map((restaurant) => {
+          const openState = getRestaurantOpenState(restaurant.workingHours, restaurant.timeZone, restaurant.isOpen)
+
+          return (
+            <article className="restaurant-card" key={restaurant.id}>
+              <Link className="restaurant-card-media" to={`/restaurants/${restaurant.id}`} aria-label={`${restaurant.name} restoranına bax`}>
+                <SafeImage src={restaurant.image} alt={restaurant.name} />
+                <div className="restaurant-card-overlay">
+                  <div className="restaurant-overlay-badges">
+                    <span className="restaurant-rating">
+                      <Star size={15} fill="currentColor" />
+                      {restaurant.rating}
+                    </span>
+                    <span className="restaurant-deposit-badge">
+                      <CircleDollarSign size={15} />
+                      {restaurant.depositAmount} ₼
+                    </span>
+                  </div>
+                  <span
+                    aria-label={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
+                    className={restaurant.hasActiveContract ? 'restaurant-availability active' : 'restaurant-availability blocked'}
+                    title={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
+                  >
+                    {restaurant.hasActiveContract ? <ShieldCheck size={16} /> : <ShieldX size={16} />}
                   </span>
                 </div>
-                <span
-                  aria-label={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
-                  className={restaurant.hasActiveContract ? 'restaurant-availability active' : 'restaurant-availability blocked'}
-                  title={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
-                >
-                  {restaurant.hasActiveContract ? <ShieldCheck size={16} /> : <ShieldX size={16} />}
-                </span>
+              </Link>
+              <div className="restaurant-card-body">
+                <h2>
+                  <Link className="restaurant-title-link" to={`/restaurants/${restaurant.id}`}>
+                    {restaurant.name}
+                  </Link>
+                </h2>
+                <p>{restaurant.cuisine}</p>
+                <div className="meta-list">
+                  <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
+                    <MapPin size={16} />
+                    <span>{restaurant.address}</span>
+                  </button>
+                  <span className={openState.isOpen ? 'restaurant-open-status open' : 'restaurant-open-status closed'}>
+                    <Clock size={16} />
+                    <span>{openState.label}</span>
+                  </span>
+                  <span>
+                    <Phone size={16} />
+                    <span>{restaurant.phone}</span>
+                  </span>
+                  <span>
+                    <Clock size={16} />
+                    <span>{formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}</span>
+                  </span>
+                </div>
               </div>
-            </Link>
-            <div className="restaurant-card-body">
-              <h2>
-                <Link className="restaurant-title-link" to={`/restaurants/${restaurant.id}`}>
-                  {restaurant.name}
-                </Link>
-              </h2>
-              <p>{restaurant.cuisine}</p>
-              <div className="meta-list">
-                <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
-                  <MapPin size={16} />
-                  <span>{restaurant.address}</span>
-                </button>
-                <span>
-                  <Phone size={16} />
-                  <span>{restaurant.phone}</span>
-                </span>
-              </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          )
+        })}
       </section>
 
       <PaginationControls

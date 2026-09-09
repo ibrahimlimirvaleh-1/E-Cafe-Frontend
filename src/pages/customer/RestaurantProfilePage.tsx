@@ -7,6 +7,8 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button } from '../../shared/ui/Button'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { SafeImage } from '../../shared/ui/SafeImage'
+import { WorkingHoursList } from '../../shared/ui/WorkingHoursField'
+import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
 
 type ProfilePanel = 'tables' | 'menu'
 
@@ -40,6 +42,8 @@ export function RestaurantProfilePage() {
     )
   }
 
+  const openState = getRestaurantOpenState(restaurant.workingHours, restaurant.timeZone, restaurant.isOpen)
+
   return (
     <main className="page">
       <section className="profile-layout">
@@ -63,13 +67,18 @@ export function RestaurantProfilePage() {
             </span>
             <span>
               <Clock size={18} />
-              Rezervasiya qaydaları restoran tərəfindən idarə olunur
+              {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}
+            </span>
+            <span className={openState.isOpen ? 'restaurant-open-status open' : 'restaurant-open-status closed'}>
+              <Clock size={18} />
+              {openState.label}
             </span>
             <span>
               <ShieldCheck size={18} />
               Ödəniş fiziki/offline
             </span>
           </div>
+          <WorkingHoursList workingHours={restaurant.workingHours} />
           <ContractGuardNotice active={restaurant.hasActiveContract} />
           <div className="action-row profile-actions">
             <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/tables`}>

@@ -1443,6 +1443,25 @@ img {
   max-width: 100%;
 }
 
+.restaurant-card-body .meta-list .restaurant-open-status {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.restaurant-open-status.open {
+  background: rgba(0, 137, 101, 0.12);
+  color: #007a5a;
+}
+
+.restaurant-open-status.closed {
+  background: rgba(86, 96, 112, 0.12);
+  color: var(--on-surface-variant);
+}
+
 .restaurant-location-button span {
   display: -webkit-box;
   overflow: hidden;
@@ -3878,6 +3897,77 @@ img {
   gap: 12px;
 }
 
+.working-hours-field {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.working-hours-field legend {
+  padding: 0 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.working-hours-list {
+  display: grid;
+  gap: 8px;
+}
+
+.working-hours-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(104px, 130px) minmax(104px, 130px);
+  align-items: center;
+  gap: 10px;
+}
+
+.working-day-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.working-day-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.working-hours-row > input[type='time'] {
+  min-width: 0;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font: inherit;
+}
+
+.working-hours-display {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.working-hours-display span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.working-hours-display strong {
+  color: var(--text);
+}
+
 .owner-mode-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5334,6 +5424,14 @@ img {
   .form-grid.two,
   .form-grid.three {
     grid-template-columns: 1fr;
+  }
+
+  .working-hours-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .working-day-toggle {
+    grid-column: 1 / -1;
   }
 
   .owner-mode-switch,

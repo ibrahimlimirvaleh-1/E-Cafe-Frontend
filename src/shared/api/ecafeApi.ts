@@ -26,6 +26,7 @@ import type {
   RestaurantGroup,
   UserSession,
   UserProfile,
+  RestaurantWorkingHour,
   WorkflowAction,
 } from '../../entities/types'
 import { endpoints } from './endpoints'
@@ -153,6 +154,8 @@ type CreateRestaurantRequest = {
   cancellationWindowMinutes: number
   serviceFeePercent: number
   staffSettlementPeriod: number
+  timeZone?: string
+  workingHours?: RestaurantWorkingHour[]
   defaultWaiterTableLimit?: number | null
   owner?: {
     id?: string | number | null
@@ -172,6 +175,7 @@ export type GeocodeAddressResponse = {
   latitude: number
   longitude: number
   placeId?: string | null
+  timeZone?: string | null
 }
 
 type CreateStaffRequest = {
@@ -456,6 +460,7 @@ function mapGeocodeAddress(record: AnyRecord): GeocodeAddressResponse {
     latitude: num(record.latitude ?? record.Latitude),
     longitude: num(record.longitude ?? record.Longitude),
     placeId: str(record.placeId || record.PlaceId) || null,
+    timeZone: str(record.timeZone || record.TimeZone) || null,
   }
 }
 
@@ -912,6 +917,13 @@ export const ecafeApi = {
       formData.set('CancellationWindowMinutes', String(request.cancellationWindowMinutes))
       formData.set('ServiceFeePercent', String(request.serviceFeePercent))
       formData.set('StaffSettlementPeriod', String(request.staffSettlementPeriod))
+      appendIfPresent(formData, 'TimeZone', request.timeZone)
+      request.workingHours?.forEach((workingHour, index) => {
+        formData.set(`WorkingHours[${index}].DayOfWeek`, String(workingHour.dayOfWeek))
+        formData.set(`WorkingHours[${index}].OpensAt`, workingHour.opensAt)
+        formData.set(`WorkingHours[${index}].ClosesAt`, workingHour.closesAt)
+        formData.set(`WorkingHours[${index}].IsClosed`, String(workingHour.isClosed))
+      })
       appendIfPresent(formData, 'DefaultWaiterTableLimit', request.defaultWaiterTableLimit)
       appendIfPresent(formData, 'Owner.Id', request.owner?.id)
       appendIfPresent(formData, 'Owner.SearchText', request.owner?.searchText)
@@ -951,6 +963,8 @@ export const ecafeApi = {
           cancellationWindowMinutes: request.cancellationWindowMinutes,
           serviceFeePercent: request.serviceFeePercent,
           staffSettlementPeriod: request.staffSettlementPeriod,
+          timeZone: request.timeZone || null,
+          workingHours: request.workingHours ?? [],
           defaultWaiterTableLimit: request.defaultWaiterTableLimit,
           fileIds: request.fileIds,
         }),

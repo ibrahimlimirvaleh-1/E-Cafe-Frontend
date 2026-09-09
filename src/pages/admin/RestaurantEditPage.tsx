@@ -12,6 +12,7 @@ import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
+import { WorkingHoursField, createDefaultWorkingHours } from '../../shared/ui/WorkingHoursField'
 
 type GeocodeFormFields = { location: string; branchName: string; restaurantGroupName: string }
 
@@ -82,6 +83,8 @@ export function RestaurantEditPage() {
     cancellationWindowMinutes: '60',
     serviceFeePercent: '0',
     staffSettlementPeriod: '7',
+    timeZone: '',
+    workingHours: createDefaultWorkingHours(),
   })
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [locationResults, setLocationResults] = useState<GeocodeAddressResponse[]>([])
@@ -107,6 +110,8 @@ export function RestaurantEditPage() {
       cancellationWindowMinutes: String(restaurant.cancellationWindowMinutes ?? 60),
       serviceFeePercent: String(restaurant.defaultServiceFeePercent),
       staffSettlementPeriod: '7',
+      timeZone: restaurant.timeZone || '',
+      workingHours: restaurant.workingHours.length > 0 ? restaurant.workingHours : createDefaultWorkingHours(),
     })
   }, [restaurant])
 
@@ -136,6 +141,8 @@ export function RestaurantEditPage() {
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         serviceFeePercent: Number(form.serviceFeePercent),
         staffSettlementPeriod: Number(form.staffSettlementPeriod),
+        timeZone: form.timeZone,
+        workingHours: form.workingHours,
         defaultWaiterTableLimit: null,
         fileIds: fileIds.length > 0 ? fileIds : undefined,
       })
@@ -168,7 +175,7 @@ export function RestaurantEditPage() {
   }
 
   function handleLocationChange(value: string) {
-    setForm({ ...form, location: value, latitude: '', longitude: '', placeId: '', geocodedAddress: '' })
+    setForm({ ...form, location: value, latitude: '', longitude: '', placeId: '', geocodedAddress: '', timeZone: '' })
     setLocationResults([])
   }
 
@@ -180,6 +187,7 @@ export function RestaurantEditPage() {
       longitude: String(result.longitude),
       placeId: result.placeId || '',
       geocodedAddress: result.displayName,
+      timeZone: result.timeZone || current.timeZone,
     }))
     setLocationResults([])
     setError('')
@@ -242,6 +250,7 @@ export function RestaurantEditPage() {
         <div className="form-grid two">
           <PhoneField label="Telefon" required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
         </div>
+        <WorkingHoursField value={form.workingHours} onChange={(workingHours) => setForm({ ...form, workingHours })} />
         <SelectField label="Restoran qrupu" value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}>
           <option value="">Yeni qrup yarat</option>
           {groups.map((group) => (

@@ -30,6 +30,13 @@ import type {
   Table,
 } from './types'
 
+const defaultWorkingHours = [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+  dayOfWeek,
+  opensAt: '09:00',
+  closesAt: '00:00',
+  isClosed: false,
+}))
+
 export const restaurants: Restaurant[] = [
   {
     id: 'saffron-premium',
@@ -43,6 +50,8 @@ export const restaurants: Restaurant[] = [
     isActive: true,
     hasActiveContract: true,
     depositAmount: 5,
+    timeZone: 'UTC',
+    workingHours: defaultWorkingHours,
     defaultServiceFeePercent: 10,
     staffPayoutFrequency: 'weekly',
   },
@@ -58,6 +67,8 @@ export const restaurants: Restaurant[] = [
     isActive: true,
     hasActiveContract: false,
     depositAmount: 8,
+    timeZone: 'UTC',
+    workingHours: defaultWorkingHours.map((hour) => ({ ...hour, opensAt: '10:00', closesAt: '23:00' })),
     defaultServiceFeePercent: 8,
     staffPayoutFrequency: 'manual',
   },
