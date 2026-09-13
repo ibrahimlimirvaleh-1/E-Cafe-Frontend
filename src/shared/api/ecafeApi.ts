@@ -1348,30 +1348,22 @@ export const ecafeApi = {
       return tableList.filter((table) => table.capacity >= guestCount)
     },
     checkAvailability: async (restaurantId: string, reservedAt: string) => {
-      const fallbackTables = await ecafeApi.tables.listAvailable(restaurantId, 2)
-
       return safe(async () => {
         const result = await httpClient<unknown>(endpoints.publicRestaurant.tableAvailability(restaurantId, reservedAt))
         const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : { tables: result.data }
-        const availability = mapTableAvailability(data, restaurantId, reservedAt)
-        const availableTables = availability.tables.length > 0 ? availability.tables : fallbackTables
-
-        return {
-          ...availability,
-          availableCount: availability.availableCount || availableTables.length,
-          hasAvailableTable: availability.hasAvailableTable || availableTables.length > 0,
-          tables: availableTables,
-        }
+        return mapTableAvailability(data, restaurantId, reservedAt)
       }, {
         reservedAt,
-        hasAvailableTable: fallbackTables.length > 0,
-        availableCount: fallbackTables.length,
-        tables: fallbackTables,
+        hasAvailableTable: false,
+        availableCount: 0,
+        tables: [],
       })
     },
     listAvailableForReservation: async (restaurantId: string, reservedAt: string) => {
-      const availability = await ecafeApi.tables.checkAvailability(restaurantId, reservedAt)
-      return availability.tables
+      return safe(async () => {
+        const result = await httpClient<unknown>(endpoints.publicRestaurant.availableTables(restaurantId, reservedAt))
+        return asArray<AnyRecord>(result.data).map((table) => mapTable(table, restaurantId))
+      }, [])
     },
     create: (restaurantId: string, request: CreateTableRequest) => {
       const formData = new FormData()

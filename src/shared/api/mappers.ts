@@ -91,12 +91,7 @@ function workingHours(record: AnyRecord) {
     return mapped.sort((first, second) => first.dayOfWeek - second.dayOfWeek)
   }
 
-  return [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
-    dayOfWeek,
-    opensAt: '09:00',
-    closesAt: '00:00',
-    isClosed: false,
-  }))
+  return []
 }
 
 function optionalWorkingHour(value: unknown) {

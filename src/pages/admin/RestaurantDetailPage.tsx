@@ -54,7 +54,7 @@ export function RestaurantDetailPage() {
           </DetailItem>
           <DetailItem label="İş saatı">
             <InlineDetail icon={<Clock size={16} />}>
-              {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}
+              {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone, restaurant.todayWorkingHours)}
             </InlineDetail>
           </DetailItem>
           {restaurant.restaurantGroupEmail ? (

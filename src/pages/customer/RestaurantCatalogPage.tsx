@@ -111,7 +111,7 @@ export function RestaurantCatalogPage() {
                   </span>
                   <span>
                     <Clock size={16} />
-                    <span>{formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}</span>
+                    <span>{formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone, restaurant.todayWorkingHours)}</span>
                   </span>
                 </div>
               </div>
