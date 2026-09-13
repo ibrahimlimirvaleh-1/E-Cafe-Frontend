@@ -51,6 +51,8 @@ export const endpoints = {
     menu: (restaurantId: string) => `/public/restaurants/${restaurantId}/menu`,
     staff: (restaurantId: string) => `/public/restaurants/${restaurantId}/staff`,
     tables: (restaurantId: string) => `/public/restaurants/${restaurantId}/tables`,
+    tableAvailability: (restaurantId: string, reservedAt: string) =>
+      `/public/restaurants/${restaurantId}/tables/availability?reservedAt=${encodeURIComponent(reservedAt)}`,
   },
   menu: {
     categories: (restaurantId: string) => `/category/${restaurantId}`,

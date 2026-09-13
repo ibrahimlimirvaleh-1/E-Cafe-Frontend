@@ -1887,6 +1887,101 @@ img {
   background: var(--primary);
 }
 
+.reservation-page {
+  gap: 28px;
+}
+
+.reservation-time-panel {
+  display: grid;
+  width: min(760px, 100%);
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-sm);
+}
+
+.reservation-time-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.reservation-time-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reservation-time-form input {
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  color: var(--on-surface);
+  background: var(--surface-low);
+  font: inherit;
+  font-weight: 700;
+}
+
+.reservation-time-submit {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.reservation-flow-note,
+.reservation-availability-message {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--surface-low);
+}
+
+.reservation-flow-note.compact {
+  width: min(760px, 100%);
+}
+
+.reservation-flow-note svg,
+.reservation-availability-message svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--secondary);
+}
+
+.reservation-flow-note div {
+  display: grid;
+  gap: 4px;
+}
+
+.reservation-flow-note span,
+.reservation-availability-message span {
+  color: var(--on-surface-variant);
+  line-height: 1.45;
+}
+
+.reservation-availability-message.warning {
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+.reservation-availability-message.danger {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.reservation-secondary-link {
+  width: fit-content;
+  color: var(--on-surface-variant);
+  font-weight: 800;
+  text-decoration: none;
+}
+
 .choice-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -5469,6 +5564,18 @@ img {
 
   .reservation-step:not(:last-child)::after {
     display: none;
+  }
+
+  .reservation-time-panel {
+    padding: 18px;
+  }
+
+  .reservation-time-form {
+    grid-template-columns: 1fr;
+  }
+
+  .reservation-time-submit {
+    width: 100%;
   }
 
   .profile-layout > img {
