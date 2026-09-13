@@ -67,7 +67,7 @@ export function RestaurantProfilePage() {
             </span>
             <span>
               <Clock size={18} />
-              {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone)}
+              {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone, restaurant.todayWorkingHours)}
             </span>
             <span className={openState.isOpen ? 'restaurant-open-status open' : 'restaurant-open-status closed'}>
               <Clock size={18} />

@@ -22,18 +22,22 @@ export function normalizeWorkingHours(value: RestaurantWorkingHour[] = []) {
   }))
 }
 
-export function formatWorkingHoursSummary(workingHours: RestaurantWorkingHour[] = [], timeZone?: string) {
-  const state = getRestaurantOpenState(workingHours, timeZone)
+export function formatWorkingHoursSummary(
+  workingHours: RestaurantWorkingHour[] = [],
+  timeZone?: string,
+  todayWorkingHours?: RestaurantWorkingHour | null,
+) {
+  const todayHours = todayWorkingHours ?? (workingHours.length > 0 ? getRestaurantOpenState(workingHours, timeZone).todayHours : undefined)
 
-  if (!state.todayHours) {
+  if (!todayHours) {
     return 'İş saatı qeyd edilməyib'
   }
 
-  if (state.todayHours.isClosed) {
+  if (todayHours.isClosed) {
     return 'Bu gün bağlıdır'
   }
 
-  return `${state.todayHours.opensAt} - ${state.todayHours.closesAt}`
+  return `${todayHours.opensAt} - ${todayHours.closesAt}`
 }
 
 export function getRestaurantOpenState(workingHours: RestaurantWorkingHour[] = [], timeZone?: string, authoritativeIsOpen?: boolean) {
