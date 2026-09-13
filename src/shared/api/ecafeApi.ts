@@ -24,6 +24,7 @@ import type {
   Recipe,
   RestaurantContract,
   RestaurantGroup,
+  Table,
   UserSession,
   UserProfile,
   RestaurantWorkingHour,
@@ -201,6 +202,13 @@ type CreateTableRequest = {
 
 type UpdateTableRequest = CreateTableRequest & {
   isActive: boolean
+}
+
+export type TableAvailabilityResponse = {
+  reservedAt: string
+  hasAvailableTable: boolean
+  availableCount: number
+  tables: Table[]
 }
 
 type CopyTableRequest = {
@@ -461,6 +469,20 @@ function mapGeocodeAddress(record: AnyRecord): GeocodeAddressResponse {
     longitude: num(record.longitude ?? record.Longitude),
     placeId: str(record.placeId || record.PlaceId) || null,
     timeZone: str(record.timeZone || record.TimeZone) || null,
+  }
+}
+
+function mapTableAvailability(record: AnyRecord, restaurantId: string, fallbackReservedAt: string): TableAvailabilityResponse {
+  const tableRecords = asArray<AnyRecord>(record.tables || record.availableTables || record.available || record.items || record.data)
+  const availableTables = tableRecords.map((table) => mapTable(table, restaurantId))
+  const availableCount = num(record.availableCount ?? record.count ?? record.totalCount, availableTables.length)
+  const hasAvailableTable = bool(record.hasAvailableTable ?? record.hasAvailableTables ?? record.isAvailable, availableCount > 0)
+
+  return {
+    reservedAt: str(record.reservedAt || record.ReservedAt, fallbackReservedAt),
+    hasAvailableTable,
+    availableCount,
+    tables: availableTables,
   }
 }
 
@@ -1324,6 +1346,32 @@ export const ecafeApi = {
     listAvailable: async (restaurantId: string, guestCount: number) => {
       const tableList = await ecafeApi.tables.listPublic(restaurantId)
       return tableList.filter((table) => table.capacity >= guestCount)
+    },
+    checkAvailability: async (restaurantId: string, reservedAt: string) => {
+      const fallbackTables = await ecafeApi.tables.listAvailable(restaurantId, 2)
+
+      return safe(async () => {
+        const result = await httpClient<unknown>(endpoints.publicRestaurant.tableAvailability(restaurantId, reservedAt))
+        const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : { tables: result.data }
+        const availability = mapTableAvailability(data, restaurantId, reservedAt)
+        const availableTables = availability.tables.length > 0 ? availability.tables : fallbackTables
+
+        return {
+          ...availability,
+          availableCount: availability.availableCount || availableTables.length,
+          hasAvailableTable: availability.hasAvailableTable || availableTables.length > 0,
+          tables: availableTables,
+        }
+      }, {
+        reservedAt,
+        hasAvailableTable: fallbackTables.length > 0,
+        availableCount: fallbackTables.length,
+        tables: fallbackTables,
+      })
+    },
+    listAvailableForReservation: async (restaurantId: string, reservedAt: string) => {
+      const availability = await ecafeApi.tables.checkAvailability(restaurantId, reservedAt)
+      return availability.tables
     },
     create: (restaurantId: string, request: CreateTableRequest) => {
       const formData = new FormData()

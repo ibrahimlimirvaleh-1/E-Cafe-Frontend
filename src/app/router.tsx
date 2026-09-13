@@ -37,6 +37,7 @@ import { NotificationsPage } from '../pages/customer/NotificationsPage'
 import { ProfilePage } from '../pages/customer/ProfilePage'
 import { RestaurantCatalogPage } from '../pages/customer/RestaurantCatalogPage'
 import { RestaurantProfilePage } from '../pages/customer/RestaurantProfilePage'
+import { ReservationTimePage } from '../pages/customer/ReservationTimePage'
 import { SimpleCustomerPage } from '../pages/customer/SimpleCustomerPage'
 import { TableSelectionPage } from '../pages/customer/TableSelectionPage'
 import { TrackingPage } from '../pages/customer/TrackingPage'
@@ -102,6 +103,7 @@ export function AppRouter() {
       <Route element={<SiteShell />}>
         <Route index element={<RestaurantCatalogEntry />} />
         <Route path="restaurants/:restaurantId" element={<RestaurantProfilePage />} />
+        <Route path="restaurants/:restaurantId/reserve" element={<ReservationTimePage />} />
         <Route path="restaurants/:restaurantId/tables" element={<TableSelectionPage />} />
         <Route path="restaurants/:restaurantId/waiters" element={<Navigate to="../menu" replace />} />
         <Route path="restaurants/:restaurantId/menu" element={<MenuSelectionPage />} />

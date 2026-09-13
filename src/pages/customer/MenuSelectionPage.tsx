@@ -1,6 +1,6 @@
-import { Minus, Plus, ReceiptText, ShoppingBasket } from 'lucide-react'
+import { CalendarClock, Minus, Plus, ReceiptText, ShoppingBasket } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -9,6 +9,9 @@ import { SafeImage } from '../../shared/ui/SafeImage'
 
 export function MenuSelectionPage() {
   const { restaurantId = 'saffron-premium' } = useParams()
+  const [searchParams] = useSearchParams()
+  const reservedAt = searchParams.get('reservedAt')
+  const tableId = searchParams.get('tableId')
   const { data: menuData, isLoading } = useAsyncData(
     () => ecafeApi.menu.publicMenu(restaurantId),
     { categories: [], items: [] },
@@ -26,6 +29,7 @@ export function MenuSelectionPage() {
   const subtotal = selectedItems.reduce((sum, line) => sum + line.item.price * line.quantity, 0)
   const serviceFee = subtotal * 0.1
   const total = subtotal + serviceFee
+  const confirmationPath = searchParams.toString() ? `/confirmation?${searchParams.toString()}` : '/confirmation'
 
   const setQuantity = (itemId: string, quantity: number) => {
     setQuantities((current) => ({ ...current, [itemId]: Math.max(0, quantity) }))
@@ -37,6 +41,15 @@ export function MenuSelectionPage() {
       <section className="menu-layout">
         <div className="menu-main">
           <PageHeader title="Menyu seçimi" />
+          {reservedAt ? (
+            <div className="reservation-flow-note compact">
+              <CalendarClock size={20} />
+              <div>
+                <strong>{reservedAt.slice(0, 10)} / {reservedAt.slice(11, 16)}</strong>
+                <span>{tableId ? `Seçilmiş masa: ${tableId}. ` : ''}İstəsəniz rezervasiya ilə birlikdə əvvəlcədən sifariş əlavə edin.</span>
+              </div>
+            </div>
+          ) : null}
           {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
           {!isLoading && items.length === 0 ? <p className="online-only">Bu restoran üçün menyu tapılmadı.</p> : null}
           <div className="category-tabs">
@@ -118,7 +131,7 @@ export function MenuSelectionPage() {
               <strong>{total.toFixed(2)} ₼</strong>
             </div>
           </div>
-          <Link className="ui-button ui-button-primary full" to="/confirmation">
+          <Link className="ui-button ui-button-primary full" to={confirmationPath}>
             Davam et
           </Link>
         </aside>

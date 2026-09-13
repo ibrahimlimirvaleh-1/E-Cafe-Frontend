@@ -81,7 +81,7 @@ export function RestaurantProfilePage() {
           <WorkingHoursList workingHours={restaurant.workingHours} />
           <ContractGuardNotice active={restaurant.hasActiveContract} />
           <div className="action-row profile-actions">
-            <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/tables`}>
+            <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve`}>
               Rezervasiyaya başla
             </Link>
             <Button variant={activePanel === 'tables' ? 'primary' : 'secondary'} type="button" onClick={() => setActivePanel('tables')}>

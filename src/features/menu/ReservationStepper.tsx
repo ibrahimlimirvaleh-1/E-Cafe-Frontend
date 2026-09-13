@@ -1,4 +1,4 @@
-const steps = ['Məlumatlar', 'Masa seçimi', 'Menyu', 'Təsdiq']
+const steps = ['Vaxt seçimi', 'Masa seçimi', 'Menyu', 'Təsdiq']
 
 type ReservationStepperProps = {
   activeStep: number
