@@ -9,6 +9,7 @@ export function createDefaultWorkingHours(): RestaurantWorkingHour[] {
     dayOfWeek,
     opensAt: '09:00',
     closesAt: '00:00',
+    closeDayOffset: 1,
     isClosed: false,
   }))
 }
@@ -27,7 +28,8 @@ export function formatWorkingHoursSummary(
   timeZone?: string,
   todayWorkingHours?: RestaurantWorkingHour | null,
 ) {
-  const todayHours = todayWorkingHours ?? (workingHours.length > 0 ? getRestaurantOpenState(workingHours, timeZone).todayHours : undefined)
+  const openState = workingHours.length > 0 ? getRestaurantOpenState(workingHours, timeZone) : null
+  const todayHours = openState?.isOpen ? openState.todayHours : todayWorkingHours ?? openState?.todayHours
 
   if (!todayHours) {
     return 'İş saatı qeyd edilməyib'
@@ -37,37 +39,26 @@ export function formatWorkingHoursSummary(
     return 'Bu gün bağlıdır'
   }
 
-  return `${todayHours.opensAt} - ${todayHours.closesAt}`
+  return `${todayHours.opensAt} - ${todayHours.closesAt}${todayHours.closeDayOffset === 1 ? ' (ertəsi gün)' : ''}`
 }
 
 export function getRestaurantOpenState(workingHours: RestaurantWorkingHour[] = [], timeZone?: string, authoritativeIsOpen?: boolean) {
-  if (authoritativeIsOpen != null) {
-    return {
-      isOpen: authoritativeIsOpen,
-      label: authoritativeIsOpen ? 'Açıqdır' : 'Bağlıdır',
-      tone: authoritativeIsOpen ? 'success' : 'neutral',
-      todayHours: getTodayHours(workingHours, timeZone),
-    } as const
-  }
-
   const now = getTimeZoneNowParts(timeZone)
   const normalized = normalizeWorkingHours(workingHours)
   const todayHours = normalized.find((hour) => hour.dayOfWeek === now.dayOfWeek)
   const yesterdayHours = normalized.find((hour) => hour.dayOfWeek === (now.dayOfWeek + 6) % 7)
-
-  const isOpen = isOpenAt(todayHours, now.minutes) || isOpenFromPreviousDay(yesterdayHours, now.minutes)
+  const isOpenToday = isOpenAt(todayHours, now.minutes)
+  const isOpenFromYesterday = isOpenFromPreviousDay(yesterdayHours, now.minutes)
+  const calculatedIsOpen = isOpenToday || isOpenFromYesterday
+  const isOpen = authoritativeIsOpen ?? calculatedIsOpen
+  const displayHours = isOpenFromYesterday ? yesterdayHours : todayHours
 
   return {
     isOpen,
     label: isOpen ? 'Açıqdır' : 'Bağlıdır',
     tone: isOpen ? 'success' : 'neutral',
-    todayHours,
+    todayHours: displayHours,
   } as const
-}
-
-function getTodayHours(workingHours: RestaurantWorkingHour[] = [], timeZone?: string) {
-  const now = getTimeZoneNowParts(timeZone)
-  return normalizeWorkingHours(workingHours).find((hour) => hour.dayOfWeek === now.dayOfWeek)
 }
 
 function isOpenAt(hour: RestaurantWorkingHour | undefined, minutes: number) {
@@ -78,15 +69,19 @@ function isOpenAt(hour: RestaurantWorkingHour | undefined, minutes: number) {
   const opensAt = parseTimeToMinutes(hour.opensAt)
   const closesAt = parseTimeToMinutes(hour.closesAt)
 
-  if (opensAt == null || closesAt == null || opensAt === closesAt) {
+  if (opensAt == null || closesAt == null) {
     return false
   }
 
-  if (opensAt < closesAt) {
+  if (hour.closeDayOffset === 0) {
+    if (opensAt === closesAt) {
+      return false
+    }
+
     return minutes >= opensAt && minutes < closesAt
   }
 
-  return minutes >= opensAt || minutes < closesAt
+  return minutes >= opensAt
 }
 
 function isOpenFromPreviousDay(hour: RestaurantWorkingHour | undefined, minutes: number) {
@@ -97,7 +92,7 @@ function isOpenFromPreviousDay(hour: RestaurantWorkingHour | undefined, minutes:
   const opensAt = parseTimeToMinutes(hour.opensAt)
   const closesAt = parseTimeToMinutes(hour.closesAt)
 
-  return opensAt != null && closesAt != null && opensAt > closesAt && minutes < closesAt
+  return opensAt != null && closesAt != null && hour.closeDayOffset === 1 && minutes < closesAt
 }
 
 function parseTimeToMinutes(value: string) {
