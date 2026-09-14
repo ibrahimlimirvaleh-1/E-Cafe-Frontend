@@ -266,8 +266,20 @@ function ContractWorkflowList({
               <strong>{contract.contractNumber || `Müqavilə #${contract.id}`}</strong>
               <small>{record.restaurantName || `Restoran #${contract.restaurantId}`}</small>
             </div>
-            <div className="contract-workflow-cell" data-label="Status">
-              <Badge tone={getContractTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
+            <div className="contract-workflow-mobile-side">
+              <div className="contract-workflow-cell" data-label="Status">
+                <Badge tone={getContractTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
+              </div>
+              <div className="contract-workflow-actions contract-workflow-view-actions" data-label="Baxış">
+                <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsinə bax`} to={`/admin/contracts/${contract.id}`}>
+                  <Eye size={18} />
+                </ActionIconLink>
+                {canManageContracts && canEditContract(contract) ? (
+                  <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsini redaktə et`} to={`/admin/contracts/${contract.id}/edit`}>
+                    <Pencil size={17} />
+                  </ActionIconLink>
+                ) : null}
+              </div>
             </div>
             <div className="contract-workflow-cell" data-label="Müddət">
               <strong>{formatDate(contract.startDate)}</strong>
@@ -276,16 +288,6 @@ function ContractWorkflowList({
             <div className="contract-workflow-cell next-step" data-label="Növbəti addım">
               <strong>{nextStep.title}</strong>
               <small>{nextStep.description}</small>
-            </div>
-            <div className="contract-workflow-actions contract-workflow-view-actions" data-label="Baxış">
-              <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsinə bax`} to={`/admin/contracts/${contract.id}`}>
-                <Eye size={18} />
-              </ActionIconLink>
-              {canManageContracts && canEditContract(contract) ? (
-                <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsini redaktə et`} to={`/admin/contracts/${contract.id}/edit`}>
-                  <Pencil size={17} />
-                </ActionIconLink>
-              ) : null}
             </div>
           </article>
         )
