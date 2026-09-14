@@ -109,8 +109,8 @@ export function RestaurantProfilePage() {
               {tables.map((table) => (
                 <article className="choice-card" key={table.id}>
                   <Table2 size={26} />
-                  <strong>{table.number}</strong>
-                  <span>{table.capacity} nəfərlik stol</span>
+                  <strong>{table.name || `Masa ${table.number}`}</strong>
+                  <span>{table.name && table.number ? `Masa ${table.number} · ${table.capacity} nəfərlik` : `${table.capacity} nəfərlik stol`}</span>
                   <small>{table.status === 'Available' ? 'Boşdur' : table.status}</small>
                 </article>
               ))}

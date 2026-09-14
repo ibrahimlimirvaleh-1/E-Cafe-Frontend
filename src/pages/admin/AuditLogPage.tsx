@@ -206,19 +206,20 @@ export function AuditLogPage() {
           </div>
           {logPage.items.map((log) => (
             <article key={log.id}>
-              <div className="audit-action-cell">
+              <div className="audit-action-cell" data-label="Əməliyyat">
                 <strong>{log.actionDisplayName || log.action || 'Əməliyyat'}</strong>
               </div>
-              <small>{log.entityDisplayName || `${log.entityName} #${log.entityId}`}</small>
-              <div className="audit-user-cell">
+              <small data-label="Obyekt">{log.entityDisplayName || `${log.entityName} #${log.entityId}`}</small>
+              <div className="audit-user-cell" data-label="İstifadəçi">
                 <Badge tone="info">{log.actorName || 'Sistem'}</Badge>
                 {log.actorEmail ? <small>{log.actorEmail}</small> : null}
               </div>
-              <small>{log.actorRoleName || '-'}</small>
-              <small>{toLocalDateTime(log.occurredAt || log.createdAt)}</small>
+              <small data-label="Rol">{log.actorRoleName || '-'}</small>
+              <small data-label="Tarix">{toLocalDateTime(log.occurredAt || log.createdAt)}</small>
               <button
                 type="button"
                 className="ui-button ui-button-secondary action-icon-button"
+                data-label="Baxış"
                 aria-label={`${log.actionDisplayName || log.action || 'Audit log'} detalına bax`}
                 title="Detala bax"
                 onClick={() => setSelectedLog(log)}
