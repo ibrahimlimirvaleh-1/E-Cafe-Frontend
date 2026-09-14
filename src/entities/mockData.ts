@@ -34,6 +34,7 @@ const defaultWorkingHours = [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
   dayOfWeek,
   opensAt: '09:00',
   closesAt: '00:00',
+  closeDayOffset: 1,
   isClosed: false,
 }))
 

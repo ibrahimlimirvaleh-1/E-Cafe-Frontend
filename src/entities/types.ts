@@ -103,6 +103,7 @@ export type RestaurantWorkingHour = {
   dayOfWeek: number
   opensAt: string
   closesAt: string
+  closeDayOffset: number
   isClosed: boolean
 }
 

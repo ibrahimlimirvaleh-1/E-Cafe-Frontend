@@ -4059,7 +4059,7 @@ img {
 
 .working-hours-row {
   display: grid;
-  grid-template-columns: minmax(104px, 1fr) 88px 88px;
+  grid-template-columns: minmax(104px, 1fr) 88px 88px auto;
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -4093,6 +4093,22 @@ img {
   font: inherit;
   font-size: 13px;
   font-weight: 700;
+}
+
+.working-day-next-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.working-day-next-day input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
 }
 
 .working-hours-display {
@@ -5607,6 +5623,10 @@ img {
 
   .working-hours-row {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .working-day-next-day {
+    grid-column: 2;
   }
 
   .working-day-toggle {

@@ -944,6 +944,7 @@ export const ecafeApi = {
         formData.set(`WorkingHours[${index}].DayOfWeek`, String(workingHour.dayOfWeek))
         formData.set(`WorkingHours[${index}].OpensAt`, workingHour.opensAt)
         formData.set(`WorkingHours[${index}].ClosesAt`, workingHour.closesAt)
+        formData.set(`WorkingHours[${index}].CloseDayOffset`, String(workingHour.closeDayOffset))
         formData.set(`WorkingHours[${index}].IsClosed`, String(workingHour.isClosed))
       })
       appendIfPresent(formData, 'DefaultWaiterTableLimit', request.defaultWaiterTableLimit)

@@ -16,7 +16,11 @@ export function WorkingHoursList({ workingHours }: { workingHours: RestaurantWor
       {normalizeWorkingHours(workingHours).map((hour) => (
         <span key={hour.dayOfWeek}>
           <strong>{compactDayLabels[hour.dayOfWeek]}</strong>
-          <em>{hour.isClosed ? 'Bağlıdır' : `${hour.opensAt} - ${hour.closesAt}`}</em>
+          <em>
+            {hour.isClosed
+              ? 'Bağlıdır'
+              : `${hour.opensAt} - ${hour.closesAt}${hour.closeDayOffset === 1 ? ' (ertəsi gün)' : ''}`}
+          </em>
         </span>
       ))}
     </div>
@@ -61,6 +65,15 @@ export function WorkingHoursField({ onChange, value }: WorkingHoursFieldProps) {
               disabled={hour.isClosed}
               onChange={(closesAt) => updateDay(hour.dayOfWeek, { closesAt })}
             />
+            <label className="working-day-next-day">
+              <input
+                checked={hour.closeDayOffset === 1}
+                disabled={hour.isClosed}
+                onChange={(event) => updateDay(hour.dayOfWeek, { closeDayOffset: event.target.checked ? 1 : 0 })}
+                type="checkbox"
+              />
+              <span>ertəsi gün</span>
+            </label>
           </div>
         ))}
       </div>

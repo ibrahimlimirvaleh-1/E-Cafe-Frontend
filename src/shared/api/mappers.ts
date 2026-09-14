@@ -71,10 +71,15 @@ function timeText(value: unknown, fallback = '') {
 }
 
 function mapWorkingHour(record: AnyRecord): RestaurantWorkingHour {
+  const opensAt = timeText(record.opensAt || record.opens_at, '09:00')
+  const closesAt = timeText(record.closesAt || record.closes_at, '00:00')
+  const inferredCloseDayOffset = opensAt > closesAt ? 1 : 0
+
   return {
     dayOfWeek: num(record.dayOfWeek ?? record.day_of_week),
-    opensAt: timeText(record.opensAt || record.opens_at, '09:00'),
-    closesAt: timeText(record.closesAt || record.closes_at, '00:00'),
+    opensAt,
+    closesAt,
+    closeDayOffset: num(record.closeDayOffset ?? record.close_day_offset, inferredCloseDayOffset),
     isClosed: bool(record.isClosed ?? record.is_closed),
   }
 }
