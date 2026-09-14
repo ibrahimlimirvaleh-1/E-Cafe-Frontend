@@ -195,7 +195,7 @@ export function ContractDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="admin-page narrow">
+      <main className="admin-page narrow contract-detail-page">
         <p className="online-only">Müqavilə məlumatları yüklənir...</p>
       </main>
     )
@@ -203,7 +203,7 @@ export function ContractDetailPage() {
 
   if (!contract) {
     return (
-      <main className="admin-page narrow">
+      <main className="admin-page narrow contract-detail-page">
         <PageHeader
           eyebrow="Müqavilə"
           title="Müqavilə tapılmadı"
@@ -236,7 +236,7 @@ export function ContractDetailPage() {
   }
 
   return (
-    <main className="admin-page narrow">
+    <main className="admin-page narrow contract-detail-page">
       <PageHeader
         eyebrow="Müqavilə"
         title={contract.contractNumber || `Müqavilə #${contract.id}`}

@@ -137,7 +137,7 @@ export function ContractListPage() {
   }
 
   return (
-    <main className="admin-page">
+    <main className="admin-page contract-list-page">
       <PageHeader
         eyebrow="Müqavilələr"
         title="Müqavilələr"
