@@ -205,7 +205,7 @@ export function AuditLogPage() {
             <span>Baxış</span>
           </div>
           {logPage.items.map((log) => (
-            <article key={log.id}>
+            <article className="audit-log-row" key={log.id}>
               <div className="audit-action-cell" data-label="Əməliyyat">
                 <strong>{log.actionDisplayName || log.action || 'Əməliyyat'}</strong>
               </div>
