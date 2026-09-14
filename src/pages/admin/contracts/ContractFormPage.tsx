@@ -133,7 +133,7 @@ export function ContractFormPage() {
     return <Navigate to="/admin/contracts" replace />
   }
   return (
-    <main className="admin-page narrow">
+    <main className="admin-page narrow contract-form-page">
       <PageHeader eyebrow={isEditMode ? 'Müqavilə redaktəsi' : 'Yeni müqavilə'} title={isEditMode ? 'Müqaviləni redaktə et' : 'Müqavilə yarat'} />
 
       <form className="form-card" onSubmit={handleSubmit}>
