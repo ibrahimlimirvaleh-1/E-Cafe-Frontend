@@ -4114,18 +4114,66 @@ img {
 .working-hours-display {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 16px;
+  gap: 8px 12px;
   min-width: 0;
 }
 
-.working-hours-display span {
-  display: grid;
-  grid-template-columns: minmax(96px, 1fr) auto;
+.working-hours-display-item {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   min-width: 0;
-  font-size: 13px;
-  line-height: 1.25;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 10px;
+  background: var(--surface-low);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.working-hours-day {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.working-hours-time,
+.working-hours-closed {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 5px;
+  color: var(--text);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.working-hours-closed {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.working-hours-next-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--outline-variant));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .working-hours-display strong {
@@ -4141,14 +4189,13 @@ img {
 }
 
 .restaurant-detail-panel .working-hours-display {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
   max-width: none;
 }
 
-.restaurant-detail-panel .working-hours-display span {
-  grid-template-columns: minmax(74px, 1fr) auto;
-  gap: 10px;
+.restaurant-detail-panel .working-hours-display-item {
+  min-height: 36px;
 }
 
 .owner-mode-switch {
@@ -7618,5 +7665,342 @@ body,
 
   .map-dialog iframe {
     height: clamp(300px, 52dvh, 440px);
+  }
+}
+
+/* Product-wide visual refinement. Keep layout behavior in the existing rules above. */
+body {
+  background: var(--surface);
+}
+
+.site-topbar,
+.staff-topbar {
+  border-bottom-color: rgba(220, 225, 232, 0.92);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
+}
+
+.site-topbar-inner {
+  min-height: 70px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.brand strong {
+  color: var(--on-surface);
+  font-weight: 800;
+}
+
+.site-nav {
+  gap: 4px;
+}
+
+.site-nav a {
+  min-height: 40px;
+  border-radius: 10px;
+  padding-inline: 14px;
+  letter-spacing: 0;
+}
+
+.site-nav a.active,
+.site-nav a:hover {
+  color: var(--on-surface);
+  background: #fff3df;
+  box-shadow: inset 0 0 0 1px rgba(254, 166, 25, 0.14);
+}
+
+.page,
+.admin-page,
+.staff-page {
+  padding-top: 40px;
+}
+
+.page-header {
+  margin-bottom: 30px;
+}
+
+.page-header h1,
+.profile-panel h1,
+.success-panel h1,
+.danger-panel h1 {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.page-header p,
+.profile-panel p,
+.success-panel p,
+.danger-panel p,
+.placeholder-panel p {
+  color: var(--on-surface-variant);
+}
+
+.ui-button {
+  min-height: 46px;
+  border-radius: 10px;
+  padding-inline: 18px;
+  letter-spacing: 0;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.ui-button-primary {
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.ui-button-primary:hover {
+  opacity: 1;
+  background: #20242b;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+}
+
+.ui-button-secondary:hover,
+.ui-button.secondary:hover {
+  border-color: #b8c0cc;
+  color: var(--on-surface);
+  background: var(--surface-low);
+}
+
+.ui-button:focus-visible,
+.icon-action:focus-visible,
+.site-nav a:focus-visible,
+.admin-sidebar nav a:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus-ring);
+}
+
+.restaurant-grid,
+.choice-grid,
+.metric-grid,
+.module-grid,
+.kitchen-board,
+.ticket-list {
+  gap: 18px;
+}
+
+.restaurant-card,
+.choice-card,
+.metric-card,
+.detail-panel,
+.form-card,
+.placeholder-panel,
+.tracking-panel,
+.operation-card,
+.kitchen-ticket,
+.success-panel,
+.danger-panel {
+  border-color: #dce1e8;
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.restaurant-card:hover,
+.choice-card:hover,
+.metric-card:hover,
+.module-card:hover,
+.menu-card:hover {
+  border-color: #c6ced9;
+  box-shadow: var(--shadow-md);
+}
+
+.restaurant-card {
+  grid-template-rows: 188px minmax(0, 1fr);
+}
+
+.restaurant-card > img,
+.restaurant-card-media > img {
+  height: 188px;
+}
+
+.restaurant-card-body {
+  gap: 12px;
+  padding: 20px;
+}
+
+.restaurant-card-body h2 {
+  min-height: 44px;
+  font-size: 18px;
+  line-height: 23px;
+}
+
+.restaurant-card-body .meta-list {
+  gap: 10px;
+}
+
+.detail-panel,
+.form-card,
+.tracking-panel,
+.operation-card,
+.kitchen-ticket {
+  padding: 26px;
+}
+
+.metric-card {
+  min-height: 150px;
+  padding: 22px;
+}
+
+.metric-card strong {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.profile-layout {
+  gap: 20px;
+}
+
+.profile-layout > img {
+  min-height: 540px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.profile-panel {
+  border-radius: 16px;
+  padding: 34px;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-facts span {
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 10px;
+  background: var(--surface-low);
+}
+
+.admin-shell {
+  grid-template-columns: 248px minmax(0, 1fr);
+}
+
+.admin-sidebar {
+  padding: 22px 16px;
+  border-right-color: #e1e5eb;
+  background: #ffffff;
+}
+
+.admin-sidebar nav {
+  gap: 4px;
+  margin-top: 28px;
+}
+
+.admin-sidebar nav a {
+  position: relative;
+  min-height: 44px;
+  border-radius: 10px;
+  padding-inline: 12px;
+  font-size: 13px;
+}
+
+.admin-sidebar nav a.active,
+.admin-sidebar nav a:hover {
+  color: #7b4b00;
+  background: #fff3df;
+}
+
+.admin-sidebar nav a.active::before {
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 22px;
+  border-radius: 0 4px 4px 0;
+  background: var(--secondary-container);
+  content: '';
+}
+
+.admin-topbar {
+  min-height: 70px;
+  padding: 12px 30px;
+  border-bottom-color: rgba(220, 225, 232, 0.92);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.workspace-switcher-trigger,
+.workspace-switcher-home {
+  min-height: 42px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.workspace-switcher-trigger:hover,
+.workspace-switcher-home:hover {
+  box-shadow: var(--shadow-xs);
+}
+
+.user-pill {
+  border-color: var(--outline-variant);
+  box-shadow: none;
+}
+
+.ui-field input,
+.ui-field select,
+.ui-field textarea {
+  min-height: 46px;
+  border-radius: 10px;
+  border-color: var(--outline-variant);
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.ui-field input:hover,
+.ui-field select:hover,
+.ui-field textarea:hover {
+  border-color: #b8c0cc;
+}
+
+.ui-field input:focus,
+.ui-field select:focus,
+.ui-field textarea:focus {
+  border-color: #9aa5b4;
+  box-shadow: var(--focus-ring);
+}
+
+.form-card h2 {
+  font-size: 20px;
+  line-height: 28px;
+}
+
+.table-shell,
+.data-table-shell,
+.inventory-table-shell,
+.inventory-history-table-shell {
+  overflow: hidden;
+  border: 1px solid var(--outline-variant);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 760px) {
+  .page,
+  .admin-page,
+  .staff-page {
+    padding-top: 28px;
+  }
+
+  .page-header {
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .page-header h1,
+  .profile-panel h1,
+  .success-panel h1,
+  .danger-panel h1 {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .detail-panel,
+  .form-card,
+  .tracking-panel,
+  .operation-card,
+  .kitchen-ticket {
+    padding: 20px;
+  }
+
+  .profile-panel {
+    padding: 24px;
   }
 }

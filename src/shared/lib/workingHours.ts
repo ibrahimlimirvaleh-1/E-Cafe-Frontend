@@ -39,7 +39,7 @@ export function formatWorkingHoursSummary(
     return 'Bu gün bağlıdır'
   }
 
-  return `${todayHours.opensAt} - ${todayHours.closesAt}${todayHours.closeDayOffset === 1 ? ' (ertəsi gün)' : ''}`
+  return `${todayHours.opensAt} - ${todayHours.closesAt}`
 }
 
 export function getRestaurantOpenState(workingHours: RestaurantWorkingHour[] = [], timeZone?: string, authoritativeIsOpen?: boolean) {
