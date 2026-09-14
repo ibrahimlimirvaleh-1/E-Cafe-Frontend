@@ -7911,6 +7911,70 @@ body,
   }
 }
 
+/* Keep contract status and the detail action together on narrow screens. */
+.contract-workflow-mobile-side {
+  display: contents;
+}
+
+@media (max-width: 760px) {
+  .contract-workflow-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    row-gap: 14px;
+  }
+
+  .contract-workflow-primary {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .contract-workflow-mobile-side {
+    display: grid;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-content: start;
+    justify-items: end;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .contract-workflow-mobile-side .contract-workflow-cell[data-label="Status"] {
+    display: grid;
+    justify-items: end;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .contract-workflow-mobile-side .contract-workflow-cell[data-label="Status"]::before,
+  .contract-workflow-mobile-side .contract-workflow-actions::before {
+    display: none;
+  }
+
+  .contract-workflow-mobile-side .contract-workflow-actions {
+    display: flex;
+    justify-content: flex-end;
+    width: auto;
+    min-width: 0;
+  }
+
+  .contract-workflow-mobile-side .contract-workflow-view-actions a:nth-child(2) {
+    display: none;
+  }
+
+  .contract-workflow-row > .contract-workflow-cell[data-label="Müddət"] {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .contract-workflow-row > .contract-workflow-cell.next-step {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+}
+
 /* Enforce a single-column mobile layout for dense admin rows. */
 @media (max-width: 760px) {
   .inventory-row {
