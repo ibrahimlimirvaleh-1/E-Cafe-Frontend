@@ -62,8 +62,8 @@ export function TableSelectionPage() {
           return (
             <Link className="choice-card" key={table.id} to={`/restaurants/${restaurantId}/menu?${nextParams.toString()}`}>
               <Users size={26} />
-              <strong>{table.number}</strong>
-              <span>{table.capacity} nəfərlik masa</span>
+              <strong>{table.name || `Masa ${table.number}`}</strong>
+              <span>{table.name && table.number ? `Masa ${table.number} · ${table.capacity} nəfərlik` : `${table.capacity} nəfərlik masa`}</span>
               <small>{table.status === 'Available' ? 'Boşdur' : table.status}</small>
             </Link>
           )

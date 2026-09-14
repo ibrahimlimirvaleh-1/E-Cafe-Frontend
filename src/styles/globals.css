@@ -7668,6 +7668,249 @@ body,
   }
 }
 
+/* Mobile form and list corrections */
+.phone-field > span {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.phone-field-control {
+  display: grid;
+  grid-template-columns: 76px 86px minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  min-height: 52px;
+  overflow: hidden;
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  background: var(--surface-lowest);
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.04);
+}
+
+.phone-country-code,
+.phone-operator-select,
+.phone-field-control input {
+  min-width: 0;
+  min-height: 52px;
+}
+
+.phone-country-code {
+  border-right: 1px solid var(--outline-variant);
+  background: var(--surface-low);
+  color: var(--on-surface);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.phone-operator-select {
+  border: 0;
+  border-right: 1px solid var(--outline-variant);
+  background: var(--surface-lowest);
+}
+
+.phone-operator-select select {
+  width: 100%;
+  padding: 0 26px 0 10px;
+  color: var(--on-surface);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.phone-operator-select svg {
+  right: 8px;
+  width: 15px;
+  height: 15px;
+}
+
+.phone-field-control input {
+  width: 100%;
+  padding: 0 14px;
+  color: var(--on-surface);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.phone-field-control input::placeholder {
+  color: var(--on-surface-variant);
+  letter-spacing: 0.02em;
+}
+
+.phone-field:focus-within .phone-field-control {
+  border-color: rgba(17, 19, 23, 0.8);
+  box-shadow: var(--focus-ring);
+}
+
+.contract-form-page .form-card,
+.contract-form-page .form-row,
+.contract-form-page .ui-field,
+.contract-form-page .restaurant-select-field,
+.contract-form-page .phone-field-control {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.contract-form-page .form-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.contract-form-page .form-row > *,
+.contract-form-page .ui-field input,
+.contract-form-page .ui-field select,
+.contract-form-page .ui-field textarea,
+.contract-form-page .restaurant-select-trigger {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .inventory-panel-header {
+    display: grid;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .compact-toggle {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .inventory-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .inventory-row-main {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .inventory-row-main > span:first-child,
+  .inventory-row-main > .ui-badge {
+    grid-column: 1 / -1;
+  }
+
+  .inventory-row-main > span,
+  .inventory-row-main > .ui-badge {
+    min-width: 0;
+  }
+
+  .inventory-list strong,
+  .inventory-list small {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .inventory-row .inline-actions {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid var(--outline-variant);
+  }
+
+  .inventory-row .inline-actions .action-icon-button {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+  }
+
+  .audit-list article {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: stretch;
+    padding: 16px 16px 68px;
+  }
+
+  .audit-list article > * {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .audit-list article > *[data-label]::before {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--on-surface-variant);
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .audit-list .audit-user-cell {
+    display: grid;
+    gap: 6px;
+  }
+
+  .audit-list .audit-user-cell .ui-badge {
+    justify-self: start;
+    width: max-content;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .audit-list article > button:last-child {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .audit-list article > button:last-child::before {
+    display: none;
+  }
+
+  .contract-form-page .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-form-page .form-card {
+    padding: 18px;
+  }
+
+  .phone-field-control {
+    grid-template-columns: 68px 72px minmax(0, 1fr);
+  }
+
+  .phone-country-code {
+    font-size: 13px;
+  }
+
+  .phone-operator-select select {
+    padding-inline: 6px 22px;
+    font-size: 13px;
+  }
+
+  .phone-field-control input {
+    padding-inline: 11px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .phone-field-control {
+    grid-template-columns: 62px 64px minmax(0, 1fr);
+  }
+
+  .phone-country-code,
+  .phone-operator-select select,
+  .phone-field-control input {
+    font-size: 12px;
+  }
+
+  .phone-field-control input {
+    padding-inline: 8px;
+  }
+}
+
 /* Phone viewport pass: prevent cramped headers, forms, and long content. */
 @media (max-width: 640px) {
   .site-topbar-inner,
@@ -8666,5 +8909,128 @@ body {
 
   .contract-form-page .form-actions .ui-button {
     width: 100%;
+  }
+}
+
+/* Final mobile overrides for the controls that must never overflow. */
+.phone-field-control {
+  grid-template-columns: 76px 86px minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+.phone-field-control input,
+.phone-field-control select {
+  min-width: 0;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+.phone-field-control input {
+  width: 100%;
+  padding-inline: 14px;
+}
+
+.contract-form-page .form-card,
+.contract-form-page .form-row,
+.contract-form-page .ui-field,
+.contract-form-page .ui-field input,
+.contract-form-page .ui-field select,
+.contract-form-page .ui-field textarea,
+.contract-form-page .restaurant-select-trigger {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .inventory-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-row-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .inventory-row-main > span:first-child,
+  .inventory-row-main > .ui-badge {
+    grid-column: 1 / -1;
+  }
+
+  .inventory-row .inline-actions {
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .audit-list article {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-width: 0;
+  }
+
+  .audit-list article > * {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .audit-list article > *[data-label]::before {
+    display: block;
+    margin-bottom: 3px;
+    content: attr(data-label);
+    color: var(--on-surface-variant);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .audit-list article > button:last-child::before {
+    display: none;
+  }
+
+  .contract-form-page .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .phone-field-control {
+    grid-template-columns: 68px 72px minmax(0, 1fr);
+  }
+
+  .phone-country-code,
+  .phone-operator-select select,
+  .phone-field-control input {
+    font-size: 13px;
+  }
+
+  .phone-operator-select select {
+    padding-inline: 6px 22px;
+  }
+
+  .phone-field-control input {
+    padding-inline: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .phone-field-control {
+    grid-template-columns: 62px 64px minmax(0, 1fr);
+  }
+
+  .phone-country-code,
+  .phone-operator-select select,
+  .phone-field-control input {
+    font-size: 12px;
+  }
+
+  .phone-field-control input {
+    padding-inline: 8px;
   }
 }
