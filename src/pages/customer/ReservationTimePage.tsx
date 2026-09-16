@@ -1,4 +1,4 @@
-import { CalendarClock, Clock, Table2 } from 'lucide-react'
+import { CalendarClock, CheckCircle2, Clock, Table2, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -85,16 +85,27 @@ export function ReservationTimePage() {
       />
 
       <section className="reservation-time-panel">
+        <div className="reservation-panel-heading">
+          <div className="reservation-panel-icon">
+            <CalendarClock size={22} />
+          </div>
+          <div>
+            <span className="reservation-panel-kicker">İlk addım</span>
+            <h2>Rezervasiya detallarını daxil edin</h2>
+            <p>Seçdiyiniz vaxtda ən azı bir uyğun masa olmalıdır.</p>
+          </div>
+        </div>
+
         <form className="reservation-time-form" onSubmit={handleSubmit}>
-          <label>
+          <label className="reservation-field">
             <span>Tarix</span>
             <input min={toDateInputValue(new Date())} onChange={(event) => setDate(event.target.value)} type="date" value={date} />
           </label>
-          <label>
+          <label className="reservation-field">
             <span>Gəliş saatı</span>
             <input onChange={(event) => setTime(event.target.value)} type="time" value={time} />
           </label>
-          <label>
+          <label className="reservation-field">
             <span>Qonaq sayı</span>
             <input
               min="1"
@@ -114,12 +125,16 @@ export function ReservationTimePage() {
           </Button>
         </form>
 
-        <div className="reservation-flow-note">
-          <CalendarClock size={22} />
-          <div>
-            <strong>{formatReservedAt(reservedAt)}</strong>
-            <span>Müştəri çıxış saatı seçmir. Rezerv olunmuş masa restoranın həmin gün bağlanma vaxtına qədər blokda qalır.</span>
+        <div className="reservation-time-preview">
+          <div className="reservation-preview-label">
+            <span>Seçiminiz</span>
+            <CheckCircle2 size={18} />
           </div>
+          <div>
+            <strong><CalendarClock size={18} /> {formatReservedAt(reservedAt)}</strong>
+            <strong><Users size={18} /> {peopleCount} nəfər</strong>
+          </div>
+          <p>Müştəri çıxış saatı seçmir. Masa restoranın həmin iş gününün bağlanma vaxtına qədər rezerv blokunda qalır.</p>
         </div>
 
         {availability && !availability.hasAvailableTable ? (
