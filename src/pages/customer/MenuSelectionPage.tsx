@@ -2,6 +2,7 @@ import { CalendarClock, CheckCircle2, Minus, Plus, ReceiptText, ShoppingBasket, 
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
+import { getReservationErrorMessage } from '../../features/menu/reservationErrors'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button } from '../../shared/ui/Button'
@@ -56,7 +57,7 @@ export function MenuSelectionPage() {
       nextParams.set('reservationId', String(reservation.id))
       navigate(`/confirmation?${nextParams.toString()}`)
     } catch (error) {
-      setReservationError(error instanceof Error ? error.message : 'Rezervasiya yaradıla bilmədi.')
+      setReservationError(getReservationErrorMessage(error))
     } finally {
       setIsCreatingReservation(false)
     }
