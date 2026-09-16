@@ -56,6 +56,9 @@ export const endpoints = {
     availableTables: (restaurantId: string, reservedAt: string) =>
       `/public/restaurants/${restaurantId}/tables/available?reservedAt=${encodeURIComponent(reservedAt)}`,
   },
+  reservations: {
+    create: (restaurantId: string) => `/restaurants/${restaurantId}/reservations`,
+  },
   menu: {
     categories: (restaurantId: string) => `/category/${restaurantId}`,
     createCategory: (restaurantId: string) => `/restaurants/${restaurantId}/categories`,

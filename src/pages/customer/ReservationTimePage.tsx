@@ -44,6 +44,7 @@ export function ReservationTimePage() {
   const defaults = useMemo(getDefaultReservationDateTime, [])
   const [date, setDate] = useState(defaults.date)
   const [time, setTime] = useState(defaults.time)
+  const [peopleCount, setPeopleCount] = useState('2')
   const [availability, setAvailability] = useState<TableAvailabilityResponse | null>(null)
   const [error, setError] = useState('')
   const [isChecking, setIsChecking] = useState(false)
@@ -63,6 +64,7 @@ export function ReservationTimePage() {
         const params = new URLSearchParams({
           reservedAt: result.reservedAt || reservedAt,
           availableCount: String(result.availableCount),
+          peopleCount,
         })
         navigate(`/restaurants/${restaurantId}/tables?${params.toString()}`)
       }
@@ -79,7 +81,7 @@ export function ReservationTimePage() {
       <PageHeader
         eyebrow="Rezervasiya"
         title="Gəliş vaxtını seç"
-        description="Əvvəlcə tarix və saat seçilir. Seçilən anda uyğun masa yoxdursa, masa seçimi mərhələsinə keçilmir."
+        description="Tarix, saat və qonaq sayını seçin. Seçilən anda uyğun masa yoxdursa, masa seçimi mərhələsinə keçilmir."
       />
 
       <section className="reservation-time-panel">
@@ -92,7 +94,21 @@ export function ReservationTimePage() {
             <span>Gəliş saatı</span>
             <input onChange={(event) => setTime(event.target.value)} type="time" value={time} />
           </label>
-          <Button className="reservation-time-submit" disabled={isChecking || !date || !time} type="submit">
+          <label>
+            <span>Qonaq sayı</span>
+            <input
+              min="1"
+              max="100"
+              onChange={(event) => setPeopleCount(event.target.value)}
+              type="number"
+              value={peopleCount}
+            />
+          </label>
+          <Button
+            className="reservation-time-submit"
+            disabled={isChecking || !date || !time || !peopleCount || Number(peopleCount) < 1}
+            type="submit"
+          >
             <Table2 size={18} />
             {isChecking ? 'Yoxlanılır...' : 'Boş masa yoxla'}
           </Button>
