@@ -12,9 +12,17 @@ export function ReservationStepper({ activeStep }: ReservationStepperProps) {
         const state = number < activeStep ? 'complete' : number === activeStep ? 'active' : 'upcoming'
 
         return (
-          <div className={`reservation-step ${state}`} key={step}>
+          <div
+            aria-current={number === activeStep ? 'step' : undefined}
+            className={`reservation-step ${state}`}
+            data-step={number}
+            key={step}
+          >
             <span>{number}</span>
-            <strong>{step}</strong>
+            <div>
+              <small>0{number}</small>
+              <strong>{step}</strong>
+            </div>
           </div>
         )
       })}

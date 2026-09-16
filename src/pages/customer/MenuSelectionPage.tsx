@@ -1,4 +1,4 @@
-import { CalendarClock, Minus, Plus, ReceiptText, ShoppingBasket } from 'lucide-react'
+import { CalendarClock, CheckCircle2, Minus, Plus, ReceiptText, ShoppingBasket, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
@@ -67,18 +67,25 @@ export function MenuSelectionPage() {
   }
 
   return (
-    <main className="page">
+    <main className="page reservation-page reservation-menu-page">
       <ReservationStepper activeStep={3} />
+      {reservedAt ? (
+        <div className="reservation-selection-summary reservation-menu-summary">
+          <div className="reservation-selection-summary-main">
+            <div className="reservation-panel-icon"><CheckCircle2 size={20} /></div>
+            <div><span>Rezervasiya üçün seçiminiz</span><strong>{reservedAt.slice(0, 10)} / {reservedAt.slice(11, 16)}</strong></div>
+          </div>
+          <div><span className="reservation-summary-caption">Masa</span><strong>{tableId || 'Seçilməyib'}</strong></div>
+          <div><span className="reservation-summary-caption">Qonaq sayı</span><strong><Users size={16} /> {peopleCount} nəfər</strong></div>
+        </div>
+      ) : null}
       <section className="menu-layout">
         <div className="menu-main">
           <PageHeader title="Menyu seçimi" />
           {reservedAt ? (
-            <div className="reservation-flow-note compact">
+            <div className="reservation-flow-note compact reservation-menu-note">
               <CalendarClock size={20} />
-              <div>
-                <strong>{reservedAt.slice(0, 10)} / {reservedAt.slice(11, 16)}</strong>
-                <span>{tableId ? `Seçilmiş masa: ${tableId}. ` : ''}İstəsəniz rezervasiya ilə birlikdə əvvəlcədən sifariş əlavə edin.</span>
-              </div>
+              <div><strong>Əvvəlcədən sifariş əlavə edin</strong><span>İstəsəniz menyudan seçim edin. Heç nə seçmədən də rezervasiyanı davam etdirə bilərsiniz.</span></div>
             </div>
           ) : null}
           {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
