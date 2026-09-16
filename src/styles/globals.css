@@ -8229,6 +8229,23 @@ body,
   transform: translateY(-2px);
 }
 
+.reservation-table-card {
+  width: 100%;
+  border: 1px solid var(--outline-variant);
+  color: inherit;
+  background: var(--surface-lowest);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+.reservation-table-card.selected {
+  border-color: var(--secondary);
+  background: #f3fbf7;
+  box-shadow: 0 0 0 3px rgb(0 131 82 / 0.1), var(--shadow-md);
+}
+
 .reservation-table-card-top,
 .reservation-table-card-meta,
 .reservation-table-card-action {
@@ -8304,6 +8321,87 @@ body,
 .reservation-menu-note {
   border: 1px solid var(--outline-variant);
   background: var(--surface-lowest);
+}
+
+.reservation-preorder-backdrop {
+  z-index: 1000;
+}
+
+.reservation-preorder-dialog {
+  display: grid;
+  width: min(480px, 100%);
+  gap: 20px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 20px;
+  padding: 24px;
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-elevated);
+}
+
+.reservation-preorder-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.reservation-preorder-dialog-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 15px;
+  color: var(--secondary);
+  background: var(--secondary-container);
+}
+
+.reservation-preorder-close {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--outline-variant);
+  border-radius: 50%;
+  color: var(--on-surface-variant);
+  background: var(--surface-low);
+  cursor: pointer;
+}
+
+.reservation-preorder-dialog-body {
+  display: grid;
+  gap: 8px;
+}
+
+.reservation-preorder-dialog-body h2,
+.reservation-preorder-dialog-body p {
+  margin: 0;
+}
+
+.reservation-preorder-dialog-body h2 {
+  color: var(--on-surface);
+  font-size: 22px;
+  line-height: 29px;
+}
+
+.reservation-preorder-dialog-body p {
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.reservation-preorder-dialog-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.reservation-preorder-option {
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+}
+
+.reservation-preorder-option-primary {
+  gap: 8px;
 }
 
 @media (max-width: 900px) {
@@ -8421,6 +8519,16 @@ body,
 
   .reservation-table-card {
     min-height: 160px;
+  }
+
+  .reservation-preorder-dialog {
+    border-radius: 18px;
+    padding: 20px;
+  }
+
+  .reservation-preorder-dialog-body h2 {
+    font-size: 19px;
+    line-height: 25px;
   }
 }
 
