@@ -15,10 +15,19 @@ export function TableSelectionPage() {
   const { restaurantId = 'saffron-premium' } = useParams()
   const [searchParams] = useSearchParams()
   const reservedAt = searchParams.get('reservedAt') || ''
+  const parsedPeopleCount = Number(searchParams.get('peopleCount') || '1')
+  const peopleCount = Number.isFinite(parsedPeopleCount) && parsedPeopleCount > 0 ? parsedPeopleCount : 1
   const { data: tables, isLoading } = useAsyncData(
-    () => reservedAt ? ecafeApi.tables.listAvailableForReservation(restaurantId, reservedAt) : Promise.resolve([]),
+    async () => {
+      if (!reservedAt) {
+        return []
+      }
+
+      const availableTables = await ecafeApi.tables.listAvailableForReservation(restaurantId, reservedAt)
+      return availableTables.filter((table) => table.capacity >= peopleCount)
+    },
     [],
-    [restaurantId, reservedAt],
+    [restaurantId, reservedAt, peopleCount],
   )
 
   if (!reservedAt) {
@@ -49,7 +58,7 @@ export function TableSelectionPage() {
         <CalendarClock size={20} />
         <div>
           <strong>{formatReservedAt(reservedAt)}</strong>
-          <span>Masa müştəri üçün restoran bağlanana qədər rezerv blokunda saxlanılır.</span>
+          <span>{peopleCount} nəfər üçün masa restoran bağlanana qədər rezerv blokunda saxlanılır.</span>
         </div>
       </div>
       {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}

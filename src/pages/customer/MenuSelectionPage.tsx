@@ -1,17 +1,21 @@
 import { CalendarClock, Minus, Plus, ReceiptText, ShoppingBasket } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { Button } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { SafeImage } from '../../shared/ui/SafeImage'
 
 export function MenuSelectionPage() {
   const { restaurantId = 'saffron-premium' } = useParams()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const reservedAt = searchParams.get('reservedAt')
   const tableId = searchParams.get('tableId')
+  const parsedPeopleCount = Number(searchParams.get('peopleCount') || '1')
+  const peopleCount = Number.isFinite(parsedPeopleCount) && parsedPeopleCount > 0 ? parsedPeopleCount : 1
   const { data: menuData, isLoading } = useAsyncData(
     () => ecafeApi.menu.publicMenu(restaurantId),
     { categories: [], items: [] },
@@ -19,6 +23,8 @@ export function MenuSelectionPage() {
   )
   const [activeCategory, setActiveCategory] = useState('all')
   const [quantities, setQuantities] = useState<Record<string, number>>({})
+  const [isCreatingReservation, setIsCreatingReservation] = useState(false)
+  const [reservationError, setReservationError] = useState('')
   const { categories, items } = menuData
 
   const visibleItems = activeCategory === 'all' ? items : items.filter((item) => item.categoryId === activeCategory)
@@ -30,6 +36,31 @@ export function MenuSelectionPage() {
   const serviceFee = subtotal * 0.1
   const total = subtotal + serviceFee
   const confirmationPath = searchParams.toString() ? `/confirmation?${searchParams.toString()}` : '/confirmation'
+
+  const handleContinue = async () => {
+    if (!reservedAt || !tableId) {
+      navigate(confirmationPath)
+      return
+    }
+
+    setReservationError('')
+    setIsCreatingReservation(true)
+
+    try {
+      const reservation = await ecafeApi.reservations.create(restaurantId, {
+        tableId,
+        reservedAt,
+        peopleCount,
+      })
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('reservationId', String(reservation.id))
+      navigate(`/confirmation?${nextParams.toString()}`)
+    } catch (error) {
+      setReservationError(error instanceof Error ? error.message : 'Rezervasiya yaradıla bilmədi.')
+    } finally {
+      setIsCreatingReservation(false)
+    }
+  }
 
   const setQuantity = (itemId: string, quantity: number) => {
     setQuantities((current) => ({ ...current, [itemId]: Math.max(0, quantity) }))
@@ -131,9 +162,10 @@ export function MenuSelectionPage() {
               <strong>{total.toFixed(2)} ₼</strong>
             </div>
           </div>
-          <Link className="ui-button ui-button-primary full" to={confirmationPath}>
-            Davam et
-          </Link>
+          {reservationError ? <p className="reservation-availability-message danger">{reservationError}</p> : null}
+          <Button className="full" disabled={isCreatingReservation} onClick={handleContinue} type="button">
+            {isCreatingReservation ? 'Rezervasiya yaradılır...' : 'Davam et'}
+          </Button>
         </aside>
       </section>
     </main>

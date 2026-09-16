@@ -211,6 +211,26 @@ export type TableAvailabilityResponse = {
   tables: Table[]
 }
 
+export type CreateReservationRequest = {
+  tableId: string
+  reservedAt: string
+  peopleCount: number
+  note?: string
+}
+
+export type ReservationResponse = {
+  id: number
+  restaurantId: number
+  tableId: number
+  reservedAt: string
+  peopleCount: number
+  statusId: number
+  status: string
+  depositAmount: number
+  holdExpiresAt?: string | null
+  cancellationDeadline?: string | null
+}
+
 type CopyTableRequest = {
   tableNo?: string
   name?: string
@@ -483,6 +503,21 @@ function mapTableAvailability(record: AnyRecord, restaurantId: string, fallbackR
     hasAvailableTable,
     availableCount,
     tables: availableTables,
+  }
+}
+
+function mapReservationResponse(record: AnyRecord): ReservationResponse {
+  return {
+    id: num(record.id || record.reservationId),
+    restaurantId: num(record.restaurantId),
+    tableId: num(record.tableId),
+    reservedAt: str(record.reservedAt || record.ReservedAt),
+    peopleCount: num(record.peopleCount),
+    statusId: num(record.statusId),
+    status: str(record.status || record.statusName),
+    depositAmount: num(record.depositAmount),
+    holdExpiresAt: str(record.holdExpiresAt || record.HoldExpiresAt) || null,
+    cancellationDeadline: str(record.cancellationDeadline || record.CancellationDeadline) || null,
   }
 }
 
@@ -1592,6 +1627,20 @@ export const ecafeApi = {
 
   reservations: {
     list: () => reservations,
+    create: async (restaurantId: string, request: CreateReservationRequest) => {
+      const result = await httpClient<unknown>(endpoints.reservations.create(restaurantId), {
+        method: 'POST',
+        body: JSON.stringify({
+          tableId: Number(request.tableId),
+          reservedAt: request.reservedAt,
+          peopleCount: request.peopleCount,
+          note: request.note?.trim() || null,
+        }),
+      })
+
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationResponse(data)
+    },
   },
   orders: {
     list: () => orders,
