@@ -11,7 +11,7 @@ export type ReservationStatus =
   | 'Expired'
   | 'NoShow'
 
-export type OrderStatus = 'Created' | 'Accepted' | 'Preparing' | 'Ready' | 'Served' | 'Closed' | 'Cancelled'
+export type OrderStatus = 'Scheduled' | 'Created' | 'Accepted' | 'Preparing' | 'Ready' | 'Served' | 'Closed' | 'Cancelled'
 
 export type PaymentStatus = 'Pending' | 'Paid' | 'Failed' | 'Refunded' | 'RefundFailed'
 
