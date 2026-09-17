@@ -45,7 +45,6 @@ export function TableSelectionPage() {
         <PageHeader
           eyebrow="Rezervasiya"
           title="Əvvəl gəliş vaxtını seç"
-          description="Masa seçimi yalnız tarix və saat yoxlandıqdan sonra açılır."
         />
         <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurantId}/reserve`}>
           Vaxt seçiminə keç
@@ -104,9 +103,8 @@ export function TableSelectionPage() {
       <PageHeader
         eyebrow="Rezervasiya"
         title="Uyğun masa seç"
-        description="Bu siyahıda yalnız seçilən saat üçün rezervasiyaya uyğun masalar göstərilir."
       />
-      <div className="reservation-selection-summary">
+      <div className="reservation-selection-summary reservation-table-selection-summary">
         <div className="reservation-selection-summary-main">
           <div className="reservation-panel-icon">
             <CalendarClock size={20} />
@@ -120,15 +118,10 @@ export function TableSelectionPage() {
           <span className="reservation-summary-caption">Qonaq sayı</span>
           <strong>{peopleCount} nəfər</strong>
         </div>
-        <div>
-          <span className="reservation-summary-caption">Masa qaydası</span>
-          <strong>Bağlanana qədər</strong>
-        </div>
       </div>
       <div className="reservation-table-toolbar">
         <div>
           <strong>Uyğun masalar</strong>
-          <span>Seçilən vaxt üçün boş olan masalardan birini seçin.</span>
         </div>
         <div className="reservation-table-legend"><span><i className="available" /> Boşdur</span><span><i className="capacity" /> Tutum</span></div>
       </div>

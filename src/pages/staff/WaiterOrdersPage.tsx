@@ -6,7 +6,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 export function WaiterOrdersPage() {
   return (
     <main className="staff-page">
-      <PageHeader title="Ofisiant sifarişləri" description="Masa üzrə sifarişləri izlə, hazır olanları servisə yönləndir." />
+      <PageHeader title="Ofisiant sifarişləri" />
       <section className="ticket-list">
         {orders.map((order) => (
           <article className="operation-card" key={order.id}>

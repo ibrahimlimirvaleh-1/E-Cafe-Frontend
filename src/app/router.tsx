@@ -123,7 +123,6 @@ export function AppRouter() {
           element={
             <SimpleCustomerPage
               title="Rezervasiyalarım"
-              description="Rezervasiya tarixçəsi üçün backend endpoint hazır olanda bura bağlanacaq."
             />
           }
         />
@@ -132,7 +131,6 @@ export function AppRouter() {
           element={
             <SimpleCustomerPage
               title="Sifarişlərim"
-              description="Sifariş tarixçəsi və izləmə endpointləri hazır olanda bura bağlanacaq."
             />
           }
         />

@@ -10,7 +10,6 @@ export function KitchenBoardPage() {
       <PageHeader
         eyebrow="Kitchen"
         title="Mətbəx sifarişləri"
-        description="Yeni sifarişləri qəbul et, hazırlanma mərhələsini dəyiş və hazır olduqda ofisianta bildir."
       />
       <section className="kitchen-board">
         {orders.map((order) => (

@@ -74,8 +74,13 @@ export function UserMenu() {
   }
 
   const onLogout = async () => {
-    await logout()
-    navigate('/login')
+    try {
+      await logout()
+    } catch {
+      // Sessiya lokal olaraq təmizləndiyi üçün logout API xətası istifadəçini səhifədə saxlamamalıdır.
+    } finally {
+      navigate('/', { replace: true })
+    }
   }
 
   const activeProfile = user.profiles.find((profile) => profile.restaurantId === user.restaurantId && profile.roleId === user.roleId)

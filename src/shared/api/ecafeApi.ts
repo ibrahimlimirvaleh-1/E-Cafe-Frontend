@@ -1627,6 +1627,11 @@ export const ecafeApi = {
 
   reservations: {
     list: () => reservations,
+    getById: async (reservationId: string) => {
+      const result = await httpClient<unknown>(endpoints.reservations.getById(reservationId))
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationResponse(data)
+    },
     create: async (restaurantId: string, request: CreateReservationRequest) => {
       const result = await httpClient<unknown>(endpoints.reservations.create(restaurantId), {
         method: 'POST',
