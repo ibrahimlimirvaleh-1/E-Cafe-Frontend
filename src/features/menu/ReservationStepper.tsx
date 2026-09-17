@@ -20,7 +20,6 @@ export function ReservationStepper({ activeStep }: ReservationStepperProps) {
           >
             <span>{number}</span>
             <div>
-              <small>0{number}</small>
               <strong>{step}</strong>
             </div>
           </div>
