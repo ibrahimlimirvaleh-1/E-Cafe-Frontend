@@ -146,7 +146,7 @@ export function ProfilePage() {
   if (isLoading) {
     return (
       <main className="page">
-        <PageHeader title="Profil" description="Profil məlumatları yüklənir." />
+        <PageHeader title="Profil" />
       </main>
     )
   }
@@ -154,7 +154,7 @@ export function ProfilePage() {
   if (!profile) {
     return (
       <main className="page">
-        <PageHeader title="Profil" description="Profil məlumatları tapılmadı." />
+        <PageHeader title="Profil" />
         <section className="placeholder-panel">
           <p>{error || 'Profil məlumatları yüklənmədi.'}</p>
         </section>
@@ -175,7 +175,7 @@ export function ProfilePage() {
 
   return (
     <main className="page">
-      <PageHeader eyebrow="Hesab" title="Profil" description="Şəxsi məlumatlarını yenilə, rolunu və hesab təhlükəsizliyini idarə et." />
+      <PageHeader eyebrow="Hesab" title="Profil" />
 
       <section className="profile-summary-card">
         <div className="profile-summary-avatar" aria-hidden="true">

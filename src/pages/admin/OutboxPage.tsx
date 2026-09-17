@@ -166,7 +166,6 @@ export function OutboxPage() {
       <PageHeader
         eyebrow="Admin"
         title="Sistem mesajları"
-        description="Email və SMS mesajlarının göndərilmə vəziyyəti izlənilir."
       />
 
       <section className="outbox-metrics">

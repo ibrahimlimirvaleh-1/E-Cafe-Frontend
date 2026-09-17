@@ -10,7 +10,6 @@ export function WaiterDashboardPage() {
       <PageHeader
         eyebrow="Waiter"
         title="Ofisiant paneli"
-        description="Masalar, rezervlər, sifariş statusları və xidmət haqqı qazancı bir yerdə görünür."
       />
       <section className="metric-grid">
         <article className="metric-card">

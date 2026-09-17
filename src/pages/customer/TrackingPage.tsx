@@ -10,7 +10,7 @@ export function TrackingPage() {
 
   return (
     <main className="page narrow">
-      <PageHeader title="Sifariş izləmə" description="Sifarişin mətbəxdən masaya qədər hansı mərhələdə olduğunu izlə." />
+      <PageHeader title="Sifariş izləmə" />
       <section className="tracking-panel">
         <div className="tracking-head">
           <div>

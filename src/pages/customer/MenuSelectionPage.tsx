@@ -1,4 +1,4 @@
-import { CalendarClock, CheckCircle2, Minus, Plus, ReceiptText, ShoppingBasket, Users } from 'lucide-react'
+import { CheckCircle2, Minus, Plus, ReceiptText, ShoppingBasket, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
@@ -83,12 +83,6 @@ export function MenuSelectionPage() {
       <section className="menu-layout">
         <div className="menu-main">
           <PageHeader title="Menyu seçimi" />
-          {reservedAt ? (
-            <div className="reservation-flow-note compact reservation-menu-note">
-              <CalendarClock size={20} />
-              <div><strong>Əvvəlcədən sifariş əlavə edin</strong><span>İstəsəniz menyudan seçim edin. Heç nə seçmədən də rezervasiyanı davam etdirə bilərsiniz.</span></div>
-            </div>
-          ) : null}
           {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
           {!isLoading && items.length === 0 ? <p className="online-only">Bu restoran üçün menyu tapılmadı.</p> : null}
           <div className="category-tabs">

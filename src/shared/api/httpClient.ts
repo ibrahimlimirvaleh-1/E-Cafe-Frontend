@@ -283,11 +283,11 @@ function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, 
   }
 
   if (result.code) {
-    return translateErrorCode(result.code) || statusMessage(statusCode)
+    return translateErrorCode(result.code) || (result.message ? translateMessage(result.message) : statusMessage(statusCode))
   }
 
   if (result.message) {
-    return translateMessage(result.message, statusCode)
+    return translateMessage(result.message)
   }
 
   return statusMessage(statusCode)
@@ -395,6 +395,11 @@ function translateErrorCode(code: string) {
     UserEmailAlreadyExists: 'Bu email ilə istifadəçi artıq mövcuddur.',
     UserPhoneAlreadyExists: 'Bu telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
     UserAlreadyExists: 'Bu email və ya telefon nömrəsi ilə istifadəçi artıq mövcuddur.',
+    PeopleCountMoreThanTableCapacity: 'Bu masa seçdiyiniz qonaq sayı üçün kifayət qədər böyük deyil.',
+    TableAlreadyReserved: 'Bu masa artıq doludur. Başqa masa seçin.',
+    TableNotBelongToRestaurant: 'Seçdiyiniz masa bu restorana aid deyil. Başqa masa seçin.',
+    RestaurantClosedForReservation: 'Seçdiyiniz tarix və saatda restoran bağlıdır. Başqa vaxt seçin.',
+    ReservationNotFound: 'Rezervasiya tapılmadı. Səhifəni yeniləyib yenidən yoxlayın.',
   }
 
   return messages[normalized]
@@ -442,14 +447,14 @@ function translateMessage(message: string, statusCode?: number) {
   const normalized = message.trim()
   const lower = normalized.toLowerCase()
   const messages: Record<string, string> = {
-    'request failed with status 400': 'Sorğu düzgün deyil. Məlumatları yoxlayıb yenidən cəhd edin.',
+    'request failed with status 400': 'Məlumatları yoxlayın və yenidən cəhd edin.',
     'request failed with status 401': 'Sessiya bitib. Zəhmət olmasa yenidən daxil olun.',
     'request failed with status 429': 'Çox sayda cəhd edildi. Bir az sonra yenidən yoxlayın.',
     'request failed with status 403': 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.',
     'request failed with status 404': 'Axtarılan məlumat tapılmadı.',
-    'request failed with status 409': 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.',
+    'request failed with status 409': 'Bu əməliyyat hazırda mümkün deyil. Məlumatları yeniləyib yenidən cəhd edin.',
     'request failed with status 413': 'Fayl çox böyükdür. Maksimum icazə verilən ölçüdə fayl seçin.',
-    'request failed with status 500': 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.',
+    'request failed with status 500': 'Xidmət müvəqqəti əlçatan deyil. Bir az sonra yenidən cəhd edin.',
     'hesabınız deaktiv edilib. sistemə girişiniz dayandırıldı.': 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.',
     'only platform admin can manage restaurant owner accounts.': 'Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.',
     'restaurant already has an active owner.': 'Bu restoran üçün artıq aktiv sahibkar təyin edilib.',
@@ -471,6 +476,11 @@ function translateMessage(message: string, statusCode?: number) {
     'unsupported file type.': 'Bu fayl formatı dəstəklənmir.',
     'business rule violation': 'Bu əməliyyat mövcud qaydalara uyğun deyil.',
     'validation failed': 'Form məlumatlarında səhv var.',
+    'reservation time must be in the future.': 'Gəliş vaxtı keçmişdə ola bilməz. Gələcək tarix və saat seçin.',
+    'rezervasiya vaxtı gələcək tarix olmalıdır.': 'Gəliş vaxtı keçmişdə ola bilməz. Gələcək tarix və saat seçin.',
+    'seçilən masa artıq rezerv edilib. başqa masa seçin.': 'Bu masa artıq doludur. Başqa masa seçin.',
+    'restoran seçilən tarix və saatda açıq deyil.': 'Seçdiyiniz tarix və saatda restoran bağlıdır. Başqa vaxt seçin.',
+    'rezervasiya tapılmadı.': 'Rezervasiya tapılmadı. Səhifəni yeniləyib yenidən yoxlayın.',
   }
 
   if (messages[lower]) {
@@ -510,14 +520,14 @@ function translateMessage(message: string, statusCode?: number) {
 }
 
 function statusMessage(statusCode: number) {
-  if (statusCode === 400) return 'Sorğu düzgün deyil. Məlumatları yoxlayıb yenidən cəhd edin.'
+  if (statusCode === 400) return 'Məlumatları yoxlayın və yenidən cəhd edin.'
   if (statusCode === 401) return 'Sessiya bitib. Zəhmət olmasa yenidən daxil olun.'
   if (statusCode === 403) return 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.'
   if (statusCode === 404) return 'Axtarılan məlumat tapılmadı.'
-  if (statusCode === 409) return 'Bu əməliyyat mövcud biznes qaydası ilə ziddiyyət təşkil edir.'
+  if (statusCode === 409) return 'Bu əməliyyat hazırda mümkün deyil. Məlumatları yeniləyib yenidən cəhd edin.'
   if (statusCode === 413) return 'Fayl çox böyükdür. Maksimum icazə verilən ölçüdə fayl seçin.'
   if (statusCode === 429) return 'Çox sayda cəhd edildi. Bir az sonra yenidən yoxlayın.'
-  if (statusCode >= 500) return 'Serverdə xəta baş verdi. Bir az sonra yenidən yoxlayın.'
+  if (statusCode >= 500) return 'Xidmət müvəqqəti əlçatan deyil. Bir az sonra yenidən cəhd edin.'
   return `Sorğu icra olunmadı. Status: ${statusCode}`
 }
 

@@ -18,6 +18,9 @@ function toTimeInputValue(date: Date) {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
+const hourOptions = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'))
+const minuteOptions = Array.from({ length: 60 }, (_, minute) => String(minute).padStart(2, '0'))
+
 function getDefaultReservationDateTime() {
   const nextSlot = new Date()
   nextSlot.setHours(nextSlot.getHours() + 1, 0, 0, 0)
@@ -49,6 +52,7 @@ export function ReservationTimePage() {
   const [error, setError] = useState('')
   const [isChecking, setIsChecking] = useState(false)
   const reservedAt = buildReservedAt(date, time)
+  const [hours, minutes] = time.split(':')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -81,7 +85,6 @@ export function ReservationTimePage() {
       <PageHeader
         eyebrow="Rezervasiya"
         title="Gəliş vaxtını seç"
-        description="Tarix, saat və qonaq sayını seçin. Seçilən anda uyğun masa yoxdursa, masa seçimi mərhələsinə keçilmir."
       />
 
       <section className="reservation-time-panel">
@@ -90,9 +93,7 @@ export function ReservationTimePage() {
             <CalendarClock size={22} />
           </div>
           <div>
-            <span className="reservation-panel-kicker">İlk addım</span>
             <h2>Rezervasiya detallarını daxil edin</h2>
-            <p>Seçdiyiniz vaxtda ən azı bir uyğun masa olmalıdır.</p>
           </div>
         </div>
 
@@ -103,7 +104,15 @@ export function ReservationTimePage() {
           </label>
           <label className="reservation-field">
             <span>Gəliş saatı</span>
-            <input onChange={(event) => setTime(event.target.value)} type="time" value={time} />
+            <div className="reservation-time-input" role="group" aria-label="Gəliş saatı">
+              <select aria-label="Saat" onChange={(event) => setTime(`${event.target.value}:${minutes}`)} value={hours}>
+                {hourOptions.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
+              </select>
+              <b>:</b>
+              <select aria-label="Dəqiqə" onChange={(event) => setTime(`${hours}:${event.target.value}`)} value={minutes}>
+                {minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}
+              </select>
+            </div>
           </label>
           <label className="reservation-field">
             <span>Qonaq sayı</span>
@@ -134,7 +143,6 @@ export function ReservationTimePage() {
             <strong><CalendarClock size={18} /> {formatReservedAt(reservedAt)}</strong>
             <strong><Users size={18} /> {peopleCount} nəfər</strong>
           </div>
-          <p>Müştəri çıxış saatı seçmir. Masa restoranın həmin iş gününün bağlanma vaxtına qədər rezerv blokunda qalır.</p>
         </div>
 
         {availability && !availability.hasAvailableTable ? (

@@ -449,22 +449,23 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               value={form.phone}
               onChange={(phone) => setForm({ ...form, phone })}
             />
-            <SelectField
-              disabled={mode === 'edit'}
-              error={fieldError('RoleId')}
-              hint={mode === 'edit' ? 'Mövcud əməkdaşın rolunu siyahı səhifəsində dəyişin.' : 'Sahibkar rolunu yalnız platform administratoru yarada bilər.'}
-              label="Rol"
-              required={mode === 'create'}
-              value={form.roleId}
-              onChange={(event) => setForm({ ...form, roleId: event.target.value })}
-            >
-              <option value="">Rol seç</option>
-              {visibleRoleOptions.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </SelectField>
+            {mode === 'create' ? (
+              <SelectField
+                error={fieldError('RoleId')}
+                hint="Sahibkar rolunu yalnız platform administratoru yarada bilər."
+                label="Rol"
+                required
+                value={form.roleId}
+                onChange={(event) => setForm({ ...form, roleId: event.target.value })}
+              >
+                <option value="">Rol seç</option>
+                {visibleRoleOptions.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
+              </SelectField>
+            ) : null}
             <div className="form-grid two">
               <SelectField
                 error={fieldError('IsActive')}
@@ -519,32 +520,36 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                     <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>
                     <Badge tone="info">{roleLabel(member.role)}</Badge>
                   </div>
-                  {canChangeRoles && canManageStaffMember(member) ? (
+                  {canManageStaffMember(member) ? (
                     <div className="staff-role-actions">
-                      <select
-                        aria-label={`${member.name} üçün rol`}
-                        value={selectedRoleId(member)}
-                        onChange={(event) =>
-                          setRoleSelections((current) => ({
-                            ...current,
-                            [member.id]: event.target.value,
-                          }))
-                        }
-                      >
-                        {visibleRoleOptions.map((role) => (
-                          <option key={role.id} value={role.id}>
-                            {role.name}
-                          </option>
-                        ))}
-                      </select>
-                      <ActionIconButton
-                        disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)}
-                        label={`${member.name} üçün rolu yenilə`}
-                        onClick={() => void handleRoleChange(member)}
-                        title={updatingRoleUserId === member.id ? 'Rol yenilənir' : 'Rolu yenilə'}
-                      >
-                        <RefreshCw size={18} />
-                      </ActionIconButton>
+                      {canChangeRoles && !isOwnerStaffMember(member) ? (
+                        <>
+                          <select
+                            aria-label={`${member.name} üçün rol`}
+                            value={selectedRoleId(member)}
+                            onChange={(event) =>
+                              setRoleSelections((current) => ({
+                                ...current,
+                                [member.id]: event.target.value,
+                              }))
+                            }
+                          >
+                            {visibleRoleOptions.map((role) => (
+                              <option key={role.id} value={role.id}>
+                                {role.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ActionIconButton
+                            disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)}
+                            label={`${member.name} üçün rolu yenilə`}
+                            onClick={() => void handleRoleChange(member)}
+                            title={updatingRoleUserId === member.id ? 'Rol yenilənir' : 'Rolu yenilə'}
+                          >
+                            <RefreshCw size={18} />
+                          </ActionIconButton>
+                        </>
+                      ) : null}
                       <ActionIconLink
                         label={`${member.name} əməkdaşını redaktə et`}
                         to={`/admin/staff/${member.id}/edit?restaurantId=${restaurantId}`}

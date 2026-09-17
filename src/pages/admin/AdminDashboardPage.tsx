@@ -16,7 +16,6 @@ export function AdminDashboardPage() {
       <PageHeader
         eyebrow="Platform Admin"
         title="ECafe idarəetmə paneli"
-        description="Restoran müqavilələri, rezervasiyalar, sifarişlər və ödənişlər bir paneldə idarə olunur."
       />
 
       <section className="metric-grid">
@@ -24,7 +23,6 @@ export function AdminDashboardPage() {
           <article className="metric-card" key={metric.label}>
             <span>{metric.label}</span>
             <strong>{metric.value}</strong>
-            <small>{metric.hint}</small>
           </article>
         ))}
       </section>
