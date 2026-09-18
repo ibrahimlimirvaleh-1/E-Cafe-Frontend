@@ -10,13 +10,10 @@ import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { StatusTone } from '../../entities/types'
+import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 
 const emptyPage: PaginatedResponse<ReservationResponse> = {
   items: [], pageIndex: 1, totalPages: 1, totalCount: 0, hasPreviousPage: false, hasNextPage: false,
-}
-
-function formatDate(value?: string | null) {
-  return value ? new Date(value).toLocaleString('az-AZ', { dateStyle: 'medium', timeStyle: 'short' }) : '-'
 }
 
 function statusPresentation(status: string): { label: string; tone: StatusTone } {
@@ -70,7 +67,7 @@ export function RestaurantReservationsPage() {
                 <span className="admin-reservation-secondary">{reservation.tableName || `Masa ${reservation.tableId}`}</span>
               </div>
               <div className="admin-reservation-row-meta">
-                <span><CalendarDays size={16} />{formatDate(reservation.reservedAt)}</span>
+                <span><CalendarDays size={16} />{formatReservationDateTime(reservation.reservedAt)}</span>
                 <span><Users size={16} />{reservation.peopleCount} nəfər</span>
                 <span><Clock3 size={16} />{reservation.depositAmount.toFixed(2)} AZN</span>
               </div>

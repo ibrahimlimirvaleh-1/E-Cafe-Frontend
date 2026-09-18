@@ -8,6 +8,7 @@ import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { StatusTone } from '../../entities/types'
+import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 
 const emptyPage: PaginatedResponse<ReservationResponse> = {
   items: [],
@@ -16,15 +17,6 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
   totalCount: 0,
   hasPreviousPage: false,
   hasNextPage: false,
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return '-'
-
-  return new Date(value).toLocaleString('az-AZ', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
 }
 
 function statusPresentation(status: string): { label: string; tone: StatusTone } {
@@ -87,7 +79,7 @@ export function MyReservationsPage() {
               </div>
 
               <div className="customer-reservation-meta">
-                <span><CalendarDays size={17} />{formatDate(reservation.reservedAt)}</span>
+                <span><CalendarDays size={17} />{formatReservationDateTime(reservation.reservedAt)}</span>
                 <span><MapPin size={17} />{reservation.tableName || `Masa ${reservation.tableId}`}</span>
                 <span><Users size={17} />{reservation.peopleCount} nəfər</span>
                 <span><Clock3 size={17} />{reservation.depositAmount.toFixed(2)} AZN depozit</span>
@@ -97,14 +89,14 @@ export function MyReservationsPage() {
                 <div className="reservation-payment-note">
                   <strong>Ödəniş məlumatı</strong>
                   <p>{reservation.latestPaymentInstruction.displayText}</p>
-                  <small>{formatDate(reservation.latestPaymentInstruction.sentAt)}</small>
+                  <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
                 </div>
               ) : null}
 
               <div className="customer-reservation-card-footer">
                 <span>
                   {reservation.holdExpiresAt
-                    ? `Ödəniş üçün son vaxt: ${formatDate(reservation.holdExpiresAt)}`
+                    ? `Ödəniş üçün son vaxt: ${formatReservationDateTime(reservation.holdExpiresAt)}`
                     : 'Rezervasiya məlumatları yenilənir'}
                 </span>
                 <ButtonLink variant="secondary" to={`/confirmation?reservationId=${reservation.id}`}>

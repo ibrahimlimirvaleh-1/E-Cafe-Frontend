@@ -11,10 +11,7 @@ import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { StatusTone } from '../../entities/types'
-
-function formatDate(value?: string | null) {
-  return value ? new Date(value).toLocaleString('az-AZ', { dateStyle: 'medium', timeStyle: 'short' }) : '-'
-}
+import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 
 function statusPresentation(status: string): { label: string; tone: StatusTone } {
   const normalized = status.toLowerCase()
@@ -56,16 +53,16 @@ export function RestaurantReservationDetailPage() {
           <Badge tone={presentation.tone}>{presentation.label}</Badge>
         </div>
         <div className="reservation-detail-grid">
-          <div><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><strong>{formatDate(reservation.reservedAt)}</strong></span></div>
+          <div><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><strong>{formatReservationDateTime(reservation.reservedAt)}</strong></span></div>
           <div><Users size={17} /><span><small>Qonaq sayı</small><strong>{reservation.peopleCount} nəfər</strong></span></div>
           <div><Clock3 size={17} /><span><small>Depozit</small><strong>{reservation.depositAmount.toFixed(2)} AZN</strong></span></div>
-          <div><Clock3 size={17} /><span><small>Ödəniş üçün son vaxt</small><strong>{formatDate(reservation.holdExpiresAt)}</strong></span></div>
+          <div><Clock3 size={17} /><span><small>Ödəniş üçün son vaxt</small><strong>{formatReservationDateTime(reservation.holdExpiresAt)}</strong></span></div>
         </div>
         {reservation.latestPaymentInstruction ? (
           <div className="reservation-payment-note">
             <strong>Son göndərilən ödəniş məlumatı</strong>
             <p>{reservation.latestPaymentInstruction.displayText}</p>
-            <small>{formatDate(reservation.latestPaymentInstruction.sentAt)}</small>
+            <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
           </div>
         ) : null}
         <div className="action-row">
