@@ -278,6 +278,7 @@ export function getAdminRows(key: AdminModuleKey): AdminRow[] {
     })),
     reservations: reservations.map((reservation) => ({
       id: reservation.id,
+      restaurantId: reservation.restaurantId,
       title: reservation.customerName,
       subtitle: `${restaurantName(reservation.restaurantId)} · ${reservation.guestCount} nəfər`,
       status: reservation.status,

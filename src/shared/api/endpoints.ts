@@ -59,6 +59,8 @@ export const endpoints = {
   reservations: {
     create: (restaurantId: string) => `/restaurants/${restaurantId}/reservations`,
     getById: (reservationId: string) => `/public/reservations/${reservationId}`,
+    sendPaymentInstruction: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/payment-instructions`,
   },
   menu: {
     categories: (restaurantId: string) => `/category/${restaurantId}`,

@@ -1,6 +1,9 @@
 import { useParams } from 'react-router-dom'
 import type { AdminModuleKey, AdminRow } from '../../entities/types'
+import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
 import { getAdminModule } from '../../entities/mockData'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { getRestaurantRoleId, hasPermission, hasPermissionForRole } from '../../shared/auth/authz'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
@@ -12,6 +15,7 @@ type AdminModuleDetailPageProps = {
 }
 
 export function AdminModuleDetailPage({ moduleKey }: AdminModuleDetailPageProps) {
+  const { user } = useAuth()
   const params = useParams()
   const module = getAdminModule(moduleKey)
   const recordId = Object.values(params)[0] ?? ''
@@ -31,6 +35,10 @@ export function AdminModuleDetailPage({ moduleKey }: AdminModuleDetailPageProps)
       </main>
     )
   }
+
+  const canSendPaymentInstruction = row.restaurantId
+    ? hasPermissionForRole(getRestaurantRoleId(user, row.restaurantId), 'ManageReservations')
+    : hasPermission(user, 'ManageReservations')
 
   return (
     <main className="admin-page narrow">
@@ -58,6 +66,13 @@ export function AdminModuleDetailPage({ moduleKey }: AdminModuleDetailPageProps)
           <ButtonLink to={`${module.route}/${row.id}/edit`}>Redaktə et</ButtonLink>
         </div>
       </section>
+      {moduleKey === 'reservations' && canSendPaymentInstruction ? (
+        <ReservationPaymentInstructionPanel
+          restaurantId={row.restaurantId || ''}
+          reservationId={row.id}
+          amount={row.value}
+        />
+      ) : null}
     </main>
   )
 }

@@ -382,6 +382,7 @@ export type AdminModule = {
 
 export type AdminRow = {
   id: string
+  restaurantId?: string
   title: string
   subtitle: string
   status: string
