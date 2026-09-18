@@ -22,6 +22,8 @@ import { InventoryCreatePage, InventoryManagementPage, InventoryMovementCreatePa
 import { CategoryCreatePage, MenuItemCreatePage, MenuManagementPage } from '../pages/admin/MenuManagementPage'
 import { RestaurantGroupCreatePage, RestaurantGroupsPage } from '../pages/admin/RestaurantGroupsPage'
 import { RestaurantDetailPage } from '../pages/admin/RestaurantDetailPage'
+import { RestaurantReservationDetailPage } from '../pages/admin/RestaurantReservationDetailPage'
+import { RestaurantReservationsPage } from '../pages/admin/RestaurantReservationsPage'
 import { RestaurantEditPage } from '../pages/admin/RestaurantEditPage'
 import { RestaurantCreatePage, RestaurantManagementPage } from '../pages/admin/RestaurantManagementPage'
 import { OutboxPage } from '../pages/admin/OutboxPage'
@@ -34,6 +36,7 @@ import { SetPasswordPage } from '../pages/auth/SetPasswordPage'
 import { ConfirmationPage } from '../pages/customer/ConfirmationPage'
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
 import { NotificationsPage } from '../pages/customer/NotificationsPage'
+import { MyReservationsPage } from '../pages/customer/MyReservationsPage'
 import { ProfilePage } from '../pages/customer/ProfilePage'
 import { RestaurantCatalogPage } from '../pages/customer/RestaurantCatalogPage'
 import { RestaurantProfilePage } from '../pages/customer/RestaurantProfilePage'
@@ -48,7 +51,7 @@ import { WaiterOrdersPage } from '../pages/staff/WaiterOrdersPage'
 import { StitchFramePage } from '../pages/stitch/StitchFramePage'
 import { StitchIndexPage } from '../pages/stitch/StitchIndexPage'
 
-const customAdminRoutes = ['restaurants', 'contracts', 'restaurant-groups', 'staff', 'tables', 'categories', 'menu', 'inventory', 'inventory-movements', 'recipes', 'outbox', 'audit-logs']
+const customAdminRoutes = ['restaurants', 'contracts', 'restaurant-groups', 'staff', 'tables', 'categories', 'menu', 'inventory', 'inventory-movements', 'recipes', 'outbox', 'audit-logs', 'reservations']
 
 function RestaurantCatalogEntry() {
   const { user } = useAuth()
@@ -121,9 +124,7 @@ export function AppRouter() {
         <Route
           path="reservations"
           element={
-            <SimpleCustomerPage
-              title="Rezervasiyalarım"
-            />
+            <RequireAuth><MyReservationsPage /></RequireAuth>
           }
         />
         <Route
@@ -207,6 +208,10 @@ export function AppRouter() {
         </Route>
         <Route path="outbox" element={<AdminProtected moduleKey="audit-logs"><OutboxPage /></AdminProtected>} />
         <Route path="audit-logs" element={<AdminProtected moduleKey="audit-logs"><AuditLogPage /></AdminProtected>} />
+        <Route path="reservations">
+          <Route index element={<AdminProtected moduleKey="reservations"><RestaurantReservationsPage /></AdminProtected>} />
+          <Route path=":reservationId" element={<AdminProtected moduleKey="reservations"><RestaurantReservationDetailPage /></AdminProtected>} />
+        </Route>
         {adminRouteConfig
           .filter((config) => !customAdminRoutes.includes(config.key))
           .map((config) => (
