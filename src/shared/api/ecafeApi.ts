@@ -229,9 +229,14 @@ export type ReservationResponse = {
   depositAmount: number
   holdExpiresAt?: string | null
   cancellationDeadline?: string | null
+  restaurantName?: string | null
+  tableName?: string | null
+  customerName?: string | null
+  latestPaymentInstruction?: PaymentInstructionResponse | null
 }
 
 export type PaymentInstructionResponse = {
+  id?: number
   reservationId: number
   status: string
   displayText: string
@@ -241,6 +246,12 @@ export type PaymentInstructionResponse = {
 
 export type SendPaymentInstructionRequest = {
   displayText: string
+}
+
+export type ReservationQuery = {
+  pageNumber?: number
+  pageSize?: number
+  statusId?: number | null
 }
 
 type CopyTableRequest = {
@@ -530,17 +541,35 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     depositAmount: num(record.depositAmount),
     holdExpiresAt: str(record.holdExpiresAt || record.HoldExpiresAt) || null,
     cancellationDeadline: str(record.cancellationDeadline || record.CancellationDeadline) || null,
+    restaurantName: str(record.restaurantName || record.RestaurantName) || null,
+    tableName: str(record.tableName || record.TableName) || null,
+    customerName: str(record.customerName || record.CustomerName) || null,
+    latestPaymentInstruction: record.latestPaymentInstruction && typeof record.latestPaymentInstruction === 'object'
+      ? mapPaymentInstructionResponse(record.latestPaymentInstruction as AnyRecord)
+      : null,
   }
 }
 
 function mapPaymentInstructionResponse(record: AnyRecord): PaymentInstructionResponse {
   return {
+    id: num(record.id || record.instructionId),
     reservationId: num(record.reservationId || record.id),
     status: str(record.status || record.statusName),
     displayText: str(record.displayText || record.message),
     amount: num(record.amount),
     sentAt: str(record.sentAt || record.createdAt),
   }
+}
+
+function appendReservationQuery(endpoint: string, query: ReservationQuery = {}) {
+  const params = new URLSearchParams()
+
+  if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
+  if (query.pageSize) params.set('PageSize', String(query.pageSize))
+  if (query.statusId) params.set('StatusId', String(query.statusId))
+
+  const search = params.toString()
+  return search ? `${endpoint}?${search}` : endpoint
 }
 
 function resolvePublicApiAssetUrl(value: string) {
@@ -1649,8 +1678,21 @@ export const ecafeApi = {
 
   reservations: {
     list: () => reservations,
+    listMine: async (query: ReservationQuery = {}) => {
+      const result = await httpClient<unknown>(appendReservationQuery(endpoints.reservations.my, query))
+      return asPaginated(result.data, mapReservationResponse)
+    },
+    listForRestaurant: async (restaurantId: string, query: ReservationQuery = {}) => {
+      const result = await httpClient<unknown>(appendReservationQuery(endpoints.reservations.restaurantList(restaurantId), query))
+      return asPaginated(result.data, mapReservationResponse)
+    },
     getById: async (reservationId: string) => {
       const result = await httpClient<unknown>(endpoints.reservations.getById(reservationId))
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationResponse(data)
+    },
+    getForRestaurant: async (restaurantId: string, reservationId: string) => {
+      const result = await httpClient<unknown>(endpoints.reservations.restaurantDetail(restaurantId, reservationId))
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapReservationResponse(data)
     },

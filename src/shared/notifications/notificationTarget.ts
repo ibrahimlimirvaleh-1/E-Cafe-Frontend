@@ -49,6 +49,16 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
   }
 
   if (relatedType.includes('reservation')) {
+    const reservationId = valueAsString(payload.reservationId || payload.ReservationId || notification.relatedEntityId)
+    if (reservationId && canAccessAdminModule(user, 'reservations', restaurantId)) {
+      const query = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
+      return `/admin/reservations/${encodeURIComponent(reservationId)}${query}`
+    }
+
+    if (reservationId && isInRole(user, [RoleIds.Customer])) {
+      return `/confirmation?reservationId=${encodeURIComponent(reservationId)}`
+    }
+
     return '/admin/reservations'
   }
 
