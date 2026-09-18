@@ -33,7 +33,7 @@ const permissionsByRoleId: Record<string, readonly string[]> = {
     'ManageRecipes',
     'AssignRoles',
   ],
-  [RoleIds.Owner]: ['ManageStaff', 'ViewReports', 'ViewRestaurantInfo', 'ViewRestaurantContracts', 'ViewInventory', 'ViewRecipes'],
+  [RoleIds.Owner]: ['ManageStaff', 'ManageReservations', 'ViewReports', 'ViewRestaurantInfo', 'ViewRestaurantContracts', 'ViewInventory', 'ViewRecipes'],
   [RoleIds.Manager]: [
     'ManageStaff',
     'ManageCatalog',

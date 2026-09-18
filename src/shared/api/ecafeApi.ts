@@ -231,6 +231,18 @@ export type ReservationResponse = {
   cancellationDeadline?: string | null
 }
 
+export type PaymentInstructionResponse = {
+  reservationId: number
+  status: string
+  displayText: string
+  amount: number
+  sentAt: string
+}
+
+export type SendPaymentInstructionRequest = {
+  displayText: string
+}
+
 type CopyTableRequest = {
   tableNo?: string
   name?: string
@@ -518,6 +530,16 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     depositAmount: num(record.depositAmount),
     holdExpiresAt: str(record.holdExpiresAt || record.HoldExpiresAt) || null,
     cancellationDeadline: str(record.cancellationDeadline || record.CancellationDeadline) || null,
+  }
+}
+
+function mapPaymentInstructionResponse(record: AnyRecord): PaymentInstructionResponse {
+  return {
+    reservationId: num(record.reservationId || record.id),
+    status: str(record.status || record.statusName),
+    displayText: str(record.displayText || record.message),
+    amount: num(record.amount),
+    sentAt: str(record.sentAt || record.createdAt),
   }
 }
 
@@ -1645,6 +1667,19 @@ export const ecafeApi = {
 
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapReservationResponse(data)
+    },
+    sendPaymentInstruction: async (
+      restaurantId: string,
+      reservationId: string,
+      request: SendPaymentInstructionRequest,
+    ) => {
+      const result = await httpClient<unknown>(endpoints.reservations.sendPaymentInstruction(restaurantId, reservationId), {
+        method: 'POST',
+        body: JSON.stringify({ displayText: request.displayText.trim() }),
+      })
+
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapPaymentInstructionResponse(data)
     },
   },
   orders: {
