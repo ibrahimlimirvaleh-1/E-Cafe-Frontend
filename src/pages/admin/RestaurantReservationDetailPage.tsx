@@ -4,13 +4,12 @@ import { ReservationPaymentInstructionPanel } from '../../features/reservations/
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
-import { getRestaurantRoleId, hasPermission, hasPermissionForRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import type { StatusTone } from '../../entities/types'
+import type { StatusTone, WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 
 function statusPresentation(status: string): { label: string; tone: StatusTone } {
@@ -31,8 +30,19 @@ export function RestaurantReservationDetailPage() {
     null,
     [restaurantId, reservationId],
   )
-  const roleId = getRestaurantRoleId(user, restaurantId)
-  const canSendPaymentInstruction = hasPermission(user, 'ManageReservations') || hasPermissionForRole(roleId, 'ManageReservations')
+  const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
+    () => reservation && restaurantId && reservationId
+      ? ecafeApi.workflow.actions({
+          flowCode: 'reservation',
+          statusId: reservation.statusId,
+          restaurantId,
+          entityId: reservationId,
+        })
+      : Promise.resolve([]),
+    [],
+    [restaurantId, reservationId, reservation?.statusId],
+  )
+  const canSendPaymentInstruction = workflowActions.some((action) => action.code === 'sendPaymentInstruction')
 
   if (isLoading) return <main className="admin-page narrow"><p className="online-only">Rezervasiya yüklənir...</p></main>
   if (error || !reservation) {
