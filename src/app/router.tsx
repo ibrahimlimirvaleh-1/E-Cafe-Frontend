@@ -63,6 +63,10 @@ function RestaurantCatalogEntry() {
   return <RestaurantCatalogPage />
 }
 
+function CustomerOnly({ children }: { children: ReactNode }) {
+  return <RequireAuth allowedRoleIds={[RoleIds.Customer]}>{children}</RequireAuth>
+}
+
 function AdminProtected({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
   return (
     <RequireAuth>
@@ -106,13 +110,13 @@ export function AppRouter() {
       <Route element={<SiteShell />}>
         <Route index element={<RestaurantCatalogEntry />} />
         <Route path="restaurants/:restaurantId" element={<RestaurantProfilePage />} />
-        <Route path="restaurants/:restaurantId/reserve" element={<ReservationTimePage />} />
-        <Route path="restaurants/:restaurantId/tables" element={<TableSelectionPage />} />
+        <Route path="restaurants/:restaurantId/reserve" element={<CustomerOnly><ReservationTimePage /></CustomerOnly>} />
+        <Route path="restaurants/:restaurantId/tables" element={<CustomerOnly><TableSelectionPage /></CustomerOnly>} />
         <Route path="restaurants/:restaurantId/waiters" element={<Navigate to="../menu" replace />} />
-        <Route path="restaurants/:restaurantId/menu" element={<MenuSelectionPage />} />
-        <Route path="reserve/menu" element={<MenuSelectionPage />} />
-        <Route path="confirmation" element={<ConfirmationPage />} />
-        <Route path="tracking/:token" element={<TrackingPage />} />
+        <Route path="restaurants/:restaurantId/menu" element={<CustomerOnly><MenuSelectionPage /></CustomerOnly>} />
+        <Route path="reserve/menu" element={<CustomerOnly><MenuSelectionPage /></CustomerOnly>} />
+        <Route path="confirmation" element={<CustomerOnly><ConfirmationPage /></CustomerOnly>} />
+        <Route path="tracking/:token" element={<CustomerOnly><TrackingPage /></CustomerOnly>} />
         <Route
           path="notifications"
           element={
@@ -124,15 +128,15 @@ export function AppRouter() {
         <Route
           path="reservations"
           element={
-            <RequireAuth><MyReservationsPage /></RequireAuth>
+            <CustomerOnly><MyReservationsPage /></CustomerOnly>
           }
         />
         <Route
           path="orders"
           element={
-            <SimpleCustomerPage
-              title="Sifarişlərim"
-            />
+            <CustomerOnly>
+              <SimpleCustomerPage title="Sifarişlərim" />
+            </CustomerOnly>
           }
         />
         <Route

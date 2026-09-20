@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button } from '../../shared/ui/Button'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
@@ -14,6 +16,8 @@ type ProfilePanel = 'tables' | 'menu'
 
 export function RestaurantProfilePage() {
   const { restaurantId = 'saffron-premium' } = useParams()
+  const { user } = useAuth()
+  const isCustomer = isInRole(user, [RoleIds.Customer])
   const [activePanel, setActivePanel] = useState<ProfilePanel>('tables')
   const [activeCategoryId, setActiveCategoryId] = useState('')
   const { data: restaurant } = useAsyncData<Restaurant | null>(() => ecafeApi.restaurants.detail(restaurantId), null, [restaurantId])
@@ -81,9 +85,11 @@ export function RestaurantProfilePage() {
           <WorkingHoursList workingHours={restaurant.workingHours} />
           <ContractGuardNotice active={restaurant.hasActiveContract} />
           <div className="action-row profile-actions">
-            <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve`}>
-              Rezervasiyaya başla
-            </Link>
+            {isCustomer ? (
+              <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve`}>
+                Rezervasiyaya başla
+              </Link>
+            ) : null}
             <Button variant={activePanel === 'tables' ? 'primary' : 'secondary'} type="button" onClick={() => setActivePanel('tables')}>
               <Table2 size={18} />
               Stollar

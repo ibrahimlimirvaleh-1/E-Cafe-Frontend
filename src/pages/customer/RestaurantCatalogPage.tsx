@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { createRestaurantMapEmbedUrl } from '../../shared/config/mapConfig'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -13,6 +15,8 @@ import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/
 const defaultPageSize = 10
 
 export function RestaurantCatalogPage() {
+  const { user } = useAuth()
+  const isCustomer = isInRole(user, [RoleIds.Customer])
   const [search, setSearch] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
@@ -41,7 +45,7 @@ export function RestaurantCatalogPage() {
 
   return (
     <main className="page">
-      <PageHeader title="Restoran seç və rezervasiyaya başla" />
+      <PageHeader title={isCustomer ? 'Restoran seç və rezervasiyaya başla' : 'Restoranlar'} />
 
       <section className="catalog-toolbar">
         <label className="site-search catalog-search">
