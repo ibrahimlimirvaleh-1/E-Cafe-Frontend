@@ -75,7 +75,7 @@ export function WorkingHoursField({ onChange, value }: WorkingHoursFieldProps) {
             <label className="working-day-next-day">
               <input
                 checked={hour.closeDayOffset === 1}
-                disabled={hour.isClosed}
+                disabled={hour.isClosed || isMidnightClose(hour)}
                 onChange={(event) => updateDay(hour.dayOfWeek, { closeDayOffset: event.target.checked ? 1 : 0 })}
                 type="checkbox"
               />
@@ -86,6 +86,10 @@ export function WorkingHoursField({ onChange, value }: WorkingHoursFieldProps) {
       </div>
     </fieldset>
   )
+}
+
+function isMidnightClose(hour: RestaurantWorkingHour) {
+  return !hour.isClosed && hour.closesAt === '00:00' && hour.opensAt !== '00:00'
 }
 
 function TimeSelect({
