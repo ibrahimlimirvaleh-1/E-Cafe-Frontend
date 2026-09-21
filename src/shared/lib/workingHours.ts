@@ -17,10 +17,19 @@ export function createDefaultWorkingHours(): RestaurantWorkingHour[] {
 export function normalizeWorkingHours(value: RestaurantWorkingHour[] = []) {
   const byDay = new Map(value.map((hour) => [hour.dayOfWeek, hour]))
 
-  return createDefaultWorkingHours().map((fallback) => ({
-    ...fallback,
-    ...byDay.get(fallback.dayOfWeek),
-  }))
+  return createDefaultWorkingHours().map((fallback) => {
+    const hour = { ...fallback, ...byDay.get(fallback.dayOfWeek) }
+    const opensAt = parseTimeToMinutes(hour.opensAt)
+    const closesAt = parseTimeToMinutes(hour.closesAt)
+
+    return {
+      ...hour,
+      closeDayOffset:
+        !hour.isClosed && opensAt != null && closesAt === 0 && opensAt > closesAt
+          ? 1
+          : hour.closeDayOffset,
+    }
+  })
 }
 
 export function formatWorkingHoursSummary(
