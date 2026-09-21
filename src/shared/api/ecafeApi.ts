@@ -206,6 +206,7 @@ type UpdateTableRequest = CreateTableRequest & {
 
 export type TableAvailabilityResponse = {
   reservedAt: string
+  isRestaurantOpen: boolean
   hasAvailableTable: boolean
   availableCount: number
   tables: Table[]
@@ -533,6 +534,7 @@ function mapTableAvailability(record: AnyRecord, restaurantId: string, fallbackR
 
   return {
     reservedAt: str(record.reservedAt || record.ReservedAt, fallbackReservedAt),
+    isRestaurantOpen: bool(record.isRestaurantOpen ?? record.IsRestaurantOpen, true),
     hasAvailableTable,
     availableCount,
     tables: availableTables,
@@ -1463,6 +1465,7 @@ export const ecafeApi = {
         return mapTableAvailability(data, restaurantId, reservedAt)
       }, {
         reservedAt,
+        isRestaurantOpen: false,
         hasAvailableTable: false,
         availableCount: 0,
         tables: [],
