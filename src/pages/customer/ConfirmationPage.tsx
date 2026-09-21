@@ -4,6 +4,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ButtonLink } from '../../shared/ui/Button'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
+import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 
 export function ConfirmationPage() {
   const [searchParams] = useSearchParams()
@@ -27,14 +28,24 @@ export function ConfirmationPage() {
         {reservationId && isLoading ? <p className="online-only">Rezervasiya detalları yüklənir...</p> : null}
         {reservationId && error ? <p className="reservation-availability-message danger">Rezervasiya detalları yüklənmədi.</p> : null}
         {reservation ? (
-          <dl className="reservation-confirmation-details">
-            <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt)}</dd></div>
-            <div><dt>Masa</dt><dd>#{reservation.tableId}</dd></div>
-            <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
-            <div><dt>Status</dt><dd>{reservation.status}</dd></div>
-            <div><dt>Depozit</dt><dd>{reservation.depositAmount.toFixed(2)} AZN</dd></div>
-            {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
-          </dl>
+          <>
+            <dl className="reservation-confirmation-details">
+              <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt)}</dd></div>
+              <div><dt>Masa</dt><dd>#{reservation.tableId}</dd></div>
+              <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
+              <div><dt>Status</dt><dd>{reservation.status}</dd></div>
+              <div><dt>Depozit</dt><dd>{reservation.depositAmount.toFixed(2)} AZN</dd></div>
+              {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
+            </dl>
+
+            {reservation.latestPaymentInstruction && reservation.status.toLowerCase().includes('pending') ? (
+              <ReservationPaymentProofPanel
+                restaurantId={String(reservation.restaurantId)}
+                reservationId={String(reservation.id)}
+                amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
+              />
+            ) : null}
+          </>
         ) : null}
         <ButtonLink to="/tracking/demo-token">Rezervasiyanı izlə</ButtonLink>
       </article>
