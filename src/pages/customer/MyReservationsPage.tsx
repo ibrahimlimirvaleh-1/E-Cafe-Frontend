@@ -9,6 +9,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { StatusTone } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
+import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 
 const emptyPage: PaginatedResponse<ReservationResponse> = {
   items: [],
@@ -91,6 +92,14 @@ export function MyReservationsPage() {
                   <p>{reservation.latestPaymentInstruction.displayText}</p>
                   <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
                 </div>
+              ) : null}
+
+              {reservation.latestPaymentInstruction && reservation.status.toLowerCase().includes('pending') ? (
+                <ReservationPaymentProofPanel
+                  restaurantId={String(reservation.restaurantId)}
+                  reservationId={String(reservation.id)}
+                  amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
+                />
               ) : null}
 
               <div className="customer-reservation-card-footer">

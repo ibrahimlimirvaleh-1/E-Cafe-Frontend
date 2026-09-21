@@ -64,6 +64,8 @@ export const endpoints = {
     restaurantDetail: (restaurantId: string, reservationId: string) => `/restaurants/${restaurantId}/reservations/${reservationId}`,
     sendPaymentInstruction: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/payment-instructions`,
+    submitPaymentProof: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/payment-proofs`,
   },
   menu: {
     categories: (restaurantId: string) => `/category/${restaurantId}`,

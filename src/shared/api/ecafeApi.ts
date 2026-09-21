@@ -244,6 +244,16 @@ export type PaymentInstructionResponse = {
   sentAt: string
 }
 
+export type PaymentProofResponse = {
+  id: number
+  reservationId: number
+  fileId: number
+  amount: number
+  status: string
+  submittedAt: string
+  fileViewUrl: string
+}
+
 export type SendPaymentInstructionRequest = {
   displayText: string
 }
@@ -558,6 +568,18 @@ function mapPaymentInstructionResponse(record: AnyRecord): PaymentInstructionRes
     displayText: str(record.displayText || record.message),
     amount: num(record.amount),
     sentAt: str(record.sentAt || record.createdAt),
+  }
+}
+
+function mapPaymentProofResponse(record: AnyRecord): PaymentProofResponse {
+  return {
+    id: num(record.id || record.paymentProofId),
+    reservationId: num(record.reservationId),
+    fileId: num(record.fileId),
+    amount: num(record.amount),
+    status: str(record.status || record.statusName),
+    submittedAt: str(record.submittedAt || record.createdAt),
+    fileViewUrl: str(record.fileViewUrl || record.fileUrl),
   }
 }
 
@@ -1722,6 +1744,18 @@ export const ecafeApi = {
 
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapPaymentInstructionResponse(data)
+    },
+    submitPaymentProof: async (restaurantId: string, reservationId: string, file: File) => {
+      const formData = new FormData()
+      formData.set('File', file)
+
+      const result = await httpClient<unknown>(endpoints.reservations.submitPaymentProof(restaurantId, reservationId), {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapPaymentProofResponse(data)
     },
   },
   orders: {
