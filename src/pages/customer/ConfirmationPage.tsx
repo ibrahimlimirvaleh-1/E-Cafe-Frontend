@@ -4,6 +4,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ButtonLink } from '../../shared/ui/Button'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
+import { isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 
 export function ConfirmationPage() {
@@ -38,7 +39,7 @@ export function ConfirmationPage() {
               {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
             </dl>
 
-            {reservation.latestPaymentInstruction && reservation.status.toLowerCase().includes('pending') ? (
+            {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
               <ReservationPaymentProofPanel
                 restaurantId={String(reservation.restaurantId)}
                 reservationId={String(reservation.id)}

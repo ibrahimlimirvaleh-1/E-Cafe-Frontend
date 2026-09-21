@@ -9,6 +9,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { StatusTone } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
+import { isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 
 const emptyPage: PaginatedResponse<ReservationResponse> = {
@@ -94,7 +95,7 @@ export function MyReservationsPage() {
                 </div>
               ) : null}
 
-              {reservation.latestPaymentInstruction && reservation.status.toLowerCase().includes('pending') ? (
+              {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
                 <ReservationPaymentProofPanel
                   restaurantId={String(reservation.restaurantId)}
                   reservationId={String(reservation.id)}
