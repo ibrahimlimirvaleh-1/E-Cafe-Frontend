@@ -25,7 +25,7 @@ export function TableSelectionPage() {
   const [isCreatingReservation, setIsCreatingReservation] = useState(false)
   const [reservationError, setReservationError] = useState('')
   const [unavailableTableIds, setUnavailableTableIds] = useState<Set<string>>(new Set())
-  const { data: tables, isLoading } = useAsyncData(
+  const { data: tables, error: availabilityError, isLoading } = useAsyncData(
     async () => {
       if (!reservedAt) {
         return []
@@ -95,7 +95,9 @@ export function TableSelectionPage() {
     }
   }
 
-  const visibleTables = tables.filter((table) => !unavailableTableIds.has(table.id))
+  const visibleTables = isLoading || availabilityError
+    ? []
+    : tables.filter((table) => !unavailableTableIds.has(table.id))
 
   return (
     <main className="page reservation-page">
@@ -126,8 +128,9 @@ export function TableSelectionPage() {
         <div className="reservation-table-legend"><span><i className="available" /> Boşdur</span><span><i className="capacity" /> Tutum</span></div>
       </div>
       {reservationError ? <p className="reservation-availability-message danger">{reservationError}</p> : null}
+      {availabilityError ? <p className="reservation-availability-message danger">Masaların vəziyyəti yüklənmədi. Səhifəni yeniləyib yenidən yoxlayın.</p> : null}
       {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
-      {!isLoading && visibleTables.length === 0 ? <p className="online-only">Bu saat üçün uyğun masa yoxdur. Başqa saat seçin.</p> : null}
+      {!isLoading && !availabilityError && visibleTables.length === 0 ? <p className="online-only">Bu saat üçün uyğun masa yoxdur. Başqa saat seçin.</p> : null}
       <section className="choice-grid reservation-table-grid">
         {visibleTables.map((table) => {
           return (
