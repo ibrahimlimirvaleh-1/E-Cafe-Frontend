@@ -6,12 +6,20 @@ import { ButtonLink } from '../../shared/ui/Button'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
+import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
+import type { ReservationHistoryResponse } from '../../shared/api/ecafeApi'
+import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 
 export function ConfirmationPage() {
   const [searchParams] = useSearchParams()
   const reservationId = searchParams.get('reservationId')
   const { data: reservation, error, isLoading } = useAsyncData(
     () => reservationId ? ecafeApi.reservations.getById(reservationId) : Promise.resolve(null),
+    null,
+    [reservationId],
+  )
+  const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
+    () => reservationId ? ecafeApi.reservations.getHistory(reservationId) : Promise.resolve(null),
     null,
     [reservationId],
   )
@@ -34,7 +42,7 @@ export function ConfirmationPage() {
               <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt)}</dd></div>
               <div><dt>Masa</dt><dd>#{reservation.tableId}</dd></div>
               <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
-              <div><dt>Status</dt><dd>{reservation.status}</dd></div>
+              <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
               <div><dt>Depozit</dt><dd>{reservation.depositAmount.toFixed(2)} AZN</dd></div>
               {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
             </dl>
@@ -46,6 +54,7 @@ export function ConfirmationPage() {
                 amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
               />
             ) : null}
+            <ReservationHistoryTimeline items={history?.items || []} />
           </>
         ) : null}
         <ButtonLink to="/tracking/demo-token">Rezervasiyanı izlə</ButtonLink>

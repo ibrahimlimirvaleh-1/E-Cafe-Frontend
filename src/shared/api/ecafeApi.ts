@@ -237,6 +237,20 @@ export type ReservationResponse = {
   latestPaymentInstruction?: PaymentInstructionResponse | null
 }
 
+export type ReservationHistoryItem = {
+  id: number
+  fromStatus?: string | null
+  toStatus: string
+  changedAt: string
+  actorType: 'Customer' | 'Restaurant' | 'System' | string
+  reason?: string | null
+}
+
+export type ReservationHistoryResponse = {
+  reservationId: number
+  items: ReservationHistoryItem[]
+}
+
 export type PaymentInstructionResponse = {
   id?: number
   reservationId: number
@@ -572,6 +586,27 @@ function mapPaymentInstructionResponse(record: AnyRecord): PaymentInstructionRes
     displayText: str(record.displayText || record.message),
     amount: num(record.amount),
     sentAt: str(record.sentAt || record.createdAt),
+  }
+}
+
+function mapReservationHistoryResponse(record: AnyRecord): ReservationHistoryResponse {
+  const items = Array.isArray(record.items)
+    ? record.items.map((item) => {
+        const history = item && typeof item === 'object' ? item as AnyRecord : {}
+        return {
+          id: num(history.id),
+          fromStatus: str(history.fromStatus) || null,
+          toStatus: str(history.toStatus || history.status),
+          changedAt: str(history.changedAt),
+          actorType: str(history.actorType),
+          reason: str(history.reason) || null,
+        }
+      })
+    : []
+
+  return {
+    reservationId: num(record.reservationId),
+    items,
   }
 }
 
@@ -1718,10 +1753,20 @@ export const ecafeApi = {
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapReservationResponse(data)
     },
+    getHistory: async (reservationId: string) => {
+      const result = await httpClient<unknown>(endpoints.reservations.history(reservationId))
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationHistoryResponse(data)
+    },
     getForRestaurant: async (restaurantId: string, reservationId: string) => {
       const result = await httpClient<unknown>(endpoints.reservations.restaurantDetail(restaurantId, reservationId))
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapReservationResponse(data)
+    },
+    getHistoryForRestaurant: async (restaurantId: string, reservationId: string) => {
+      const result = await httpClient<unknown>(endpoints.reservations.restaurantHistory(restaurantId, reservationId))
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationHistoryResponse(data)
     },
     create: async (restaurantId: string, request: CreateReservationRequest) => {
       const result = await httpClient<unknown>(endpoints.reservations.create(restaurantId), {
