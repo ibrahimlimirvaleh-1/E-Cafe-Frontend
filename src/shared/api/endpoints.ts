@@ -69,6 +69,13 @@ export const endpoints = {
       `/restaurants/${restaurantId}/reservations/${reservationId}/payment-instructions`,
     submitPaymentProof: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/payment-proofs`,
+    approvePaymentProof: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/payment-proofs/approve`,
+    rejectPaymentProof: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/payment-proofs/reject`,
+    customerCancel: (reservationId: string) => `/public/reservations/${reservationId}/cancel`,
+    restaurantCancel: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/cancel`,
   },
   menu: {
     categories: (restaurantId: string) => `/category/${restaurantId}`,

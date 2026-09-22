@@ -235,6 +235,7 @@ export type ReservationResponse = {
   tableName?: string | null
   customerName?: string | null
   latestPaymentInstruction?: PaymentInstructionResponse | null
+  latestPaymentProof?: PaymentProofResponse | null
 }
 
 export type ReservationHistoryItem = {
@@ -249,6 +250,13 @@ export type ReservationHistoryItem = {
 export type ReservationHistoryResponse = {
   reservationId: number
   items: ReservationHistoryItem[]
+}
+
+export type ReservationActionResponse = {
+  reservationId: number
+  statusId: number
+  status: string
+  message: string
 }
 
 export type PaymentInstructionResponse = {
@@ -272,6 +280,10 @@ export type PaymentProofResponse = {
 
 export type SendPaymentInstructionRequest = {
   displayText: string
+}
+
+export type ReservationCancellationRequest = {
+  reason?: string | null
 }
 
 export type ReservationQuery = {
@@ -575,6 +587,9 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     latestPaymentInstruction: record.latestPaymentInstruction && typeof record.latestPaymentInstruction === 'object'
       ? mapPaymentInstructionResponse(record.latestPaymentInstruction as AnyRecord)
       : null,
+    latestPaymentProof: record.latestPaymentProof && typeof record.latestPaymentProof === 'object'
+      ? mapPaymentProofResponse(record.latestPaymentProof as AnyRecord)
+      : null,
   }
 }
 
@@ -607,6 +622,15 @@ function mapReservationHistoryResponse(record: AnyRecord): ReservationHistoryRes
   return {
     reservationId: num(record.reservationId),
     items,
+  }
+}
+
+function mapReservationActionResponse(record: AnyRecord): ReservationActionResponse {
+  return {
+    reservationId: num(record.reservationId || record.id),
+    statusId: num(record.statusId),
+    status: str(record.status),
+    message: str(record.message),
   }
 }
 
@@ -1806,6 +1830,41 @@ export const ecafeApi = {
 
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapPaymentProofResponse(data)
+    },
+    approvePaymentProof: async (restaurantId: string, reservationId: string) => {
+      const result = await httpClient<unknown>(endpoints.reservations.approvePaymentProof(restaurantId, reservationId), {
+        method: 'POST',
+      })
+
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationActionResponse(data)
+    },
+    rejectPaymentProof: async (restaurantId: string, reservationId: string, reason: string) => {
+      const result = await httpClient<unknown>(endpoints.reservations.rejectPaymentProof(restaurantId, reservationId), {
+        method: 'POST',
+        body: JSON.stringify({ reason: reason.trim() }),
+      })
+
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationActionResponse(data)
+    },
+    cancel: async (reservationId: string, reason?: string | null) => {
+      const result = await httpClient<unknown>(endpoints.reservations.customerCancel(reservationId), {
+        method: 'POST',
+        body: JSON.stringify({ reason: reason?.trim() || null }),
+      })
+
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationActionResponse(data)
+    },
+    cancelForRestaurant: async (restaurantId: string, reservationId: string, reason?: string | null) => {
+      const result = await httpClient<unknown>(endpoints.reservations.restaurantCancel(restaurantId, reservationId), {
+        method: 'POST',
+        body: JSON.stringify({ reason: reason?.trim() || null }),
+      })
+
+      const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapReservationActionResponse(data)
     },
   },
   orders: {

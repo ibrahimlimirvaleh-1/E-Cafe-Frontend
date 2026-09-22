@@ -1,8 +1,13 @@
 import { CheckCircle2 } from 'lucide-react'
+import { Ban } from 'lucide-react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
-import { ButtonLink } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
+import type { WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
@@ -13,16 +18,53 @@ import { getReservationStatusPresentation } from '../../shared/lib/reservationSt
 export function ConfirmationPage() {
   const [searchParams] = useSearchParams()
   const reservationId = searchParams.get('reservationId')
+  const [reloadKey, setReloadKey] = useState(0)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
   const { data: reservation, error, isLoading } = useAsyncData(
     () => reservationId ? ecafeApi.reservations.getById(reservationId) : Promise.resolve(null),
     null,
-    [reservationId],
+    [reservationId, reloadKey],
+  )
+  const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
+    () => reservation && reservationId
+      ? ecafeApi.workflow.actions({
+          flowCode: 'reservation',
+          statusId: reservation.statusId,
+          restaurantId: String(reservation.restaurantId),
+          entityId: reservationId,
+        })
+      : Promise.resolve([]),
+    [],
+    [reservationId, reservation?.statusId, reservation?.restaurantId, reloadKey],
   )
   const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
     () => reservationId ? ecafeApi.reservations.getHistory(reservationId) : Promise.resolve(null),
     null,
-    [reservationId],
+    [reservationId, reloadKey],
   )
+
+  const cancelAction = workflowActions.find((action) => action.code === 'cancel')
+
+  async function cancelReservation(reason: string) {
+    if (!reservationId) {
+      return
+    }
+
+    setCancelError('')
+    setIsCancelling(true)
+    try {
+      await ecafeApi.reservations.cancel(reservationId, reason)
+      setIsCancelDialogOpen(false)
+      setReloadKey((value) => value + 1)
+      window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+    } catch (err) {
+      setCancelError(normalizeCaughtApiError(err, 'Rezervasiya ləğv edilmədi.').message)
+    } finally {
+      setIsCancelling(false)
+    }
+  }
 
   return (
     <main className="center-page">
@@ -54,11 +96,37 @@ export function ConfirmationPage() {
                 amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
               />
             ) : null}
+            {cancelAction ? (
+              <div className="reservation-confirmation-actions">
+                <Button
+                  onClick={() => {
+                    setCancelError('')
+                    setIsCancelDialogOpen(true)
+                  }}
+                  variant="danger"
+                >
+                  <Ban size={17} />
+                  {cancelAction.label}
+                </Button>
+              </div>
+            ) : null}
             <ReservationHistoryTimeline items={history?.items || []} />
           </>
         ) : null}
-        <ButtonLink to="/tracking/demo-token">Rezervasiyanı izlə</ButtonLink>
+        <ButtonLink to={reservation ? `/tracking/${reservation.id}` : '/reservations'}>Rezervasiyanı izlə</ButtonLink>
       </article>
+      <ReservationReasonDialog
+        confirmLabel="Rezervasiyanı ləğv et"
+        description="Rezervasiya ləğv edildikdən sonra masa üçün yaradılmış hold aradan qaldırılacaq."
+        error={cancelError}
+        isOpen={isCancelDialogOpen}
+        isSubmitting={isCancelling}
+        onClose={() => setIsCancelDialogOpen(false)}
+        onConfirm={(reason) => {
+          void cancelReservation(reason)
+        }}
+        title="Rezervasiyanı ləğv edirsiniz?"
+      />
     </main>
   )
 }
