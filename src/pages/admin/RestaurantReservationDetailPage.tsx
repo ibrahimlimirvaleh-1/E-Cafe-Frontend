@@ -14,6 +14,7 @@ import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 
 function statusPresentation(status: string): { label: string; tone: StatusTone } {
   const normalized = status.toLowerCase()
+  if (normalized.includes('restoran cavabı')) return { label: 'Restoran cavabı gözlənilir', tone: 'warning' }
   if (normalized.includes('pending') || normalized.includes('payment')) return { label: 'Ödəniş gözləyir', tone: 'warning' }
   if (normalized.includes('reserved') || normalized.includes('confirmed')) return { label: 'Təsdiqlənib', tone: 'success' }
   if (normalized.includes('expired') || normalized.includes('cancel') || normalized.includes('reject')) return { label: 'Bağlanıb', tone: 'danger' }
@@ -66,7 +67,7 @@ export function RestaurantReservationDetailPage() {
           <div><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><strong>{formatReservationDateTime(reservation.reservedAt)}</strong></span></div>
           <div><Users size={17} /><span><small>Qonaq sayı</small><strong>{reservation.peopleCount} nəfər</strong></span></div>
           <div><Clock3 size={17} /><span><small>Depozit</small><strong>{reservation.depositAmount.toFixed(2)} AZN</strong></span></div>
-          <div><Clock3 size={17} /><span><small>Ödəniş üçün son vaxt</small><strong>{formatReservationDateTime(reservation.holdExpiresAt)}</strong></span></div>
+          <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ? 'Ödəniş üçün son vaxt' : 'Cavab üçün son vaxt'}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
         </div>
         {reservation.latestPaymentInstruction ? (
           <div className="reservation-payment-note">

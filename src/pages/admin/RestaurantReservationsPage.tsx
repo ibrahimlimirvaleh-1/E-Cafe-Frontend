@@ -24,6 +24,7 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 
 function statusPresentation(status: string): { label: string; tone: StatusTone } {
   const normalized = status.toLowerCase()
+  if (normalized.includes('restoran cavabı')) return { label: 'Restoran cavabı gözlənilir', tone: 'warning' }
   if (normalized.includes('pending') || normalized.includes('payment')) return { label: 'Ödəniş gözləyir', tone: 'warning' }
   if (normalized.includes('reserved') || normalized.includes('confirmed')) return { label: 'Təsdiqlənib', tone: 'success' }
   if (normalized.includes('expired')) return { label: 'Vaxtı bitib', tone: 'danger' }
