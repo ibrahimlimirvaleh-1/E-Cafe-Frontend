@@ -24,6 +24,7 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 function statusPresentation(status: string): { label: string; tone: StatusTone } {
   const normalized = status.toLowerCase()
 
+  if (normalized.includes('restoran cavabı')) return { label: 'Restoran cavabı gözlənilir', tone: 'warning' }
   if (normalized.includes('pending') || normalized.includes('payment')) {
     return { label: 'Ödəniş gözləyir', tone: 'warning' }
   }
@@ -107,7 +108,9 @@ export function MyReservationsPage() {
                 <span>
                   {reservation.holdExpiresAt
                     ? `Ödəniş üçün son vaxt: ${formatReservationDateTime(reservation.holdExpiresAt)}`
-                    : 'Rezervasiya məlumatları yenilənir'}
+                    : reservation.restaurantResponseExpiresAt
+                      ? `Cavab üçün son vaxt: ${formatReservationDateTime(reservation.restaurantResponseExpiresAt)}`
+                      : 'Rezervasiya məlumatları yenilənir'}
                 </span>
                 <ButtonLink variant="secondary" to={`/confirmation?reservationId=${reservation.id}`}>
                   Detallara bax <ArrowRight size={16} />

@@ -1,11 +1,16 @@
 const reservationDateTimeFormatter = new Intl.DateTimeFormat('az-AZ', {
-  day: '2-digit',
-  month: 'long',
+  day: 'numeric',
+  month: 'numeric',
   year: 'numeric',
   hour: '2-digit',
   minute: '2-digit',
-  hour12: false,
+  hourCycle: 'h23',
 })
+
+const monthNames = [
+  'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun',
+  'iyul', 'avqust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr',
+]
 
 export function formatReservationDateTime(value?: string | null) {
   if (!value) {
@@ -17,5 +22,13 @@ export function formatReservationDateTime(value?: string | null) {
     return value
   }
 
-  return reservationDateTimeFormatter.format(date).replace(' at ', ', ')
+  const parts = reservationDateTimeFormatter.formatToParts(date)
+  const getPart = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || ''
+  const month = Number(getPart('month'))
+
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return value
+  }
+
+  return `${getPart('day')} ${monthNames[month - 1]} ${getPart('year')}, ${getPart('hour')}:${getPart('minute')}`
 }

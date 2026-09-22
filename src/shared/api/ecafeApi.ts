@@ -229,6 +229,7 @@ export type ReservationResponse = {
   status: string
   depositAmount: number
   holdExpiresAt?: string | null
+  restaurantResponseExpiresAt?: string | null
   cancellationDeadline?: string | null
   restaurantName?: string | null
   tableName?: string | null
@@ -552,6 +553,7 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     status: str(record.status || record.statusName),
     depositAmount: num(record.depositAmount),
     holdExpiresAt: str(record.holdExpiresAt || record.HoldExpiresAt) || null,
+    restaurantResponseExpiresAt: str(record.restaurantResponseExpiresAt || record.RestaurantResponseExpiresAt) || null,
     cancellationDeadline: str(record.cancellationDeadline || record.CancellationDeadline) || null,
     restaurantName: str(record.restaurantName || record.RestaurantName) || null,
     tableName: str(record.tableName || record.TableName) || null,
