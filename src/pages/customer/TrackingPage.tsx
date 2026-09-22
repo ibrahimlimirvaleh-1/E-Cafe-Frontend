@@ -1,76 +1,120 @@
-import { orders } from '../../entities/mockData'
-import type { OrderStatus } from '../../entities/types'
+import { CalendarDays, MapPin, Users } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
+import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
+import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
+import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
+import { getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
+import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
-
-const regularStatusSteps: OrderStatus[] = ['Created', 'Accepted', 'Preparing', 'Ready', 'Served', 'Closed']
-const scheduledStatusSteps: OrderStatus[] = ['Scheduled', ...regularStatusSteps]
-const statusLabels: Record<OrderStatus, string> = {
-  Scheduled: 'Planlaşdırılıb',
-  Created: 'Qəbul gözləyir',
-  Accepted: 'Qəbul edildi',
-  Preparing: 'Hazırlanır',
-  Ready: 'Hazırdır',
-  Served: 'Təqdim edildi',
-  Closed: 'Bağlandı',
-  Cancelled: 'Ləğv edildi',
-}
-
-const statusTone = (status: OrderStatus) => {
-  if (status === 'Cancelled') return 'danger' as const
-  if (status === 'Closed' || status === 'Served') return 'success' as const
-  return 'warning' as const
-}
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function TrackingPage() {
-  const order = orders[0]
-  const statusSteps = order.status === 'Scheduled' ? scheduledStatusSteps : regularStatusSteps
-  const activeIndex = statusSteps.indexOf(order.status)
-  const isCancelled = order.status === 'Cancelled'
+  const { token = '' } = useParams()
+  const { data: reservation, error, isLoading } = useAsyncData<ReservationResponse | null>(
+    async () => {
+      if (/^\d+$/.test(token)) {
+        return ecafeApi.reservations.getById(token)
+      }
+
+      const result = await ecafeApi.reservations.listMine({ pageNumber: 1, pageSize: 1 })
+      return result.items[0] ?? null
+    },
+    null,
+    [token],
+  )
+  const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
+    () => reservation ? ecafeApi.reservations.getHistory(String(reservation.id)) : Promise.resolve(null),
+    null,
+    [reservation?.id],
+  )
+
+  const presentation = reservation ? getReservationStatusPresentation(reservation.status) : null
 
   return (
     <main className="page tracking-page">
-      <PageHeader title="Sifariş izləmə" />
-      <section className="tracking-panel">
-        <header className="tracking-hero">
-          <div>
-            <span className="tracking-eyebrow">SİFARİŞ</span>
-            <h2>{order.id}</h2>
-            <p>{order.tableId} · {order.source === 'CustomerCreated' ? 'Müştəri sifarişi' : 'Personal sifarişi'}</p>
-          </div>
-          <Badge tone={statusTone(order.status)}>{statusLabels[order.status]}</Badge>
-        </header>
+      <PageHeader
+        eyebrow="Rezervasiya"
+        title="Rezervasiyanı izlə"
+        description="Rezervasiyanın statusunu, ödəniş məlumatını və keçdiyi mərhələləri izləyin."
+      />
 
-        {isCancelled ? (
-          <div className="tracking-cancelled">Bu sifariş ləğv edilib.</div>
-        ) : (
-          <div className="status-timeline" aria-label="Sifariş statusu">
-            {statusSteps.map((step, index) => (
-              <div className={index <= activeIndex ? 'done' : ''} key={step}>
-                <span>{index + 1}</span>
-                <strong>{statusLabels[step]}</strong>
+      {isLoading ? <p className="online-only">Rezervasiya məlumatları yüklənir...</p> : null}
+      {error ? <StatusMessage autoHideMs={false} tone="danger">{error}</StatusMessage> : null}
+
+      {!isLoading && !error && !reservation ? (
+        <section className="tracking-panel reservation-empty-state">
+          <CalendarDays size={28} />
+          <h2>İzlənəcək rezervasiya yoxdur</h2>
+          <p>Rezervasiya yaratdıqdan sonra onun statusunu burada görə bilərsiniz.</p>
+          <ButtonLink to="/reservations">Rezervasiyalarım</ButtonLink>
+        </section>
+      ) : null}
+
+      {reservation && presentation ? (
+        <>
+          <section className="tracking-panel">
+            <header className="tracking-hero">
+              <div>
+                <span className="tracking-eyebrow">REZERVASİYA #{reservation.id}</span>
+                <h2>{reservation.restaurantName || 'Restoran rezervasiyası'}</h2>
+                <p>{reservation.tableName || `Masa ${reservation.tableId}`}</p>
               </div>
-            ))}
-          </div>
-        )}
+              <Badge tone={presentation.tone}>{presentation.label}</Badge>
+            </header>
 
-        <div className="tracking-content-grid">
-          <section className="tracking-items">
-            <div className="tracking-section-heading">
-              <span>SİFARİŞ TƏRKİBİ</span>
-              <strong>{order.itemNames.length} məhsul</strong>
+            <div className="tracking-content-grid">
+              <section className="tracking-items" aria-label="Rezervasiya məlumatları">
+                <div className="tracking-section-heading">
+                  <span>REZERVASİYA MƏLUMATLARI</span>
+                  <strong>{reservation.peopleCount} nəfər</strong>
+                </div>
+                <ul>
+                  <li><CalendarDays size={17} />{formatReservationDateTime(reservation.reservedAt)}</li>
+                  <li><MapPin size={17} />{reservation.tableName || `Masa ${reservation.tableId}`}</li>
+                  <li><Users size={17} />{reservation.peopleCount} nəfər</li>
+                </ul>
+              </section>
+              <section className="tracking-total" aria-label="Depozit məlumatı">
+                <span>DEPOZİT</span>
+                <strong>{reservation.depositAmount.toFixed(2)} AZN</strong>
+                <small>
+                  {reservation.holdExpiresAt
+                    ? `Ödəniş üçün son vaxt: ${formatReservationDateTime(reservation.holdExpiresAt)}`
+                    : reservation.restaurantResponseExpiresAt
+                      ? `Cavab üçün son vaxt: ${formatReservationDateTime(reservation.restaurantResponseExpiresAt)}`
+                      : 'Əlavə ödəniş müddəti yoxdur'}
+                </small>
+              </section>
             </div>
-            <ul>
-              {order.itemNames.map((item) => <li key={item}>{item}</li>)}
-            </ul>
+
+            {reservation.latestPaymentInstruction ? (
+              <div className="reservation-payment-note">
+                <strong>Ödəniş məlumatı</strong>
+                <p>{reservation.latestPaymentInstruction.displayText}</p>
+                <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
+              </div>
+            ) : null}
+
+            {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
+              <ReservationPaymentProofPanel
+                restaurantId={String(reservation.restaurantId)}
+                reservationId={String(reservation.id)}
+                amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
+              />
+            ) : null}
+
+            <div className="tracking-page-actions">
+              <ButtonLink to={`/confirmation?reservationId=${reservation.id}`}>Rezervasiya detallarına bax</ButtonLink>
+            </div>
           </section>
-          <section className="tracking-total">
-            <span>ÜMUMİ MƏBLƏĞ</span>
-            <strong>{order.total.toFixed(2)} ₼</strong>
-            <small>{order.paymentStatus === 'Paid' ? 'Ödəniş edildi' : 'Ödəniş gözləyir'}</small>
-          </section>
-        </div>
-      </section>
+
+          <ReservationHistoryTimeline items={history?.items || []} />
+        </>
+      ) : null}
     </main>
   )
 }
