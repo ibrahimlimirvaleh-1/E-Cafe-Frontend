@@ -7,9 +7,8 @@ import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import type { StatusTone } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
+import { getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 
 const emptyPage: PaginatedResponse<ReservationResponse> = {
@@ -19,25 +18,6 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
   totalCount: 0,
   hasPreviousPage: false,
   hasNextPage: false,
-}
-
-function statusPresentation(status: string): { label: string; tone: StatusTone } {
-  const normalized = status.toLowerCase()
-
-  if (normalized.includes('restoran cavabı')) return { label: 'Restoran cavabı gözlənilir', tone: 'warning' }
-  if (normalized.includes('pending') || normalized.includes('payment')) {
-    return { label: 'Ödəniş gözləyir', tone: 'warning' }
-  }
-
-  if (normalized.includes('reserved') || normalized.includes('confirmed')) {
-    return { label: 'Təsdiqlənib', tone: 'success' }
-  }
-
-  if (normalized.includes('expired')) return { label: 'Vaxtı bitib', tone: 'danger' }
-  if (normalized.includes('cancel')) return { label: 'Ləğv edilib', tone: 'danger' }
-  if (normalized.includes('reject')) return { label: 'Rədd edilib', tone: 'danger' }
-
-  return { label: status || 'Gözləmədə', tone: 'neutral' }
 }
 
 export function MyReservationsPage() {
@@ -69,7 +49,7 @@ export function MyReservationsPage() {
 
       <section className="customer-reservation-list" aria-label="Rezervasiya siyahısı">
         {data.items.map((reservation) => {
-          const presentation = statusPresentation(reservation.status)
+          const presentation = getReservationStatusPresentation(reservation.status)
 
           return (
             <article className="customer-reservation-card" key={reservation.id}>

@@ -60,8 +60,11 @@ export const endpoints = {
     create: (restaurantId: string) => `/restaurants/${restaurantId}/reservations`,
     my: '/public/reservations/my',
     getById: (reservationId: string) => `/public/reservations/${reservationId}`,
+    history: (reservationId: string) => `/public/reservations/${reservationId}/history`,
     restaurantList: (restaurantId: string) => `/restaurants/${restaurantId}/reservations`,
     restaurantDetail: (restaurantId: string, reservationId: string) => `/restaurants/${restaurantId}/reservations/${reservationId}`,
+    restaurantHistory: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/history`,
     sendPaymentInstruction: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/payment-instructions`,
     submitPaymentProof: (restaurantId: string, reservationId: string) =>

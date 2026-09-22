@@ -13,23 +13,13 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import type { StatusTone } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
+import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 
 const defaultPageSize = 20
 
 const emptyPage: PaginatedResponse<ReservationResponse> = {
   items: [], pageIndex: 1, totalPages: 1, totalCount: 0, hasPreviousPage: false, hasNextPage: false,
-}
-
-function statusPresentation(status: string): { label: string; tone: StatusTone } {
-  const normalized = status.toLowerCase()
-  if (normalized.includes('restoran cavabı')) return { label: 'Restoran cavabı gözlənilir', tone: 'warning' }
-  if (normalized.includes('pending') || normalized.includes('payment')) return { label: 'Ödəniş gözləyir', tone: 'warning' }
-  if (normalized.includes('reserved') || normalized.includes('confirmed')) return { label: 'Təsdiqlənib', tone: 'success' }
-  if (normalized.includes('expired')) return { label: 'Vaxtı bitib', tone: 'danger' }
-  if (normalized.includes('cancel') || normalized.includes('reject')) return { label: 'Bağlanıb', tone: 'danger' }
-  return { label: status || 'Gözləmədə', tone: 'neutral' }
 }
 
 export function RestaurantReservationsPage() {
@@ -101,7 +91,7 @@ export function RestaurantReservationsPage() {
         <>
           <section className="admin-reservation-list" aria-label="Restoran rezervasiyaları">
             {data.items.map((reservation) => {
-              const presentation = statusPresentation(reservation.status)
+              const presentation = getReservationStatusPresentation(reservation.status)
 
               return (
                 <article className="admin-reservation-row" key={reservation.id}>

@@ -1,7 +1,8 @@
 import { CalendarDays, Clock3, Users } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
-import type { ReservationResponse } from '../../shared/api/ecafeApi'
+import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
+import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -9,17 +10,9 @@ import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import type { StatusTone, WorkflowAction } from '../../entities/types'
+import type { WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-
-function statusPresentation(status: string): { label: string; tone: StatusTone } {
-  const normalized = status.toLowerCase()
-  if (normalized.includes('restoran cavabı')) return { label: 'Restoran cavabı gözlənilir', tone: 'warning' }
-  if (normalized.includes('pending') || normalized.includes('payment')) return { label: 'Ödəniş gözləyir', tone: 'warning' }
-  if (normalized.includes('reserved') || normalized.includes('confirmed')) return { label: 'Təsdiqlənib', tone: 'success' }
-  if (normalized.includes('expired') || normalized.includes('cancel') || normalized.includes('reject')) return { label: 'Bağlanıb', tone: 'danger' }
-  return { label: status || 'Gözləmədə', tone: 'neutral' }
-}
+import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 
 export function RestaurantReservationDetailPage() {
   const { user } = useAuth()
@@ -43,6 +36,13 @@ export function RestaurantReservationDetailPage() {
     [],
     [restaurantId, reservationId, reservation?.statusId],
   )
+  const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
+    () => restaurantId && reservationId
+      ? ecafeApi.reservations.getHistoryForRestaurant(restaurantId, reservationId)
+      : Promise.resolve(null),
+    null,
+    [restaurantId, reservationId],
+  )
   const canSendPaymentInstruction = workflowActions.some((action) => action.code === 'sendPaymentInstruction')
 
   if (isLoading) return <main className="admin-page narrow"><p className="online-only">Rezervasiya yüklənir...</p></main>
@@ -50,7 +50,7 @@ export function RestaurantReservationDetailPage() {
     return <main className="admin-page narrow"><StatusMessage tone="danger" autoHideMs={false}>{error || 'Rezervasiya tapılmadı.'}</StatusMessage></main>
   }
 
-  const presentation = statusPresentation(reservation.status)
+  const presentation = getReservationStatusPresentation(reservation.status)
 
   return (
     <main className="admin-page narrow reservation-detail-page">
@@ -80,6 +80,7 @@ export function RestaurantReservationDetailPage() {
           <ButtonLink variant="secondary" to={`/admin/reservations?restaurantId=${restaurantId}`}>Siyahıya qayıt</ButtonLink>
         </div>
       </section>
+      <ReservationHistoryTimeline items={history?.items || []} />
       {canSendPaymentInstruction ? (
         <ReservationPaymentInstructionPanel
           restaurantId={restaurantId}
