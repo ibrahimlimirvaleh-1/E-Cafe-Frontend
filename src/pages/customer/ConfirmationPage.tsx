@@ -76,63 +76,68 @@ export function ConfirmationPage() {
 
   return (
     <main className="center-page reservation-confirmation-page">
-      <article className="success-panel reservation-confirmation-panel">
-        <div className="reservation-confirmation-icon"><CheckCircle2 size={28} /></div>
-        <div className="reservation-confirmation-heading">
-          <span className="section-eyebrow">REZERVASİYA DETALI</span>
-          <h1>{reservationId ? `Rezervasiya #${reservationId}` : 'Sifariş qeydə alındı'}</h1>
-          {reservation ? <p>{reservation.restaurantName || 'Restoran rezervasiyası'}</p> : null}
-        </div>
-        {reservationPresentation ? <Badge tone={reservationPresentation.tone}>{reservationPresentation.label}</Badge> : null}
-        <p>
-          {reservationId
-            ? reservationPresentation?.tone === 'success'
-              ? 'Rezervasiyanın statusu yeniləndi. Detalları və tarixçəni aşağıda görə bilərsiniz.'
-              : 'Rezervasiyanın statusunu və növbəti addımı aşağıda görə bilərsiniz.'
-            : 'Sifariş məlumatları restorana göndərildi.'}
-        </p>
-        {reservationId && isLoading ? <p className="online-only">Rezervasiya detalları yüklənir...</p> : null}
-        {reservationId && error ? <p className="reservation-availability-message danger">Rezervasiya detalları yüklənmədi.</p> : null}
-        {reservation ? (
-          <>
-            <dl className="reservation-confirmation-details">
-              <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt)}</dd></div>
-              <div><dt>Masa</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
-              <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
-              <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
-              <div><dt>Depozit</dt><dd>{reservation.depositAmount.toFixed(2)} AZN</dd></div>
-              {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
-            </dl>
+      <div className="reservation-confirmation-layout">
+        <article className="success-panel reservation-confirmation-panel">
+          <div className="reservation-confirmation-icon"><CheckCircle2 size={28} /></div>
+          <div className="reservation-confirmation-heading">
+            <span className="section-eyebrow">REZERVASİYA DETALI</span>
+            <h1>{reservationId ? `Rezervasiya #${reservationId}` : 'Sifariş qeydə alındı'}</h1>
+            {reservation ? <p>{reservation.restaurantName || 'Restoran rezervasiyası'}</p> : null}
+          </div>
+          {reservationPresentation ? <Badge tone={reservationPresentation.tone}>{reservationPresentation.label}</Badge> : null}
+          <p>
+            {reservationId
+              ? reservationPresentation?.tone === 'success'
+                ? 'Rezervasiyanın statusu yeniləndi. Detalları və tarixçəni aşağıda görə bilərsiniz.'
+                : 'Rezervasiyanın statusunu və növbəti addımı aşağıda görə bilərsiniz.'
+              : 'Sifariş məlumatları restorana göndərildi.'}
+          </p>
+          {reservationId && isLoading ? <p className="online-only">Rezervasiya detalları yüklənir...</p> : null}
+          {reservationId && error ? <p className="reservation-availability-message danger">Rezervasiya detalları yüklənmədi.</p> : null}
+          {reservation ? (
+            <>
+              <dl className="reservation-confirmation-details">
+                <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt)}</dd></div>
+                <div><dt>Masa</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
+                <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
+                <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
+                <div><dt>Depozit</dt><dd>{reservation.depositAmount.toFixed(2)} AZN</dd></div>
+                {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
+              </dl>
 
-            {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
-              <ReservationPaymentProofPanel
-                restaurantId={String(reservation.restaurantId)}
-                reservationId={String(reservation.id)}
-                amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
-                action={submitPaymentProofAction}
-                statusId={reservation.statusId}
-                workflowFlowCode={reservation.workflowFlowCode}
-              />
-            ) : null}
-            {cancelAction ? (
-              <div className="reservation-confirmation-actions">
-                <Button
-                  onClick={() => {
-                    setCancelError('')
-                    setIsCancelDialogOpen(true)
-                  }}
-                  variant="danger"
-                >
-                  <Ban size={17} />
-                  {cancelAction.label}
-                </Button>
-              </div>
-            ) : null}
-            <ReservationHistoryTimeline items={history?.items || []} />
-          </>
-        ) : null}
-        <ButtonLink to={reservation ? `/tracking/${reservation.id}` : '/reservations'}>Rezervasiyanı izlə</ButtonLink>
-      </article>
+              {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
+                <ReservationPaymentProofPanel
+                  restaurantId={String(reservation.restaurantId)}
+                  reservationId={String(reservation.id)}
+                  amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
+                  action={submitPaymentProofAction}
+                  statusId={reservation.statusId}
+                  workflowFlowCode={reservation.workflowFlowCode}
+                />
+              ) : null}
+              {cancelAction ? (
+                <div className="reservation-confirmation-actions">
+                  <Button
+                    onClick={() => {
+                      setCancelError('')
+                      setIsCancelDialogOpen(true)
+                    }}
+                    variant="danger"
+                  >
+                    <Ban size={17} />
+                    {cancelAction.label}
+                  </Button>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </article>
+
+        <aside className="reservation-confirmation-side">
+          {reservation ? <ReservationHistoryTimeline items={history?.items || []} /> : null}
+          <ButtonLink to={reservation ? `/tracking/${reservation.id}` : '/reservations'}>Rezervasiyanı izlə</ButtonLink>
+        </aside>
+      </div>
       <ReservationReasonDialog
         confirmLabel="Rezervasiyanı ləğv et"
         description="Rezervasiya ləğv edildikdən sonra masa üçün yaradılmış hold aradan qaldırılacaq."

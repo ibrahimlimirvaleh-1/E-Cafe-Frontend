@@ -7911,6 +7911,56 @@ body,
   }
 }
 
+/* Reservation details use the available desktop width while stacking cleanly on phones. */
+.reservation-confirmation-page {
+  width: min(1180px, calc(100% - 48px));
+  align-content: start;
+  align-items: start;
+  justify-items: stretch;
+  padding: clamp(28px, 5vw, 56px) 24px;
+}
+
+.reservation-confirmation-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+  gap: 24px;
+  width: 100%;
+  align-items: start;
+}
+
+.reservation-confirmation-panel {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+
+.reservation-confirmation-side {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+  align-content: start;
+}
+
+.reservation-confirmation-side .reservation-history-panel {
+  margin-top: 0;
+}
+
+.reservation-confirmation-side > .ui-button {
+  justify-content: center;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .reservation-confirmation-page {
+    width: min(100% - 28px, 760px);
+    padding: 24px 0 40px;
+  }
+
+  .reservation-confirmation-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Reservation UI refinement: clearer hierarchy on desktop and compact mobile cards. */
 .reservation-overview {
   display: grid;
