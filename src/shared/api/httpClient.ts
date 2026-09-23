@@ -390,6 +390,8 @@ function translateErrorCode(code: string) {
     RoleAlreadyAssigned: 'Bu istifadəçiyə həmin rol artıq verilib.',
     StaffAssignmentNotFound: 'Əməkdaş təyinatı tapılmadı.',
     StaffNotFound: 'Əməkdaş tapılmadı.',
+    CustomerAlreadyHasReservationToday: 'Bu gün bu restoran üçün artıq aktiv rezervasiyanız var. Başqa tarix seçin.',
+    ReservationTimeAlreadyPassed: 'Rezervasiyanın vaxtı keçdiyi üçün ödəniş təsdiqlənə bilməz.',
     TableAlreadyExists: 'Bu nömrəli masa artıq mövcuddur.',
     TableNameAlreadyExists: 'Bu adda masa artıq mövcuddur.',
     UserEmailAlreadyExists: 'Bu email ilə istifadəçi artıq mövcuddur.',

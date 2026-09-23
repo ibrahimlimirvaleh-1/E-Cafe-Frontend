@@ -2,7 +2,11 @@ import { ArrowRight, CalendarClock, CheckCircle2, Users } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 import { ReservationPreorderDialog } from '../../features/menu/ReservationPreorderDialog'
-import { getReservationErrorMessage } from '../../features/menu/reservationErrors'
+import {
+  getReservationErrorMessage,
+  isCustomerDailyReservationLimit,
+  isTableReservationConflict,
+} from '../../features/menu/reservationErrors'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -24,6 +28,7 @@ export function TableSelectionPage() {
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [isCreatingReservation, setIsCreatingReservation] = useState(false)
   const [reservationError, setReservationError] = useState('')
+  const [reservationErrorTone, setReservationErrorTone] = useState<'danger' | 'warning'>('danger')
   const [unavailableTableIds, setUnavailableTableIds] = useState<Set<string>>(new Set())
   const { data: tables, error: availabilityError, isLoading } = useAsyncData(
     async () => {
@@ -55,6 +60,7 @@ export function TableSelectionPage() {
 
   const handleTableSelect = (tableId: string) => {
     setReservationError('')
+    setReservationErrorTone('danger')
     setSelectedTableId(tableId)
   }
 
@@ -74,6 +80,7 @@ export function TableSelectionPage() {
     }
 
     setReservationError('')
+    setReservationErrorTone('danger')
     setIsCreatingReservation(true)
 
     try {
@@ -87,8 +94,12 @@ export function TableSelectionPage() {
       nextParams.set('reservationId', String(reservation.id))
       navigate(`/confirmation?${nextParams.toString()}`)
     } catch (error) {
-      setUnavailableTableIds((current) => new Set(current).add(selectedTableId))
-      setSelectedTableId(null)
+      const tableConflict = isTableReservationConflict(error)
+      if (tableConflict) {
+        setUnavailableTableIds((current) => new Set(current).add(selectedTableId))
+        setSelectedTableId(null)
+      }
+      setReservationErrorTone(isCustomerDailyReservationLimit(error) ? 'warning' : 'danger')
       setReservationError(getReservationErrorMessage(error))
     } finally {
       setIsCreatingReservation(false)
@@ -127,7 +138,7 @@ export function TableSelectionPage() {
         </div>
         <div className="reservation-table-legend"><span><i className="available" /> Boşdur</span><span><i className="capacity" /> Tutum</span></div>
       </div>
-      {reservationError ? <p className="reservation-availability-message danger">{reservationError}</p> : null}
+      {reservationError ? <p className={`reservation-availability-message ${reservationErrorTone}`}>{reservationError}</p> : null}
       {availabilityError ? <p className="reservation-availability-message danger">Masaların vəziyyəti yüklənmədi. Səhifəni yeniləyib yenidən yoxlayın.</p> : null}
       {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
       {!isLoading && !availabilityError && visibleTables.length === 0 ? <p className="online-only">Bu saat üçün uyğun masa yoxdur. Başqa saat seçin.</p> : null}
