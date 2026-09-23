@@ -7914,6 +7914,7 @@ body,
 /* Reservation details use the available desktop width while stacking cleanly on phones. */
 .reservation-confirmation-page {
   width: min(1180px, calc(100% - 48px));
+  margin-inline: auto;
   align-content: start;
   align-items: start;
   justify-items: stretch;
