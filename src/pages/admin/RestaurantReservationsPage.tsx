@@ -61,7 +61,7 @@ export function RestaurantReservationsPage() {
       <PageHeader
         eyebrow="Restoran"
         title="Rezervasiyalar"
-        description="Müştərilərin rezervasiyalarını və ödəniş gözləyən sorğuları idarə edin."
+        description="Müştəri rezervasiyalarını statusuna görə idarə edin."
       />
 
       <section className="admin-panel reservation-admin-toolbar">
@@ -90,6 +90,13 @@ export function RestaurantReservationsPage() {
       {!isLoading && !error && restaurantId ? (
         <>
           <section className="admin-reservation-list" aria-label="Restoran rezervasiyaları">
+            <div className="admin-reservation-list-header">
+              <div>
+                <span className="section-eyebrow">SİYAHI</span>
+                <strong>{data.totalCount} rezervasiya</strong>
+              </div>
+              <span>Səhifə {data.pageIndex} / {data.totalPages}</span>
+            </div>
             {data.items.map((reservation) => {
               const presentation = getReservationStatusPresentation(reservation.status)
 
@@ -98,12 +105,12 @@ export function RestaurantReservationsPage() {
                   <div className="admin-reservation-row-main">
                     <span className="reservation-card-kicker">Rezervasiya #{reservation.id}</span>
                     <h2>{reservation.customerName || 'Müştəri'}</h2>
-                    <span className="admin-reservation-secondary">{reservation.tableName || `Masa ${reservation.tableId}`}</span>
+                    <span className="admin-reservation-secondary">{reservation.restaurantName || 'Restoran'} · {reservation.tableName || `Masa ${reservation.tableId}`}</span>
                   </div>
                   <div className="admin-reservation-row-meta">
-                    <span><CalendarDays size={16} />{formatReservationDateTime(reservation.reservedAt)}</span>
+                    <span><CalendarDays size={16} /><b>{formatReservationDateTime(reservation.reservedAt)}</b></span>
                     <span><Users size={16} />{reservation.peopleCount} nəfər</span>
-                    <span><Clock3 size={16} />{reservation.depositAmount.toFixed(2)} AZN</span>
+                    <span><Clock3 size={16} />{reservation.depositAmount.toFixed(2)} AZN depozit</span>
                   </div>
                   <div className="admin-reservation-row-action">
                     <Badge tone={presentation.tone}>{presentation.label}</Badge>

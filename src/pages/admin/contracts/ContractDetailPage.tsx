@@ -1,6 +1,7 @@
-import { CheckCircle2, Download, Eye, FileText, Send, ShieldCheck, XCircle } from 'lucide-react'
+import { Ban, CheckCircle2, Download, Eye, FileText, Send, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
+import { ReservationReasonDialog } from '../../../features/reservations/ReservationReasonDialog'
 import type { ContractStatus, RestaurantContract, StatusTone, WorkflowAction } from '../../../entities/types'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../../shared/api/httpClient'
@@ -41,32 +42,8 @@ function formatMoney(value?: number) {
   return `${Number(value || 0).toFixed(2)} AZN`
 }
 
-function nextActionText(contract: RestaurantContract, actions: WorkflowAction[]) {
-  if (actions.some((action) => action.code === 'approve')) {
-    return 'Müqavilə təsdiqinizi gözləyir. Sənədi oxuyub şərtləri qəbul etdikdən sonra admin aktivləşdirə biləcək.'
-  }
-
-  if (actions.some((action) => action.code === 'sendForSignature')) {
-    return 'Müqavilə hazırdır. Növbəti addım sənədi restoran sahibinə təsdiq üçün göndərməkdir.'
-  }
-
-  if (contract.status === 'PendingSignature') {
-    return 'Müqavilə restoran sahibinin təsdiqini gözləyir.'
-  }
-
-  if (contract.status === 'OwnerApproved') {
-    return 'Restoran sahibi müqaviləni təsdiqləyib. Başlama tarixi gələcəkdirsə aktivləşdirmədən sonra müqavilə planlaşdırılmış statusa düşəcək.'
-  }
-
-  if (contract.status === 'Scheduled') {
-    return 'Müqavilə planlaşdırılıb. Başlama tarixi çatanda sistem onu avtomatik aktiv edəcək.'
-  }
-
-  if (contract.status === 'Active') {
-    return 'Müqavilə aktivdir. Lazım olarsa ləğv əməliyyatı icra edilə bilər.'
-  }
-
-  return 'Bu müqavilə üzrə aktiv əməliyyat yoxdur.'
+function nextActionText(actions: WorkflowAction[]) {
+  return actions[0]?.label || 'Bu statusda icra ediləcək əməliyyat yoxdur.'
 }
 
 function contractFileName(contract: RestaurantContract) {
@@ -93,6 +70,7 @@ export function ContractDetailPage() {
   const [actionError, setActionError] = useState('')
   const [actionErrorDetails, setActionErrorDetails] = useState<ApiErrorDetail[]>([])
   const [actionName, setActionName] = useState('')
+  const [pendingAction, setPendingAction] = useState<WorkflowAction | null>(null)
   const [fileError, setFileError] = useState('')
   const [fileErrorDetails, setFileErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isOpeningFile, setIsOpeningFile] = useState(false)
@@ -113,12 +91,13 @@ export function ContractDetailPage() {
     }
   }, [previewUrl])
 
-  async function runAction(name: string, action: () => Promise<unknown>) {
+  async function runAction(action: WorkflowAction, body?: unknown, onSuccess?: () => void) {
     setActionError('')
     setActionErrorDetails([])
-    setActionName(name)
+    setActionName(action.code)
     try {
-      await action()
+      await ecafeApi.workflow.executeAction({ action, body })
+      onSuccess?.()
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       setReloadKey((value) => value + 1)
     } catch (err) {
@@ -128,6 +107,16 @@ export function ContractDetailPage() {
     } finally {
       setActionName('')
     }
+  }
+
+  function requestAction(action: WorkflowAction) {
+    setActionError('')
+    if (action.requiresConfirmation) {
+      setPendingAction(action)
+      return
+    }
+
+    void runAction(action)
   }
 
   async function openContractFile() {
@@ -219,10 +208,8 @@ export function ContractDetailPage() {
 
   const isBusy = actionName !== ''
   const availableActions = contract.availableActions ?? []
-  const sendForSignatureAction = availableActions.find((action) => action.code === 'sendForSignature')
   const approveAction = availableActions.find((action) => action.code === 'approve')
-  const activateAction = availableActions.find((action) => action.code === 'activate')
-  const terminateAction = availableActions.find((action) => action.code === 'terminate')
+  const genericActions = availableActions.filter((action) => action.code !== 'approve')
   const hasVisibleAction = availableActions.length > 0
 
   function closePreview() {
@@ -337,18 +324,8 @@ export function ContractDetailPage() {
       <section className="contract-action-panel">
         <div>
           <h2>Növbəti əməliyyat</h2>
-          <p>{nextActionText(contract, availableActions)}</p>
+          <p>{nextActionText(availableActions)}</p>
         </div>
-
-        {sendForSignatureAction ? (
-          <Button
-            disabled={isBusy}
-            onClick={() => runAction('send', () => ecafeApi.contracts.executeAction({ action: sendForSignatureAction }))}
-          >
-            <Send size={18} />
-            {actionName === 'send' ? 'Göndərilir...' : sendForSignatureAction.label}
-          </Button>
-        ) : null}
 
         {approveAction ? (
           <div className="contract-approval-box">
@@ -369,49 +346,53 @@ export function ContractDetailPage() {
             <Button
               disabled={isBusy || !hasAcceptedContractTerms || !acceptanceText.trim()}
               onClick={() =>
-                runAction('approve', () =>
-                  ecafeApi.contracts.executeAction({
-                    action: approveAction,
-                    body: {
-                      restaurantId: Number(contract.restaurantId),
-                      contractId: Number(contract.id),
-                      hasAcceptedContractTerms,
-                      acceptanceText,
-                    },
-                  }),
-                )
+                runAction(approveAction, {
+                  restaurantId: Number(contract.restaurantId),
+                  contractId: Number(contract.id),
+                  hasAcceptedContractTerms,
+                  acceptanceText,
+                })
               }
             >
               <CheckCircle2 size={18} />
-              {actionName === 'approve' ? 'Təsdiqlənir...' : approveAction.label}
+              {actionName === approveAction.code ? 'Təsdiqlənir...' : approveAction.label}
             </Button>
           </div>
         ) : null}
 
-        {activateAction ? (
-          <Button
-            disabled={isBusy}
-            onClick={() => runAction('activate', () => ecafeApi.contracts.executeAction({ action: activateAction }))}
-          >
-            <ShieldCheck size={18} />
-            {actionName === 'activate' ? 'Aktivləşdirilir...' : activateAction.label}
-          </Button>
-        ) : null}
-
-        {terminateAction ? (
-          <Button
-            disabled={isBusy}
-            onClick={() => runAction('terminate', () => ecafeApi.contracts.executeAction({ action: terminateAction }))}
-            variant="danger"
-          >
-            <XCircle size={18} />
-            {actionName === 'terminate' ? 'Ləğv edilir...' : terminateAction.label}
-          </Button>
+        {genericActions.length > 0 ? (
+          <div className="action-row">
+            {genericActions.map((action) => (
+              <Button
+                disabled={isBusy}
+                key={`${action.code}-${action.endpoint}`}
+                onClick={() => requestAction(action)}
+                variant={action.requiresConfirmation ? 'danger' : 'primary'}
+              >
+                {action.code === 'sendForSignature' ? <Send size={18} /> : action.code === 'activate' ? <ShieldCheck size={18} /> : action.requiresConfirmation ? <Ban size={18} /> : <CheckCircle2 size={18} />}
+                {actionName === action.code ? 'İcra olunur...' : action.label}
+              </Button>
+            ))}
+          </div>
         ) : null}
 
         {!hasVisibleAction ? <p className="muted-text">Sizin rolunuz üçün bu statusda icra ediləcək əməliyyat yoxdur.</p> : null}
         {actionError ? <StatusMessage details={actionErrorDetails} tone="danger">{actionError}</StatusMessage> : null}
       </section>
+      <ReservationReasonDialog
+        confirmLabel={pendingAction?.label || 'Təsdiqlə'}
+        description="Bu əməliyyat müqavilənin cari statusu və istifadəçi roluna uyğun icra ediləcək."
+        error={pendingAction ? actionError : ''}
+        isOpen={Boolean(pendingAction)}
+        isSubmitting={Boolean(pendingAction && actionName === pendingAction.code)}
+        onClose={() => setPendingAction(null)}
+        onConfirm={(reason) => {
+          if (!pendingAction) return
+          void runAction(pendingAction, reason ? { reason } : undefined, () => setPendingAction(null))
+        }}
+        requireReason={pendingAction?.requiresReason || false}
+        title={`${pendingAction?.label || 'Əməliyyatı'} təsdiqləyirsiniz?`}
+      />
     </main>
   )
 }

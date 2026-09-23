@@ -1,7 +1,9 @@
 import { CheckCircle2, FileCheck2, Upload } from 'lucide-react'
 import { useState, type ChangeEvent, type FormEvent } from 'react'
+import type { WorkflowAction } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useFormFeedback } from '../../shared/hooks/useFormFeedback'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button } from '../../shared/ui/Button'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
@@ -9,6 +11,9 @@ type ReservationPaymentProofPanelProps = {
   restaurantId: string
   reservationId: string
   amount: number
+  workflowFlowCode?: string
+  statusId?: number
+  action?: WorkflowAction
 }
 
 const maxFileSizeBytes = 10 * 1024 * 1024
@@ -17,11 +22,27 @@ export function ReservationPaymentProofPanel({
   restaurantId,
   reservationId,
   amount,
+  workflowFlowCode,
+  statusId,
+  action,
 }: ReservationPaymentProofPanelProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const { feedback, clearFeedback, setError, setSuccess } = useFormFeedback()
+  const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
+    () => !action && workflowFlowCode && statusId
+      ? ecafeApi.workflow.actions({
+          flowCode: workflowFlowCode,
+          statusId,
+          restaurantId,
+          entityId: reservationId,
+        })
+      : Promise.resolve([]),
+    [],
+    [action, workflowFlowCode, statusId, restaurantId, reservationId],
+  )
+  const submitPaymentProofAction = action || workflowActions.find((item) => item.code === 'submitPaymentProof')
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     clearFeedback()
@@ -54,7 +75,17 @@ export function ReservationPaymentProofPanel({
     setIsSubmitting(true)
 
     try {
-      await ecafeApi.reservations.submitPaymentProof(restaurantId, reservationId, selectedFile)
+      const formData = new FormData()
+      formData.append('File', selectedFile)
+
+      if (submitPaymentProofAction) {
+        await ecafeApi.workflow.executeMultipartAction({
+          action: submitPaymentProofAction,
+          formData,
+        })
+      } else {
+        await ecafeApi.reservations.submitPaymentProof(restaurantId, reservationId, selectedFile)
+      }
       setIsSubmitted(true)
       setSuccess('Ödəniş çeki göndərildi. Restoran təsdiq etdikdən sonra rezervasiya tamamlanacaq.')
     } catch (error) {

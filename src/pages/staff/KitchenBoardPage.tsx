@@ -1,8 +1,7 @@
-import { Check, ChefHat, Clock } from 'lucide-react'
 import { orders } from '../../entities/mockData'
 import { Badge } from '../../shared/ui/Badge'
-import { Button } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function KitchenBoardPage() {
   return (
@@ -11,6 +10,7 @@ export function KitchenBoardPage() {
         eyebrow="Kitchen"
         title="Mətbəx sifarişləri"
       />
+      <StatusMessage tone="info">Sifariş workflow-u backend-də aktivləşdirildikdən sonra əməliyyat düymələri burada görünəcək.</StatusMessage>
       <section className="kitchen-board">
         {orders.map((order) => (
           <article className="kitchen-ticket" key={order.id}>
@@ -24,20 +24,6 @@ export function KitchenBoardPage() {
                 <li key={item}>{item}</li>
               ))}
             </ul>
-            <footer>
-              <Button variant="secondary" type="button">
-                <Clock size={17} />
-                Accepted
-              </Button>
-              <Button variant="secondary" type="button">
-                <ChefHat size={17} />
-                Preparing
-              </Button>
-              <Button type="button">
-                <Check size={17} />
-                Ready
-              </Button>
-            </footer>
           </article>
         ))}
       </section>

@@ -1,4 +1,4 @@
-import { Ban, CalendarDays, CheckCircle2, Clock3, Eye, Users, XCircle } from 'lucide-react'
+import { Ban, CalendarDays, CheckCircle2, Clock3, Eye, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
@@ -25,24 +25,23 @@ export function RestaurantReservationDetailPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [actionName, setActionName] = useState('')
   const [actionError, setActionError] = useState('')
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [pendingAction, setPendingAction] = useState<WorkflowAction | null>(null)
   const { data: reservation, error, isLoading } = useAsyncData<ReservationResponse | null>(
     () => restaurantId && reservationId ? ecafeApi.reservations.getForRestaurant(restaurantId, reservationId) : Promise.resolve(null),
     null,
     [restaurantId, reservationId, reloadKey],
   )
   const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
-    () => reservation && restaurantId && reservationId
+    () => reservation && restaurantId && reservationId && reservation.workflowFlowCode
       ? ecafeApi.workflow.actions({
-          flowCode: 'reservation',
+          flowCode: reservation.workflowFlowCode,
           statusId: reservation.statusId,
           restaurantId,
           entityId: reservationId,
         })
       : Promise.resolve([]),
     [],
-    [restaurantId, reservationId, reservation?.statusId],
+    [restaurantId, reservationId, reservation?.workflowFlowCode, reservation?.statusId],
   )
   const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
     () => restaurantId && reservationId
@@ -51,17 +50,15 @@ export function RestaurantReservationDetailPage() {
     null,
     [restaurantId, reservationId, reloadKey],
   )
-  const canSendPaymentInstruction = workflowActions.some((action) => action.code === 'sendPaymentInstruction')
-  const approvePaymentProofAction = workflowActions.find((action) => action.code === 'approvePaymentProof')
-  const rejectPaymentProofAction = workflowActions.find((action) => action.code === 'rejectPaymentProof')
-  const cancelAction = workflowActions.find((action) => action.code === 'cancel')
+  const sendPaymentInstructionAction = workflowActions.find((action) => action.code === 'sendPaymentInstruction')
+  const visibleActions = workflowActions.filter((action) => action.code !== 'sendPaymentInstruction' && action.code !== 'submitPaymentProof')
 
-  async function runAction(name: string, action: () => Promise<unknown>, onSuccess?: () => void) {
+  async function runAction(action: WorkflowAction, body?: unknown, onSuccess?: () => void) {
     setActionError('')
-    setActionName(name)
+    setActionName(action.code)
 
     try {
-      await action()
+      await ecafeApi.workflow.executeAction({ action, body })
       onSuccess?.()
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       setReloadKey((value) => value + 1)
@@ -70,6 +67,16 @@ export function RestaurantReservationDetailPage() {
     } finally {
       setActionName('')
     }
+  }
+
+  function requestAction(action: WorkflowAction) {
+    setActionError('')
+    if (action.requiresConfirmation) {
+      setPendingAction(action)
+      return
+    }
+
+    void runAction(action)
   }
 
   async function openPaymentProof() {
@@ -139,48 +146,24 @@ export function RestaurantReservationDetailPage() {
             </Button>
           </div>
         ) : null}
-        {(approvePaymentProofAction || rejectPaymentProofAction || cancelAction || actionError) ? (
+        {(visibleActions.length > 0 || actionError) ? (
           <div className="reservation-detail-actions">
             <div>
-              <strong>Rezervasiya əməliyyatları</strong>
-              <p>Əməliyyatlar rezervasiyanın hazırkı statusuna və sizin rolunuza əsasən göstərilir.</p>
+              <span className="section-eyebrow">NÖVBƏTİ ADDIM</span>
+              <strong>Rezervasiya əməliyyatı</strong>
             </div>
             <div className="action-row">
-              {approvePaymentProofAction ? (
+              {visibleActions.map((action) => (
                 <Button
                   disabled={Boolean(actionName)}
-                  onClick={() => runAction('approve', () => ecafeApi.reservations.approvePaymentProof(restaurantId, String(reservation.id)))}
+                  key={`${action.code}-${action.endpoint}`}
+                  onClick={() => requestAction(action)}
+                  variant={action.requiresConfirmation ? 'danger' : 'primary'}
                 >
-                  <CheckCircle2 size={17} />
-                  {actionName === 'approve' ? 'Təsdiqlənir...' : approvePaymentProofAction.label}
+                  {action.requiresConfirmation ? <Ban size={17} /> : <CheckCircle2 size={17} />}
+                  {actionName === action.code ? 'İcra olunur...' : action.label}
                 </Button>
-              ) : null}
-              {rejectPaymentProofAction ? (
-                <Button
-                  disabled={Boolean(actionName)}
-                  onClick={() => {
-                    setActionError('')
-                    setIsRejectDialogOpen(true)
-                  }}
-                  variant="danger"
-                >
-                  <XCircle size={17} />
-                  {rejectPaymentProofAction.label}
-                </Button>
-              ) : null}
-              {cancelAction ? (
-                <Button
-                  disabled={Boolean(actionName)}
-                  onClick={() => {
-                    setActionError('')
-                    setIsCancelDialogOpen(true)
-                  }}
-                  variant="danger"
-                >
-                  <Ban size={17} />
-                  {cancelAction.label}
-                </Button>
-              ) : null}
+              ))}
             </div>
             {actionError ? <StatusMessage tone="danger">{actionError}</StatusMessage> : null}
           </div>
@@ -190,46 +173,27 @@ export function RestaurantReservationDetailPage() {
         </div>
       </section>
       <ReservationHistoryTimeline items={history?.items || []} />
-      {canSendPaymentInstruction ? (
+      {sendPaymentInstructionAction ? (
         <ReservationPaymentInstructionPanel
+          action={sendPaymentInstructionAction}
           restaurantId={restaurantId}
           reservationId={String(reservation.id)}
           amount={`${reservation.depositAmount.toFixed(2)} AZN`}
         />
       ) : null}
       <ReservationReasonDialog
-        confirmLabel="Çeki rədd et"
-        description="Çek müştəriyə qaytarılacaq və yeni ödəniş sübutu göndərməsi mümkün olacaq."
-        error={actionName === 'reject' ? actionError : ''}
-        isOpen={isRejectDialogOpen}
-        isSubmitting={actionName === 'reject'}
-        onClose={() => setIsRejectDialogOpen(false)}
+        confirmLabel={pendingAction?.label || 'Təsdiqlə'}
+        description="Bu əməliyyat rezervasiyanın backend workflow qaydasına uyğun icra ediləcək."
+        error={pendingAction ? actionError : ''}
+        isOpen={Boolean(pendingAction)}
+        isSubmitting={Boolean(pendingAction && actionName === pendingAction.code)}
+        onClose={() => setPendingAction(null)}
         onConfirm={(reason) => {
-          void runAction(
-            'reject',
-            () => ecafeApi.reservations.rejectPaymentProof(restaurantId, String(reservation.id), reason),
-            () => setIsRejectDialogOpen(false),
-          )
+          if (!pendingAction) return
+          void runAction(pendingAction, reason ? { reason } : undefined, () => setPendingAction(null))
         }}
-        requireReason
-        title="Ödəniş çekini rədd edirsiniz?"
-      />
-      <ReservationReasonDialog
-        confirmLabel="Rezervasiyanı ləğv et"
-        description="Bu əməliyyat rezervasiyanı ləğv edəcək və masa üçün yaradılmış hold-u azad edəcək."
-        error={actionName === 'cancel' ? actionError : ''}
-        isOpen={isCancelDialogOpen}
-        isSubmitting={actionName === 'cancel'}
-        onClose={() => setIsCancelDialogOpen(false)}
-        onConfirm={(reason) => {
-          void runAction(
-            'cancel',
-            () => ecafeApi.reservations.cancelForRestaurant(restaurantId, String(reservation.id), reason),
-            () => setIsCancelDialogOpen(false),
-          )
-        }}
-        requireReason
-        title="Rezervasiyanı ləğv edirsiniz?"
+        requireReason={pendingAction?.requiresReason || false}
+        title={`${pendingAction?.label || 'Əməliyyatı'} təsdiqləyirsiniz?`}
       />
     </main>
   )

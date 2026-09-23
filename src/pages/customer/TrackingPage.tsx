@@ -39,7 +39,7 @@ export function TrackingPage() {
       <PageHeader
         eyebrow="Rezervasiya"
         title="Rezervasiyanı izlə"
-        description="Rezervasiyanın statusunu, ödəniş məlumatını və keçdiyi mərhələləri izləyin."
+        description="Statusu, ödənişi və proses tarixçəsini bir yerdə görün."
       />
 
       {isLoading ? <p className="online-only">Rezervasiya məlumatları yüklənir...</p> : null}
@@ -104,6 +104,8 @@ export function TrackingPage() {
                 restaurantId={String(reservation.restaurantId)}
                 reservationId={String(reservation.id)}
                 amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
+                statusId={reservation.statusId}
+                workflowFlowCode={reservation.workflowFlowCode}
               />
             ) : null}
 

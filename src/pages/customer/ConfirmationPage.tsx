@@ -1,5 +1,4 @@
-import { CheckCircle2 } from 'lucide-react'
-import { Ban } from 'lucide-react'
+import { Ban, CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
@@ -14,6 +13,7 @@ import { ReservationPaymentProofPanel } from '../../features/reservations/Reserv
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import type { ReservationHistoryResponse } from '../../shared/api/ecafeApi'
 import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
+import { Badge } from '../../shared/ui/Badge'
 
 export function ConfirmationPage() {
   const [searchParams] = useSearchParams()
@@ -28,16 +28,16 @@ export function ConfirmationPage() {
     [reservationId, reloadKey],
   )
   const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
-    () => reservation && reservationId
+    () => reservation && reservationId && reservation.workflowFlowCode
       ? ecafeApi.workflow.actions({
-          flowCode: 'reservation',
+          flowCode: reservation.workflowFlowCode,
           statusId: reservation.statusId,
           restaurantId: String(reservation.restaurantId),
           entityId: reservationId,
         })
       : Promise.resolve([]),
     [],
-    [reservationId, reservation?.statusId, reservation?.restaurantId, reloadKey],
+    [reservationId, reservation?.workflowFlowCode, reservation?.statusId, reservation?.restaurantId, reloadKey],
   )
   const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
     () => reservationId ? ecafeApi.reservations.getHistory(reservationId) : Promise.resolve(null),
@@ -45,17 +45,21 @@ export function ConfirmationPage() {
     [reservationId, reloadKey],
   )
 
-  const cancelAction = workflowActions.find((action) => action.code === 'cancel')
+  const cancelAction = workflowActions.find((action) => action.requiresConfirmation)
+  const submitPaymentProofAction = workflowActions.find((action) => action.code === 'submitPaymentProof')
 
   async function cancelReservation(reason: string) {
-    if (!reservationId) {
+    if (!reservationId || !cancelAction) {
       return
     }
 
     setCancelError('')
     setIsCancelling(true)
     try {
-      await ecafeApi.reservations.cancel(reservationId, reason)
+      await ecafeApi.workflow.executeAction({
+        action: cancelAction,
+        body: reason ? { reason } : undefined,
+      })
       setIsCancelDialogOpen(false)
       setReloadKey((value) => value + 1)
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
@@ -66,14 +70,25 @@ export function ConfirmationPage() {
     }
   }
 
+  const reservationPresentation = reservation
+    ? getReservationStatusPresentation(reservation.status)
+    : null
+
   return (
-    <main className="center-page">
-      <article className="success-panel">
-        <CheckCircle2 size={56} />
-        <h1>{reservationId ? 'Rezervasiya qeydə alındı' : 'Sifariş qeydə alındı'}</h1>
+    <main className="center-page reservation-confirmation-page">
+      <article className="success-panel reservation-confirmation-panel">
+        <div className="reservation-confirmation-icon"><CheckCircle2 size={28} /></div>
+        <div className="reservation-confirmation-heading">
+          <span className="section-eyebrow">REZERVASİYA DETALI</span>
+          <h1>{reservationId ? `Rezervasiya #${reservationId}` : 'Sifariş qeydə alındı'}</h1>
+          {reservation ? <p>{reservation.restaurantName || 'Restoran rezervasiyası'}</p> : null}
+        </div>
+        {reservationPresentation ? <Badge tone={reservationPresentation.tone}>{reservationPresentation.label}</Badge> : null}
         <p>
           {reservationId
-            ? `Rezervasiya #${reservationId} ödəniş gözləyir. Menecer ödəniş təsdiqi üçün sizinlə əlaqə saxlayacaq.`
+            ? reservationPresentation?.tone === 'success'
+              ? 'Rezervasiyanın statusu yeniləndi. Detalları və tarixçəni aşağıda görə bilərsiniz.'
+              : 'Rezervasiyanın statusunu və növbəti addımı aşağıda görə bilərsiniz.'
             : 'Sifariş məlumatları restorana göndərildi.'}
         </p>
         {reservationId && isLoading ? <p className="online-only">Rezervasiya detalları yüklənir...</p> : null}
@@ -82,7 +97,7 @@ export function ConfirmationPage() {
           <>
             <dl className="reservation-confirmation-details">
               <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt)}</dd></div>
-              <div><dt>Masa</dt><dd>#{reservation.tableId}</dd></div>
+              <div><dt>Masa</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
               <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
               <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
               <div><dt>Depozit</dt><dd>{reservation.depositAmount.toFixed(2)} AZN</dd></div>
@@ -94,6 +109,9 @@ export function ConfirmationPage() {
                 restaurantId={String(reservation.restaurantId)}
                 reservationId={String(reservation.id)}
                 amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
+                action={submitPaymentProofAction}
+                statusId={reservation.statusId}
+                workflowFlowCode={reservation.workflowFlowCode}
               />
             ) : null}
             {cancelAction ? (

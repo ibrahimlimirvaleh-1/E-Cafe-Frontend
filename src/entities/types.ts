@@ -84,6 +84,7 @@ export type WorkflowAction = {
   httpMethod: string
   endpoint: string
   requiresConfirmation: boolean
+  requiresReason: boolean
   sortOrder: number
 }
 
