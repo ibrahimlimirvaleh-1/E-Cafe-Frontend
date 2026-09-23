@@ -285,6 +285,7 @@ function mapWorkflowAction(record: AnyRecord): WorkflowAction {
     httpMethod: str(record.httpMethod || record.method, 'POST'),
     endpoint: str(record.endpoint || record.url),
     requiresConfirmation: bool(record.requiresConfirmation),
+    requiresReason: bool(record.requiresReason),
     sortOrder: num(record.sortOrder),
   }
 }

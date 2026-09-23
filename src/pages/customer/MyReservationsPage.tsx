@@ -1,4 +1,5 @@
 import { ArrowRight, CalendarDays, Clock3, MapPin, Users } from 'lucide-react'
+import { useMemo } from 'react'
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
@@ -27,16 +28,47 @@ export function MyReservationsPage() {
     [],
   )
 
+  const reservationSummary = useMemo(() => {
+    const activeCount = data.items.filter((reservation) => getReservationStatusPresentation(reservation.status).tone !== 'danger').length
+    const awaitingPaymentCount = data.items.filter((reservation) => isReservationAwaitingPayment(reservation.status)).length
+
+    return {
+      activeCount,
+      awaitingPaymentCount,
+      totalCount: data.totalCount,
+    }
+  }, [data.items, data.totalCount])
+
   return (
     <main className="page reservations-page">
       <PageHeader
         eyebrow="Hesab"
         title="Rezervasiyalarım"
-        description="Rezervasiyalarınızın statusunu və ödəniş məlumatlarını buradan izləyin."
+        description="Rezervasiyalarınızı və ödəniş mərhələlərini izləyin."
       />
 
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
       {isLoading ? <p className="online-only">Rezervasiyalar yüklənir...</p> : null}
+
+      {!isLoading && !error && data.items.length > 0 ? (
+        <section className="reservation-overview" aria-label="Rezervasiya xülasəsi">
+          <div>
+            <span>Aktiv</span>
+            <strong>{reservationSummary.activeCount}</strong>
+            <small>rezervasiya</small>
+          </div>
+          <div>
+            <span>Ödəniş gözləyir</span>
+            <strong>{reservationSummary.awaitingPaymentCount}</strong>
+            <small>növbəti addım</small>
+          </div>
+          <div>
+            <span>Ümumi</span>
+            <strong>{reservationSummary.totalCount}</strong>
+            <small>rezervasiya</small>
+          </div>
+        </section>
+      ) : null}
 
       {!isLoading && !error && data.items.length === 0 ? (
         <section className="reservation-empty-state">
@@ -58,14 +90,17 @@ export function MyReservationsPage() {
                   <span className="reservation-card-kicker">Rezervasiya #{reservation.id}</span>
                   <h2>{reservation.restaurantName || 'Restoran rezervasiyası'}</h2>
                 </div>
-                <Badge tone={presentation.tone}>{presentation.label}</Badge>
+                <div className="reservation-card-status">
+                  <Badge tone={presentation.tone}>{presentation.label}</Badge>
+                  <span>{formatReservationDateTime(reservation.reservedAt)}</span>
+                </div>
               </div>
 
               <div className="customer-reservation-meta">
-                <span><CalendarDays size={17} />{formatReservationDateTime(reservation.reservedAt)}</span>
-                <span><MapPin size={17} />{reservation.tableName || `Masa ${reservation.tableId}`}</span>
-                <span><Users size={17} />{reservation.peopleCount} nəfər</span>
-                <span><Clock3 size={17} />{reservation.depositAmount.toFixed(2)} AZN depozit</span>
+                <span className="reservation-meta-item"><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><b>{formatReservationDateTime(reservation.reservedAt)}</b></span></span>
+                <span className="reservation-meta-item"><MapPin size={17} /><span><small>Masa</small><b>{reservation.tableName || `Masa ${reservation.tableId}`}</b></span></span>
+                <span className="reservation-meta-item"><Users size={17} /><span><small>Qonaq sayı</small><b>{reservation.peopleCount} nəfər</b></span></span>
+                <span className="reservation-meta-item"><Clock3 size={17} /><span><small>Depozit</small><b>{reservation.depositAmount.toFixed(2)} AZN</b></span></span>
               </div>
 
               {reservation.latestPaymentInstruction ? (
@@ -81,11 +116,13 @@ export function MyReservationsPage() {
                   restaurantId={String(reservation.restaurantId)}
                   reservationId={String(reservation.id)}
                   amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
+                  statusId={reservation.statusId}
+                  workflowFlowCode={reservation.workflowFlowCode}
                 />
               ) : null}
 
               <div className="customer-reservation-card-footer">
-                <span>
+                <span className="reservation-card-deadline">
                   {reservation.holdExpiresAt
                     ? `Ödəniş üçün son vaxt: ${formatReservationDateTime(reservation.holdExpiresAt)}`
                     : reservation.restaurantResponseExpiresAt

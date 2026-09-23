@@ -115,6 +115,11 @@ type WorkflowActionRequest = {
   body?: unknown
 }
 
+type WorkflowMultipartActionRequest = {
+  action: WorkflowAction
+  formData: FormData
+}
+
 function normalizeWorkflowActionEndpoint(endpoint: string) {
   const trimmedEndpoint = endpoint.trim()
 
@@ -227,6 +232,7 @@ export type ReservationResponse = {
   peopleCount: number
   statusId: number
   status: string
+  workflowFlowCode: string
   depositAmount: number
   holdExpiresAt?: string | null
   restaurantResponseExpiresAt?: string | null
@@ -577,6 +583,7 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     peopleCount: num(record.peopleCount),
     statusId: num(record.statusId),
     status: str(record.status || record.statusName),
+    workflowFlowCode: str(record.workflowFlowCode || record.flowCode),
     depositAmount: num(record.depositAmount),
     holdExpiresAt: str(record.holdExpiresAt || record.HoldExpiresAt) || null,
     restaurantResponseExpiresAt: str(record.restaurantResponseExpiresAt || record.RestaurantResponseExpiresAt) || null,
@@ -744,6 +751,7 @@ function mapWorkflowAction(record: AnyRecord): WorkflowAction {
     httpMethod: str(record.httpMethod || record.method, 'POST'),
     endpoint: str(record.endpoint || record.url),
     requiresConfirmation: bool(record.requiresConfirmation),
+    requiresReason: bool(record.requiresReason),
     sortOrder: num(record.sortOrder),
   }
 }
@@ -1238,6 +1246,16 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(`${endpoints.workflow.actions(request.flowCode)}?${params.toString()}`)
         return asArray<AnyRecord>(result.data).map(mapWorkflowAction)
       }, [] as WorkflowAction[]),
+    executeAction: ({ action, body }: WorkflowActionRequest) =>
+      httpClient<unknown>(normalizeWorkflowActionEndpoint(action.endpoint), {
+        method: action.httpMethod || 'POST',
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      }),
+    executeMultipartAction: ({ action, formData }: WorkflowMultipartActionRequest) =>
+      httpClient<unknown>(normalizeWorkflowActionEndpoint(action.endpoint), {
+        method: action.httpMethod || 'POST',
+        body: formData,
+      }),
   },
 
   restaurantGroups: {

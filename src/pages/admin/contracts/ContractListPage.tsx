@@ -340,38 +340,10 @@ function getNextStep(contract: RestaurantContract) {
     }
   }
 
-  const fallback: Record<ContractStatus, { title: string; description: string }> = {
-    Draft: {
-      title: 'Sahibkara göndərilməlidir',
-      description: 'Müqavilə hazırdır, təsdiq üçün göndərilə bilər.',
-    },
-    PendingSignature: {
-      title: 'Sahibkar təsdiqi gözlənilir',
-      description: 'Owner sənədi oxuyub təsdiqləməlidir.',
-    },
-    OwnerApproved: {
-      title: 'Admin aktivləşdirməlidir',
-      description: 'Təsdiqlənmiş müqavilə aktivləşdirmə gözləyir.',
-    },
-    Scheduled: {
-      title: 'Başlama tarixi gözlənilir',
-      description: 'Vaxtı çatanda job müqaviləni aktiv edəcək.',
-    },
-    Active: {
-      title: 'Aktiv müqavilə',
-      description: 'Lazım olarsa ləğv əməliyyatı detaldadır.',
-    },
-    Expired: {
-      title: 'Müddəti bitib',
-      description: 'Yeni müqavilə yaradılması nəzərdən keçirilə bilər.',
-    },
-    Terminated: {
-      title: 'Ləğv edilib',
-      description: 'Bu müqavilə üzrə əməliyyat bağlanıb.',
-    },
+  return {
+    title: 'Əməliyyat yoxdur',
+    description: 'Bu status və istifadəçi rolu üçün backend əməliyyat qaytarmayıb.',
   }
-
-  return fallback[contract.status]
 }
 
 function isExpiringWithin(contract: RestaurantContract, days: number) {

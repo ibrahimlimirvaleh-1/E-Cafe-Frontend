@@ -1,5 +1,6 @@
 import { CreditCard, Send, ShieldCheck } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import type { WorkflowAction } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useFormFeedback } from '../../shared/hooks/useFormFeedback'
 import { Button } from '../../shared/ui/Button'
@@ -9,12 +10,14 @@ type ReservationPaymentInstructionPanelProps = {
   restaurantId: string
   reservationId: string
   amount?: string
+  action?: WorkflowAction
 }
 
 export function ReservationPaymentInstructionPanel({
   restaurantId,
   reservationId,
   amount,
+  action,
 }: ReservationPaymentInstructionPanelProps) {
   const [displayText, setDisplayText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -32,7 +35,14 @@ export function ReservationPaymentInstructionPanel({
     setIsSubmitting(true)
 
     try {
-      await ecafeApi.reservations.sendPaymentInstruction(restaurantId, reservationId, { displayText })
+      if (action) {
+        await ecafeApi.workflow.executeAction({
+          action,
+          body: { displayText },
+        })
+      } else {
+        await ecafeApi.reservations.sendPaymentInstruction(restaurantId, reservationId, { displayText })
+      }
       setDisplayText('')
       setSuccess('Ödəniş məlumatı müştəriyə göndərildi.')
     } catch (error) {
