@@ -1,5 +1,5 @@
 import { ArrowRight, CalendarDays, Clock3, MapPin, Users } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
@@ -22,10 +22,11 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 }
 
 export function MyReservationsPage() {
+  const [reloadKey, setReloadKey] = useState(0)
   const { data, error, isLoading } = useAsyncData(
     () => ecafeApi.reservations.listMine({ pageNumber: 1, pageSize: 20 }),
     emptyPage,
-    [],
+    [reloadKey],
   )
 
   const reservationSummary = useMemo(() => {
@@ -118,6 +119,7 @@ export function MyReservationsPage() {
                   amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
                   statusId={reservation.statusId}
                   workflowFlowCode={reservation.workflowFlowCode}
+                  onSubmitted={() => setReloadKey((value) => value + 1)}
                 />
               ) : null}
 

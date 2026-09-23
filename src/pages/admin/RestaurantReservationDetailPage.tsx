@@ -1,4 +1,4 @@
-import { Ban, CalendarDays, CheckCircle2, Clock3, Eye, Users } from 'lucide-react'
+import { Ban, CalendarDays, CheckCircle2, Clock3, Eye, Users, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
@@ -52,6 +52,18 @@ export function RestaurantReservationDetailPage() {
   )
   const sendPaymentInstructionAction = workflowActions.find((action) => action.code === 'sendPaymentInstruction')
   const visibleActions = workflowActions.filter((action) => action.code !== 'sendPaymentInstruction' && action.code !== 'submitPaymentProof')
+
+  function getActionVariant(action: WorkflowAction) {
+    if (action.code === 'cancel') {
+      return 'danger' as const
+    }
+
+    if (action.code === 'rejectPaymentProof') {
+      return 'secondary' as const
+    }
+
+    return 'primary' as const
+  }
 
   async function runAction(action: WorkflowAction, body?: unknown, onSuccess?: () => void) {
     setActionError('')
@@ -158,9 +170,13 @@ export function RestaurantReservationDetailPage() {
                   disabled={Boolean(actionName)}
                   key={`${action.code}-${action.endpoint}`}
                   onClick={() => requestAction(action)}
-                  variant={action.requiresConfirmation ? 'danger' : 'primary'}
+                  variant={getActionVariant(action)}
                 >
-                  {action.requiresConfirmation ? <Ban size={17} /> : <CheckCircle2 size={17} />}
+                  {action.code === 'cancel'
+                    ? <Ban size={17} />
+                    : action.code === 'rejectPaymentProof'
+                      ? <XCircle size={17} />
+                      : <CheckCircle2 size={17} />}
                   {actionName === action.code ? 'İcra olunur...' : action.label}
                 </Button>
               ))}

@@ -45,7 +45,7 @@ export function ConfirmationPage() {
     [reservationId, reloadKey],
   )
 
-  const cancelAction = workflowActions.find((action) => action.requiresConfirmation)
+  const cancelAction = workflowActions.find((action) => action.code === 'cancel')
   const submitPaymentProofAction = workflowActions.find((action) => action.code === 'submitPaymentProof')
 
   async function cancelReservation(reason: string) {
@@ -113,6 +113,7 @@ export function ConfirmationPage() {
                   action={submitPaymentProofAction}
                   statusId={reservation.statusId}
                   workflowFlowCode={reservation.workflowFlowCode}
+                  onSubmitted={() => setReloadKey((value) => value + 1)}
                 />
               ) : null}
               {cancelAction ? (
