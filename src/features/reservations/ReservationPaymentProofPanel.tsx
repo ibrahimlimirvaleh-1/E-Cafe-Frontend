@@ -14,6 +14,7 @@ type ReservationPaymentProofPanelProps = {
   workflowFlowCode?: string
   statusId?: number
   action?: WorkflowAction
+  onSubmitted?: () => void
 }
 
 const maxFileSizeBytes = 10 * 1024 * 1024
@@ -25,12 +26,13 @@ export function ReservationPaymentProofPanel({
   workflowFlowCode,
   statusId,
   action,
+  onSubmitted,
 }: ReservationPaymentProofPanelProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const { feedback, clearFeedback, setError, setSuccess } = useFormFeedback()
-  const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
+  const { data: workflowActions, isLoading: isWorkflowLoading } = useAsyncData<WorkflowAction[]>(
     () => !action && workflowFlowCode && statusId
       ? ecafeApi.workflow.actions({
           flowCode: workflowFlowCode,
@@ -43,6 +45,18 @@ export function ReservationPaymentProofPanel({
     [action, workflowFlowCode, statusId, restaurantId, reservationId],
   )
   const submitPaymentProofAction = action || workflowActions.find((item) => item.code === 'submitPaymentProof')
+
+  if (!action && isWorkflowLoading) {
+    return (
+      <section className="reservation-proof-panel">
+        <p className="online-only">Ödəniş addımı yoxlanılır...</p>
+      </section>
+    )
+  }
+
+  if (!submitPaymentProofAction) {
+    return null
+  }
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     clearFeedback()
@@ -78,16 +92,13 @@ export function ReservationPaymentProofPanel({
       const formData = new FormData()
       formData.append('File', selectedFile)
 
-      if (submitPaymentProofAction) {
-        await ecafeApi.workflow.executeMultipartAction({
-          action: submitPaymentProofAction,
-          formData,
-        })
-      } else {
-        await ecafeApi.reservations.submitPaymentProof(restaurantId, reservationId, selectedFile)
-      }
+      await ecafeApi.workflow.executeMultipartAction({
+        action: submitPaymentProofAction,
+        formData,
+      })
       setIsSubmitted(true)
       setSuccess('Ödəniş çeki göndərildi. Restoran təsdiq etdikdən sonra rezervasiya tamamlanacaq.')
+      onSubmitted?.()
     } catch (error) {
       setError(error, 'Ödəniş çeki göndərilmədi. Rezervasiyanın statusunu yoxlayıb yenidən cəhd edin.')
     } finally {

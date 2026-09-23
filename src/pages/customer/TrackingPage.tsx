@@ -1,5 +1,6 @@
 import { CalendarDays, MapPin, Users } from 'lucide-react'
 import { useParams } from 'react-router-dom'
+import { useState } from 'react'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
@@ -14,6 +15,7 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function TrackingPage() {
   const { token = '' } = useParams()
+  const [reloadKey, setReloadKey] = useState(0)
   const { data: reservation, error, isLoading } = useAsyncData<ReservationResponse | null>(
     async () => {
       if (/^\d+$/.test(token)) {
@@ -24,12 +26,12 @@ export function TrackingPage() {
       return result.items[0] ?? null
     },
     null,
-    [token],
+    [token, reloadKey],
   )
   const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
     () => reservation ? ecafeApi.reservations.getHistory(String(reservation.id)) : Promise.resolve(null),
     null,
-    [reservation?.id],
+    [reservation?.id, reloadKey],
   )
 
   const presentation = reservation ? getReservationStatusPresentation(reservation.status) : null
@@ -106,6 +108,7 @@ export function TrackingPage() {
                 amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
                 statusId={reservation.statusId}
                 workflowFlowCode={reservation.workflowFlowCode}
+                onSubmitted={() => setReloadKey((value) => value + 1)}
               />
             ) : null}
 
