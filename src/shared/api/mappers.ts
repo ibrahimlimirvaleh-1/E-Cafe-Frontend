@@ -121,6 +121,11 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
     restaurantGroupId: restaurant.restaurantGroupId == null ? undefined : str(restaurant.restaurantGroupId),
     restaurantGroupName: str(restaurant.restaurantGroupName),
     cancellationWindowMinutes: restaurant.cancellationWindowMinutes == null ? undefined : num(restaurant.cancellationWindowMinutes),
+    reservationPreBlockMinutes: restaurant.reservationPreBlockMinutes == null ? undefined : num(restaurant.reservationPreBlockMinutes),
+    tableTurnoverBufferMinutes: restaurant.tableTurnoverBufferMinutes == null ? undefined : num(restaurant.tableTurnoverBufferMinutes),
+    noShowGraceMinutes: restaurant.noShowGraceMinutes == null ? undefined : num(restaurant.noShowGraceMinutes),
+    paymentHoldMinutes: restaurant.paymentHoldMinutes == null ? undefined : num(restaurant.paymentHoldMinutes),
+    restaurantResponseMinutes: restaurant.restaurantResponseMinutes == null ? undefined : num(restaurant.restaurantResponseMinutes),
     timeZone: str(restaurant.timeZone || restaurant.time_zone) || undefined,
     workingHours: workingHours(restaurant),
     isOpen: restaurant.isOpen == null && restaurant.is_open == null ? undefined : bool(restaurant.isOpen ?? restaurant.is_open),
@@ -152,6 +157,7 @@ export function mapTable(record: AnyRecord, restaurantId: string): Table {
     isActive,
     isPublic: bool(record.isPublic, true),
     image: str(record.imageUrl || record.fileUrl || record.image),
+    mustVacateAt: str(record.mustVacateAt || record.MustVacateAt) || null,
   }
 }
 

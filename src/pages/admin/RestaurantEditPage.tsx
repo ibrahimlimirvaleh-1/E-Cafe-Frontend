@@ -81,6 +81,11 @@ export function RestaurantEditPage() {
     branchName: '',
     depositAmount: '0',
     cancellationWindowMinutes: '60',
+    reservationPreBlockMinutes: '60',
+    tableTurnoverBufferMinutes: '15',
+    noShowGraceMinutes: '15',
+    paymentHoldMinutes: '15',
+    restaurantResponseMinutes: '15',
     serviceFeePercent: '0',
     staffSettlementPeriod: '7',
     timeZone: '',
@@ -108,6 +113,11 @@ export function RestaurantEditPage() {
       branchName: restaurant.branchName || '',
       depositAmount: String(restaurant.depositAmount),
       cancellationWindowMinutes: String(restaurant.cancellationWindowMinutes ?? 60),
+      reservationPreBlockMinutes: String(restaurant.reservationPreBlockMinutes ?? 60),
+      tableTurnoverBufferMinutes: String(restaurant.tableTurnoverBufferMinutes ?? 15),
+      noShowGraceMinutes: String(restaurant.noShowGraceMinutes ?? 15),
+      paymentHoldMinutes: String(restaurant.paymentHoldMinutes ?? 15),
+      restaurantResponseMinutes: String(restaurant.restaurantResponseMinutes ?? 15),
       serviceFeePercent: String(restaurant.defaultServiceFeePercent),
       staffSettlementPeriod: '7',
       timeZone: restaurant.timeZone || '',
@@ -139,6 +149,11 @@ export function RestaurantEditPage() {
         branchName: form.branchName,
         depositAmount: Number(form.depositAmount),
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
+        reservationPreBlockMinutes: Number(form.reservationPreBlockMinutes),
+        tableTurnoverBufferMinutes: Number(form.tableTurnoverBufferMinutes),
+        noShowGraceMinutes: Number(form.noShowGraceMinutes),
+        paymentHoldMinutes: Number(form.paymentHoldMinutes),
+        restaurantResponseMinutes: Number(form.restaurantResponseMinutes),
         serviceFeePercent: Number(form.serviceFeePercent),
         staffSettlementPeriod: Number(form.staffSettlementPeriod),
         timeZone: form.timeZone,
@@ -279,6 +294,17 @@ export function RestaurantEditPage() {
         <div className="form-grid two">
           <TextField label="Ləğv pəncərəsi dəqiqə" min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
           <TextField label="Personal hesablaşma günü" min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
+        </div>
+        <div className="form-grid two">
+          <TextField label="Növbəti rezervasiyadan əvvəl qoruma müddəti (dəqiqə)" min={15} max={180} required type="number" value={form.reservationPreBlockMinutes} onChange={(event) => setForm({ ...form, reservationPreBlockMinutes: event.target.value })} />
+          <TextField label="Masa hazırlıq bufferi dəqiqə" min={0} max={120} required type="number" value={form.tableTurnoverBufferMinutes} onChange={(event) => setForm({ ...form, tableTurnoverBufferMinutes: event.target.value })} />
+        </div>
+        <div className="form-grid two">
+          <TextField label="No-show gözləmə müddəti dəqiqə" min={0} max={120} required type="number" value={form.noShowGraceMinutes} onChange={(event) => setForm({ ...form, noShowGraceMinutes: event.target.value })} />
+          <TextField label="Ödəniş üçün hold müddəti dəqiqə" min={1} max={120} required type="number" value={form.paymentHoldMinutes} onChange={(event) => setForm({ ...form, paymentHoldMinutes: event.target.value })} />
+        </div>
+        <div className="form-grid two">
+          <TextField label="Restoranın cavab müddəti dəqiqə" min={1} max={120} required type="number" value={form.restaurantResponseMinutes} onChange={(event) => setForm({ ...form, restaurantResponseMinutes: event.target.value })} />
         </div>
         <FileUploadField
           label="Restoran şəkli"

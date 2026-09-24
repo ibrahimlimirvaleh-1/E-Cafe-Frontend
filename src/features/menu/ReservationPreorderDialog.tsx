@@ -7,6 +7,9 @@ type ReservationPreorderDialogProps = {
   onCancel: () => void
   onPreorder: () => void
   onSkip: () => void
+  limitedSeatingMessage?: string | null
+  acceptsLimitedSeating?: boolean
+  onAcceptLimitedSeating?: (accepted: boolean) => void
 }
 
 export function ReservationPreorderDialog({
@@ -15,6 +18,9 @@ export function ReservationPreorderDialog({
   onCancel,
   onPreorder,
   onSkip,
+  limitedSeatingMessage,
+  acceptsLimitedSeating = false,
+  onAcceptLimitedSeating,
 }: ReservationPreorderDialogProps) {
   if (!isOpen) {
     return null
@@ -40,13 +46,23 @@ export function ReservationPreorderDialog({
         <div className="reservation-preorder-dialog-body">
           <h2 id="reservation-preorder-title">Öncədən sifariş etmək istəyirsiniz?</h2>
           <p>Masanız seçildi. İndi menyudan əvvəlcədən sifariş əlavə edə və ya yalnız rezervasiyanı davam etdirə bilərsiniz.</p>
+          {limitedSeatingMessage ? (
+            <label className="reservation-limited-seating-confirmation">
+              <input
+                checked={acceptsLimitedSeating}
+                onChange={(event) => onAcceptLimitedSeating?.(event.target.checked)}
+                type="checkbox"
+              />
+              <span>{limitedSeatingMessage}</span>
+            </label>
+          ) : null}
         </div>
         <footer className="reservation-preorder-dialog-actions">
-          <Button className="reservation-preorder-option reservation-preorder-option-primary" disabled={isSubmitting} onClick={onPreorder} type="button">
+          <Button className="reservation-preorder-option reservation-preorder-option-primary" disabled={isSubmitting || Boolean(limitedSeatingMessage && !acceptsLimitedSeating)} onClick={onPreorder} type="button">
             <ShoppingBag size={18} />
             Menyuya keç
           </Button>
-          <Button className="reservation-preorder-option" disabled={isSubmitting} onClick={onSkip} variant="secondary" type="button">
+          <Button className="reservation-preorder-option" disabled={isSubmitting || Boolean(limitedSeatingMessage && !acceptsLimitedSeating)} onClick={onSkip} variant="secondary" type="button">
             {isSubmitting ? 'Rezervasiya yaradılır...' : 'Yox, yalnız rezervasiya et'}
           </Button>
         </footer>
