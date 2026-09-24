@@ -8,7 +8,7 @@ import {
   isTableReservationConflict,
 } from '../../features/menu/reservationErrors'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
-import { ecafeApi } from '../../shared/api/ecafeApi'
+import { ecafeApi, type TableAvailabilityResponse } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
@@ -16,6 +16,11 @@ function formatReservedAt(value: string) {
   const [date, timeWithOffset] = value.split('T')
   const time = timeWithOffset?.slice(0, 5)
   return [date, time].filter(Boolean).join(' / ')
+}
+
+function formatTime(value?: string | null) {
+  if (!value) return '-'
+  return value.split('T')[1]?.slice(0, 5) || '-'
 }
 
 export function TableSelectionPage() {
@@ -27,19 +32,19 @@ export function TableSelectionPage() {
   const peopleCount = Number.isFinite(parsedPeopleCount) && parsedPeopleCount > 0 ? parsedPeopleCount : 1
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [isCreatingReservation, setIsCreatingReservation] = useState(false)
+  const [acceptsLimitedSeating, setAcceptsLimitedSeating] = useState(false)
   const [reservationError, setReservationError] = useState('')
   const [reservationErrorTone, setReservationErrorTone] = useState<'danger' | 'warning'>('danger')
   const [unavailableTableIds, setUnavailableTableIds] = useState<Set<string>>(new Set())
-  const { data: tables, error: availabilityError, isLoading } = useAsyncData(
+  const { data: availability, error: availabilityError, isLoading } = useAsyncData<TableAvailabilityResponse | null>(
     async () => {
       if (!reservedAt) {
-        return []
+        return null
       }
 
-      const availableTables = await ecafeApi.tables.listAvailableForReservation(restaurantId, reservedAt)
-      return availableTables.filter((table) => table.capacity >= peopleCount)
+      return ecafeApi.tables.checkAvailability(restaurantId, reservedAt)
     },
-    [],
+    null,
     [restaurantId, reservedAt, peopleCount],
   )
 
@@ -62,6 +67,7 @@ export function TableSelectionPage() {
     setReservationError('')
     setReservationErrorTone('danger')
     setSelectedTableId(tableId)
+    setAcceptsLimitedSeating(false)
   }
 
   const handlePreorder = () => {
@@ -71,6 +77,9 @@ export function TableSelectionPage() {
 
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tableId', selectedTableId)
+    if (selectedTable?.mustVacateAt && acceptsLimitedSeating) {
+      nextParams.set('acceptsLimitedSeating', 'true')
+    }
     navigate(`/restaurants/${restaurantId}/menu?${nextParams.toString()}`)
   }
 
@@ -88,6 +97,7 @@ export function TableSelectionPage() {
         tableId: selectedTableId,
         reservedAt,
         peopleCount,
+        acceptsLimitedSeating,
       })
       const nextParams = new URLSearchParams(searchParams)
       nextParams.set('tableId', selectedTableId)
@@ -106,9 +116,16 @@ export function TableSelectionPage() {
     }
   }
 
+  const tables = availability?.tables ?? []
   const visibleTables = isLoading || availabilityError
     ? []
-    : tables.filter((table) => !unavailableTableIds.has(table.id))
+    : tables
+      .filter((table) => table.capacity >= peopleCount)
+      .filter((table) => !unavailableTableIds.has(table.id))
+  const selectedTable = visibleTables.find((table) => table.id === selectedTableId) ?? null
+  const limitedSeatingMessage = selectedTable?.mustVacateAt
+    ? `Bu masa növbəti rezervasiya üçün ayrılıb. Ən geci ${formatTime(selectedTable.mustVacateAt)}-də masanı təhvil vermə şərti ilə razıyam.`
+    : null
 
   return (
     <main className="page reservation-page">
@@ -138,10 +155,15 @@ export function TableSelectionPage() {
         </div>
         <div className="reservation-table-legend"><span><i className="available" /> Boşdur</span><span><i className="capacity" /> Tutum</span></div>
       </div>
+      {availability?.message ? (
+        <p className={`reservation-availability-message ${availability.hasAvailableTable ? 'success' : 'warning'}`}>
+          {availability.message}
+        </p>
+      ) : null}
       {reservationError ? <p className={`reservation-availability-message ${reservationErrorTone}`}>{reservationError}</p> : null}
       {availabilityError ? <p className="reservation-availability-message danger">Masaların vəziyyəti yüklənmədi. Səhifəni yeniləyib yenidən yoxlayın.</p> : null}
       {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
-      {!isLoading && !availabilityError && visibleTables.length === 0 ? <p className="online-only">Bu saat üçün uyğun masa yoxdur. Başqa saat seçin.</p> : null}
+      {!isLoading && !availabilityError && visibleTables.length === 0 ? <p className="online-only">{availability?.message || 'Bu saat üçün uyğun masa yoxdur. Başqa saat seçin.'}</p> : null}
       <section className="choice-grid reservation-table-grid">
         {visibleTables.map((table) => {
           return (
@@ -157,7 +179,7 @@ export function TableSelectionPage() {
               </div>
               <div className="reservation-table-card-meta">
                 <span><Users size={16} /> {table.capacity} nəfərlik</span>
-                <small>{table.status === 'Available' ? 'Boşdur' : table.status}</small>
+                <small>{table.mustVacateAt ? `${formatTime(table.mustVacateAt)}-dək` : table.status === 'Available' ? 'Boşdur' : table.status}</small>
               </div>
               <div className="reservation-table-card-action">Seç <ArrowRight size={17} /></div>
             </button>
@@ -167,9 +189,15 @@ export function TableSelectionPage() {
       <ReservationPreorderDialog
         isOpen={Boolean(selectedTableId)}
         isSubmitting={isCreatingReservation}
-        onCancel={() => setSelectedTableId(null)}
+        onCancel={() => {
+          setSelectedTableId(null)
+          setAcceptsLimitedSeating(false)
+        }}
         onPreorder={handlePreorder}
         onSkip={handleReservationOnly}
+        limitedSeatingMessage={limitedSeatingMessage}
+        acceptsLimitedSeating={acceptsLimitedSeating}
+        onAcceptLimitedSeating={setAcceptsLimitedSeating}
       />
     </main>
   )

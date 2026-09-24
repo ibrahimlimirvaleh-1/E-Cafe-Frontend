@@ -25,6 +25,7 @@ export function RestaurantReservationDetailPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [actionName, setActionName] = useState('')
   const [actionError, setActionError] = useState('')
+  const [actionMessage, setActionMessage] = useState('')
   const [pendingAction, setPendingAction] = useState<WorkflowAction | null>(null)
   const { data: reservation, error, isLoading } = useAsyncData<ReservationResponse | null>(
     () => restaurantId && reservationId ? ecafeApi.reservations.getForRestaurant(restaurantId, reservationId) : Promise.resolve(null),
@@ -67,10 +68,13 @@ export function RestaurantReservationDetailPage() {
 
   async function runAction(action: WorkflowAction, body?: unknown, onSuccess?: () => void) {
     setActionError('')
+    setActionMessage('')
     setActionName(action.code)
 
     try {
-      await ecafeApi.workflow.executeAction({ action, body })
+      const result = await ecafeApi.workflow.executeAction({ action, body })
+      const payload = result.data && typeof result.data === 'object' ? result.data as { message?: unknown } : null
+      setActionMessage(typeof payload?.message === 'string' ? payload.message : `${action.label} icra edildi.`)
       onSuccess?.()
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       setReloadKey((value) => value + 1)
@@ -83,6 +87,7 @@ export function RestaurantReservationDetailPage() {
 
   function requestAction(action: WorkflowAction) {
     setActionError('')
+    setActionMessage('')
     if (action.requiresConfirmation) {
       setPendingAction(action)
       return
@@ -137,6 +142,7 @@ export function RestaurantReservationDetailPage() {
           <div><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><strong>{formatReservationDateTime(reservation.reservedAt)}</strong></span></div>
           <div><Users size={17} /><span><small>Qonaq sayı</small><strong>{reservation.peopleCount} nəfər</strong></span></div>
           <div><Clock3 size={17} /><span><small>Depozit</small><strong>{reservation.depositAmount.toFixed(2)} AZN</strong></span></div>
+          {reservation.mustVacateAt ? <div><Clock3 size={17} /><span><small>Masanı təhvil vaxtı</small><strong>{formatReservationDateTime(reservation.mustVacateAt)}</strong></span></div> : null}
           <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ? 'Ödəniş üçün son vaxt' : 'Cavab üçün son vaxt'}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
         </div>
         {reservation.latestPaymentInstruction ? (
@@ -158,7 +164,7 @@ export function RestaurantReservationDetailPage() {
             </Button>
           </div>
         ) : null}
-        {(visibleActions.length > 0 || actionError) ? (
+        {(visibleActions.length > 0 || actionError || actionMessage) ? (
           <div className="reservation-detail-actions">
             <div>
               <span className="section-eyebrow">NÖVBƏTİ ADDIM</span>
@@ -182,6 +188,7 @@ export function RestaurantReservationDetailPage() {
               ))}
             </div>
             {actionError ? <StatusMessage tone="danger">{actionError}</StatusMessage> : null}
+            {actionMessage ? <StatusMessage tone="success">{actionMessage}</StatusMessage> : null}
           </div>
         ) : null}
         <div className="action-row">

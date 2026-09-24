@@ -102,6 +102,7 @@ export function ConfirmationPage() {
                 <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
                 <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
                 <div><dt>Depozit</dt><dd>{reservation.depositAmount.toFixed(2)} AZN</dd></div>
+                {reservation.mustVacateAt ? <div><dt>Masanı təhvil vaxtı</dt><dd>{formatReservationDateTime(reservation.mustVacateAt)}</dd></div> : null}
                 {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
               </dl>
 

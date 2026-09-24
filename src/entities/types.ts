@@ -36,6 +36,11 @@ export type Restaurant = {
   restaurantGroupId?: string
   restaurantGroupName?: string
   cancellationWindowMinutes?: number
+  reservationPreBlockMinutes?: number
+  tableTurnoverBufferMinutes?: number
+  noShowGraceMinutes?: number
+  paymentHoldMinutes?: number
+  restaurantResponseMinutes?: number
   timeZone?: string
   workingHours: RestaurantWorkingHour[]
   isOpen?: boolean
@@ -98,6 +103,7 @@ export type Table = {
   isActive: boolean
   isPublic: boolean
   image?: string
+  mustVacateAt?: string | null
 }
 
 export type RestaurantWorkingHour = {

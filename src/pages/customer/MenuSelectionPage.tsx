@@ -15,6 +15,7 @@ export function MenuSelectionPage() {
   const [searchParams] = useSearchParams()
   const reservedAt = searchParams.get('reservedAt')
   const tableId = searchParams.get('tableId')
+  const acceptsLimitedSeating = searchParams.get('acceptsLimitedSeating') === 'true'
   const parsedPeopleCount = Number(searchParams.get('peopleCount') || '1')
   const peopleCount = Number.isFinite(parsedPeopleCount) && parsedPeopleCount > 0 ? parsedPeopleCount : 1
   const { data: menuData, isLoading } = useAsyncData(
@@ -52,6 +53,7 @@ export function MenuSelectionPage() {
         tableId,
         reservedAt,
         peopleCount,
+        acceptsLimitedSeating,
       })
       const nextParams = new URLSearchParams(searchParams)
       nextParams.set('reservationId', String(reservation.id))

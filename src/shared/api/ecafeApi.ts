@@ -158,6 +158,11 @@ type CreateRestaurantRequest = {
   branchName?: string
   depositAmount: number
   cancellationWindowMinutes: number
+  reservationPreBlockMinutes: number
+  tableTurnoverBufferMinutes: number
+  noShowGraceMinutes: number
+  paymentHoldMinutes: number
+  restaurantResponseMinutes: number
   serviceFeePercent: number
   staffSettlementPeriod: number
   timeZone?: string
@@ -211,6 +216,10 @@ type UpdateTableRequest = CreateTableRequest & {
 
 export type TableAvailabilityResponse = {
   reservedAt: string
+  reservationPreBlockMinutes: number
+  tableTurnoverBufferMinutes: number
+  messageCode: string
+  message: string
   isRestaurantOpen: boolean
   hasAvailableTable: boolean
   availableCount: number
@@ -222,6 +231,7 @@ export type CreateReservationRequest = {
   reservedAt: string
   peopleCount: number
   note?: string
+  acceptsLimitedSeating?: boolean
 }
 
 export type ReservationResponse = {
@@ -229,6 +239,8 @@ export type ReservationResponse = {
   restaurantId: number
   tableId: number
   reservedAt: string
+  noShowDeadlineAt: string
+  mustVacateAt?: string | null
   peopleCount: number
   statusId: number
   status: string
@@ -567,6 +579,10 @@ function mapTableAvailability(record: AnyRecord, restaurantId: string, fallbackR
 
   return {
     reservedAt: str(record.reservedAt || record.ReservedAt, fallbackReservedAt),
+    reservationPreBlockMinutes: num(record.reservationPreBlockMinutes || record.ReservationPreBlockMinutes),
+    tableTurnoverBufferMinutes: num(record.tableTurnoverBufferMinutes || record.TableTurnoverBufferMinutes),
+    messageCode: str(record.messageCode || record.MessageCode),
+    message: str(record.message || record.Message),
     isRestaurantOpen: bool(record.isRestaurantOpen ?? record.IsRestaurantOpen, true),
     hasAvailableTable,
     availableCount,
@@ -580,6 +596,8 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     restaurantId: num(record.restaurantId),
     tableId: num(record.tableId),
     reservedAt: str(record.reservedAt || record.ReservedAt),
+    noShowDeadlineAt: str(record.noShowDeadlineAt || record.NoShowDeadlineAt),
+    mustVacateAt: str(record.mustVacateAt || record.MustVacateAt) || null,
     peopleCount: num(record.peopleCount),
     statusId: num(record.statusId),
     status: str(record.status || record.statusName),
@@ -1116,6 +1134,11 @@ export const ecafeApi = {
       appendIfPresent(formData, 'BranchName', request.branchName)
       formData.set('DepositAmount', String(request.depositAmount))
       formData.set('CancellationWindowMinutes', String(request.cancellationWindowMinutes))
+      formData.set('ReservationPreBlockMinutes', String(request.reservationPreBlockMinutes))
+      formData.set('TableTurnoverBufferMinutes', String(request.tableTurnoverBufferMinutes))
+      formData.set('NoShowGraceMinutes', String(request.noShowGraceMinutes))
+      formData.set('PaymentHoldMinutes', String(request.paymentHoldMinutes))
+      formData.set('RestaurantResponseMinutes', String(request.restaurantResponseMinutes))
       formData.set('ServiceFeePercent', String(request.serviceFeePercent))
       formData.set('StaffSettlementPeriod', String(request.staffSettlementPeriod))
       appendIfPresent(formData, 'TimeZone', request.timeZone)
@@ -1163,6 +1186,11 @@ export const ecafeApi = {
           branchName: request.branchName,
           depositAmount: request.depositAmount,
           cancellationWindowMinutes: request.cancellationWindowMinutes,
+          reservationPreBlockMinutes: request.reservationPreBlockMinutes,
+          tableTurnoverBufferMinutes: request.tableTurnoverBufferMinutes,
+          noShowGraceMinutes: request.noShowGraceMinutes,
+          paymentHoldMinutes: request.paymentHoldMinutes,
+          restaurantResponseMinutes: request.restaurantResponseMinutes,
           serviceFeePercent: request.serviceFeePercent,
           staffSettlementPeriod: request.staffSettlementPeriod,
           timeZone: request.timeZone || null,
@@ -1544,6 +1572,10 @@ export const ecafeApi = {
         return mapTableAvailability(data, restaurantId, reservedAt)
       }, {
         reservedAt,
+        reservationPreBlockMinutes: 0,
+        tableTurnoverBufferMinutes: 0,
+        messageCode: 'AvailabilityUnavailable',
+        message: 'Masa əlçatanlığı hazırda yoxlanıla bilmir.',
         isRestaurantOpen: false,
         hasAvailableTable: false,
         availableCount: 0,
@@ -1818,6 +1850,7 @@ export const ecafeApi = {
           reservedAt: request.reservedAt,
           peopleCount: request.peopleCount,
           note: request.note?.trim() || null,
+          acceptsLimitedSeating: Boolean(request.acceptsLimitedSeating),
         }),
       })
 

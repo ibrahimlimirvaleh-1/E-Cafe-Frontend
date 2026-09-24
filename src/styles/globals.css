@@ -1970,6 +1970,11 @@ img {
   background: var(--warning-bg);
 }
 
+.reservation-availability-message.success {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
 .reservation-availability-message.danger {
   color: var(--danger);
   background: var(--danger-bg);
@@ -10009,6 +10014,26 @@ body,
   color: var(--on-surface-variant);
   font-size: 14px;
   line-height: 21px;
+}
+
+.reservation-limited-seating-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--warning);
+  background: var(--warning-bg);
+  color: var(--on-surface);
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.reservation-limited-seating-confirmation input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--warning);
+  flex: 0 0 auto;
 }
 
 .reservation-preorder-dialog-actions {

@@ -150,8 +150,8 @@ export function ReservationTimePage() {
             <Clock size={20} />
             <span>
               {availability.isRestaurantOpen
-                ? 'Bu saat üçün boş masa yoxdur. Başqa tarix və ya saat seçin.'
-                : 'Seçdiyiniz tarix və saatda restoran bağlıdır. Başqa vaxt seçin.'}
+                ? availability.message || 'Bu saat üçün boş masa yoxdur. Başqa tarix və ya saat seçin.'
+                : availability.message || 'Seçdiyiniz tarix və saatda restoran bağlıdır. Başqa vaxt seçin.'}
             </span>
           </div>
         ) : null}
