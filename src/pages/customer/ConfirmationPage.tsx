@@ -150,6 +150,7 @@ export function ConfirmationPage() {
         onConfirm={(reason) => {
           void cancelReservation(reason)
         }}
+        showReason
         title="Rezervasiyanı ləğv edirsiniz?"
       />
     </main>

@@ -215,8 +215,10 @@ export function RestaurantReservationDetailPage() {
           if (!pendingAction) return
           void runAction(pendingAction, reason ? { reason } : undefined, () => setPendingAction(null))
         }}
+        confirmVariant={pendingAction ? getActionVariant(pendingAction) : 'primary'}
         requireReason={pendingAction?.requiresReason || false}
-        title={`${pendingAction?.label || 'Əməliyyatı'} təsdiqləyirsiniz?`}
+        showReason={pendingAction?.requiresReason || false}
+        title="Əməliyyatı təsdiqləyirsiniz?"
       />
     </main>
   )

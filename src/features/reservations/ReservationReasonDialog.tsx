@@ -1,6 +1,6 @@
 import { AlertTriangle, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Button } from '../../shared/ui/Button'
+import { Button, type ButtonVariant } from '../../shared/ui/Button'
 import { TextareaField } from '../../shared/ui/FormField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
@@ -12,6 +12,8 @@ type ReservationReasonDialogProps = {
   isSubmitting: boolean
   error?: string
   requireReason?: boolean
+  showReason?: boolean
+  confirmVariant?: ButtonVariant
   onClose: () => void
   onConfirm: (reason: string) => void
 }
@@ -24,6 +26,8 @@ export function ReservationReasonDialog({
   isSubmitting,
   error = '',
   requireReason = false,
+  showReason = false,
+  confirmVariant = 'danger',
   onClose,
   onConfirm,
 }: ReservationReasonDialogProps) {
@@ -60,21 +64,23 @@ export function ReservationReasonDialog({
         <div className="reservation-action-dialog-body">
           <h2 id="reservation-action-dialog-title">{title}</h2>
           <p>{description}</p>
-          <TextareaField
-            label={requireReason ? 'Səbəb' : 'Səbəb (istəyə görə)'}
-            maxLength={500}
-            onChange={(event) => setReason(event.target.value)}
-            placeholder="Səbəbi yazın"
-            rows={4}
-            value={reason}
-          />
+          {showReason || requireReason ? (
+            <TextareaField
+              label={requireReason ? 'Səbəb' : 'Səbəb (istəyə görə)'}
+              maxLength={500}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Səbəbi yazın"
+              rows={4}
+              value={reason}
+            />
+          ) : null}
           {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
         </div>
         <footer className="reservation-action-dialog-actions">
           <Button disabled={isSubmitting} onClick={onClose} type="button" variant="secondary">
             Bağla
           </Button>
-          <Button disabled={!canSubmit} onClick={() => onConfirm(reason.trim())} type="button" variant="danger">
+          <Button disabled={!canSubmit} onClick={() => onConfirm(reason.trim())} type="button" variant={confirmVariant}>
             {isSubmitting ? 'Gözləyin...' : confirmLabel}
           </Button>
         </footer>

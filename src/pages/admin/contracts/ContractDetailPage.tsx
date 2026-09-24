@@ -391,7 +391,8 @@ export function ContractDetailPage() {
           void runAction(pendingAction, reason ? { reason } : undefined, () => setPendingAction(null))
         }}
         requireReason={pendingAction?.requiresReason || false}
-        title={`${pendingAction?.label || 'Əməliyyatı'} təsdiqləyirsiniz?`}
+        showReason={pendingAction?.requiresReason || false}
+        title="Əməliyyatı təsdiqləyirsiniz?"
       />
     </main>
   )
