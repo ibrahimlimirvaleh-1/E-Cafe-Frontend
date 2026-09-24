@@ -18,9 +18,26 @@ function formatReservedAt(value: string) {
   return [date, time].filter(Boolean).join(' / ')
 }
 
-function formatTime(value?: string | null) {
+function formatTime(value?: string | null, timeZone?: string) {
   if (!value) return '-'
-  return value.split('T')[1]?.slice(0, 5) || '-'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+
+  try {
+    return new Intl.DateTimeFormat('az-AZ', {
+      timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).format(date)
+  } catch {
+    return new Intl.DateTimeFormat('az-AZ', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).format(date)
+  }
 }
 
 export function TableSelectionPage() {
@@ -124,7 +141,7 @@ export function TableSelectionPage() {
       .filter((table) => !unavailableTableIds.has(table.id))
   const selectedTable = visibleTables.find((table) => table.id === selectedTableId) ?? null
   const limitedSeatingMessage = selectedTable?.mustVacateAt
-    ? `Bu masa növbəti rezervasiya üçün ayrılıb. Ən geci ${formatTime(selectedTable.mustVacateAt)}-də masanı təhvil vermə şərti ilə razıyam.`
+    ? `Bu masa növbəti rezervasiya üçün ayrılıb. Ən geci ${formatTime(selectedTable.mustVacateAt, availability?.restaurantTimeZone)}-də masanı təhvil vermə şərti ilə razıyam.`
     : null
 
   return (
@@ -179,7 +196,7 @@ export function TableSelectionPage() {
               </div>
               <div className="reservation-table-card-meta">
                 <span><Users size={16} /> {table.capacity} nəfərlik</span>
-                <small>{table.mustVacateAt ? `${formatTime(table.mustVacateAt)}-dək` : table.status === 'Available' ? 'Boşdur' : table.status}</small>
+                <small>{table.mustVacateAt ? `${formatTime(table.mustVacateAt, availability?.restaurantTimeZone)}-dək` : table.status === 'Available' ? 'Boşdur' : table.status}</small>
               </div>
               <div className="reservation-table-card-action">Seç <ArrowRight size={17} /></div>
             </button>

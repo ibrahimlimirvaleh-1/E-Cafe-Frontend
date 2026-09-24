@@ -218,6 +218,7 @@ export type TableAvailabilityResponse = {
   reservedAt: string
   reservationPreBlockMinutes: number
   tableTurnoverBufferMinutes: number
+  restaurantTimeZone?: string
   messageCode: string
   message: string
   isRestaurantOpen: boolean
@@ -581,6 +582,7 @@ function mapTableAvailability(record: AnyRecord, restaurantId: string, fallbackR
     reservedAt: str(record.reservedAt || record.ReservedAt, fallbackReservedAt),
     reservationPreBlockMinutes: num(record.reservationPreBlockMinutes || record.ReservationPreBlockMinutes),
     tableTurnoverBufferMinutes: num(record.tableTurnoverBufferMinutes || record.TableTurnoverBufferMinutes),
+    restaurantTimeZone: str(record.restaurantTimeZone || record.RestaurantTimeZone) || undefined,
     messageCode: str(record.messageCode || record.MessageCode),
     message: str(record.message || record.Message),
     isRestaurantOpen: bool(record.isRestaurantOpen ?? record.IsRestaurantOpen, true),
