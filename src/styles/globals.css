@@ -8568,7 +8568,7 @@ body,
 
 .reservation-list-toolbar {
   justify-content: flex-end;
-  margin-top: 4px;
+  margin: -6px 0 20px;
 }
 
 .reservation-admin-toolbar .restaurant-select-field {
@@ -8576,32 +8576,92 @@ body,
 }
 
 .reservation-date-filter {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 8px;
-  min-width: 230px;
+  width: min(360px, 100%);
 }
 
-.reservation-date-filter .ui-field {
-  flex: 1;
+.reservation-date-filter-label {
+  grid-column: 1 / -1;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+.reservation-date-filter-control {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 48px;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  background: var(--surface-container-lowest, #fff);
+  color: var(--on-surface-variant);
+  padding: 0 14px;
+  box-shadow: 0 6px 18px rgba(29, 35, 44, 0.04);
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.reservation-date-filter-control > svg {
+  flex: 0 0 auto;
+  color: var(--secondary);
+}
+
+.reservation-date-filter-control > span {
+  overflow: hidden;
+  color: var(--on-surface);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reservation-date-filter-control:focus-within,
+.reservation-date-filter-control:hover {
+  border-color: var(--primary);
+  color: var(--on-surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.reservation-date-filter-active .reservation-date-filter-control {
+  border-color: color-mix(in srgb, var(--secondary) 55%, var(--outline-variant));
+  background: color-mix(in srgb, var(--secondary-container) 38%, var(--surface-container-lowest, #fff));
+}
+
+.reservation-date-filter-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  opacity: 0;
 }
 
 .reservation-date-filter-clear {
   display: grid;
-  flex: 0 0 auto;
   place-items: center;
   width: 48px;
-  height: 48px;
+  min-height: 48px;
   border: 1px solid var(--outline-variant);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--surface-container-lowest, #fff);
   color: var(--on-surface-variant);
   cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .reservation-date-filter-clear:hover {
-  border-color: var(--outline);
-  color: var(--on-surface);
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 @media (max-width: 640px) {
@@ -8618,7 +8678,11 @@ body,
   }
 
   .reservation-date-filter {
-    min-width: 0;
+    width: 100%;
+  }
+
+  .reservation-list-toolbar {
+    margin: -2px 0 18px;
   }
 }
 
