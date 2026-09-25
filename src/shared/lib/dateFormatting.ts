@@ -12,6 +12,21 @@ const monthNames = [
   'iyul', 'avqust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr',
 ]
 
+export function formatReservationDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) {
+    return value
+  }
+
+  const [, year, monthValue, day] = match
+  const month = Number(monthValue)
+  if (month < 1 || month > 12) {
+    return value
+  }
+
+  return `${Number(day)} ${monthNames[month - 1]} ${year}`
+}
+
 export function formatReservationDateTime(value?: string | null) {
   if (!value) {
     return '-'
