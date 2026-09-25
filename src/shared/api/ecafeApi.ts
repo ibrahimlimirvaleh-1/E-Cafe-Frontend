@@ -309,6 +309,7 @@ export type ReservationQuery = {
   pageNumber?: number
   pageSize?: number
   statusId?: number | null
+  reservedDate?: string
 }
 
 type CopyTableRequest = {
@@ -679,6 +680,7 @@ function appendReservationQuery(endpoint: string, query: ReservationQuery = {}) 
   if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
   if (query.pageSize) params.set('PageSize', String(query.pageSize))
   if (query.statusId) params.set('StatusId', String(query.statusId))
+  if (query.reservedDate) params.set('ReservedDate', toUtcDayBoundary(query.reservedDate, 'start'))
 
   const search = params.toString()
   return search ? `${endpoint}?${search}` : endpoint

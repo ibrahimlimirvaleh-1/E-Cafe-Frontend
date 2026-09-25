@@ -11,6 +11,9 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
+import {
+  ReservationDateFilter,
+} from '../../features/reservations/ReservationDateFilter'
 
 const emptyPage: PaginatedResponse<ReservationResponse> = {
   items: [],
@@ -23,10 +26,15 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 
 export function MyReservationsPage() {
   const [reloadKey, setReloadKey] = useState(0)
+  const [selectedDate, setSelectedDate] = useState('')
+  const query = useMemo(
+    () => ({ pageNumber: 1, pageSize: 20, reservedDate: selectedDate }),
+    [selectedDate],
+  )
   const { data, error, isLoading } = useAsyncData(
-    () => ecafeApi.reservations.listMine({ pageNumber: 1, pageSize: 20 }),
+    () => ecafeApi.reservations.listMine(query),
     emptyPage,
-    [reloadKey],
+    [query, reloadKey],
   )
 
   const reservationSummary = useMemo(() => {
@@ -47,6 +55,10 @@ export function MyReservationsPage() {
         title="Rezervasiyalarım"
         description="Rezervasiyalarınızı və ödəniş mərhələlərini izləyin."
       />
+
+      <section className="reservation-list-toolbar" aria-label="Rezervasiya filterləri">
+        <ReservationDateFilter value={selectedDate} onChange={setSelectedDate} />
+      </section>
 
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
       {isLoading ? <p className="online-only">Rezervasiyalar yüklənir...</p> : null}
@@ -74,9 +86,9 @@ export function MyReservationsPage() {
       {!isLoading && !error && data.items.length === 0 ? (
         <section className="reservation-empty-state">
           <CalendarDays size={28} />
-          <h2>Hələ rezervasiyanız yoxdur</h2>
-          <p>Restoran seçərək uyğun masa üçün rezervasiya yarada bilərsiniz.</p>
-          <ButtonLink to="/">Restoranlara bax</ButtonLink>
+          <h2>{selectedDate ? 'Seçilən tarix üçün rezervasiya yoxdur' : 'Hələ rezervasiyanız yoxdur'}</h2>
+          <p>{selectedDate ? 'Başqa tarix seçərək rezervasiyalarınıza baxa bilərsiniz.' : 'Restoran seçərək uyğun masa üçün rezervasiya yarada bilərsiniz.'}</p>
+          {selectedDate ? null : <ButtonLink to="/">Restoranlara bax</ButtonLink>}
         </section>
       ) : null}
 

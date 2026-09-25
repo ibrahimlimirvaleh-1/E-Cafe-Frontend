@@ -8558,6 +8558,70 @@ body,
   min-width: 0;
 }
 
+.reservation-list-toolbar,
+.reservation-admin-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.reservation-list-toolbar {
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.reservation-admin-toolbar .restaurant-select-field {
+  flex: 1 1 320px;
+}
+
+.reservation-date-filter {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  min-width: 230px;
+}
+
+.reservation-date-filter .ui-field {
+  flex: 1;
+}
+
+.reservation-date-filter-clear {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  background: var(--surface-container-lowest, #fff);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+
+.reservation-date-filter-clear:hover {
+  border-color: var(--outline);
+  color: var(--on-surface);
+}
+
+@media (max-width: 640px) {
+  .reservation-list-toolbar,
+  .reservation-admin-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reservation-admin-toolbar .restaurant-select-field,
+  .reservation-list-toolbar .reservation-date-filter,
+  .reservation-admin-toolbar .reservation-date-filter {
+    width: 100%;
+  }
+
+  .reservation-date-filter {
+    min-width: 0;
+  }
+}
+
 .customer-reservation-list,
 .admin-reservation-list {
   display: grid;
