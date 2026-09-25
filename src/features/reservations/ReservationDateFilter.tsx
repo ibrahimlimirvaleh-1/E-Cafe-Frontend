@@ -1,23 +1,18 @@
 import { CalendarDays, X } from 'lucide-react'
 import { useRef } from 'react'
+import { formatReservationDate } from '../../shared/lib/dateFormatting'
 
 type ReservationDateFilterProps = {
   value: string
   onChange: (value: string) => void
 }
 
-const dateFormatter = new Intl.DateTimeFormat('az-AZ', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-})
-
 function formatSelectedDate(value: string) {
   if (!value) {
     return 'Bütün tarixlər'
   }
 
-  return dateFormatter.format(new Date(`${value}T00:00:00`))
+  return formatReservationDate(value)
 }
 
 export function ReservationDateFilter({ onChange, value }: ReservationDateFilterProps) {
