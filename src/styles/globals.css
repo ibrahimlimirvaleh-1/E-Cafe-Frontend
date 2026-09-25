@@ -8607,7 +8607,6 @@ body,
   padding: 0 14px;
   box-shadow: 0 6px 18px rgba(29, 35, 44, 0.04);
   cursor: pointer;
-  text-align: left;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
 
@@ -8616,17 +8615,23 @@ body,
   color: var(--secondary);
 }
 
-.reservation-date-filter-control > span {
-  overflow: hidden;
+.reservation-date-filter-input {
+  min-width: 0;
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  outline: 0;
+  background: transparent;
   color: var(--on-surface);
+  cursor: pointer;
+  font: inherit;
   font-size: 14px;
   font-weight: 700;
   line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  padding: 0;
 }
 
-.reservation-date-filter-control:focus-visible,
+.reservation-date-filter-control:focus-within,
 .reservation-date-filter-control:hover {
   border-color: var(--primary);
   color: var(--on-surface);
@@ -8636,15 +8641,6 @@ body,
 .reservation-date-filter-active .reservation-date-filter-control {
   border-color: color-mix(in srgb, var(--secondary) 55%, var(--outline-variant));
   background: color-mix(in srgb, var(--secondary-container) 38%, var(--surface-container-lowest, #fff));
-}
-
-.reservation-date-filter-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
 }
 
 .reservation-date-filter-clear {
