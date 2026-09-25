@@ -15,6 +15,9 @@ import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
+import {
+  ReservationDateFilter,
+} from '../../features/reservations/ReservationDateFilter'
 
 const defaultPageSize = 20
 
@@ -28,12 +31,16 @@ export function RestaurantReservationsPage() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
+  const [selectedDate, setSelectedDate] = useState('')
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId)
     ? selectedRestaurantId
     : accessibleRestaurants[0]?.id || ''
-  const query = useMemo(() => ({ pageNumber, pageSize }), [pageNumber, pageSize])
+  const query = useMemo(
+    () => ({ pageNumber, pageSize, reservedDate: selectedDate }),
+    [pageNumber, pageSize, selectedDate],
+  )
   const { data, error, isLoading } = useAsyncData(
     () => restaurantId ? ecafeApi.reservations.listForRestaurant(restaurantId, query) : Promise.resolve(emptyPage),
     emptyPage,
@@ -56,6 +63,11 @@ export function RestaurantReservationsPage() {
     setPageNumber(1)
   }
 
+  function handleDateChange(nextDate: string) {
+    setSelectedDate(nextDate)
+    setPageNumber(1)
+  }
+
   return (
     <main className="admin-page reservations-admin-page">
       <PageHeader
@@ -73,6 +85,7 @@ export function RestaurantReservationsPage() {
           restaurants={accessibleRestaurants}
           value={restaurantId}
         />
+        <ReservationDateFilter value={selectedDate} onChange={handleDateChange} />
       </section>
 
       {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>Rezervasiyaları görmək üçün restoran seçin.</StatusMessage> : null}
@@ -82,8 +95,8 @@ export function RestaurantReservationsPage() {
       {!isLoading && !error && data.items.length === 0 ? (
         <section className="reservation-empty-state reservation-empty-state-admin">
           <CalendarDays size={28} />
-          <h2>Rezervasiya yoxdur</h2>
-          <p>Bu restoran üçün yeni rezervasiya yarandıqda burada görünəcək.</p>
+          <h2>{selectedDate ? 'Seçilən tarix üçün rezervasiya yoxdur' : 'Rezervasiya yoxdur'}</h2>
+          <p>{selectedDate ? 'Başqa tarix seçərək rezervasiyalara baxa bilərsiniz.' : 'Bu restoran üçün yeni rezervasiya yarandıqda burada görünəcək.'}</p>
         </section>
       ) : null}
 
