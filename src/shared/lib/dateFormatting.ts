@@ -12,6 +12,27 @@ const monthNames = [
   'iyul', 'avqust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr',
 ]
 
+const bakuDateFormatter = new Intl.DateTimeFormat('en-US', {
+  day: 'numeric',
+  month: 'numeric',
+  year: 'numeric',
+  timeZone: 'Asia/Baku',
+})
+
+export function formatDateInBaku(value?: string | null) {
+  if (!value) return '-'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  const parts = bakuDateFormatter.formatToParts(date)
+  const getPart = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || ''
+  const month = Number(getPart('month'))
+  if (month < 1 || month > 12) return value
+
+  return `${getPart('day')} ${monthNames[month - 1]} ${getPart('year')}`
+}
+
 export function formatReservationDateTime(value?: string | null) {
   if (!value) {
     return '-'

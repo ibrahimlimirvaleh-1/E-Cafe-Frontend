@@ -6,11 +6,13 @@ import { ecafeApi } from '../../../shared/api/ecafeApi'
 import { useAuth } from '../../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../../shared/auth/authz'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { formatDateInBaku } from '../../../shared/lib/dateFormatting'
 import { ActionIconLink } from '../../../shared/ui/ActionIconButton'
 import { Badge } from '../../../shared/ui/Badge'
 import { ButtonLink } from '../../../shared/ui/Button'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 import { RestaurantSelectField } from '../../../shared/ui/RestaurantSelectField'
+import { StatusMessage } from '../../../shared/ui/StatusMessage'
 
 type ContractFilterState = {
   dateFrom: string
@@ -32,26 +34,12 @@ const defaultFilters: ContractFilterState = {
 
 export function ContractListPage() {
   const { user } = useAuth()
-  const { data: allRecords } = useAsyncData(() => ecafeApi.contracts.records(), [])
+  const { data: allRecords, error, isLoading } = useAsyncData(() => ecafeApi.contracts.records(), [])
   const { data: contractStatuses } = useAsyncData(() => ecafeApi.lookups.contractStatuses(), [], [])
   const isPlatformAdmin = isInRole(user, [RoleIds.PlatformAdmin])
   const canManageContracts = isPlatformAdmin
   const [filters, setFilters] = useState<ContractFilterState>(defaultFilters)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const contractQuery = useMemo(
-    () => ({
-      dateFrom: filters.dateFrom,
-      dateTo: filters.dateTo,
-      expiringInDays: filters.expiringInDays,
-      restaurantId: isPlatformAdmin ? filters.restaurantId : undefined,
-      search: filters.search,
-      statusId: filters.statusId,
-      pageNumber: 1,
-      pageSize: 100,
-    }),
-    [filters, isPlatformAdmin],
-  )
-  const { data: records, isLoading } = useAsyncData(() => ecafeApi.contracts.records(contractQuery), [], [contractQuery])
 
   const restaurantOptions = useMemo(() => {
     const options = new Map<string, string>()
@@ -93,7 +81,7 @@ export function ContractListPage() {
     const dateTo = localDayBoundary(filters.dateTo, 'end')
     const expiringInDays = Number(filters.expiringInDays)
 
-    return records.filter((record) => {
+    return allRecords.filter((record) => {
       const contract = record.contract
       const searchableText = normalizeSearch(`${contract.contractNumber} ${record.restaurantName} ${contractStatusLabel(contract)}`)
       const endDate = parseDate(contract.endDate)
@@ -110,11 +98,11 @@ export function ContractListPage() {
         return false
       }
 
-      if (dateFrom && endDate && endDate < dateFrom) {
+      if (dateFrom && (!endDate || endDate < dateFrom)) {
         return false
       }
 
-      if (dateTo && endDate && endDate > dateTo) {
+      if (dateTo && (!endDate || endDate > dateTo)) {
         return false
       }
 
@@ -124,7 +112,7 @@ export function ContractListPage() {
 
       return true
     })
-  }, [contractStatuses, filters, records])
+  }, [allRecords, contractStatuses, filters])
 
   const hasActiveFilters =
     filters.statusId !== 'all' ||
@@ -183,7 +171,7 @@ export function ContractListPage() {
 
         {isFilterOpen ? (
           <div className="contract-filter-panel">
-            <span>Sırala</span>
+            <span>Əlavə filtrlər</span>
             {isPlatformAdmin ? (
               <RestaurantSelectField
                 emptyOption={null}
@@ -226,15 +214,16 @@ export function ContractListPage() {
       </section>
 
       {isLoading ? <p className="online-only">Məlumatlar yüklənir...</p> : null}
-      {!isLoading && allRecords.length === 0 ? (
+      {!isLoading && error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
+      {!isLoading && !error && allRecords.length === 0 ? (
         <section className="placeholder-panel">
           <FileText size={28} />
           <h2>Müqavilə yoxdur</h2>
           {canManageContracts ? <ButtonLink to="/admin/contracts/new">Müqavilə yarat</ButtonLink> : null}
         </section>
-      ) : (
+      ) : !isLoading && !error ? (
         <ContractWorkflowList canManageContracts={canManageContracts} records={filteredRecords} />
-      )}
+      ) : null}
     </main>
   )
 }
@@ -252,13 +241,13 @@ function ContractWorkflowList({
         <span>Müqavilə</span>
         <span>Status</span>
         <span>Müddət</span>
-        <span>Növbəti addım</span>
+        <span>Mümkün əməliyyatlar</span>
         <span className="contract-workflow-view-head">Baxış</span>
       </div>
 
       {records.map((record) => {
         const contract = record.contract
-        const nextStep = getNextStep(contract)
+        const actionSummary = getAvailableActionSummary(contract)
 
         return (
           <article className="contract-workflow-row" key={contract.id}>
@@ -266,28 +255,27 @@ function ContractWorkflowList({
               <strong>{contract.contractNumber || `Müqavilə #${contract.id}`}</strong>
               <small>{record.restaurantName || `Restoran #${contract.restaurantId}`}</small>
             </div>
-            <div className="contract-workflow-mobile-side">
-              <div className="contract-workflow-cell" data-label="Status">
-                <Badge tone={getContractTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
-              </div>
-              <div className="contract-workflow-actions contract-workflow-view-actions" data-label="Baxış">
-                <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsinə bax`} to={`/admin/contracts/${contract.id}`}>
-                  <Eye size={18} />
+            <div className="contract-workflow-cell contract-workflow-status" data-label="Status">
+              <Badge tone={getContractTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
+            </div>
+            <div className="contract-workflow-cell contract-workflow-period" data-label="Müddət">
+              <span><small>Başlanğıc</small><strong>{formatDateInBaku(contract.startDate)}</strong></span>
+              <span><small>Bitmə</small><strong>{contract.endDate ? formatDateInBaku(contract.endDate) : 'Müddətsiz'}</strong></span>
+            </div>
+            <div className="contract-workflow-cell contract-workflow-next-action" data-label="Mümkün əməliyyatlar">
+              <strong>{actionSummary.title}</strong>
+              {actionSummary.description ? <small>{actionSummary.description}</small> : null}
+            </div>
+            <div className="contract-workflow-actions contract-workflow-view-actions" data-label="Baxış">
+              <ButtonLink className="contract-workflow-detail-link" to={`/admin/contracts/${contract.id}`} variant="secondary">
+                <Eye size={16} />
+                Detallar
+              </ButtonLink>
+              {canManageContracts && canEditContract(contract) ? (
+                <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsini redaktə et`} to={`/admin/contracts/${contract.id}/edit`}>
+                  <Pencil size={17} />
                 </ActionIconLink>
-                {canManageContracts && canEditContract(contract) ? (
-                  <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsini redaktə et`} to={`/admin/contracts/${contract.id}/edit`}>
-                    <Pencil size={17} />
-                  </ActionIconLink>
-                ) : null}
-              </div>
-            </div>
-            <div className="contract-workflow-cell" data-label="Müddət">
-              <strong>{formatDate(contract.startDate)}</strong>
-              <small>{formatDate(contract.endDate)}</small>
-            </div>
-            <div className="contract-workflow-cell next-step" data-label="Növbəti addım">
-              <strong>{nextStep.title}</strong>
-              <small>{nextStep.description}</small>
+              ) : null}
             </div>
           </article>
         )
@@ -300,19 +288,6 @@ function ContractWorkflowList({
 
 function canEditContract(contract: RestaurantContract) {
   return contract.status === 'Draft' || contract.status === 'PendingSignature'
-}
-
-function formatDate(value: string) {
-  const date = parseDate(value)
-  if (!date) {
-    return '-'
-  }
-
-  return new Intl.DateTimeFormat('az-AZ', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(date)
 }
 
 function getContractTone(status: ContractStatus): StatusTone {
@@ -331,18 +306,18 @@ function getContractTone(status: ContractStatus): StatusTone {
   return 'neutral'
 }
 
-function getNextStep(contract: RestaurantContract) {
-  const action = contract.availableActions?.[0]
-  if (action) {
+function getAvailableActionSummary(contract: RestaurantContract) {
+  const actions = contract.availableActions ?? []
+  if (actions.length > 0) {
     return {
-      title: action.label,
-      description: 'Əməliyyatı detallar səhifəsindən icra edin.',
+      title: actions[0].label,
+      description: actions.length > 1 ? `Daha ${actions.length - 1} əməliyyat detallar səhifəsində` : '',
     }
   }
 
   return {
     title: 'Əməliyyat yoxdur',
-    description: 'Bu status və istifadəçi rolu üçün backend əməliyyat qaytarmayıb.',
+    description: '',
   }
 }
 
