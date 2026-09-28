@@ -27,8 +27,13 @@ export function ReservationPaymentInstructionPanel({
     event.preventDefault()
     clearFeedback()
 
-    if (!displayText.trim()) {
-      setError(new Error('Ödəniş məlumatı boş ola bilməz.'), 'Kart və ya ödəniş məlumatını daxil edin.')
+    if (displayText.trim().length < 4) {
+      setError(new Error('Ödəniş məlumatı ən azı 4 simvol olmalıdır.'), 'Ödəniş məlumatını daxil edin.')
+      return
+    }
+
+    if (/\b(cvv|cvc|pin)(?:\s*2)?\b/i.test(displayText)) {
+      setError(new Error('CVV, CVC və PIN göndərmək olmaz.'), 'Təhlükəsizlik kodunu və PIN-i silin.')
       return
     }
 
@@ -59,7 +64,7 @@ export function ReservationPaymentInstructionPanel({
         <div>
           <span className="section-eyebrow">ÖDƏNİŞ MƏLUMATI</span>
           <h2>Müştəriyə kart məlumatı göndər</h2>
-          <p>Bu məlumat yalnız seçilmiş rezervasiya üçün göndərilir və tarixçədə saxlanılır.</p>
+          <p>Ödəniş rekvizitləri seçilmiş rezervasiya üçün müştəriyə göndərilir.</p>
         </div>
       </div>
 
@@ -81,6 +86,7 @@ export function ReservationPaymentInstructionPanel({
             disabled={isSubmitting}
           />
           <small>{displayText.length}/1000</small>
+          <small>CVV, CVC və PIN daxil etməyin.</small>
         </label>
 
         {feedback.message ? (

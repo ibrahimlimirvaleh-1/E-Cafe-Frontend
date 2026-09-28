@@ -119,7 +119,7 @@ export function MyReservationsPage() {
               {reservation.latestPaymentInstruction ? (
                 <div className="reservation-payment-note">
                   <strong>Ödəniş məlumatı</strong>
-                  <p>{reservation.latestPaymentInstruction.displayText}</p>
+                  <p>{reservation.latestPaymentInstruction.maskedDetails || 'Detallara baxın'}</p>
                   <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
                 </div>
               ) : null}
