@@ -8912,10 +8912,42 @@ body,
   line-height: 1.2;
 }
 
+.reservation-history-summary {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 19px 0;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.reservation-history-summary > div {
+  display: grid;
+  gap: 5px;
+}
+
+.reservation-history-summary strong {
+  color: var(--on-surface);
+  font-size: 17px;
+}
+
+.reservation-history-summary > span {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+}
+
+.reservation-history-events h3 {
+  margin: 19px 0 0;
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .reservation-history-timeline {
   display: grid;
   gap: 0;
-  margin: 22px 0 0;
+  margin: 20px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -8925,7 +8957,7 @@ body,
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   gap: 13px;
-  min-height: 82px;
+  min-height: 0;
 }
 
 .reservation-history-item:not(:last-child)::before {
@@ -8973,7 +9005,11 @@ body,
 
 .reservation-history-content {
   min-width: 0;
-  padding: 3px 0 24px;
+  padding: 3px 0 25px;
+}
+
+.reservation-history-item:last-child .reservation-history-content {
+  padding-bottom: 0;
 }
 
 .reservation-history-title-row,
