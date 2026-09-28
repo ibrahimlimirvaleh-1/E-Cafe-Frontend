@@ -1,6 +1,6 @@
 import { CalendarDays, MapPin, Users } from 'lucide-react'
 import { useParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
@@ -17,6 +17,11 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 export function TrackingPage() {
   const { token = '' } = useParams()
   const [reloadKey, setReloadKey] = useState(0)
+  useEffect(() => {
+    const onRefresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('ecafe:notifications-refresh', onRefresh)
+    return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
+  }, [])
   const { data: reservation, error, isLoading } = useAsyncData<ReservationResponse | null>(
     async () => {
       if (/^\d+$/.test(token)) {
@@ -58,7 +63,7 @@ export function TrackingPage() {
       ) : null}
 
       {reservation && presentation ? (
-        <>
+        <div className="tracking-reservation-layout">
           <section className="tracking-panel">
             <header className="tracking-hero">
               <div>
@@ -129,7 +134,7 @@ export function TrackingPage() {
           </section>
 
           <ReservationHistoryTimeline items={history?.items || []} />
-        </>
+        </div>
       ) : null}
     </main>
   )

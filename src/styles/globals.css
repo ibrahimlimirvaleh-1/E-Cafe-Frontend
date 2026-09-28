@@ -11835,3 +11835,114 @@ body {
     width: 100%;
   }
 }
+
+/* Keep reservation details spacious while the shared history remains easy to scan. */
+.reservation-confirmation-page,
+.admin-page.narrow.reservation-detail-page,
+.tracking-page {
+  width: min(1220px, calc(100% - 48px));
+  max-width: none;
+}
+
+.reservation-confirmation-page {
+  padding: 40px 0 72px;
+}
+
+.reservation-confirmation-layout,
+.reservation-detail-layout,
+.tracking-reservation-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 24px;
+  min-width: 0;
+}
+
+.reservation-detail-main,
+.reservation-confirmation-side,
+.tracking-reservation-layout > .tracking-panel {
+  min-width: 0;
+}
+
+.reservation-detail-main {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.reservation-confirmation-panel {
+  justify-items: stretch;
+  text-align: left;
+}
+
+.reservation-confirmation-heading {
+  justify-items: start;
+}
+
+.reservation-confirmation-heading h1 {
+  font-size: 32px;
+}
+
+.reservation-confirmation-layout .reservation-history-panel,
+.reservation-detail-layout .reservation-history-panel,
+.tracking-reservation-layout .reservation-history-panel {
+  margin-top: 0;
+}
+
+.reservation-history-events {
+  max-height: min(640px, calc(100dvh - 230px));
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 8px;
+  scrollbar-color: var(--outline) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.reservation-history-events:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.tracking-page .page-header {
+  margin-bottom: 24px;
+}
+
+@media (max-width: 920px) {
+  .reservation-confirmation-layout,
+  .reservation-detail-layout,
+  .tracking-reservation-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reservation-history-events {
+    max-height: min(500px, 58dvh);
+  }
+}
+
+@media (max-width: 600px) {
+  .reservation-confirmation-page,
+  .admin-page.narrow.reservation-detail-page,
+  .tracking-page {
+    width: calc(100% - 28px);
+  }
+
+  .reservation-confirmation-page {
+    padding: 24px 0 48px;
+  }
+
+  .reservation-confirmation-layout,
+  .reservation-detail-layout,
+  .tracking-reservation-layout {
+    gap: 16px;
+  }
+
+  .reservation-confirmation-heading h1 {
+    font-size: 28px;
+  }
+
+  .reservation-history-events {
+    padding-right: 2px;
+  }
+}

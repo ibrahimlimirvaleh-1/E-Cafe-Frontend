@@ -1,5 +1,5 @@
 import { Ban, CheckCircle2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -20,6 +20,11 @@ export function ConfirmationPage() {
   const [searchParams] = useSearchParams()
   const reservationId = searchParams.get('reservationId')
   const [reloadKey, setReloadKey] = useState(0)
+  useEffect(() => {
+    const onRefresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('ecafe:notifications-refresh', onRefresh)
+    return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
+  }, [])
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')

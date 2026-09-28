@@ -384,6 +384,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.location.reload()
         }, 1800)
       },
+      onNotificationsChanged: () => {
+        window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+      },
       onConnectionRestored: async () => {
         const refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
         const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
@@ -394,13 +397,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     })
 
-    void connection.start().catch((error) => {
-      if (import.meta.env.DEV) {
-        console.error('Realtime session connection failed.', error)
+    let disposed = false
+    let retryId: number | undefined
+    const startConnection = async () => {
+      try {
+        await connection.start()
+        if (!disposed) {
+          window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('Realtime session connection failed.', error)
+        }
+        if (!disposed) {
+          retryId = window.setTimeout(() => void startConnection(), 10000)
+        }
       }
-    })
+    }
+
+    void startConnection()
 
     return () => {
+      disposed = true
+      window.clearTimeout(retryId)
       window.clearTimeout(logoutTimerId)
       void connection.stop()
     }

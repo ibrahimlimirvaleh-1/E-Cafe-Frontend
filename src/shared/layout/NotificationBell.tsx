@@ -52,6 +52,10 @@ export function NotificationBell() {
         setUnreadCount(count)
         hasLoadedRef.current = true
       }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Notifications could not be refreshed.', error)
+      }
     } finally {
       if (requestIdRef.current === requestId) {
         setIsLoading(false)
@@ -68,9 +72,18 @@ export function NotificationBell() {
     const onRefresh = () => {
       void loadNotifications()
     }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+      }
+    }
 
     window.addEventListener('ecafe:notifications-refresh', onRefresh)
-    return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener('ecafe:notifications-refresh', onRefresh)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [loadNotifications])
 
   useEffect(() => {
