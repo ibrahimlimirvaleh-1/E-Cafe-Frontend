@@ -11,6 +11,7 @@ import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
+import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
 import type { ReservationHistoryResponse } from '../../shared/api/ecafeApi'
 import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
@@ -129,6 +130,7 @@ export function ConfirmationPage() {
                   onSubmitted={() => setReloadKey((value) => value + 1)}
                 />
               ) : null}
+              <ReservationRefundPanel reservationId={reservation.id} restaurantId={reservation.restaurantId} />
               {cancelAction ? (
                 <div className="reservation-confirmation-actions">
                   <Button

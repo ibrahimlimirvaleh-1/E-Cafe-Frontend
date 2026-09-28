@@ -271,6 +271,28 @@ export type ReservationHistoryResponse = {
   items: ReservationHistoryItem[]
 }
 
+export type ReservationRefundResponse = {
+  id: number
+  reservationId: number
+  statusId: number
+  status: string
+  workflowFlowCode: string
+  amount: number
+  currencyCode: string
+  requestedAt: string
+  refundedAt?: string | null
+  payoutDetails?: { maskedDetails: string; submittedAt: string } | null
+  latestTransfer?: {
+    id: number
+    amount: number
+    proofFileViewUrl: string
+    submittedAt: string
+    customerConfirmedAt?: string | null
+    disputedAt?: string | null
+    disputeReason?: string | null
+  } | null
+}
+
 export type ReservationActionResponse = {
   reservationId: number
   statusId: number
@@ -1841,6 +1863,10 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(endpoints.reservations.history(reservationId))
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapReservationHistoryResponse(data)
+    },
+    getRefund: async (reservationId: string): Promise<ReservationRefundResponse | null> => {
+      const result = await httpClient<ReservationRefundResponse | null>(endpoints.reservations.refund(reservationId))
+      return result.data ?? null
     },
     getForRestaurant: async (restaurantId: string, reservationId: string) => {
       const result = await httpClient<unknown>(endpoints.reservations.restaurantDetail(restaurantId, reservationId))

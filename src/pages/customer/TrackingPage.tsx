@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
+import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -115,6 +116,7 @@ export function TrackingPage() {
                 onSubmitted={() => setReloadKey((value) => value + 1)}
               />
             ) : null}
+            <ReservationRefundPanel reservationId={reservation.id} restaurantId={reservation.restaurantId} />
 
             <div className="tracking-page-actions">
               <ButtonLink to={`/confirmation?reservationId=${reservation.id}`}>Rezervasiya detallarına bax</ButtonLink>
