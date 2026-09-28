@@ -107,6 +107,14 @@ export function ConfirmationPage() {
               </dl>
 
               {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
+                <section className="reservation-payment-note" aria-label="Depozit ödəniş məlumatı">
+                  <strong>Depozit ödəniş məlumatı</strong>
+                  <p>{reservation.latestPaymentInstruction.displayText}</p>
+                  <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
+                </section>
+              ) : null}
+
+              {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
                 <ReservationPaymentProofPanel
                   restaurantId={String(reservation.restaurantId)}
                   reservationId={String(reservation.id)}
