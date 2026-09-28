@@ -7,6 +7,7 @@ type PaginationControlsProps = {
   pageIndex: number
   pageSize?: number
   pageSizeOptions?: number[]
+  showOnSinglePage?: boolean
   totalCount?: number
   totalPages: number
   onPageChange: (pageNumber: number) => void
@@ -38,10 +39,11 @@ export function PaginationControls({
   pageIndex,
   pageSize,
   pageSizeOptions = [10, 20, 50],
+  showOnSinglePage = false,
   totalCount,
   totalPages,
 }: PaginationControlsProps) {
-  if (totalPages <= 1) {
+  if (totalPages <= 1 && (!showOnSinglePage || !totalCount)) {
     return null
   }
 
