@@ -28,8 +28,19 @@ const routineReasons = new Set([
   'Müştəri ödəniş çekini göndərdi.',
   'Ödəniş çeki təsdiqləndi.',
   'Müştəri check-in etdi və masa sessiyası açıldı.',
+  'Müştəri masaya əyləşdi və masa açıldı.',
   'Masa sessiyası bağlandı, rezervasiya tamamlandı.',
 ])
+
+function customerReason(reason: string) {
+  if (reason === 'Müştəri check-in etdi və masa sessiyası açıldı.' || reason === 'Müştəri masaya əyləşdi və masa açıldı.') {
+    return 'Restoran gəlişinizi təsdiqlədi və masanız açıldı.'
+  }
+  if (reason === 'Müştəri no-show müddəti ərzində check-in etmədi.' || reason === 'Müştəri gəliş üçün ayrılan vaxtda masaya əyləşmədi.') {
+    return 'Gəliş üçün ayrılan vaxtda masaya əyləşmədiniz.'
+  }
+  return reason
+}
 
 function eventLabel(item: ReservationHistoryItem) {
   const status = item.toStatus.toLocaleLowerCase('az-AZ')
@@ -107,7 +118,7 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                       <span><ActorIcon actorType={item.actorType} />{actorLabel(item.actorType, viewer)}</span>
                     </div>
                     {reason && reason !== presentation.label && (viewer === 'customer' || !routineReasons.has(reason))
-                      ? <p>{viewer === 'manager' ? `Qeyd: ${reason}` : reason}</p>
+                      ? <p>{viewer === 'manager' ? `Qeyd: ${reason}` : customerReason(reason)}</p>
                       : null}
                   </div>
                 </li>
