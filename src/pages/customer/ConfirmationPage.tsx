@@ -130,7 +130,12 @@ export function ConfirmationPage() {
                   onSubmitted={() => setReloadKey((value) => value + 1)}
                 />
               ) : null}
-              <ReservationRefundPanel reservationId={reservation.id} restaurantId={reservation.restaurantId} />
+              <ReservationRefundPanel
+                reservationId={reservation.id}
+                restaurantId={reservation.restaurantId}
+                reservationStatusId={reservation.statusId}
+                reservationFlowCode={reservation.workflowFlowCode}
+              />
               {cancelAction ? (
                 <div className="reservation-confirmation-actions">
                   <Button

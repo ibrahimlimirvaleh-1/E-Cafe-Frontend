@@ -116,7 +116,12 @@ export function TrackingPage() {
                 onSubmitted={() => setReloadKey((value) => value + 1)}
               />
             ) : null}
-            <ReservationRefundPanel reservationId={reservation.id} restaurantId={reservation.restaurantId} />
+            <ReservationRefundPanel
+              reservationId={reservation.id}
+              restaurantId={reservation.restaurantId}
+              reservationStatusId={reservation.statusId}
+              reservationFlowCode={reservation.workflowFlowCode}
+            />
 
             <div className="tracking-page-actions">
               <ButtonLink to={`/confirmation?reservationId=${reservation.id}`}>Rezervasiya detallarına bax</ButtonLink>

@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
+import { RestaurantRefundPanel } from '../../features/reservations/RestaurantRefundPanel'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -200,6 +201,7 @@ export function RestaurantReservationDetailPage() {
         </div>
       </section>
       <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} />
+      <RestaurantRefundPanel key={reservation.id} reservationId={String(reservation.id)} restaurantId={restaurantId} />
       {sendPaymentInstructionAction ? (
         <ReservationPaymentInstructionPanel
           action={sendPaymentInstructionAction}
