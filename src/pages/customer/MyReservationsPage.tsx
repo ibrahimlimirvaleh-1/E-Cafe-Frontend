@@ -1,12 +1,13 @@
-import { ArrowRight, CalendarDays, Clock3, MapPin, Users } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { ArrowRight, CalendarDays, Clock3, MapPin, Search, Users, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
-import { ButtonLink } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
@@ -27,15 +28,31 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 export function MyReservationsPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [selectedDate, setSelectedDate] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [restaurantName, setRestaurantName] = useState('')
+  const [pageNumber, setPageNumber] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setRestaurantName(searchInput.trim()), 300)
+    return () => window.clearTimeout(timeoutId)
+  }, [searchInput])
+
   const query = useMemo(
-    () => ({ pageNumber: 1, pageSize: 20, reservedDate: selectedDate }),
-    [selectedDate],
+    () => ({ pageNumber, pageSize, reservedDate: selectedDate, restaurantName }),
+    [pageNumber, pageSize, selectedDate, restaurantName],
   )
   const { data, error, isLoading } = useAsyncData(
     () => ecafeApi.reservations.listMine(query),
     emptyPage,
     [query, reloadKey],
   )
+
+  useEffect(() => {
+    if (!isLoading && !error && data.totalPages > 0 && pageNumber > data.totalPages) {
+      setPageNumber(data.totalPages)
+    }
+  }, [data.totalPages, error, isLoading, pageNumber])
 
   const reservationSummary = useMemo(() => {
     const activeCount = data.items.filter((reservation) => getReservationStatusPresentation(reservation.status).tone !== 'danger').length
@@ -48,6 +65,15 @@ export function MyReservationsPage() {
     }
   }, [data.items, data.totalCount])
 
+  const hasFilters = Boolean(selectedDate || restaurantName)
+
+  function clearFilters() {
+    setSearchInput('')
+    setRestaurantName('')
+    setSelectedDate('')
+    setPageNumber(1)
+  }
+
   return (
     <main className="page reservations-page">
       <PageHeader
@@ -57,7 +83,42 @@ export function MyReservationsPage() {
       />
 
       <section className="reservation-list-toolbar" aria-label="Rezervasiya filterləri">
-        <ReservationDateFilter value={selectedDate} onChange={setSelectedDate} />
+        <div className="reservation-name-filter">
+          <label htmlFor="my-reservations-restaurant-name">Restoran adı</label>
+          <div className="reservation-name-filter-control">
+            <Search aria-hidden="true" size={18} />
+            <input
+              autoComplete="off"
+              id="my-reservations-restaurant-name"
+              maxLength={100}
+              onChange={(event) => {
+                setSearchInput(event.target.value)
+                setPageNumber(1)
+              }}
+              placeholder="Restoran axtar"
+              type="search"
+              value={searchInput}
+            />
+            {searchInput ? (
+              <button
+                aria-label="Restoran axtarışını təmizlə"
+                onClick={() => {
+                  setSearchInput('')
+                  setRestaurantName('')
+                  setPageNumber(1)
+                }}
+                title="Axtarışı təmizlə"
+                type="button"
+              >
+                <X size={18} />
+              </button>
+            ) : null}
+          </div>
+        </div>
+        <ReservationDateFilter value={selectedDate} onChange={(value) => {
+          setSelectedDate(value)
+          setPageNumber(1)
+        }} />
       </section>
 
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
@@ -66,17 +127,17 @@ export function MyReservationsPage() {
       {!isLoading && !error && data.items.length > 0 ? (
         <section className="reservation-overview" aria-label="Rezervasiya xülasəsi">
           <div>
-            <span>Aktiv</span>
+            <span>Bu səhifədə aktiv</span>
             <strong>{reservationSummary.activeCount}</strong>
             <small>rezervasiya</small>
           </div>
           <div>
-            <span>Ödəniş gözləyir</span>
+            <span>Bu səhifədə ödəniş gözləyir</span>
             <strong>{reservationSummary.awaitingPaymentCount}</strong>
             <small>növbəti addım</small>
           </div>
           <div>
-            <span>Ümumi</span>
+            <span>Tapılan</span>
             <strong>{reservationSummary.totalCount}</strong>
             <small>rezervasiya</small>
           </div>
@@ -86,9 +147,9 @@ export function MyReservationsPage() {
       {!isLoading && !error && data.items.length === 0 ? (
         <section className="reservation-empty-state">
           <CalendarDays size={28} />
-          <h2>{selectedDate ? 'Seçilən tarix üçün rezervasiya yoxdur' : 'Hələ rezervasiyanız yoxdur'}</h2>
-          <p>{selectedDate ? 'Başqa tarix seçərək rezervasiyalarınıza baxa bilərsiniz.' : 'Restoran seçərək uyğun masa üçün rezervasiya yarada bilərsiniz.'}</p>
-          {selectedDate ? null : <ButtonLink to="/">Restoranlara bax</ButtonLink>}
+          <h2>{hasFilters ? 'Axtarışa uyğun rezervasiya yoxdur' : 'Hələ rezervasiyanız yoxdur'}</h2>
+          <p>{hasFilters ? 'Restoran adını və ya tarixi dəyişərək yenidən yoxlayın.' : 'Restoran seçərək uyğun masa üçün rezervasiya yarada bilərsiniz.'}</p>
+          {hasFilters ? <Button onClick={clearFilters} variant="secondary">Filtrləri təmizlə</Button> : <ButtonLink to="/">Restoranlara bax</ButtonLink>}
         </section>
       ) : null}
 
@@ -155,6 +216,23 @@ export function MyReservationsPage() {
           )
         })}
       </section>
+      {!isLoading && !error ? (
+        <PaginationControls
+          ariaLabel="Rezervasiyalarım səhifələməsi"
+          hasNextPage={data.hasNextPage}
+          hasPreviousPage={data.hasPreviousPage}
+          pageIndex={data.pageIndex}
+          pageSize={pageSize}
+          showOnSinglePage
+          totalCount={data.totalCount}
+          totalPages={data.totalPages}
+          onPageChange={setPageNumber}
+          onPageSizeChange={(nextPageSize) => {
+            setPageSize(nextPageSize)
+            setPageNumber(1)
+          }}
+        />
+      ) : null}
     </main>
   )
 }

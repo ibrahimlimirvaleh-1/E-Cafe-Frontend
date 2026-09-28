@@ -1,4 +1,4 @@
-import { Ban, CalendarDays, CheckCircle2, Clock3, Eye, Users, XCircle } from 'lucide-react'
+import { ArrowLeft, Ban, CalendarDays, CheckCircle2, Clock3, Eye, Users, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
@@ -203,9 +203,6 @@ export function RestaurantReservationDetailPage() {
             {actionMessage ? <StatusMessage tone="success">{actionMessage}</StatusMessage> : null}
           </div>
         ) : null}
-        <div className="action-row">
-          <ButtonLink variant="secondary" to={`/admin/reservations?restaurantId=${restaurantId}`}>Siyahıya qayıt</ButtonLink>
-        </div>
       </section>
       <RestaurantRefundPanel key={reservation.id} reservationId={String(reservation.id)} restaurantId={restaurantId} />
       {sendPaymentInstructionAction ? (
@@ -216,6 +213,11 @@ export function RestaurantReservationDetailPage() {
           amount={`${reservation.depositAmount.toFixed(2)} AZN`}
         />
       ) : null}
+        <nav className="reservation-detail-footer" aria-label="Rezervasiya naviqasiyası">
+          <ButtonLink variant="secondary" to={`/admin/reservations?restaurantId=${restaurantId}`}>
+            <ArrowLeft size={17} /> Rezervasiyalara qayıt
+          </ButtonLink>
+        </nav>
         </div>
         <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} />
       </div>
