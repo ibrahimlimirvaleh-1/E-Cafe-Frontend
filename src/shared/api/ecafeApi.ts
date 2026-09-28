@@ -285,6 +285,7 @@ export type PaymentInstructionResponse = {
   displayText: string
   maskedDetails?: string | null
   isDetailsProtected: boolean
+  isDetailsAvailable: boolean
   amount: number
   sentAt: string
 }
@@ -631,6 +632,7 @@ function mapPaymentInstructionResponse(record: AnyRecord): PaymentInstructionRes
     displayText: str(record.displayText || record.message),
     maskedDetails: str(record.maskedDetails) || null,
     isDetailsProtected: bool(record.isDetailsProtected),
+    isDetailsAvailable: record.isDetailsAvailable !== false,
     amount: num(record.amount),
     sentAt: str(record.sentAt || record.createdAt),
   }

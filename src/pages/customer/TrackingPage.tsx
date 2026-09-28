@@ -96,12 +96,16 @@ export function TrackingPage() {
             {reservation.latestPaymentInstruction ? (
               <div className="reservation-payment-note">
                 <strong>Ödəniş məlumatı</strong>
-                <p>{reservation.latestPaymentInstruction.displayText}</p>
+                <p role={reservation.latestPaymentInstruction.isDetailsAvailable ? undefined : 'alert'}>
+                  {reservation.latestPaymentInstruction.isDetailsAvailable
+                    ? reservation.latestPaymentInstruction.displayText
+                    : 'Ödəniş məlumatı hazırda əlçatan deyil. Restoranla əlaqə saxlayın.'}
+                </p>
                 <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
               </div>
             ) : null}
 
-            {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
+            {reservation.latestPaymentInstruction?.isDetailsAvailable && isReservationAwaitingPayment(reservation.status) ? (
               <ReservationPaymentProofPanel
                 restaurantId={String(reservation.restaurantId)}
                 reservationId={String(reservation.id)}

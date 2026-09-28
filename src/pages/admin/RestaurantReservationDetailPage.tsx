@@ -148,7 +148,11 @@ export function RestaurantReservationDetailPage() {
         {reservation.latestPaymentInstruction ? (
           <div className="reservation-payment-note">
             <strong>Son göndərilən ödəniş məlumatı</strong>
-            <p>{reservation.latestPaymentInstruction.displayText}</p>
+            <p role={reservation.latestPaymentInstruction.isDetailsAvailable ? undefined : 'alert'}>
+              {reservation.latestPaymentInstruction.isDetailsAvailable
+                ? reservation.latestPaymentInstruction.displayText
+                : 'Ödəniş məlumatının tam mətni açıla bilmir. Dəstək ilə əlaqə saxlayın.'}
+            </p>
             <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
           </div>
         ) : null}
