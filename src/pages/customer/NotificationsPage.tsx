@@ -1,5 +1,5 @@
 import { Bell, CheckCheck } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { NotificationItem, StatusTone } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -43,6 +43,11 @@ export function NotificationsPage() {
   const navigate = useNavigate()
   const { selectProfileForRestaurant, user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
+  useEffect(() => {
+    const onRefresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('ecafe:notifications-refresh', onRefresh)
+    return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
+  }, [])
   const activeProfileKey = `${user?.restaurantId || ''}:${user?.roleId || ''}`
   const { data: notifications, isLoading } = useAsyncData(() => ecafeApi.notifications.list(), [], [activeProfileKey, reloadKey])
   const unreadCount = useMemo(() => notifications.filter((notification) => !notification.isRead).length, [notifications])

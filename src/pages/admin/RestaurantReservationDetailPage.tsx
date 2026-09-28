@@ -1,5 +1,5 @@
 import { Ban, CalendarDays, CheckCircle2, Clock3, Eye, Users, XCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
@@ -24,6 +24,11 @@ export function RestaurantReservationDetailPage() {
   const [searchParams] = useSearchParams()
   const restaurantId = searchParams.get('restaurantId') || user?.restaurantId || user?.profiles[0]?.restaurantId || ''
   const [reloadKey, setReloadKey] = useState(0)
+  useEffect(() => {
+    const onRefresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('ecafe:notifications-refresh', onRefresh)
+    return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
+  }, [])
   const [actionName, setActionName] = useState('')
   const [actionError, setActionError] = useState('')
   const [actionMessage, setActionMessage] = useState('')
@@ -131,6 +136,8 @@ export function RestaurantReservationDetailPage() {
   return (
     <main className="admin-page narrow reservation-detail-page">
       <PageHeader eyebrow="Rezervasiya detalı" title={`Rezervasiya #${reservation.id}`} description={reservation.customerName || 'Müştəri rezervasiyası'} />
+      <div className="reservation-detail-layout">
+        <div className="reservation-detail-main">
       <section className="reservation-detail-card">
         <div className="reservation-detail-card-header">
           <div>
@@ -200,7 +207,6 @@ export function RestaurantReservationDetailPage() {
           <ButtonLink variant="secondary" to={`/admin/reservations?restaurantId=${restaurantId}`}>Siyahıya qayıt</ButtonLink>
         </div>
       </section>
-      <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} />
       <RestaurantRefundPanel key={reservation.id} reservationId={String(reservation.id)} restaurantId={restaurantId} />
       {sendPaymentInstructionAction ? (
         <ReservationPaymentInstructionPanel
@@ -210,6 +216,9 @@ export function RestaurantReservationDetailPage() {
           amount={`${reservation.depositAmount.toFixed(2)} AZN`}
         />
       ) : null}
+        </div>
+        <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} />
+      </div>
       <ReservationReasonDialog
         confirmLabel={pendingAction?.label || 'Təsdiqlə'}
         description="Bu əməliyyat rezervasiyanın backend workflow qaydasına uyğun icra ediləcək."

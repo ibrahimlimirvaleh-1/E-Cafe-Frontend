@@ -92,7 +92,7 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
       {items.length === 0 ? (
         <p className="reservation-history-empty">Bu rezervasiya üçün hələ tarixçə yoxdur.</p>
       ) : (
-        <div className="reservation-history-events">
+        <div className="reservation-history-events" role="region" aria-label="Tarixçə hadisələri" tabIndex={0}>
           {viewer === 'manager' ? <h3>Hadisələr</h3> : null}
           <ol className="reservation-history-timeline">
             {items.map((item, index) => {
