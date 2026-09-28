@@ -247,6 +247,7 @@ export type ReservationResponse = {
   status: string
   workflowFlowCode: string
   depositAmount: number
+  isRefundEligible: boolean
   holdExpiresAt?: string | null
   restaurantResponseExpiresAt?: string | null
   cancellationDeadline?: string | null
@@ -271,6 +272,16 @@ export type ReservationHistoryResponse = {
   items: ReservationHistoryItem[]
 }
 
+export type ReservationRefundTransferResponse = {
+  id: number
+  amount: number
+  proofFileViewUrl: string
+  submittedAt: string
+  customerConfirmedAt?: string | null
+  disputedAt?: string | null
+  disputeReason?: string | null
+}
+
 export type ReservationRefundResponse = {
   id: number
   reservationId: number
@@ -280,17 +291,19 @@ export type ReservationRefundResponse = {
   amount: number
   currencyCode: string
   requestedAt: string
+  eligibilityReason: string
+  cancellationReason?: string | null
   refundedAt?: string | null
   payoutDetails?: { maskedDetails: string; submittedAt: string } | null
-  latestTransfer?: {
-    id: number
-    amount: number
-    proofFileViewUrl: string
-    submittedAt: string
-    customerConfirmedAt?: string | null
-    disputedAt?: string | null
-    disputeReason?: string | null
-  } | null
+  latestTransfer?: ReservationRefundTransferResponse | null
+  transferAttempts: ReservationRefundTransferResponse[]
+  history: ReservationHistoryItem[]
+}
+
+export type RestaurantRefundPayoutDetailsResponse = {
+  refundId: number
+  details: string
+  submittedAt: string
 }
 
 export type ReservationActionResponse = {
@@ -631,6 +644,7 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     status: str(record.status || record.statusName),
     workflowFlowCode: str(record.workflowFlowCode || record.flowCode),
     depositAmount: num(record.depositAmount),
+    isRefundEligible: bool(record.isRefundEligible),
     holdExpiresAt: str(record.holdExpiresAt || record.HoldExpiresAt) || null,
     restaurantResponseExpiresAt: str(record.restaurantResponseExpiresAt || record.RestaurantResponseExpiresAt) || null,
     cancellationDeadline: str(record.cancellationDeadline || record.CancellationDeadline) || null,
@@ -1306,8 +1320,8 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(`${endpoints.workflow.actions(request.flowCode)}?${params.toString()}`)
         return asArray<AnyRecord>(result.data).map(mapWorkflowAction)
       }, [] as WorkflowAction[]),
-    executeAction: ({ action, body }: WorkflowActionRequest) =>
-      httpClient<unknown>(normalizeWorkflowActionEndpoint(action.endpoint), {
+    executeAction: <T = unknown>({ action, body }: WorkflowActionRequest) =>
+      httpClient<T>(normalizeWorkflowActionEndpoint(action.endpoint), {
         method: action.httpMethod || 'POST',
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       }),
@@ -1866,6 +1880,12 @@ export const ecafeApi = {
     },
     getRefund: async (reservationId: string): Promise<ReservationRefundResponse | null> => {
       const result = await httpClient<ReservationRefundResponse | null>(endpoints.reservations.refund(reservationId))
+      return result.data ?? null
+    },
+    getRefundForRestaurant: async (restaurantId: string, reservationId: string): Promise<ReservationRefundResponse | null> => {
+      const result = await httpClient<ReservationRefundResponse | null>(
+        endpoints.reservations.restaurantRefund(restaurantId, reservationId),
+      )
       return result.data ?? null
     },
     getForRestaurant: async (restaurantId: string, reservationId: string) => {

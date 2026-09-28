@@ -62,6 +62,8 @@ export const endpoints = {
     getById: (reservationId: string) => `/public/reservations/${reservationId}`,
     history: (reservationId: string) => `/public/reservations/${reservationId}/history`,
     refund: (reservationId: string) => `/public/reservations/${reservationId}/refund`,
+    restaurantRefund: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/refund`,
     restaurantList: (restaurantId: string) => `/restaurants/${restaurantId}/reservations`,
     restaurantDetail: (restaurantId: string, reservationId: string) => `/restaurants/${restaurantId}/reservations/${reservationId}`,
     restaurantHistory: (restaurantId: string, reservationId: string) =>
