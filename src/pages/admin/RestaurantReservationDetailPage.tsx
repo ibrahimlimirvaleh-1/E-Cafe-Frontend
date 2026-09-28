@@ -195,7 +195,7 @@ export function RestaurantReservationDetailPage() {
           <ButtonLink variant="secondary" to={`/admin/reservations?restaurantId=${restaurantId}`}>Siyahıya qayıt</ButtonLink>
         </div>
       </section>
-      <ReservationHistoryTimeline items={history?.items || []} />
+      <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} />
       {sendPaymentInstructionAction ? (
         <ReservationPaymentInstructionPanel
           action={sendPaymentInstructionAction}
