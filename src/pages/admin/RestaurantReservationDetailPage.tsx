@@ -1,4 +1,4 @@
-import { ArrowLeft, Ban, CalendarDays, CheckCircle2, Clock3, Eye, Users, XCircle } from 'lucide-react'
+import { ArrowLeft, Ban, CalendarDays, CheckCircle2, CircleDollarSign, Clock3, Eye, Users, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
@@ -192,6 +192,8 @@ export function RestaurantReservationDetailPage() {
                     ? <Ban size={17} />
                     : action.code === 'rejectPaymentProof'
                       ? <XCircle size={17} />
+                      : action.code === 'waiveDeposit'
+                        ? <CircleDollarSign size={17} />
                       : <CheckCircle2 size={17} />}
                   {actionName === action.code ? 'İcra olunur...' : action.label}
                 </Button>
@@ -221,7 +223,9 @@ export function RestaurantReservationDetailPage() {
       </div>
       <ReservationReasonDialog
         confirmLabel={pendingAction?.label || 'Təsdiqlə'}
-        description="Bu əməliyyat rezervasiyanın backend workflow qaydasına uyğun icra ediləcək."
+        description={pendingAction?.code === 'waiveDeposit'
+          ? 'Ödəniş məlumatı göndərilməyibsə depozit tələbi silinəcək və rezervasiya depozitsiz təsdiqlənəcək. Gün üzrə depozit qaydası dəyişməyəcək.'
+          : 'Bu əməliyyat rezervasiyanın backend workflow qaydasına uyğun icra ediləcək.'}
         error={pendingAction ? actionError : ''}
         isOpen={Boolean(pendingAction)}
         isSubmitting={Boolean(pendingAction && actionName === pendingAction.code)}
@@ -233,7 +237,7 @@ export function RestaurantReservationDetailPage() {
         confirmVariant={pendingAction ? getActionVariant(pendingAction) : 'primary'}
         requireReason={pendingAction?.requiresReason || false}
         showReason={pendingAction?.requiresReason || false}
-        title="Əməliyyatı təsdiqləyirsiniz?"
+        title={pendingAction?.code === 'waiveDeposit' ? 'Bu rezervasiya üçün depozitdən imtina edirsiniz?' : 'Əməliyyatı təsdiqləyirsiniz?'}
       />
     </main>
   )

@@ -32,17 +32,19 @@ export function ReservationDepositReviewDialog({
           <button aria-label="Bağla" className="reservation-preorder-close" onClick={onCancel} type="button"><X size={20} /></button>
         </header>
         <div className="reservation-preorder-dialog-body">
-          <h2 id="reservation-deposit-review-title">{isChanged ? 'Depozit məbləği dəyişib' : 'Bu tarix üçün depozit tələb olunur'}</h2>
+          <h2 id="reservation-deposit-review-title">{amount === 0 ? 'Depozit tələbi ləğv edilib' : isChanged ? 'Depozit məbləği dəyişib' : 'Bu tarix üçün depozit tələb olunur'}</h2>
           <div className="reservation-deposit-notice">
             <span>Hazırkı depozit</span>
-            <strong>{amount.toFixed(2)} AZN</strong>
-            <p>Restoran ödəniş məlumatlarını göndərdikdən sonra depoziti ödəyib çeki yükləyəcəksiniz. Rezervasiya çek təsdiqləndikdən sonra təsdiqlənəcək.</p>
+            <strong>{amount > 0 ? `${amount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong>
+            <p>{amount > 0
+              ? 'Restoran ödəniş məlumatlarını göndərdikdən sonra depoziti ödəyib çeki yükləyəcəksiniz. Rezervasiya çek təsdiqləndikdən sonra təsdiqlənəcək.'
+              : 'Restoran bu tarix üçün depozit qaydasını ləğv edib. Rezervasiya yaradıldıqda depozitsiz təsdiqlənəcək.'}</p>
           </div>
-          <p>Bu məbləğlə rezervasiyanı yaratmağa davam edirsiniz?</p>
+          <p>{amount > 0 ? 'Bu məbləğlə rezervasiyanı yaratmağa davam edirsiniz?' : 'Depozitsiz rezervasiyaya davam edirsiniz?'}</p>
         </div>
         <footer className="reservation-preorder-dialog-actions">
           <Button disabled={isSubmitting} onClick={onConfirm} type="button">
-            {isSubmitting ? 'Rezervasiya yaradılır...' : 'Məbləği qəbul et və davam et'}
+            {isSubmitting ? 'Rezervasiya yaradılır...' : amount === 0 ? 'Depozitsiz davam et' : 'Məbləği qəbul et və davam et'}
           </Button>
           <Button disabled={isSubmitting} onClick={onCancel} type="button" variant="secondary">Geri qayıt</Button>
         </footer>

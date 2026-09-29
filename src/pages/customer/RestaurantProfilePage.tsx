@@ -1,6 +1,6 @@
 import { BookOpen, Clock, MapPin, Phone, ShieldCheck, Star, Table2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -16,6 +16,8 @@ type ProfilePanel = 'tables' | 'menu'
 
 export function RestaurantProfilePage() {
   const { restaurantId = 'saffron-premium' } = useParams()
+  const [searchParams] = useSearchParams()
+  const reservationDate = searchParams.get('reservationDate')
   const { user } = useAuth()
   const isCustomer = isInRole(user, [RoleIds.Customer])
   const [activePanel, setActivePanel] = useState<ProfilePanel>('tables')
@@ -86,7 +88,7 @@ export function RestaurantProfilePage() {
           <ContractGuardNotice active={restaurant.hasActiveContract} />
           <div className="action-row profile-actions">
             {isCustomer ? (
-              <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve`}>
+              <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve${reservationDate ? `?reservationDate=${encodeURIComponent(reservationDate)}` : ''}`}>
                 Rezervasiyaya başla
               </Link>
             ) : null}

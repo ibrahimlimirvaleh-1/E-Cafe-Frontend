@@ -3,28 +3,9 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { formatDateOnlyAz, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 import { Button } from '../../shared/ui/Button'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-
-function localToday(timeZone?: string) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timeZone || 'Asia/Baku',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date())
-  const value = (type: string) => parts.find((part) => part.type === type)?.value || ''
-  return `${value('year')}-${value('month')}-${value('day')}`
-}
-
-function formatRuleDate(date: string) {
-  return new Intl.DateTimeFormat('az-AZ', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${date}T12:00:00Z`))
-}
 
 export function RestaurantDepositRulesPanel({ restaurantId }: { restaurantId: string }) {
   const [refreshKey, setRefreshKey] = useState(0)
@@ -38,7 +19,7 @@ export function RestaurantDepositRulesPanel({ restaurantId }: { restaurantId: st
     null,
     [restaurantId, refreshKey],
   )
-  const today = localToday(restaurant?.timeZone)
+  const today = getTodayDateInputValue(restaurant?.timeZone)
   const rules = useMemo(
     () => (restaurant?.depositRules || []).filter((rule) => rule.reservationDate >= today)
       .sort((first, second) => first.reservationDate.localeCompare(second.reservationDate)),
@@ -82,7 +63,7 @@ export function RestaurantDepositRulesPanel({ restaurantId }: { restaurantId: st
     setIsSaving(true)
     try {
       await ecafeApi.restaurants.removeDepositRule(restaurantId, date)
-      setFeedback('Bu tarix üçün depozit ləğv edildi. Yeni rezervasiyalar depozitsiz olacaq.')
+      setFeedback('Bu tarix üçün depozit ləğv edildi. Yeni rezervasiyalar depozitsiz olacaq. Mövcud rezervasiyalar dəyişmir; uyğun rezervasiyada depozitdən ayrıca imtina edə bilərsiniz.')
       setRefreshKey((current) => current + 1)
     } catch (removeError) {
       setActionError(removeError instanceof Error ? removeError.message : 'Tarix qaydası silinmədi.')
@@ -119,7 +100,7 @@ export function RestaurantDepositRulesPanel({ restaurantId }: { restaurantId: st
         <div className="deposit-rules-list" aria-label="Təyin edilmiş tarixlər">
           {rules.map((rule) => (
             <button className={rule.reservationDate === date ? 'active' : ''} key={rule.reservationDate} onClick={() => setDate(rule.reservationDate)} type="button">
-              <span>{formatRuleDate(rule.reservationDate)}</span><strong>{rule.amount.toFixed(2)} AZN</strong>
+              <span>{formatDateOnlyAz(rule.reservationDate)}</span><strong>{rule.amount.toFixed(2)} AZN</strong>
             </button>
           ))}
         </div>
