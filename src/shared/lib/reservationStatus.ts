@@ -20,8 +20,8 @@ export function getReservationStatusPresentation(status: string): { label: strin
     return { label: displayLabel, tone: 'success' }
   }
 
-  if (normalized.includes('seated')) return { label: displayLabel, tone: 'success' }
-  if (normalized.includes('completed')) return { label: displayLabel, tone: 'success' }
+  if (normalized.includes('seated') || normalized.includes('əyləşib')) return { label: displayLabel, tone: 'success' }
+  if (normalized.includes('completed') || normalized.includes('tamamlanıb')) return { label: displayLabel, tone: 'success' }
   if (normalized.includes('expired') || normalized.includes('vaxtı bitib')) {
     return { label: displayLabel, tone: 'danger' }
   }

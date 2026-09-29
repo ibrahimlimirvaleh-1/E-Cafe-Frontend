@@ -88,13 +88,13 @@ export function TrackingPage() {
               </section>
               <section className="tracking-total" aria-label="Depozit məlumatı">
                 <span>DEPOZİT</span>
-                <strong>{reservation.depositAmount.toFixed(2)} AZN</strong>
+                <strong>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong>
                 <small>
                   {reservation.holdExpiresAt
                     ? `Ödəniş üçün son vaxt: ${formatReservationDateTime(reservation.holdExpiresAt)}`
                     : reservation.restaurantResponseExpiresAt
                       ? `Cavab üçün son vaxt: ${formatReservationDateTime(reservation.restaurantResponseExpiresAt)}`
-                      : 'Əlavə ödəniş müddəti yoxdur'}
+                      : reservation.depositAmount > 0 ? 'Əlavə ödəniş müddəti yoxdur' : 'Rezervasiya ödənişsiz təsdiqlənib'}
                 </small>
               </section>
             </div>

@@ -60,9 +60,14 @@ export function RestaurantEditPage() {
   const navigate = useNavigate()
   const { restaurantId = '' } = useParams()
   const { user } = useAuth()
-  const canEditRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
+  const canEditRestrictedSettings = isInRole(user, [RoleIds.PlatformAdmin])
+  const canEditRestaurants = canEditRestrictedSettings || isInRole(user, [RoleIds.Owner, RoleIds.Manager], restaurantId)
   const { data: restaurant, isLoading } = useAsyncData(() => ecafeApi.restaurants.adminDetail(restaurantId), null, [restaurantId])
-  const { data: groups } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [])
+  const { data: groups } = useAsyncData(
+    () => canEditRestrictedSettings ? ecafeApi.restaurantGroups.list() : Promise.resolve([]),
+    [],
+    [canEditRestrictedSettings],
+  )
   const [fileIds, setFileIds] = useState<number[]>([])
   const [error, setError] = useState('')
   const [errorDetails, setErrorDetails] = useState<ApiErrorDetail[]>([])
@@ -79,7 +84,6 @@ export function RestaurantEditPage() {
     restaurantGroupName: '',
     restaurantGroupLegalName: '',
     branchName: '',
-    depositAmount: '0',
     cancellationWindowMinutes: '60',
     reservationPreBlockMinutes: '60',
     tableTurnoverBufferMinutes: '15',
@@ -111,7 +115,6 @@ export function RestaurantEditPage() {
       restaurantGroupName: restaurant.restaurantGroupName || '',
       restaurantGroupLegalName: '',
       branchName: restaurant.branchName || '',
-      depositAmount: String(restaurant.depositAmount),
       cancellationWindowMinutes: String(restaurant.cancellationWindowMinutes ?? 60),
       reservationPreBlockMinutes: String(restaurant.reservationPreBlockMinutes ?? 60),
       tableTurnoverBufferMinutes: String(restaurant.tableTurnoverBufferMinutes ?? 15),
@@ -142,20 +145,21 @@ export function RestaurantEditPage() {
         longitude: form.longitude ? Number(form.longitude) : null,
         placeId: form.placeId || null,
         phone: form.phone,
-        restaurantGroupId: form.restaurantGroupId || undefined,
-        restaurantGroupName: form.restaurantGroupId ? undefined : form.restaurantGroupName,
-        restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
-        restaurantGroupEmail: form.restaurantGroupId ? undefined : form.restaurantGroupEmail,
+        ...(canEditRestrictedSettings ? {
+          restaurantGroupId: form.restaurantGroupId || undefined,
+          restaurantGroupName: form.restaurantGroupId ? undefined : form.restaurantGroupName,
+          restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
+          restaurantGroupEmail: form.restaurantGroupId ? undefined : form.restaurantGroupEmail,
+          serviceFeePercent: Number(form.serviceFeePercent),
+          staffSettlementPeriod: Number(form.staffSettlementPeriod),
+        } : {}),
         branchName: form.branchName,
-        depositAmount: Number(form.depositAmount),
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         reservationPreBlockMinutes: Number(form.reservationPreBlockMinutes),
         tableTurnoverBufferMinutes: Number(form.tableTurnoverBufferMinutes),
         noShowGraceMinutes: Number(form.noShowGraceMinutes),
         paymentHoldMinutes: Number(form.paymentHoldMinutes),
         restaurantResponseMinutes: Number(form.restaurantResponseMinutes),
-        serviceFeePercent: Number(form.serviceFeePercent),
-        staffSettlementPeriod: Number(form.staffSettlementPeriod),
         timeZone: form.timeZone,
         workingHours: form.workingHours,
         defaultWaiterTableLimit: null,
@@ -266,34 +270,41 @@ export function RestaurantEditPage() {
           <PhoneField label="Telefon" required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
         </div>
         <WorkingHoursField value={form.workingHours} onChange={(workingHours) => setForm({ ...form, workingHours })} />
-        <SelectField label="Restoran qrupu" value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}>
-          <option value="">Yeni qrup yarat</option>
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </SelectField>
-        {!form.restaurantGroupId ? (
-          <div className="form-grid two">
-            <TextField label="Yeni qrup adı" required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
-            <TextField label="Yeni qrup legal adı" value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
-            <TextField
-              label="Qrup əlaqə emaili"
-              required
-              type="email"
-              value={form.restaurantGroupEmail}
-              onChange={(event) => setForm({ ...form, restaurantGroupEmail: event.target.value })}
-            />
-          </div>
+        {canEditRestrictedSettings ? (
+          <>
+            <SelectField label="Restoran qrupu" value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}>
+              <option value="">Yeni qrup yarat</option>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </SelectField>
+            {!form.restaurantGroupId ? (
+              <div className="form-grid two">
+                <TextField label="Yeni qrup adı" required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
+                <TextField label="Yeni qrup legal adı" value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
+                <TextField
+                  label="Qrup əlaqə emaili"
+                  required
+                  type="email"
+                  value={form.restaurantGroupEmail}
+                  onChange={(event) => setForm({ ...form, restaurantGroupEmail: event.target.value })}
+                />
+              </div>
+            ) : null}
+          </>
         ) : null}
         <div className="form-grid two">
-          <TextField label="Depozit" min={0} required step="0.01" type="number" value={form.depositAmount} onChange={(event) => setForm({ ...form, depositAmount: event.target.value })} />
-          <TextField label="Servis faizi" min={0} required step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
+          {canEditRestrictedSettings ? (
+            <TextField label="Servis faizi" min={0} required step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
+          ) : null}
         </div>
         <div className="form-grid two">
           <TextField label="Ləğv pəncərəsi dəqiqə" min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
-          <TextField label="Personal hesablaşma günü" min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
+          {canEditRestrictedSettings ? (
+            <TextField label="Personal hesablaşma günü" min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
+          ) : null}
         </div>
         <div className="form-grid two">
           <TextField label="Növbəti rezervasiyadan əvvəl qoruma müddəti (dəqiqə)" min={15} max={180} required type="number" value={form.reservationPreBlockMinutes} onChange={(event) => setForm({ ...form, reservationPreBlockMinutes: event.target.value })} />

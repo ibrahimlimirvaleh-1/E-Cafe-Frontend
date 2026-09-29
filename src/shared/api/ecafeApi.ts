@@ -156,7 +156,6 @@ type CreateRestaurantRequest = {
   restaurantGroupLegalName?: string
   restaurantGroupEmail?: string
   branchName?: string
-  depositAmount: number
   cancellationWindowMinutes: number
   reservationPreBlockMinutes: number
   tableTurnoverBufferMinutes: number
@@ -179,7 +178,8 @@ type CreateRestaurantRequest = {
   fileIds?: number[]
 }
 
-type UpdateRestaurantRequest = CreateRestaurantRequest
+type UpdateRestaurantRequest = Omit<CreateRestaurantRequest, 'serviceFeePercent' | 'staffSettlementPeriod'> &
+  Partial<Pick<CreateRestaurantRequest, 'serviceFeePercent' | 'staffSettlementPeriod'>>
 
 export type GeocodeAddressResponse = {
   displayName: string
@@ -216,6 +216,7 @@ type UpdateTableRequest = CreateTableRequest & {
 
 export type TableAvailabilityResponse = {
   reservedAt: string
+  depositAmount?: number
   reservationPreBlockMinutes: number
   tableTurnoverBufferMinutes: number
   restaurantTimeZone?: string
@@ -233,6 +234,7 @@ export type CreateReservationRequest = {
   peopleCount: number
   note?: string
   acceptsLimitedSeating?: boolean
+  expectedDepositAmount?: number
 }
 
 export type ReservationResponse = {
@@ -620,6 +622,9 @@ function mapTableAvailability(record: AnyRecord, restaurantId: string, fallbackR
 
   return {
     reservedAt: str(record.reservedAt || record.ReservedAt, fallbackReservedAt),
+    depositAmount: record.depositAmount == null && record.DepositAmount == null
+      ? undefined
+      : num(record.depositAmount ?? record.DepositAmount),
     reservationPreBlockMinutes: num(record.reservationPreBlockMinutes || record.ReservationPreBlockMinutes),
     tableTurnoverBufferMinutes: num(record.tableTurnoverBufferMinutes || record.TableTurnoverBufferMinutes),
     restaurantTimeZone: str(record.restaurantTimeZone || record.RestaurantTimeZone) || undefined,
@@ -1180,7 +1185,6 @@ export const ecafeApi = {
       appendIfPresent(formData, 'RestaurantGroupLegalName', request.restaurantGroupLegalName)
       appendIfPresent(formData, 'RestaurantGroupEmail', request.restaurantGroupEmail)
       appendIfPresent(formData, 'BranchName', request.branchName)
-      formData.set('DepositAmount', String(request.depositAmount))
       formData.set('CancellationWindowMinutes', String(request.cancellationWindowMinutes))
       formData.set('ReservationPreBlockMinutes', String(request.reservationPreBlockMinutes))
       formData.set('TableTurnoverBufferMinutes', String(request.tableTurnoverBufferMinutes))
@@ -1232,7 +1236,6 @@ export const ecafeApi = {
           restaurantGroupLegalName: request.restaurantGroupLegalName,
           restaurantGroupEmail: request.restaurantGroupEmail,
           branchName: request.branchName,
-          depositAmount: request.depositAmount,
           cancellationWindowMinutes: request.cancellationWindowMinutes,
           reservationPreBlockMinutes: request.reservationPreBlockMinutes,
           tableTurnoverBufferMinutes: request.tableTurnoverBufferMinutes,
@@ -1246,6 +1249,16 @@ export const ecafeApi = {
           defaultWaiterTableLimit: request.defaultWaiterTableLimit,
           fileIds: request.fileIds,
         }),
+      }),
+    setDepositRule: (restaurantId: string, date: string, amount: number) =>
+      httpClient<unknown>(endpoints.restaurants.update(restaurantId), {
+        method: 'PUT',
+        body: JSON.stringify({ depositDate: date, depositAmount: amount }),
+      }),
+    removeDepositRule: (restaurantId: string, date: string) =>
+      httpClient<unknown>(endpoints.restaurants.update(restaurantId), {
+        method: 'PUT',
+        body: JSON.stringify({ depositDate: date, removeDepositDateOverride: true }),
       }),
     deactivate: (restaurantId: string) =>
       httpClient<unknown>(endpoints.restaurants.deactivate(restaurantId), {
@@ -1909,6 +1922,7 @@ export const ecafeApi = {
           peopleCount: request.peopleCount,
           note: request.note?.trim() || null,
           acceptsLimitedSeating: Boolean(request.acceptsLimitedSeating),
+          expectedDepositAmount: request.expectedDepositAmount,
         }),
       })
 

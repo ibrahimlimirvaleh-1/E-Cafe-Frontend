@@ -27,7 +27,6 @@ export function RestaurantContextCard({ restaurant }: RestaurantContextCardProps
         <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>
           {restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur'}
         </Badge>
-        <small>{restaurant.depositAmount.toFixed(2)} AZN depozit</small>
       </div>
     </article>
   )

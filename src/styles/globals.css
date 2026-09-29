@@ -8214,8 +8214,28 @@ body,
   height: 58px;
   place-items: center;
   border-radius: 16px;
+  color: var(--on-surface-variant);
+  background: var(--surface-high);
+}
+
+.reservation-confirmation-icon.is-success {
   color: var(--success);
-  background: #e9f8f1;
+  background: var(--success-bg);
+}
+
+.reservation-confirmation-icon.is-warning {
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+.reservation-confirmation-icon.is-info {
+  color: var(--info);
+  background: var(--info-bg);
+}
+
+.reservation-confirmation-icon.is-danger {
+  color: var(--danger);
+  background: var(--danger-bg);
 }
 
 .reservation-confirmation-heading {
@@ -8415,6 +8435,7 @@ body,
 
 .reservation-detail-actions .action-row {
   margin-top: 0;
+  flex-wrap: wrap;
 }
 
 .reservation-detail-actions .ui-button,
@@ -8422,6 +8443,19 @@ body,
   display: inline-flex;
   align-items: center;
   gap: 7px;
+}
+
+.reservation-detail-actions .ui-button-danger,
+.reservation-confirmation-actions .ui-button-danger {
+  border-color: color-mix(in srgb, var(--danger) 32%, var(--outline-variant));
+  color: var(--danger);
+  background: var(--surface-lowest);
+  box-shadow: none;
+}
+
+.reservation-detail-actions .ui-button-danger:hover,
+.reservation-confirmation-actions .ui-button-danger:hover {
+  background: color-mix(in srgb, var(--danger-bg) 55%, var(--surface-lowest));
 }
 
 .reservation-confirmation-actions {
@@ -10233,6 +10267,8 @@ body,
 .reservation-preorder-dialog {
   display: grid;
   width: min(480px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
   gap: 20px;
   border: 1px solid var(--outline-variant);
   border-radius: 20px;
@@ -10290,6 +10326,32 @@ body,
   color: var(--on-surface-variant);
   font-size: 14px;
   line-height: 21px;
+}
+
+.reservation-deposit-notice {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  background: var(--warning-bg);
+}
+
+.reservation-deposit-notice > span {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reservation-deposit-notice > strong {
+  color: var(--on-surface);
+  font-size: 20px;
+}
+
+.reservation-preorder-dialog-body .reservation-deposit-notice p {
+  color: var(--on-surface);
+  font-size: 13px;
+  line-height: 19px;
 }
 
 .reservation-limited-seating-confirmation {
@@ -12152,5 +12214,166 @@ body {
     grid-row: 5;
     justify-self: stretch;
     justify-content: flex-start;
+  }
+}
+
+.deposit-rules-panel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin: 24px 0 30px;
+  padding: 22px 0;
+  border-top: 1px solid var(--outline-variant);
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.deposit-rules-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.deposit-rules-heading h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
+}
+
+.deposit-rules-default {
+  display: flex;
+  gap: 8px;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+}
+
+.deposit-rules-default strong {
+  color: var(--on-surface);
+}
+
+.deposit-rules-form {
+  display: grid;
+  grid-template-columns: minmax(170px, 240px) minmax(150px, 200px) auto auto;
+  align-items: end;
+  justify-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.deposit-rules-form label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.deposit-rules-form input,
+.deposit-rules-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 6px;
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  font: inherit;
+}
+
+.deposit-rules-form label > input {
+  padding: 0 12px;
+}
+
+.deposit-rules-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.deposit-rules-input input {
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+}
+
+.deposit-rules-form .ui-button {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.deposit-rules-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 8px;
+  max-height: 168px;
+  overflow-y: auto;
+}
+
+.deposit-rules-list button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 6px;
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  cursor: pointer;
+}
+
+.deposit-rules-list button.active {
+  border-color: var(--primary);
+}
+
+.deposit-rules-list button span,
+.deposit-rules-list button strong {
+  white-space: nowrap;
+}
+
+.deposit-rules-empty {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+}
+
+.reservation-table-selection-summary {
+  grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(110px, .75fr));
+}
+
+.reservation-menu-summary {
+  grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(110px, .75fr));
+}
+
+@media (max-width: 760px) {
+  .deposit-rules-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reservation-table-selection-summary,
+  .reservation-menu-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .deposit-rules-heading,
+  .deposit-rules-default {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .deposit-rules-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .deposit-rules-form .ui-button {
+    width: 100%;
+  }
+
+  .reservation-table-selection-summary,
+  .reservation-menu-summary {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

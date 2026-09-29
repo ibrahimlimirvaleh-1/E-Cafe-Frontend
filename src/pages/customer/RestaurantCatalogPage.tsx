@@ -1,4 +1,4 @@
-import { CircleDollarSign, Clock, MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
+import { Clock, MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
@@ -78,10 +78,6 @@ export function RestaurantCatalogPage() {
                     <span className="restaurant-rating">
                       <Star size={15} fill="currentColor" />
                       {restaurant.rating}
-                    </span>
-                    <span className="restaurant-deposit-badge">
-                      <CircleDollarSign size={15} />
-                      {restaurant.depositAmount} ₼
                     </span>
                   </div>
                   <span

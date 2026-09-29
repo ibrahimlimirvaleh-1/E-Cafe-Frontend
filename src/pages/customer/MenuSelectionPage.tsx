@@ -2,6 +2,7 @@ import { CheckCircle2, Minus, Plus, ReceiptText, ShoppingBasket, Users } from 'l
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
+import { ReservationDepositReviewDialog } from '../../features/menu/ReservationDepositReviewDialog'
 import { getReservationErrorMessage } from '../../features/menu/reservationErrors'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -16,6 +17,11 @@ export function MenuSelectionPage() {
   const reservedAt = searchParams.get('reservedAt')
   const tableId = searchParams.get('tableId')
   const acceptsLimitedSeating = searchParams.get('acceptsLimitedSeating') === 'true'
+  const shownDepositAmountValue = searchParams.get('shownDepositAmount')
+  const parsedShownDepositAmount = shownDepositAmountValue === null ? null : Number(shownDepositAmountValue)
+  const shownDepositAmount = parsedShownDepositAmount !== null && Number.isFinite(parsedShownDepositAmount) && parsedShownDepositAmount >= 0
+    ? parsedShownDepositAmount
+    : null
   const parsedPeopleCount = Number(searchParams.get('peopleCount') || '1')
   const peopleCount = Number.isFinite(parsedPeopleCount) && parsedPeopleCount > 0 ? parsedPeopleCount : 1
   const { data: menuData, isLoading } = useAsyncData(
@@ -23,10 +29,18 @@ export function MenuSelectionPage() {
     { categories: [], items: [] },
     [restaurantId],
   )
+  const { data: availability } = useAsyncData(
+    () => reservedAt ? ecafeApi.tables.checkAvailability(restaurantId, reservedAt) : Promise.resolve(null),
+    null,
+    [restaurantId, reservedAt],
+  )
   const [activeCategory, setActiveCategory] = useState('all')
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [isCreatingReservation, setIsCreatingReservation] = useState(false)
   const [reservationError, setReservationError] = useState('')
+  const [latestDepositAmount, setLatestDepositAmount] = useState<number | null>(null)
+  const [pendingDepositAmount, setPendingDepositAmount] = useState<number | null>(null)
+  const [acknowledgedDepositAmount, setAcknowledgedDepositAmount] = useState<number | null>(shownDepositAmount)
   const { categories, items } = menuData
 
   const visibleItems = activeCategory === 'all' ? items : items.filter((item) => item.categoryId === activeCategory)
@@ -38,6 +52,23 @@ export function MenuSelectionPage() {
   const serviceFee = subtotal * 0.1
   const total = subtotal + serviceFee
   const confirmationPath = searchParams.toString() ? `/confirmation?${searchParams.toString()}` : '/confirmation'
+  const displayedDepositAmount = latestDepositAmount ?? availability?.depositAmount
+
+  const createReservation = async (depositAmount: number) => {
+    if (!reservedAt || !tableId) return
+
+    const reservation = await ecafeApi.reservations.create(restaurantId, {
+      tableId,
+      reservedAt,
+      peopleCount,
+      acceptsLimitedSeating,
+      expectedDepositAmount: depositAmount,
+    })
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('shownDepositAmount')
+    nextParams.set('reservationId', String(reservation.id))
+    navigate(`/confirmation?${nextParams.toString()}`)
+  }
 
   const handleContinue = async () => {
     if (!reservedAt || !tableId) {
@@ -49,16 +80,38 @@ export function MenuSelectionPage() {
     setIsCreatingReservation(true)
 
     try {
-      const reservation = await ecafeApi.reservations.create(restaurantId, {
-        tableId,
-        reservedAt,
-        peopleCount,
-        acceptsLimitedSeating,
-      })
-      const nextParams = new URLSearchParams(searchParams)
-      nextParams.set('reservationId', String(reservation.id))
-      navigate(`/confirmation?${nextParams.toString()}`)
+      const currentAvailability = await ecafeApi.tables.checkAvailability(restaurantId, reservedAt)
+      const currentAmount = currentAvailability.depositAmount
+      if (currentAmount === undefined) {
+        setReservationError('Bu tarix üçün depozit məlumatı yüklənməyib. Səhifəni yeniləyib yenidən yoxlayın.')
+        return
+      }
+
+      setLatestDepositAmount(currentAmount)
+      if (currentAmount > 0 && currentAmount !== acknowledgedDepositAmount) {
+        setPendingDepositAmount(currentAmount)
+        return
+      }
+
+      await createReservation(currentAmount)
     } catch (error) {
+      setReservationError(getReservationErrorMessage(error))
+    } finally {
+      setIsCreatingReservation(false)
+    }
+  }
+
+  const confirmDepositAmount = async () => {
+    if (pendingDepositAmount === null) return
+
+    setAcknowledgedDepositAmount(pendingDepositAmount)
+    setReservationError('')
+    setIsCreatingReservation(true)
+    try {
+      await createReservation(pendingDepositAmount)
+      setPendingDepositAmount(null)
+    } catch (error) {
+      setPendingDepositAmount(null)
       setReservationError(getReservationErrorMessage(error))
     } finally {
       setIsCreatingReservation(false)
@@ -80,6 +133,9 @@ export function MenuSelectionPage() {
           </div>
           <div><span className="reservation-summary-caption">Masa</span><strong>{tableId || 'Seçilməyib'}</strong></div>
           <div><span className="reservation-summary-caption">Qonaq sayı</span><strong><Users size={16} /> {peopleCount} nəfər</strong></div>
+          {displayedDepositAmount !== undefined ? (
+            <div><span className="reservation-summary-caption">Depozit</span><strong>{displayedDepositAmount > 0 ? `${displayedDepositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong></div>
+          ) : null}
         </div>
       ) : null}
       <section className="menu-layout">
@@ -172,6 +228,13 @@ export function MenuSelectionPage() {
           </Button>
         </aside>
       </section>
+      <ReservationDepositReviewDialog
+        amount={pendingDepositAmount}
+        isChanged={shownDepositAmount !== null}
+        isSubmitting={isCreatingReservation}
+        onCancel={() => setPendingDepositAmount(null)}
+        onConfirm={() => void confirmDepositAmount()}
+      />
     </main>
   )
 }

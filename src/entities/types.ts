@@ -49,7 +49,7 @@ export type Restaurant = {
   image: string
   isActive: boolean
   hasActiveContract: boolean
-  depositAmount: number
+  depositRules?: { reservationDate: string; amount: number }[]
   defaultWaiterTableLimit?: number
   defaultServiceFeePercent: number
   staffPayoutFrequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'manual'

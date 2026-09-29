@@ -134,7 +134,12 @@ export function mapRestaurant(record: AnyRecord): Restaurant {
     image: imageUrl(restaurant, 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80'),
     isActive: bool(restaurant.isActive, true),
     hasActiveContract: bool(restaurant.hasActiveContract, true),
-    depositAmount: num(restaurant.depositAmount),
+    depositRules: Array.isArray(restaurant.depositRules)
+      ? restaurant.depositRules.map((rule: AnyRecord) => ({
+          reservationDate: str(rule.reservationDate),
+          amount: num(rule.amount),
+        }))
+      : [],
     defaultWaiterTableLimit: restaurant.defaultWaiterTableLimit == null ? undefined : num(restaurant.defaultWaiterTableLimit),
     defaultServiceFeePercent: num(restaurant.defaultServiceFeePercent || restaurant.serviceFeePercent),
     staffPayoutFrequency: 'weekly',
@@ -350,12 +355,12 @@ export function restaurantRow(restaurant: Restaurant): AdminRow {
   return {
     id: restaurant.id,
     title: restaurant.name,
-    subtitle: `${restaurant.address} · ${restaurant.phone}`,
+    subtitle: restaurant.address,
     image: restaurant.image,
     status: restaurant.isActive ? openState.label : 'Deaktiv',
     tone: restaurant.isActive ? openState.tone : 'danger',
     meta: restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur',
-    value: `${restaurant.depositAmount} ₼ depozit`,
+    value: restaurant.phone,
   }
 }
 

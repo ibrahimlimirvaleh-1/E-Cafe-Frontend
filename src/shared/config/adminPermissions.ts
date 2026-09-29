@@ -3,7 +3,7 @@ import type { CurrentUser } from '../auth/jwt'
 import { RoleIds, canAccessRestaurant, getRestaurantRoleId, hasAnyPermission, hasAnyPermissionForRole, isInRole, isPlatformAdmin } from '../auth/authz'
 
 export const adminModulePermissions: Record<AdminModuleKey, string[]> = {
-  restaurants: ['ManageRestaurants', 'ViewRestaurantInfo'],
+  restaurants: ['ManageRestaurants', 'EditRestaurantInfo', 'ViewRestaurantInfo'],
   'restaurant-groups': ['ManageRestaurants'],
   contracts: ['ManageRestaurantContracts', 'ViewRestaurantContracts'],
   reservations: ['ManageReservations', 'ViewAssignedReservations'],
@@ -20,7 +20,7 @@ export const adminModulePermissions: Record<AdminModuleKey, string[]> = {
 }
 
 const adminModuleRoleAccess: Partial<Record<AdminModuleKey, readonly string[]>> = {
-  restaurants: [RoleIds.PlatformAdmin, RoleIds.Owner],
+  restaurants: [RoleIds.PlatformAdmin, RoleIds.Owner, RoleIds.Manager],
   contracts: [RoleIds.PlatformAdmin, RoleIds.Owner],
   'restaurant-groups': [RoleIds.PlatformAdmin],
 }
