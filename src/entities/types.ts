@@ -50,6 +50,7 @@ export type Restaurant = {
   isActive: boolean
   hasActiveContract: boolean
   depositRules?: { reservationDate: string; amount: number }[]
+  depositAmount?: number
   defaultWaiterTableLimit?: number
   defaultServiceFeePercent: number
   staffPayoutFrequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'manual'

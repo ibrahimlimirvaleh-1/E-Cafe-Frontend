@@ -176,15 +176,36 @@ img {
 }
 
 .catalog-toolbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 205px) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   margin-bottom: 22px;
 }
 
 .catalog-search {
-  width: min(620px, 100%);
+  width: 100%;
+}
+
+.catalog-date-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.catalog-date-field input {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  font: inherit;
 }
 
 .catalog-toolbar > span {
@@ -192,6 +213,22 @@ img {
   color: var(--on-surface-variant);
   font-size: 13px;
   font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .catalog-toolbar {
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 205px);
+  }
+
+  .catalog-toolbar > span {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .catalog-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .user-menu {

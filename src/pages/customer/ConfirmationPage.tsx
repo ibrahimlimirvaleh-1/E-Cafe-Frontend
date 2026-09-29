@@ -1,5 +1,5 @@
 import { Ban, CalendarDays, CheckCircle2, CircleAlert, Clock3, ReceiptText } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -26,6 +26,8 @@ export function ConfirmationPage() {
     return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
   }, [])
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [showDepositWaiverNotice, setShowDepositWaiverNotice] = useState(false)
+  const previousReservationRef = useRef<{ id: number; depositAmount: number } | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
   const { data: reservation, error, isLoading } = useAsyncData(
@@ -33,6 +35,14 @@ export function ConfirmationPage() {
     null,
     [reservationId, reloadKey],
   )
+  useEffect(() => {
+    if (!reservation) return
+    const previous = previousReservationRef.current
+    if (previous?.id === reservation.id && previous.depositAmount > 0 && reservation.depositAmount === 0) {
+      setShowDepositWaiverNotice(true)
+    }
+    previousReservationRef.current = { id: reservation.id, depositAmount: reservation.depositAmount }
+  }, [reservation])
   const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
     () => reservation && reservationId && reservation.workflowFlowCode
       ? ecafeApi.workflow.actions({
@@ -187,6 +197,19 @@ export function ConfirmationPage() {
         showReason
         title="Rezervasiyanı ləğv edirsiniz?"
       />
+      {showDepositWaiverNotice ? (
+        <div className="modal-backdrop reservation-action-backdrop" role="presentation">
+          <section aria-labelledby="deposit-waiver-notice-title" aria-modal="true" className="reservation-action-dialog" role="dialog">
+            <div className="reservation-action-dialog-body">
+              <h2 id="deposit-waiver-notice-title">Depozit tələbi ləğv edildi</h2>
+              <p>Restoran bu rezervasiya üçün depozitdən imtina etdi. Rezervasiyanız depozitsiz təsdiqlənib, ödəniş etməyinizə ehtiyac yoxdur.</p>
+            </div>
+            <footer className="reservation-action-dialog-actions">
+              <Button onClick={() => setShowDepositWaiverNotice(false)} type="button">Başa düşdüm</Button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
     </main>
   )
 }

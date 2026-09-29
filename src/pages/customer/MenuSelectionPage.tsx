@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ReservationDepositReviewDialog } from '../../features/menu/ReservationDepositReviewDialog'
-import { getReservationErrorMessage } from '../../features/menu/reservationErrors'
+import { getReservationErrorMessage, isDepositAmountChanged } from '../../features/menu/reservationErrors'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button } from '../../shared/ui/Button'
@@ -54,6 +54,19 @@ export function MenuSelectionPage() {
   const confirmationPath = searchParams.toString() ? `/confirmation?${searchParams.toString()}` : '/confirmation'
   const displayedDepositAmount = latestDepositAmount ?? availability?.depositAmount
 
+  const showLatestDeposit = async () => {
+    if (!reservedAt) return false
+    try {
+      const amount = (await ecafeApi.tables.checkAvailability(restaurantId, reservedAt)).depositAmount
+      if (amount === undefined) return false
+      setLatestDepositAmount(amount)
+      setPendingDepositAmount(amount)
+      return true
+    } catch {
+      return false
+    }
+  }
+
   const createReservation = async (depositAmount: number) => {
     if (!reservedAt || !tableId) return
 
@@ -88,13 +101,15 @@ export function MenuSelectionPage() {
       }
 
       setLatestDepositAmount(currentAmount)
-      if (currentAmount > 0 && currentAmount !== acknowledgedDepositAmount) {
+      if ((acknowledgedDepositAmount === null && currentAmount > 0) ||
+          (acknowledgedDepositAmount !== null && currentAmount !== acknowledgedDepositAmount)) {
         setPendingDepositAmount(currentAmount)
         return
       }
 
       await createReservation(currentAmount)
     } catch (error) {
+      if (isDepositAmountChanged(error) && await showLatestDeposit()) return
       setReservationError(getReservationErrorMessage(error))
     } finally {
       setIsCreatingReservation(false)
@@ -112,6 +127,7 @@ export function MenuSelectionPage() {
       setPendingDepositAmount(null)
     } catch (error) {
       setPendingDepositAmount(null)
+      if (isDepositAmountChanged(error) && await showLatestDeposit()) return
       setReservationError(getReservationErrorMessage(error))
     } finally {
       setIsCreatingReservation(false)

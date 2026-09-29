@@ -1,4 +1,4 @@
-import { Clock, MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
+import { CircleDollarSign, Clock, MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
@@ -11,6 +11,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { SafeImage } from '../../shared/ui/SafeImage'
 import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
+import { getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 
 const defaultPageSize = 10
 
@@ -18,6 +19,7 @@ export function RestaurantCatalogPage() {
   const { user } = useAuth()
   const isCustomer = isInRole(user, [RoleIds.Customer])
   const [search, setSearch] = useState('')
+  const [reservationDate, setReservationDate] = useState(getTodayDateInputValue)
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [mapRestaurant, setMapRestaurant] = useState<Restaurant | null>(null)
@@ -25,6 +27,7 @@ export function RestaurantCatalogPage() {
     const params = new URLSearchParams({
       pageNumber: String(pageNumber),
       pageSize: String(pageSize),
+      reservationDate,
     })
 
     if (search.trim()) {
@@ -32,7 +35,7 @@ export function RestaurantCatalogPage() {
     }
 
     return `?${params.toString()}`
-  }, [pageNumber, pageSize, search])
+  }, [pageNumber, pageSize, reservationDate, search])
 
   const { data: restaurantPage, isLoading } = useAsyncData(() => ecafeApi.restaurants.publicPage(query), {
     items: [],
@@ -59,19 +62,32 @@ export function RestaurantCatalogPage() {
             }}
           />
         </label>
-        <span>{restaurantPage.totalCount} restoran</span>
+        <label className="catalog-date-field">
+          <span>Rezervasiya tarixi</span>
+          <input
+            min={getTodayDateInputValue()}
+            onChange={(event) => {
+              setReservationDate(event.target.value || getTodayDateInputValue())
+              setPageNumber(1)
+            }}
+            type="date"
+            value={reservationDate}
+          />
+        </label>
+        <span>{isLoading ? 'Yüklənir...' : `${restaurantPage.totalCount} restoran`}</span>
       </section>
 
       {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
       {!isLoading && restaurantPage.items.length === 0 ? <p className="online-only">Axtarışa uyğun restoran tapılmadı.</p> : null}
 
       <section className="restaurant-grid">
-        {restaurantPage.items.map((restaurant) => {
+        {!isLoading ? restaurantPage.items.map((restaurant) => {
           const openState = getRestaurantOpenState(restaurant.workingHours, restaurant.timeZone, restaurant.isOpen)
+          const profileUrl = `/restaurants/${restaurant.id}?reservationDate=${encodeURIComponent(reservationDate)}`
 
           return (
             <article className="restaurant-card" key={restaurant.id}>
-              <Link className="restaurant-card-media" to={`/restaurants/${restaurant.id}`} aria-label={`${restaurant.name} restoranına bax`}>
+              <Link className="restaurant-card-media" to={profileUrl} aria-label={`${restaurant.name} restoranına bax`}>
                 <SafeImage src={restaurant.image} alt={restaurant.name} />
                 <div className="restaurant-card-overlay">
                   <div className="restaurant-overlay-badges">
@@ -79,6 +95,12 @@ export function RestaurantCatalogPage() {
                       <Star size={15} fill="currentColor" />
                       {restaurant.rating}
                     </span>
+                    {restaurant.depositAmount !== undefined && restaurant.depositAmount > 0 ? (
+                      <span className="restaurant-deposit-badge" title="Seçilən tarix üçün depozit" aria-label={`Seçilən tarix üçün ${restaurant.depositAmount.toFixed(2)} AZN depozit`}>
+                        <CircleDollarSign size={15} />
+                        {restaurant.depositAmount.toFixed(2)} ₼
+                      </span>
+                    ) : null}
                   </div>
                   <span
                     aria-label={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
@@ -91,7 +113,7 @@ export function RestaurantCatalogPage() {
               </Link>
               <div className="restaurant-card-body">
                 <h2>
-                  <Link className="restaurant-title-link" to={`/restaurants/${restaurant.id}`}>
+                  <Link className="restaurant-title-link" to={profileUrl}>
                     {restaurant.name}
                   </Link>
                 </h2>
@@ -117,10 +139,10 @@ export function RestaurantCatalogPage() {
               </div>
             </article>
           )
-        })}
+        }) : null}
       </section>
 
-      <PaginationControls
+      {!isLoading ? <PaginationControls
         ariaLabel="Restoran səhifələmə"
         hasNextPage={restaurantPage.hasNextPage}
         hasPreviousPage={restaurantPage.hasPreviousPage}
@@ -133,7 +155,7 @@ export function RestaurantCatalogPage() {
           setPageSize(value)
           setPageNumber(1)
         }}
-      />
+      /> : null}
 
       {mapRestaurant ? <RestaurantMapDialog restaurant={mapRestaurant} onClose={() => setMapRestaurant(null)} /> : null}
     </main>

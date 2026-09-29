@@ -1,7 +1,7 @@
 import { CalendarClock, CheckCircle2, Clock, Table2, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ecafeApi, type TableAvailabilityResponse } from '../../shared/api/ecafeApi'
 import { Button } from '../../shared/ui/Button'
@@ -43,9 +43,14 @@ function formatReservedAt(value: string) {
 
 export function ReservationTimePage() {
   const { restaurantId = '' } = useParams()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const defaults = useMemo(getDefaultReservationDateTime, [])
-  const [date, setDate] = useState(defaults.date)
+  const dateFromCatalog = searchParams.get('reservationDate')
+  const initialDate = dateFromCatalog && /^\d{4}-\d{2}-\d{2}$/.test(dateFromCatalog) && dateFromCatalog >= defaults.date
+    ? dateFromCatalog
+    : defaults.date
+  const [date, setDate] = useState(initialDate)
   const [time, setTime] = useState(defaults.time)
   const [peopleCount, setPeopleCount] = useState('2')
   const [availability, setAvailability] = useState<TableAvailabilityResponse | null>(null)

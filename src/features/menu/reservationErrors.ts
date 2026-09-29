@@ -39,3 +39,7 @@ export function isTableReservationConflict(error: unknown) {
 export function isCustomerDailyReservationLimit(error: unknown) {
   return error instanceof ApiError && error.code === CUSTOMER_DAILY_RESERVATION_CODE
 }
+
+export function isDepositAmountChanged(error: unknown) {
+  return error instanceof ApiError && error.code === DEPOSIT_AMOUNT_CHANGED_CODE
+}
