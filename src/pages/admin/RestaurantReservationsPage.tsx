@@ -5,7 +5,6 @@ import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
-import { canAccessAdminModule } from '../../shared/config/adminPermissions'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { Badge } from '../../shared/ui/Badge'
@@ -19,7 +18,6 @@ import { getReservationStatusPresentation } from '../../shared/lib/reservationSt
 import {
   ReservationDateFilter,
 } from '../../features/reservations/ReservationDateFilter'
-import { RestaurantDepositRulesPanel } from '../../features/reservations/RestaurantDepositRulesPanel'
 
 const defaultPageSize = 20
 
@@ -89,10 +87,6 @@ export function RestaurantReservationsPage() {
         />
         <ReservationDateFilter value={selectedDate} onChange={handleDateChange} />
       </section>
-
-      {restaurantId && canAccessAdminModule(user, 'restaurants', restaurantId)
-        ? <RestaurantDepositRulesPanel key={restaurantId} restaurantId={restaurantId} />
-        : null}
 
       {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>Rezervasiyaları görmək üçün restoran seçin.</StatusMessage> : null}
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
