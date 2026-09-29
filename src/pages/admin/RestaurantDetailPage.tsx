@@ -17,6 +17,7 @@ export function RestaurantDetailPage() {
   const { user } = useAuth()
   const { data: restaurant, isLoading } = useAsyncData(() => ecafeApi.restaurants.adminDetail(restaurantId), null, [restaurantId])
   const canCreateContracts = isInRole(user, [RoleIds.PlatformAdmin])
+  const canEditRestaurant = isInRole(user, [RoleIds.PlatformAdmin]) || isInRole(user, [RoleIds.Owner, RoleIds.Manager], restaurantId)
 
   if (isLoading || !restaurant) {
     return (
@@ -63,7 +64,6 @@ export function RestaurantDetailPage() {
           <DetailItem label="Həftəlik qrafik" className="restaurant-detail-schedule">
             <WorkingHoursList workingHours={restaurant.workingHours} />
           </DetailItem>
-          <DetailItem label="Depozit">{restaurant.depositAmount} ₼</DetailItem>
           <DetailItem label="Servis faizi">{restaurant.defaultServiceFeePercent}%</DetailItem>
           <DetailItem label="Ləğv pəncərəsi">{restaurant.cancellationWindowMinutes ?? '-'} dəqiqə</DetailItem>
         </dl>
@@ -73,6 +73,11 @@ export function RestaurantDetailPage() {
         <ButtonLink to="/admin/restaurants" variant="secondary">
           Siyahıya qayıt
         </ButtonLink>
+        {canEditRestaurant ? (
+          <ButtonLink to={`/admin/restaurants/${restaurantId}/edit`} variant="secondary">
+            Redaktə et
+          </ButtonLink>
+        ) : null}
         {canCreateContracts ? (
           <ButtonLink to="/admin/contracts/new">
             <Building2 size={18} />

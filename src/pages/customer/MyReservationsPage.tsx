@@ -174,7 +174,7 @@ export function MyReservationsPage() {
                 <span className="reservation-meta-item"><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><b>{formatReservationDateTime(reservation.reservedAt)}</b></span></span>
                 <span className="reservation-meta-item"><MapPin size={17} /><span><small>Masa</small><b>{reservation.tableName || `Masa ${reservation.tableId}`}</b></span></span>
                 <span className="reservation-meta-item"><Users size={17} /><span><small>Qonaq sayı</small><b>{reservation.peopleCount} nəfər</b></span></span>
-                <span className="reservation-meta-item"><Clock3 size={17} /><span><small>Depozit</small><b>{reservation.depositAmount.toFixed(2)} AZN</b></span></span>
+                <span className="reservation-meta-item"><Clock3 size={17} /><span><small>Depozit</small><b>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</b></span></span>
               </div>
 
               {reservation.latestPaymentInstruction ? (

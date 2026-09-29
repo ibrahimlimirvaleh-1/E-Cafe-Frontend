@@ -61,12 +61,8 @@ export function RestaurantReservationDetailPage() {
   const visibleActions = workflowActions.filter((action) => action.code !== 'sendPaymentInstruction' && action.code !== 'submitPaymentProof')
 
   function getActionVariant(action: WorkflowAction) {
-    if (action.code === 'cancel') {
+    if (action.code === 'cancel' || action.code === 'rejectPaymentProof') {
       return 'danger' as const
-    }
-
-    if (action.code === 'rejectPaymentProof') {
-      return 'secondary' as const
     }
 
     return 'primary' as const
@@ -149,9 +145,11 @@ export function RestaurantReservationDetailPage() {
         <div className="reservation-detail-grid">
           <div><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><strong>{formatReservationDateTime(reservation.reservedAt)}</strong></span></div>
           <div><Users size={17} /><span><small>Qonaq sayı</small><strong>{reservation.peopleCount} nəfər</strong></span></div>
-          <div><Clock3 size={17} /><span><small>Depozit</small><strong>{reservation.depositAmount.toFixed(2)} AZN</strong></span></div>
+          <div><Clock3 size={17} /><span><small>Depozit</small><strong>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong></span></div>
           {reservation.mustVacateAt ? <div><Clock3 size={17} /><span><small>Masanı təhvil vaxtı</small><strong>{formatReservationDateTime(reservation.mustVacateAt)}</strong></span></div> : null}
-          <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ? 'Ödəniş üçün son vaxt' : 'Cavab üçün son vaxt'}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
+          {reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt ? (
+            <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ? 'Ödəniş üçün son vaxt' : 'Cavab üçün son vaxt'}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
+          ) : null}
         </div>
         {reservation.latestPaymentInstruction ? (
           <div className="reservation-payment-note">

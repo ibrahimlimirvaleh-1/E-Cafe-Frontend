@@ -50,7 +50,6 @@ export const restaurants: Restaurant[] = [
       'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
     isActive: true,
     hasActiveContract: true,
-    depositAmount: 5,
     timeZone: 'Asia/Baku',
     workingHours: defaultWorkingHours,
     defaultServiceFeePercent: 10,
@@ -67,7 +66,6 @@ export const restaurants: Restaurant[] = [
       'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=80',
     isActive: true,
     hasActiveContract: false,
-    depositAmount: 8,
     timeZone: 'Asia/Baku',
     workingHours: defaultWorkingHours.map((hour) => ({ ...hour, opensAt: '10:00', closesAt: '23:00' })),
     defaultServiceFeePercent: 8,
@@ -228,10 +226,10 @@ export const settlements: StaffSettlement[] = [
 ]
 
 export const adminModules: AdminModule[] = [
-  { key: 'restaurants', title: 'Restoranlar', singular: 'Restoran', route: '/admin/restaurants', icon: Store, createLabel: 'Yeni restoran', dangerLabel: 'Restoranı deaktiv et', description: 'Profil və aktivlik vəziyyəti.', columns: ['Restoran', 'Status', 'Müqavilə', 'Depozit'] },
+  { key: 'restaurants', title: 'Restoranlar', singular: 'Restoran', route: '/admin/restaurants', icon: Store, createLabel: 'Yeni restoran', dangerLabel: 'Restoranı deaktiv et', description: 'Profil və aktivlik vəziyyəti.', columns: ['Restoran', 'Status', 'Müqavilə', 'Telefon'] },
   { key: 'restaurant-groups', title: 'Restoran qrupları', singular: 'Restoran qrupu', route: '/admin/restaurant-groups', icon: Building2, createLabel: 'Yeni qrup', description: 'Filialları vahid biznes qrupu altında birləşdirir.', columns: ['Qrup', 'Status', 'Legal ad', 'Filial'] },
   { key: 'contracts', title: 'Müqavilələr', singular: 'Müqavilə', route: '/admin/contracts', icon: FileText, createLabel: 'Yeni müqavilə', dangerLabel: 'Müqaviləni ləğv et', description: 'Platforma-restoran kommersiya və hüquqi şərtləri.', columns: ['Müqavilə', 'Status', 'Dövr', 'Ödəniş siyasəti'] },
-  { key: 'reservations', title: 'Rezervasiyalar', singular: 'Rezervasiya', route: '/admin/reservations', icon: CalendarDays, description: 'Depozitli masa rezervləri və check-in statusları.', columns: ['Rezerv', 'Status', 'Tarix', 'Depozit'] },
+  { key: 'reservations', title: 'Rezervasiyalar', singular: 'Rezervasiya', route: '/admin/reservations', icon: CalendarDays, description: 'Masa rezervləri və gəliş statusları.', columns: ['Rezerv', 'Status', 'Tarix', 'Depozit'] },
   { key: 'orders', title: 'Sifarişlər', singular: 'Sifariş', route: '/admin/orders', icon: ShoppingBag, description: 'Sifariş statusları və məbləğləri.', columns: ['Sifariş', 'Status', 'Mənbə', 'Məbləğ'] },
   { key: 'payments', title: 'Ödənişlər', singular: 'Ödəniş', route: '/admin/payments', icon: CreditCard, description: 'Ödəniş və geri qaytarma vəziyyəti.', columns: ['Ödəniş', 'Status', 'Provider', 'Məbləğ'] },
   { key: 'staff', title: 'Personal', singular: 'Əməkdaş', route: '/admin/staff', icon: Users, createLabel: 'Yeni əməkdaş', dangerLabel: 'Əməkdaşı deaktiv et', description: 'Rol, servis faizi və hesablaşma məlumatları.', columns: ['Əməkdaş', 'Status', 'Rol', 'Qazanc'] },
@@ -259,12 +257,12 @@ export function getAdminRows(key: AdminModuleKey): AdminRow[] {
     restaurants: restaurants.map((restaurant) => ({
       id: restaurant.id,
       title: restaurant.name,
-      subtitle: `${restaurant.address} · ${restaurant.phone}`,
+      subtitle: restaurant.address,
       image: restaurant.image,
       status: restaurant.isActive ? 'Aktiv' : 'Deaktiv',
       tone: restaurant.isActive ? 'success' : 'danger',
       meta: restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur',
-      value: `${restaurant.depositAmount} ₼ depozit`,
+      value: restaurant.phone,
     })),
     'restaurant-groups': [],
     contracts: contracts.map((contract) => ({

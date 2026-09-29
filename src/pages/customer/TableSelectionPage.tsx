@@ -81,6 +81,10 @@ export function TableSelectionPage() {
   }
 
   const handleTableSelect = (tableId: string) => {
+    if (availability?.depositAmount === undefined) {
+      setReservationError('Bu tarix üçün depozit məlumatı yüklənməyib. Səhifəni yeniləyib yenidən yoxlayın.')
+      return
+    }
     setReservationError('')
     setReservationErrorTone('danger')
     setSelectedTableId(tableId)
@@ -88,12 +92,13 @@ export function TableSelectionPage() {
   }
 
   const handlePreorder = () => {
-    if (!selectedTableId) {
+    if (!selectedTableId || availability?.depositAmount === undefined) {
       return
     }
 
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tableId', selectedTableId)
+    nextParams.set('shownDepositAmount', String(availability.depositAmount))
     if (selectedTable?.mustVacateAt && acceptsLimitedSeating) {
       nextParams.set('acceptsLimitedSeating', 'true')
     }
@@ -115,6 +120,7 @@ export function TableSelectionPage() {
         reservedAt,
         peopleCount,
         acceptsLimitedSeating,
+        expectedDepositAmount: availability?.depositAmount,
       })
       const nextParams = new URLSearchParams(searchParams)
       nextParams.set('tableId', selectedTableId)
@@ -165,6 +171,9 @@ export function TableSelectionPage() {
           <span className="reservation-summary-caption">Qonaq sayı</span>
           <strong>{peopleCount} nəfər</strong>
         </div>
+        {availability?.depositAmount !== undefined ? (
+          <div><span className="reservation-summary-caption">Depozit</span><strong>{availability.depositAmount > 0 ? `${availability.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong></div>
+        ) : null}
       </div>
       <div className="reservation-table-toolbar">
         <div>
@@ -206,6 +215,7 @@ export function TableSelectionPage() {
       <ReservationPreorderDialog
         isOpen={Boolean(selectedTableId)}
         isSubmitting={isCreatingReservation}
+        depositAmount={availability?.depositAmount}
         onCancel={() => {
           setSelectedTableId(null)
           setAcceptsLimitedSeating(false)

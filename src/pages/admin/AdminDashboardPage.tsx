@@ -4,7 +4,7 @@ import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
 const metrics = [
-  { label: 'Bugünkü rezervasiya', value: reservations.length.toString(), hint: 'Depozitlə təsdiqlənən rezervlər' },
+  { label: 'Bugünkü rezervasiya', value: reservations.length.toString(), hint: 'Təsdiqlənmiş masa rezervləri' },
   { label: 'Aktiv sifariş', value: orders.length.toString(), hint: 'Ofisiant tərəfindən yaradılan sifarişlər' },
   { label: 'Online ödəniş', value: `${payments.reduce((sum, item) => sum + item.amount, 0).toFixed(2)} ₼`, hint: 'Yalnız sistemdə izlənən ödənişlər' },
   { label: 'Personal qazancı', value: `${settlements.reduce((sum, item) => sum + item.payableAmount, 0).toFixed(2)} ₼`, hint: 'Ödəniş dövrünə düşən məbləğ' },

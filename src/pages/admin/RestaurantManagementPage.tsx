@@ -32,7 +32,6 @@ const initialForm = {
   restaurantGroupName: '',
   restaurantGroupLegalName: '',
   branchName: '',
-  depositAmount: '0',
   cancellationWindowMinutes: '60',
   reservationPreBlockMinutes: '60',
   tableTurnoverBufferMinutes: '15',
@@ -240,7 +239,6 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
         restaurantGroupEmail: form.restaurantGroupId ? undefined : form.restaurantGroupEmail,
         branchName: form.branchName,
-        depositAmount: Number(form.depositAmount),
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         reservationPreBlockMinutes: Number(form.reservationPreBlockMinutes),
         tableTurnoverBufferMinutes: Number(form.tableTurnoverBufferMinutes),
@@ -366,8 +364,8 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
           <DataTable
             baseRoute="/admin/restaurants"
-            canEdit={canCreateRestaurants}
-            columns={['Restoran', 'Status', 'Müqavilə', 'Depozit']}
+            canEdit={isInRole(user, [RoleIds.PlatformAdmin, RoleIds.Owner, RoleIds.Manager])}
+            columns={['Restoran', 'Status', 'Müqavilə', 'Telefon']}
             onActionNavigate={(row) => selectProfileForRestaurant(row.id)}
             rows={visibleRestaurants.map(restaurantRow)}
           />
@@ -481,7 +479,6 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             </div>
           ) : null}
           <div className="form-grid two">
-            <TextField label="Depozit" min={0} required step="0.01" type="number" value={form.depositAmount} onChange={(event) => setForm({ ...form, depositAmount: event.target.value })} />
             <TextField label="Servis faizi" min={0} required step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
           </div>
           <div className="form-grid two">

@@ -1,4 +1,4 @@
-import { Ban, CheckCircle2 } from 'lucide-react'
+import { Ban, CalendarDays, CheckCircle2, CircleAlert, Clock3, ReceiptText } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
@@ -79,12 +79,22 @@ export function ConfirmationPage() {
   const reservationPresentation = reservation
     ? getReservationStatusPresentation(reservation.status)
     : null
+  const statusTone = reservationPresentation?.tone || 'neutral'
+  const StatusIcon = statusTone === 'success'
+    ? CheckCircle2
+    : statusTone === 'danger'
+      ? CircleAlert
+      : statusTone === 'warning'
+        ? Clock3
+        : statusTone === 'info'
+          ? ReceiptText
+          : CalendarDays
 
   return (
     <main className="center-page reservation-confirmation-page">
       <div className="reservation-confirmation-layout">
         <article className="success-panel reservation-confirmation-panel">
-          <div className="reservation-confirmation-icon"><CheckCircle2 size={28} /></div>
+          <div className={`reservation-confirmation-icon is-${statusTone}`}><StatusIcon size={28} /></div>
           <div className="reservation-confirmation-heading">
             <span className="section-eyebrow">REZERVASİYA DETALI</span>
             <h1>{reservationId ? `Rezervasiya #${reservationId}` : 'Sifariş qeydə alındı'}</h1>
@@ -107,7 +117,7 @@ export function ConfirmationPage() {
                 <div><dt>Masa</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
                 <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
                 <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
-                <div><dt>Depozit</dt><dd>{reservation.depositAmount.toFixed(2)} AZN</dd></div>
+                <div><dt>Depozit</dt><dd>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</dd></div>
                 {reservation.mustVacateAt ? <div><dt>Masanı təhvil vaxtı</dt><dd>{formatReservationDateTime(reservation.mustVacateAt)}</dd></div> : null}
                 {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
               </dl>

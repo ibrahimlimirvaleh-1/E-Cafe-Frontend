@@ -2,6 +2,7 @@ import { ApiError } from '../../shared/api/httpClient'
 
 const CUSTOMER_DAILY_RESERVATION_CODE = 'CustomerAlreadyHasReservationToday'
 const TABLE_ALREADY_RESERVED_CODE = 'TableAlreadyReserved'
+const DEPOSIT_AMOUNT_CHANGED_CODE = 'ReservationDepositAmountChanged'
 
 export function getReservationErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
@@ -11,6 +12,10 @@ export function getReservationErrorMessage(error: unknown) {
 
     if (error.code === TABLE_ALREADY_RESERVED_CODE) {
       return 'Bu masa artıq doludur. Başqa masa seçin.'
+    }
+
+    if (error.code === DEPOSIT_AMOUNT_CHANGED_CODE) {
+      return 'Bu gün üçün depozit məbləği dəyişib. Səhifəni yeniləyib yeni məbləği yoxlayın.'
     }
 
     if (error.statusCode === 409) {

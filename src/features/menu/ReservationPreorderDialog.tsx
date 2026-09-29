@@ -1,4 +1,4 @@
-import { CalendarCheck2, ShoppingBag, X } from 'lucide-react'
+import { CalendarCheck2, ShoppingBag, WalletCards, X } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
 
 type ReservationPreorderDialogProps = {
@@ -7,6 +7,7 @@ type ReservationPreorderDialogProps = {
   onCancel: () => void
   onPreorder: () => void
   onSkip: () => void
+  depositAmount?: number
   limitedSeatingMessage?: string | null
   acceptsLimitedSeating?: boolean
   onAcceptLimitedSeating?: (accepted: boolean) => void
@@ -18,6 +19,7 @@ export function ReservationPreorderDialog({
   onCancel,
   onPreorder,
   onSkip,
+  depositAmount,
   limitedSeatingMessage,
   acceptsLimitedSeating = false,
   onAcceptLimitedSeating,
@@ -37,15 +39,22 @@ export function ReservationPreorderDialog({
       >
         <header className="reservation-preorder-dialog-header">
           <div className="reservation-preorder-dialog-icon">
-            <CalendarCheck2 size={23} />
+            {depositAmount && depositAmount > 0 ? <WalletCards size={23} /> : <CalendarCheck2 size={23} />}
           </div>
           <button aria-label="Bağla" className="reservation-preorder-close" onClick={onCancel} type="button">
             <X size={20} />
           </button>
         </header>
         <div className="reservation-preorder-dialog-body">
-          <h2 id="reservation-preorder-title">Öncədən sifariş etmək istəyirsiniz?</h2>
-          <p>Masanız seçildi. İndi menyudan əvvəlcədən sifariş əlavə edə və ya yalnız rezervasiyanı davam etdirə bilərsiniz.</p>
+          <h2 id="reservation-preorder-title">{depositAmount && depositAmount > 0 ? 'Bu tarix üçün depozit tələb olunur' : 'Öncədən sifariş etmək istəyirsiniz?'}</h2>
+          {depositAmount && depositAmount > 0 ? (
+            <div className="reservation-deposit-notice">
+              <span>Rezervasiya depoziti</span>
+              <strong>{depositAmount.toFixed(2)} AZN</strong>
+              <p>Restoran ödəniş məlumatlarını göndərdikdən sonra depoziti ödəyib çeki yükləyəcəksiniz. Rezervasiya çek təsdiqləndikdən sonra təsdiqlənəcək.</p>
+            </div>
+          ) : null}
+          <p>Masanız seçildi. Menyudan öncədən sifariş əlavə edə və ya menyusuz davam edə bilərsiniz.</p>
           {limitedSeatingMessage ? (
             <label className="reservation-limited-seating-confirmation">
               <input
@@ -63,7 +72,7 @@ export function ReservationPreorderDialog({
             Menyuya keç
           </Button>
           <Button className="reservation-preorder-option" disabled={isSubmitting || Boolean(limitedSeatingMessage && !acceptsLimitedSeating)} onClick={onSkip} variant="secondary" type="button">
-            {isSubmitting ? 'Rezervasiya yaradılır...' : 'Yox, yalnız rezervasiya et'}
+            {isSubmitting ? 'Rezervasiya yaradılır...' : 'Menyusuz davam et'}
           </Button>
         </footer>
       </section>
