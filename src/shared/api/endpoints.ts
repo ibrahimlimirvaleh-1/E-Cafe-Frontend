@@ -15,6 +15,8 @@ export const endpoints = {
     geocode: '/admin/restaurants/geocode',
     adminDetail: (restaurantId: string) => `/restaurant/getById/${restaurantId}`,
     update: (restaurantId: string) => `/admin/restaurants/${restaurantId}`,
+    depositRule: (restaurantId: string, reservationDate: string) =>
+      `/admin/restaurants/${restaurantId}/deposit-rules/${encodeURIComponent(reservationDate)}`,
     deactivate: (restaurantId: string) => `/admin/restaurants/${restaurantId}/deactivate`,
     publicList: '/public/restaurants',
     publicDetail: (restaurantId: string) => `/public/restaurants/${restaurantId}`,

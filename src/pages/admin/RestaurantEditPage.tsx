@@ -13,6 +13,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { WorkingHoursField, createDefaultWorkingHours } from '../../shared/ui/WorkingHoursField'
+import { RestaurantDepositRulesPanel } from '../../features/reservations/RestaurantDepositRulesPanel'
 
 type GeocodeFormFields = { location: string; branchName: string; restaurantGroupName: string }
 
@@ -332,6 +333,7 @@ export function RestaurantEditPage() {
           <ButtonLink to={`/admin/restaurants/${restaurantId}`} variant="secondary">Ləğv et</ButtonLink>
         </div>
       </form>
+      <RestaurantDepositRulesPanel restaurantId={restaurantId} />
     </main>
   )
 }

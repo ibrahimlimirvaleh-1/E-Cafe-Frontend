@@ -1251,14 +1251,13 @@ export const ecafeApi = {
         }),
       }),
     setDepositRule: (restaurantId: string, date: string, amount: number) =>
-      httpClient<unknown>(endpoints.restaurants.update(restaurantId), {
+      httpClient<unknown>(endpoints.restaurants.depositRule(restaurantId, date), {
         method: 'PUT',
-        body: JSON.stringify({ depositDate: date, depositAmount: amount }),
+        body: JSON.stringify({ amount }),
       }),
     removeDepositRule: (restaurantId: string, date: string) =>
-      httpClient<unknown>(endpoints.restaurants.update(restaurantId), {
-        method: 'PUT',
-        body: JSON.stringify({ depositDate: date, removeDepositDateOverride: true }),
+      httpClient<unknown>(endpoints.restaurants.depositRule(restaurantId, date), {
+        method: 'DELETE',
       }),
     deactivate: (restaurantId: string) =>
       httpClient<unknown>(endpoints.restaurants.deactivate(restaurantId), {
