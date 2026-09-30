@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
+import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 import { useAuth } from '../auth/AuthContext'
@@ -36,6 +37,7 @@ export function StaffShell({ title }: StaffShellProps) {
           ) : null}
         </nav>
         <div className="site-actions">
+          <ThemeToggle />
           <WorkspaceSwitcher mode="workspace" />
           <NotificationBell />
           <UserMenu />

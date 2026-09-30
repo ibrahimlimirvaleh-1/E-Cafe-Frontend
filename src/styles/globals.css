@@ -176,59 +176,11 @@ img {
 }
 
 .catalog-toolbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(170px, 205px) auto;
-  align-items: center;
-  gap: 16px;
   margin-bottom: 22px;
 }
 
 .catalog-search {
   width: 100%;
-}
-
-.catalog-date-field {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-  color: var(--on-surface-variant);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.catalog-date-field input {
-  width: 100%;
-  min-width: 0;
-  height: 44px;
-  padding: 0 10px;
-  border: 1px solid var(--outline-variant);
-  border-radius: 8px;
-  background: var(--surface-lowest);
-  color: var(--on-surface);
-  font: inherit;
-}
-
-.catalog-toolbar > span {
-  min-width: max-content;
-  color: var(--on-surface-variant);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-@media (max-width: 900px) {
-  .catalog-toolbar {
-    grid-template-columns: minmax(0, 1fr) minmax(170px, 205px);
-  }
-
-  .catalog-toolbar > span {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 640px) {
-  .catalog-toolbar {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 .user-menu {
@@ -6489,15 +6441,6 @@ body,
 }
 
 @media (max-width: 640px) {
-  .catalog-toolbar {
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-
-  .catalog-toolbar > span {
-    font-size: 12px;
-  }
-
   .restaurant-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -6704,19 +6647,10 @@ body,
     justify-self: start;
   }
 
-  .catalog-toolbar,
   .outbox-toolbar,
   .audit-toolbar {
     grid-template-columns: 1fr;
     align-items: stretch;
-  }
-
-  .catalog-toolbar {
-    display: grid;
-  }
-
-  .catalog-toolbar > span {
-    justify-self: start;
   }
 
   .site-search,
@@ -7531,10 +7465,6 @@ body,
 @media (max-width: 480px) {
   .page {
     width: min(100% - 32px, var(--container));
-  }
-
-  .catalog-toolbar {
-    gap: 8px;
   }
 
   .site-search input {
@@ -12416,21 +12346,15 @@ body {
 }
 
 .restaurant-catalog-page .catalog-toolbar {
-  grid-template-columns: minmax(0, 1fr) 230px;
-  align-items: end;
-  gap: 12px;
   margin-bottom: 16px;
 }
 
 .restaurant-catalog-page .catalog-search {
+  max-width: 620px;
   min-height: 46px;
   border: 1px solid var(--outline-variant);
   border-radius: 8px;
   background: var(--surface-lowest);
-}
-
-.restaurant-catalog-page .catalog-date-field input {
-  height: 46px;
 }
 
 .restaurant-catalog-page .catalog-results-count {
@@ -12484,6 +12408,29 @@ body {
 
 .restaurant-catalog-page .restaurant-location-button span {
   min-width: 0;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-shell {
+  position: relative;
+  min-height: 100vh;
+}
+
+.auth-theme-switch {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .auth-theme-switch {
+    top: 12px;
+    right: 16px;
+  }
 }
 
 .restaurant-catalog-page .restaurant-card-footer {
@@ -12540,7 +12487,6 @@ body {
 }
 
 @media (max-width: 640px) {
-  .restaurant-catalog-page .catalog-toolbar,
   .restaurant-catalog-page .restaurant-grid {
     grid-template-columns: minmax(0, 1fr);
   }

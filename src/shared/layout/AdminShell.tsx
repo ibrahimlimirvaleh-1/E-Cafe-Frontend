@@ -6,6 +6,7 @@ import { RoleIds, isInRole } from '../auth/authz'
 import { canAccessAdminModule } from '../config/adminPermissions'
 import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
+import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
@@ -44,6 +45,7 @@ export function AdminShell() {
       <div className="admin-workspace">
         <header className="admin-topbar compact">
           <div className="site-actions">
+            <ThemeToggle />
             <WorkspaceSwitcher mode="workspace" />
             <NotificationBell />
             <UserMenu />

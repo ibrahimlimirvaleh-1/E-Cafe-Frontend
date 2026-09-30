@@ -19,15 +19,15 @@ export function RestaurantCatalogPage() {
   const { user } = useAuth()
   const isCustomer = isInRole(user, [RoleIds.Customer])
   const [search, setSearch] = useState('')
-  const [reservationDate, setReservationDate] = useState(getTodayDateInputValue)
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [mapRestaurant, setMapRestaurant] = useState<Restaurant | null>(null)
+  const today = getTodayDateInputValue()
   const query = useMemo(() => {
     const params = new URLSearchParams({
       pageNumber: String(pageNumber),
       pageSize: String(pageSize),
-      reservationDate,
+      reservationDate: today,
     })
 
     if (search.trim()) {
@@ -35,7 +35,7 @@ export function RestaurantCatalogPage() {
     }
 
     return `?${params.toString()}`
-  }, [pageNumber, pageSize, reservationDate, search])
+  }, [pageNumber, pageSize, search, today])
 
   const { data: restaurantPage, isLoading } = useAsyncData(() => ecafeApi.restaurants.publicPage(query), {
     items: [],
@@ -64,18 +64,6 @@ export function RestaurantCatalogPage() {
             }}
           />
         </label>
-        <label className="catalog-date-field">
-          <span>Rezervasiya tarixi</span>
-          <input
-            min={getTodayDateInputValue()}
-            onChange={(event) => {
-              setReservationDate(event.target.value || getTodayDateInputValue())
-              setPageNumber(1)
-            }}
-            type="date"
-            value={reservationDate}
-          />
-        </label>
       </section>
 
       <div className="catalog-results-count" aria-live="polite">
@@ -88,7 +76,7 @@ export function RestaurantCatalogPage() {
       <section className="restaurant-grid">
         {!isLoading ? restaurantPage.items.map((restaurant) => {
           const openState = getRestaurantOpenState(restaurant.workingHours, restaurant.timeZone, restaurant.isOpen)
-          const profileUrl = `/restaurants/${restaurant.id}?reservationDate=${encodeURIComponent(reservationDate)}`
+          const profileUrl = `/restaurants/${restaurant.id}`
 
           return (
             <article className="restaurant-card" key={restaurant.id}>
@@ -103,9 +91,9 @@ export function RestaurantCatalogPage() {
                       </span>
                     ) : null}
                     {restaurant.depositAmount !== undefined && restaurant.depositAmount > 0 ? (
-                      <span className="restaurant-deposit-badge" title="Seçilən tarix üçün depozit" aria-label={`Seçilən tarix üçün ${restaurant.depositAmount.toFixed(2)} AZN depozit`}>
+                      <span className="restaurant-deposit-badge" title="Bu gün üçün depozit" aria-label={`Bu gün üçün ${restaurant.depositAmount.toFixed(2)} AZN depozit`}>
                         <CircleDollarSign size={15} />
-                        {restaurant.depositAmount.toFixed(2)} ₼
+                        Bu gün {restaurant.depositAmount.toFixed(2)} ₼
                       </span>
                     ) : null}
                   </div>
@@ -127,7 +115,7 @@ export function RestaurantCatalogPage() {
                   </h2>
                   <p>{restaurant.cuisine}</p>
                 </div>
-                <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
+                <button className="restaurant-location-button" type="button" title={restaurant.address} onClick={() => setMapRestaurant(restaurant)}>
                   <MapPin size={16} />
                   <span>{restaurant.address}</span>
                 </button>
