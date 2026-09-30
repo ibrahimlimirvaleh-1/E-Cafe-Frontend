@@ -2,6 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 :root {
+  color-scheme: light;
   --surface: #f7f8fa;
   --surface-lowest: #ffffff;
   --surface-container-lowest: #ffffff;
@@ -51,6 +52,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --surface: #17191b;
   --surface-lowest: #232628;
   --surface-container-lowest: #232628;
