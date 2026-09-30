@@ -26,6 +26,41 @@
   background: var(--surface-high);
 }
 
+:root[data-theme='dark'] .ui-button-primary:hover {
+  color: var(--on-primary);
+  background: color-mix(in srgb, var(--primary) 88%, var(--surface-high));
+}
+
+:root[data-theme='dark'] .reservation-payment-note {
+  border-color: color-mix(in srgb, var(--success) 30%, var(--outline-variant));
+  background: var(--success-bg);
+}
+
+:root[data-theme='dark'] select :is(option, optgroup) {
+  color: var(--on-surface);
+  background: var(--surface-lowest);
+}
+
+:root[data-theme='dark'] .form-message-warning,
+:root[data-theme='dark'] .reservation-history-current {
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+:root[data-theme='dark'] .form-message-info {
+  color: var(--info);
+  background: var(--info-bg);
+}
+
+:root[data-theme='dark'] .session-termination-notice span,
+:root[data-theme='dark'] :is(.reservation-refund-meta, .reservation-refund-transfer small, .reservation-refund-history small, .reservation-refund-history p) {
+  color: var(--on-surface-variant);
+}
+
+:root[data-theme='dark'] .reservation-history-item-danger .reservation-history-marker {
+  color: var(--danger);
+}
+
 :root[data-theme='dark'] :is(.admin-panel, .auth-card, .success-panel, .danger-panel, .ui-table, .restaurant-card, .profile-card, .dashboard-card, .filter-panel, .contract-filter-panel, .notification-popover, .modal-card, .audit-detail-modal, .profile-summary-card, .reservation-payment-panel, .reservation-manager-refund) {
   border-color: var(--outline-variant);
   background: var(--surface-lowest);
@@ -64,7 +99,7 @@
   background: var(--surface-low);
 }
 
-:root[data-theme='dark'] :is(.reservation-proof-panel, .reservation-time-preview, .reservation-table-card.selected, .reservation-proof-submitted, .form-message-success, .tracking-cancelled, .session-termination-notice, .contract-workflow-cell.next-step) {
+:root[data-theme='dark'] :is(.reservation-proof-panel, .reservation-time-preview, .reservation-table-card.selected, .reservation-proof-submitted, .form-message-success, .session-termination-notice, .contract-workflow-cell.next-step) {
   border-color: var(--outline-variant);
   background: var(--surface-low);
 }
@@ -126,4 +161,32 @@
 :root[data-theme='dark'] .theme-toggle {
   flex: 0 0 44px;
   border-color: var(--outline-variant);
+}
+
+:root[data-theme='dark'] :is(.ui-field-invalid input, .ui-field-invalid select, .ui-field-invalid textarea, .ui-field-invalid .restaurant-select-trigger) {
+  color: var(--on-surface);
+  background: var(--danger-bg);
+}
+
+:root[data-theme='dark'] .tracking-cancelled {
+  border-color: color-mix(in srgb, var(--danger) 36%, var(--outline-variant));
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+:root[data-theme='dark'] :is(.ui-button-danger, .ui-button.danger, .action-icon-button-danger, .form-message-danger .form-message-icon) {
+  color: var(--on-primary);
+}
+
+:root[data-theme='dark'] .action-icon-button-danger:hover {
+  color: var(--on-primary);
+  background: color-mix(in srgb, var(--danger) 82%, var(--surface-lowest));
+}
+
+:root[data-theme='dark'] :is(.reservation-detail-actions, .reservation-confirmation-actions) .ui-button-danger {
+  color: var(--danger);
+}
+
+:root[data-theme='dark'] :is(.form-message-success .form-message-icon, .form-message-warning .form-message-icon) {
+  color: var(--on-primary);
 }
