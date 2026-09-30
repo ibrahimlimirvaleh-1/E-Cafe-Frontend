@@ -47,14 +47,16 @@ export function RestaurantCatalogPage() {
   }, [query])
 
   return (
-    <main className="page">
+    <main className="page restaurant-catalog-page">
       <PageHeader title={isCustomer ? 'Restoran seç və rezervasiyaya başla' : 'Restoranlar'} />
 
       <section className="catalog-toolbar">
         <label className="site-search catalog-search">
           <Search size={18} />
           <input
+            aria-label="Restoran axtar"
             placeholder="Restoran, filial, məkan və ya menyu üzrə axtar..."
+            type="search"
             value={search}
             onChange={(event) => {
               setSearch(event.target.value)
@@ -74,8 +76,11 @@ export function RestaurantCatalogPage() {
             value={reservationDate}
           />
         </label>
-        <span>{isLoading ? 'Yüklənir...' : `${restaurantPage.totalCount} restoran`}</span>
       </section>
+
+      <div className="catalog-results-count" aria-live="polite">
+        {isLoading ? 'Yüklənir...' : `${restaurantPage.totalCount} restoran`}
+      </div>
 
       {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
       {!isLoading && restaurantPage.items.length === 0 ? <p className="online-only">Axtarışa uyğun restoran tapılmadı.</p> : null}
@@ -91,10 +96,12 @@ export function RestaurantCatalogPage() {
                 <SafeImage src={restaurant.image} alt={restaurant.name} />
                 <div className="restaurant-card-overlay">
                   <div className="restaurant-overlay-badges">
-                    <span className="restaurant-rating">
-                      <Star size={15} fill="currentColor" />
-                      {restaurant.rating}
-                    </span>
+                    {restaurant.rating > 0 ? (
+                      <span className="restaurant-rating">
+                        <Star size={15} fill="currentColor" />
+                        {restaurant.rating}
+                      </span>
+                    ) : null}
                     {restaurant.depositAmount !== undefined && restaurant.depositAmount > 0 ? (
                       <span className="restaurant-deposit-badge" title="Seçilən tarix üçün depozit" aria-label={`Seçilən tarix üçün ${restaurant.depositAmount.toFixed(2)} AZN depozit`}>
                         <CircleDollarSign size={15} />
@@ -112,29 +119,31 @@ export function RestaurantCatalogPage() {
                 </div>
               </Link>
               <div className="restaurant-card-body">
-                <h2>
-                  <Link className="restaurant-title-link" to={profileUrl}>
-                    {restaurant.name}
-                  </Link>
-                </h2>
-                <p>{restaurant.cuisine}</p>
-                <div className="meta-list">
-                  <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
-                    <MapPin size={16} />
-                    <span>{restaurant.address}</span>
-                  </button>
+                <div className="restaurant-card-intro">
+                  <h2>
+                    <Link className="restaurant-title-link" to={profileUrl}>
+                      {restaurant.name}
+                    </Link>
+                  </h2>
+                  <p>{restaurant.cuisine}</p>
+                </div>
+                <button className="restaurant-location-button" type="button" onClick={() => setMapRestaurant(restaurant)}>
+                  <MapPin size={16} />
+                  <span>{restaurant.address}</span>
+                </button>
+                <div className="restaurant-card-footer">
                   <span className={openState.isOpen ? 'restaurant-open-status open' : 'restaurant-open-status closed'}>
                     <Clock size={16} />
                     <span>{openState.label}</span>
                   </span>
-                  <span>
-                    <Phone size={16} />
-                    <span>{restaurant.phone}</span>
-                  </span>
-                  <span>
+                  <span className="restaurant-hours">
                     <Clock size={16} />
                     <span>{formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone, restaurant.todayWorkingHours)}</span>
                   </span>
+                  <a className="restaurant-phone" href={`tel:${restaurant.phone}`}>
+                    <Phone size={16} />
+                    <span>{restaurant.phone}</span>
+                  </a>
                 </div>
               </div>
             </article>
