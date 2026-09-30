@@ -7,6 +7,7 @@ import { AdminRoleIds, RoleIds, getHomePathForUser, isInRole } from '../shared/a
 import { adminRouteConfig } from '../shared/config/adminRoutes'
 import { adminModulePermissions, canAccessAdminModule } from '../shared/config/adminPermissions'
 import { AdminShell } from '../shared/layout/AdminShell'
+import { AuthShell } from '../shared/layout/AuthShell'
 import { SiteShell } from '../shared/layout/SiteShell'
 import { StaffShell } from '../shared/layout/StaffShell'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
@@ -149,11 +150,13 @@ export function AppRouter() {
         />
       </Route>
 
-      <Route path="login" element={<AuthPage mode="login" />} />
-      <Route path="register" element={<AuthPage mode="register" />} />
-      <Route path="set-password" element={<SetPasswordPage />} />
-      <Route path="forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="reset-password" element={<ResetPasswordPage />} />
+      <Route element={<AuthShell />}>
+        <Route path="login" element={<AuthPage mode="login" />} />
+        <Route path="register" element={<AuthPage mode="register" />} />
+        <Route path="set-password" element={<SetPasswordPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
+      </Route>
 
       <Route
         path="admin"

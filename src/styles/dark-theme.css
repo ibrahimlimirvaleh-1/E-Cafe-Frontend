@@ -1,0 +1,129 @@
+:root[data-theme='dark'] body,
+:root[data-theme='dark'] .admin-shell {
+  background: var(--surface);
+}
+
+:root[data-theme='dark'] :is(.site-topbar, .staff-topbar, .admin-topbar, .topbar) {
+  border-color: var(--outline-variant);
+  background: rgba(35, 38, 40, 0.94);
+}
+
+:root[data-theme='dark'] .admin-sidebar {
+  border-color: var(--outline-variant);
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-sm);
+}
+
+:root[data-theme='dark'] :is(.site-nav a.active, .site-nav a:hover, .admin-sidebar nav a.active, .admin-sidebar nav a:hover) {
+  border-color: var(--outline-variant);
+  color: var(--on-surface);
+  background: var(--surface-high);
+  box-shadow: none;
+}
+
+:root[data-theme='dark'] :is(.workspace-switcher-trigger:hover, .workspace-switcher-home:hover, .user-pill:hover, .ui-button-secondary, .ui-button.secondary) {
+  color: var(--on-surface);
+  background: var(--surface-high);
+}
+
+:root[data-theme='dark'] :is(.admin-panel, .auth-card, .success-panel, .danger-panel, .ui-table, .restaurant-card, .profile-card, .dashboard-card, .filter-panel, .contract-filter-panel, .notification-popover, .modal-card, .audit-detail-modal, .profile-summary-card, .reservation-payment-panel, .reservation-manager-refund) {
+  border-color: var(--outline-variant);
+  background: var(--surface-lowest);
+}
+
+:root[data-theme='dark'] :is(.phone-field-control, .phone-field:hover .phone-field-control, .phone-field:focus-within .phone-field-control, .ui-field-invalid .phone-field-control, .phone-field.ui-field-invalid .phone-field-control, .filter-panel-actions) {
+  background: var(--surface-lowest);
+}
+
+:root[data-theme='dark'] :is(.ui-field input, .ui-field select, .ui-field textarea, .restaurant-select-trigger, .search-box, .filter-panel input, .filter-panel select, .contract-filter-panel input, .contract-filter-panel select) {
+  color: var(--on-surface);
+  background: var(--surface-lowest);
+}
+
+:root[data-theme='dark'] :is(.ui-field input:hover, .ui-field select:hover, .ui-field textarea:hover, .restaurant-select-trigger:hover, .search-box:hover, .filter-panel input:hover, .filter-panel select:hover, .contract-filter-panel input:hover, .contract-filter-panel select:hover, .ui-field input:focus, .ui-field select:focus, .ui-field textarea:focus, .restaurant-select-trigger:focus, .search-box:focus-within, .filter-panel input:focus, .filter-panel select:focus, .contract-filter-panel input:focus, .contract-filter-panel select:focus) {
+  background: var(--surface-low);
+}
+
+:root[data-theme='dark'] :is(.ui-table-row, .compact-list article, .audit-list article, .inventory-row, .recipe-list article, .movement-list article, .notification-page-list > button) {
+  border-color: var(--outline-variant);
+  background: var(--surface-container-low);
+}
+
+:root[data-theme='dark'] :is(.ui-table-row:hover, .compact-list article:hover, .audit-list article:hover, .inventory-row:hover, .recipe-list article:hover, .movement-list article:hover, .notification-page-list > button:hover, .contract-workflow-row:hover) {
+  background: var(--surface-high);
+}
+
+:root[data-theme='dark'] :is(.site-search, .catalog-search, .reservation-payment-meta, .reservation-payment-field textarea, .reservation-proof-file-field strong, .table-shell, .data-table-shell, .inventory-table-shell, .inventory-history-table-shell) {
+  border-color: var(--outline-variant);
+  color: var(--on-surface);
+  background: var(--surface-lowest);
+}
+
+:root[data-theme='dark'] .site-search:focus-within,
+:root[data-theme='dark'] .reservation-payment-field textarea:focus {
+  background: var(--surface-low);
+}
+
+:root[data-theme='dark'] :is(.reservation-proof-panel, .reservation-time-preview, .reservation-table-card.selected, .reservation-proof-submitted, .form-message-success, .tracking-cancelled, .session-termination-notice, .contract-workflow-cell.next-step) {
+  border-color: var(--outline-variant);
+  background: var(--surface-low);
+}
+
+:root[data-theme='dark'] :is(.reservation-payment-panel-header h2, .reservation-payment-meta b, .reservation-payment-field textarea, .session-termination-notice) {
+  color: var(--on-surface);
+}
+
+:root[data-theme='dark'] :is(.reservation-payment-panel-header p, .reservation-payment-meta strong, .reservation-payment-field > span, .reservation-payment-field small, .reservation-payment-actions > span) {
+  color: var(--on-surface-variant);
+}
+
+:root[data-theme='dark'] :is(.reservation-payment-meta span, .form-message-success, .reservation-proof-submitted) {
+  color: var(--success);
+}
+
+:root[data-theme='dark'] :is(.reservation-payment-panel-icon, .reservation-proof-icon) {
+  color: var(--secondary);
+  background: var(--warning-bg);
+}
+
+:root[data-theme='dark'] :is(.pagination-page.active, .form-guidance-icon) {
+  color: var(--info);
+  background: var(--info-bg);
+}
+
+:root[data-theme='dark'] .restaurant-open-status.open {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+:root[data-theme='dark'] .restaurant-open-status.closed {
+  color: var(--on-surface-variant);
+  background: var(--surface-high);
+}
+
+:root[data-theme='dark'] :is(.restaurant-rating, .restaurant-deposit-badge, .restaurant-availability) {
+  border-color: var(--outline-variant);
+  background: rgba(35, 38, 40, 0.94);
+  box-shadow: var(--shadow-sm);
+}
+
+:root[data-theme='dark'] .restaurant-availability.active {
+  color: var(--success);
+}
+
+:root[data-theme='dark'] .restaurant-availability.blocked {
+  color: var(--danger);
+}
+
+:root[data-theme='dark'] .reservation-proof-file-field strong {
+  color: var(--info);
+}
+
+:root[data-theme='dark'] :is(.reservation-card, .choice-card, .metric-card, .detail-panel, .form-card, .placeholder-panel, .tracking-panel, .operation-card, .kitchen-ticket, .reservation-history-panel) {
+  border-color: var(--outline-variant);
+}
+
+:root[data-theme='dark'] .theme-toggle {
+  flex: 0 0 44px;
+  border-color: var(--outline-variant);
+}
