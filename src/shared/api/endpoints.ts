@@ -63,6 +63,9 @@ export const endpoints = {
     my: '/public/reservations/my',
     getById: (reservationId: string) => `/public/reservations/${reservationId}`,
     history: (reservationId: string) => `/public/reservations/${reservationId}/history`,
+    arrivalOptions: (reservationId: string) => `/public/reservations/${reservationId}/late-arrival`,
+    arrivalOffer: (reservationId: string) => `/public/reservations/${reservationId}/late-arrival/offers`,
+    arrivalAccept: (reservationId: string) => `/public/reservations/${reservationId}/late-arrival/accept`,
     refund: (reservationId: string) => `/public/reservations/${reservationId}/refund`,
     restaurantRefund: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/refund`,

@@ -45,6 +45,7 @@ function customerReason(reason: string) {
 function eventLabel(item: ReservationHistoryItem) {
   const status = item.toStatus.toLocaleLowerCase('az-AZ')
   const previous = item.fromStatus?.toLocaleLowerCase('az-AZ') || ''
+  if (status === previous && item.reason === 'Müştəri yeni gəliş və masanın təhvil şərtlərini qəbul etdi.') return 'Gəliş vaxtı yeniləndi'
 
   if (!item.fromStatus && item.reason === 'Mövcud rezervasiyanın ilkin statusu.') return 'İlkin vəziyyət qeydə alındı'
   if (!item.fromStatus) return 'Rezervasiya yaradıldı'
@@ -110,7 +111,7 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                   </span>
                   <div className="reservation-history-content">
                     <div className="reservation-history-title-row">
-                      <strong>{viewer === 'manager' ? eventLabel(item) : presentation.label}</strong>
+                      <strong>{viewer === 'manager' || item.fromStatus === item.toStatus ? eventLabel(item) : presentation.label}</strong>
                       {viewer === 'customer' && isCurrent ? <span className="reservation-history-current">Hazırkı mərhələ</span> : null}
                     </div>
                     <div className="reservation-history-meta">

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
+import { ReservationLateArrivalPanel } from '../../features/reservations/ReservationLateArrivalPanel'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
@@ -99,6 +100,7 @@ export function TrackingPage() {
               </section>
             </div>
 
+            <ReservationLateArrivalPanel reservation={reservation} refreshKey={reloadKey} onChanged={() => setReloadKey((value) => value + 1)} />
             {reservation.latestPaymentInstruction ? (
               <div className="reservation-payment-note">
                 <strong>Ödəniş məlumatı</strong>

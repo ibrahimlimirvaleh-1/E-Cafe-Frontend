@@ -1,0 +1,41 @@
+.reservation-arrival-summary {
+  margin: 16px 0;
+  padding: 16px 0;
+  border-block: 1px solid var(--outline-variant);
+  text-align: left;
+  color: var(--on-surface);
+}
+.reservation-arrival-summary dl, .reservation-arrival-terms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 12px 0 0;
+}
+.reservation-arrival-summary dt, .reservation-arrival-terms dt {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-bottom: 6px;
+}
+.reservation-arrival-summary dd, .reservation-arrival-terms dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.reservation-arrival-action { margin-block: 16px; text-align: left; }
+.reservation-action-dialog.reservation-arrival-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; border-radius: 8px; outline: none; }
+.reservation-arrival-dialog h2 { font-size: 22px; }
+.reservation-arrival-choice { display: grid; gap: 8px; font-size: 14px; font-weight: 600; margin-top: 20px; }
+.reservation-arrival-choice select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: 4px; background: var(--surface-lowest); color: var(--on-surface); }
+.reservation-arrival-choice option { background: var(--surface-lowest); color: var(--on-surface); }
+.reservation-arrival-terms { padding-block: 16px; border-block: 1px solid var(--outline-variant); }
+.reservation-arrival-terms > div:last-child:nth-child(3) { grid-column: 1 / -1; }
+.reservation-arrival-dialog .reservation-arrival-warning { background: var(--warning-bg); color: var(--warning); padding: 12px; border-radius: 4px; }
+.reservation-arrival-dialog .reservation-arrival-error, .reservation-arrival-action > p { color: var(--danger); }
+.reservation-arrival-expiry { font-size: 12px; }
+.reservation-action-dialog-actions.reservation-arrival-dialog-actions { display: grid; grid-template-columns: 1fr; }
+.reservation-arrival-dialog-actions .ui-button { white-space: normal; min-height: 44px; height: auto; }
+@media (max-width: 480px) {
+  .reservation-arrival-summary dl, .reservation-arrival-terms { grid-template-columns: 1fr; }
+  .reservation-arrival-dialog h2 { font-size: 20px; }
+}

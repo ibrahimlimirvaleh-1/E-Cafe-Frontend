@@ -199,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isCurrent = false
+      didBootstrapSessionRef.current = false
     }
   }, [user])
 

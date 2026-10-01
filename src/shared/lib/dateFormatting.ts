@@ -1,11 +1,12 @@
-const reservationDateTimeFormatter = new Intl.DateTimeFormat('az-AZ', {
+const reservationDateTimeOptions: Intl.DateTimeFormatOptions = {
   day: 'numeric',
   month: 'numeric',
   year: 'numeric',
   hour: '2-digit',
   minute: '2-digit',
   hourCycle: 'h23',
-})
+}
+const reservationDateTimeFormatter = new Intl.DateTimeFormat('az-AZ', reservationDateTimeOptions)
 
 const monthNames = [
   'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun',
@@ -53,7 +54,7 @@ export function formatDateInBaku(value?: string | null) {
   return `${getPart('day')} ${monthNames[month - 1]} ${getPart('year')}`
 }
 
-export function formatReservationDateTime(value?: string | null) {
+export function formatReservationDateTime(value?: string | null, timeZone?: string) {
   if (!value) {
     return '-'
   }
@@ -63,7 +64,10 @@ export function formatReservationDateTime(value?: string | null) {
     return value
   }
 
-  const parts = reservationDateTimeFormatter.formatToParts(date)
+  const formatter = timeZone
+    ? new Intl.DateTimeFormat('az-AZ', { ...reservationDateTimeOptions, timeZone })
+    : reservationDateTimeFormatter
+  const parts = formatter.formatToParts(date)
   const getPart = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || ''
   const month = Number(getPart('month'))
 
