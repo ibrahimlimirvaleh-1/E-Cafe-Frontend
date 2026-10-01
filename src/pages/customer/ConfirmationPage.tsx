@@ -8,10 +8,11 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import type { WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
+import { isReservationAwaitingPayment, isReservationConfirmed } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
+import { ReservationLateArrivalPanel } from '../../features/reservations/ReservationLateArrivalPanel'
 import type { ReservationHistoryResponse } from '../../shared/api/ecafeApi'
 import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
@@ -26,6 +27,13 @@ export function ConfirmationPage() {
     return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
   }, [])
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [cancelNow, setCancelNow] = useState(Date.now())
+  useEffect(() => {
+    if (!isCancelDialogOpen) return
+    setCancelNow(Date.now())
+    const timer = window.setInterval(() => setCancelNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [isCancelDialogOpen])
   const [showDepositWaiverNotice, setShowDepositWaiverNotice] = useState(false)
   const previousReservationRef = useRef<{ id: number; depositAmount: number } | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
@@ -128,9 +136,12 @@ export function ConfirmationPage() {
                 <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
                 <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
                 <div><dt>Depozit</dt><dd>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</dd></div>
+                {!reservation.expectedArrivalAt && isReservationConfirmed(reservation.status) ? <div><dt>Gəliş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</dd></div> : null}
                 {reservation.mustVacateAt ? <div><dt>Masanı təhvil vaxtı</dt><dd>{formatReservationDateTime(reservation.mustVacateAt)}</dd></div> : null}
                 {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
               </dl>
+
+              <ReservationLateArrivalPanel reservation={reservation} refreshKey={reloadKey} onChanged={() => setReloadKey((value) => value + 1)} />
 
               {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
                 <section className="reservation-payment-note" aria-label="Depozit ödəniş məlumatı">
@@ -186,7 +197,11 @@ export function ConfirmationPage() {
       </div>
       <ReservationReasonDialog
         confirmLabel="Rezervasiyanı ləğv et"
-        description="Rezervasiya ləğv edildikdən sonra masa üçün yaradılmış hold aradan qaldırılacaq."
+        description={reservation?.hasConfirmedDeposit
+          ? reservation.canCancelWithRefund && new Date(reservation.refundCancellationDeadlineAt || '').getTime() > cancelNow
+            ? `İndi ləğv etsəniz depozitin tam geri ödənişini tələb edə bilərsiniz. Geri ödəniş üçün son ləğv vaxtı: ${formatReservationDateTime(reservation.refundCancellationDeadlineAt)}. Pul ayrıca geri ödəniş prosesi ilə qaytarılır.`
+            : 'Rezervasiya ləğv ediləcək və masa azad olacaq. Geri ödəniş üçün müddət bitdiyinə görə depozit qaytarılmayacaq.'
+          : 'Rezervasiya ləğv ediləcək və masa azad olacaq.'}
         error={cancelError}
         isOpen={isCancelDialogOpen}
         isSubmitting={isCancelling}

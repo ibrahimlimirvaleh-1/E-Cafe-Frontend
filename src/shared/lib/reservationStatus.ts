@@ -46,3 +46,8 @@ export function isReservationAwaitingPayment(status: string) {
 
   return normalized.includes('pending') || normalized.includes('ödəniş gözlənilir')
 }
+
+export function isReservationConfirmed(status: string) {
+  const normalized = status.toLocaleLowerCase('az-AZ')
+  return normalized.includes('confirmed') || normalized.includes('təsdiqlənib')
+}

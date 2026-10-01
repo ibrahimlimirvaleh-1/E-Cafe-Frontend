@@ -5,6 +5,7 @@ import { ReservationPaymentInstructionPanel } from '../../features/reservations/
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { RestaurantRefundPanel } from '../../features/reservations/RestaurantRefundPanel'
+import { ReservationArrivalSummary } from '../../features/reservations/ReservationArrivalSummary'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -151,6 +152,7 @@ export function RestaurantReservationDetailPage() {
             <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ? 'Ödəniş üçün son vaxt' : 'Cavab üçün son vaxt'}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
           ) : null}
         </div>
+        <ReservationArrivalSummary reservation={reservation} />
         {reservation.latestPaymentInstruction ? (
           <div className="reservation-payment-note">
             <strong>Son göndərilən ödəniş məlumatı</strong>

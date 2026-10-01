@@ -243,6 +243,7 @@ export type ReservationResponse = {
   tableId: number
   reservedAt: string
   noShowDeadlineAt: string
+  timeZone?: string | null
   mustVacateAt?: string | null
   peopleCount: number
   statusId: number
@@ -253,6 +254,11 @@ export type ReservationResponse = {
   holdExpiresAt?: string | null
   restaurantResponseExpiresAt?: string | null
   cancellationDeadline?: string | null
+  refundCancellationDeadlineAt?: string | null
+  hasConfirmedDeposit: boolean
+  canCancelWithRefund: boolean
+  expectedArrivalAt?: string | null
+  arrivalDecisionExpiresAt?: string | null
   restaurantName?: string | null
   tableName?: string | null
   customerName?: string | null
@@ -267,6 +273,25 @@ export type ReservationHistoryItem = {
   changedAt: string
   actorType: 'Customer' | 'Restaurant' | 'System' | string
   reason?: string | null
+}
+
+export type ReservationArrivalOffer = {
+  consentToken: string
+  arrivalAt: string
+  noShowDeadlineAt: string
+  mustVacateAt?: string | null
+  decisionExpiresAt: string
+  accepted: boolean
+  hasDeposit: boolean
+  refundAvailable: boolean
+  timeZone: string
+}
+
+export type ReservationArrivalOptions = {
+  canRequest: boolean
+  arrivalChoices: string[]
+  offer?: ReservationArrivalOffer | null
+  timeZone: string
 }
 
 export type ReservationHistoryResponse = {
@@ -644,6 +669,7 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     tableId: num(record.tableId),
     reservedAt: str(record.reservedAt || record.ReservedAt),
     noShowDeadlineAt: str(record.noShowDeadlineAt || record.NoShowDeadlineAt),
+    timeZone: str(record.timeZone) || null,
     mustVacateAt: str(record.mustVacateAt || record.MustVacateAt) || null,
     peopleCount: num(record.peopleCount),
     statusId: num(record.statusId),
@@ -654,6 +680,11 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     holdExpiresAt: str(record.holdExpiresAt || record.HoldExpiresAt) || null,
     restaurantResponseExpiresAt: str(record.restaurantResponseExpiresAt || record.RestaurantResponseExpiresAt) || null,
     cancellationDeadline: str(record.cancellationDeadline || record.CancellationDeadline) || null,
+    refundCancellationDeadlineAt: str(record.refundCancellationDeadlineAt) || null,
+    hasConfirmedDeposit: bool(record.hasConfirmedDeposit),
+    canCancelWithRefund: bool(record.canCancelWithRefund),
+    expectedArrivalAt: str(record.expectedArrivalAt) || null,
+    arrivalDecisionExpiresAt: str(record.arrivalDecisionExpiresAt) || null,
     restaurantName: str(record.restaurantName || record.RestaurantName) || null,
     tableName: str(record.tableName || record.TableName) || null,
     customerName: str(record.customerName || record.CustomerName) || null,
@@ -1907,6 +1938,16 @@ export const ecafeApi = {
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapReservationResponse(data)
     },
+    getArrivalOptions: async (reservationId: string) =>
+      (await httpClient<ReservationArrivalOptions>(endpoints.reservations.arrivalOptions(reservationId))).data,
+    offerArrival: async (reservationId: string, arrivalAt: string) =>
+      (await httpClient<ReservationArrivalOffer>(endpoints.reservations.arrivalOffer(reservationId), {
+        method: 'POST', body: JSON.stringify({ arrivalAt }),
+      })).data,
+    acceptArrival: async (reservationId: string, consentToken: string) =>
+      (await httpClient<ReservationArrivalOffer>(endpoints.reservations.arrivalAccept(reservationId), {
+        method: 'POST', body: JSON.stringify({ consentToken }),
+      })).data,
     getHistoryForRestaurant: async (restaurantId: string, reservationId: string) => {
       const result = await httpClient<unknown>(endpoints.reservations.restaurantHistory(restaurantId, reservationId))
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}

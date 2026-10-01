@@ -166,7 +166,7 @@ export function MyReservationsPage() {
                 </div>
                 <div className="reservation-card-status">
                   <Badge tone={presentation.tone}>{presentation.label}</Badge>
-                  <span>{formatReservationDateTime(reservation.reservedAt)}</span>
+                  <span>{reservation.expectedArrivalAt ? 'Yeni gəliş: ' : ''}{formatReservationDateTime(reservation.expectedArrivalAt || reservation.reservedAt)}</span>
                 </div>
               </div>
 
