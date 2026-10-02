@@ -1,0 +1,30 @@
+.schedule-section { min-width: 0; border-top: 1px solid var(--outline-variant); padding: 24px 0; margin-top: 24px; }
+.schedule-section h2 { display: flex; align-items: center; gap: 8px; font-size: 20px; line-height: 1.4; margin: 0 0 16px; }
+.schedule-section p { text-align: left; line-height: 1.6; overflow-wrap: anywhere; }
+.schedule-section form { display: grid; gap: 16px; }
+.schedule-section form > button { justify-self: start; }
+.schedule-muted { font-size: 14px; color: var(--on-surface-variant); }
+.schedule-deadline { padding: 16px 0; border-block: 1px solid var(--outline-variant); margin: 16px 0; }
+.schedule-deadline dt { font-size: 14px; margin-bottom: 6px; }
+.schedule-deadline dd { margin: 0; font-size: 16px; font-weight: 700; }
+.schedule-consent { display: flex; align-items: flex-start; gap: 10px; text-align: left; font-size: 14px; line-height: 1.6; margin: 16px 0; cursor: pointer; }
+.schedule-consent input { flex: none; width: 18px; height: 18px; margin-top: 3px; accent-color: var(--primary); }
+.schedule-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.schedule-section .ui-button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+.schedule-table-wrap { max-width: 100%; overflow-x: auto; margin: 20px 0; }
+.schedule-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.schedule-table th { font-size: 12px; text-transform: uppercase; padding: 12px; background: var(--surface-low); }
+.schedule-table td { padding: 14px 12px; border-bottom: 1px solid var(--outline-variant); vertical-align: top; min-width: 130px; }
+.schedule-table td small { display: block; margin-top: 6px; overflow-wrap: anywhere; }
+.schedule-session-response { border-left: 3px solid var(--secondary); padding-left: 16px; }
+@media (max-width: 600px) {
+  .schedule-section h2 { font-size: 18px; }
+  .schedule-actions > * { flex: 1 1 100%; min-width: 0; }
+  .schedule-section form > button { width: 100%; }
+  .schedule-table, .schedule-table tbody { display: block; }
+  .schedule-table thead { display: none; }
+  .schedule-table tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 16px; padding: 16px 0; border-bottom: 1px solid var(--outline-variant); }
+  .schedule-table td { display: block; min-width: 0; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .schedule-table td:first-child, .schedule-table td:last-child { grid-column: 1 / -1; }
+  .schedule-table td[data-label]::before { content: attr(data-label); display: block; font-size: 12px; color: var(--on-surface-variant); margin-bottom: 6px; }
+}

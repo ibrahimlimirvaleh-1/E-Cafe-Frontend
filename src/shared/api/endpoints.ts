@@ -1,4 +1,12 @@
 export const endpoints = {
+  schedule: {
+    get: (id: string) => `/restaurants/${id}/schedule-change`,
+    apply: (id: string) => `/restaurants/${id}/schedule-change/apply`,
+    withdraw: (id: string) => `/restaurants/${id}/schedule-change/withdraw`,
+    session: (id: string, consentId: number) => `/restaurants/${id}/schedule-change/sessions/${consentId}/response`,
+    offer: (id: string) => `/public/reservations/${id}/schedule-offer`,
+    respond: (id: string) => `/public/reservations/${id}/schedule-offer/response`,
+  },
   auth: {
     login: '/user/login',
     register: '/user/register',

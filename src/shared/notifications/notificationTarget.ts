@@ -56,7 +56,7 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
     }
 
     if (reservationId && isInRole(user, [RoleIds.Customer])) {
-      const section = payload.section === 'refund' ? '#refund' : ''
+      const section = payload.section === 'refund' ? '#refund' : payload.section === 'schedule-offer' ? '#schedule-offer' : ''
       return `/confirmation?reservationId=${encodeURIComponent(reservationId)}${section}`
     }
 
@@ -64,6 +64,7 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
   }
 
   if (restaurantId && canAccessAdminModule(user, 'restaurants', restaurantId)) {
+    if (payload.section === 'schedule-change') return `/admin/restaurants/${encodeURIComponent(restaurantId)}/edit#schedule-change`
     return `/admin/restaurants/${encodeURIComponent(restaurantId)}`
   }
 
