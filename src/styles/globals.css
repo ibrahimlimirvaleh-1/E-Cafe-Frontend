@@ -11728,6 +11728,7 @@ body {
   }
 }
 .reservation-refund-panel {
+  scroll-margin-top: 160px;
   margin-top: 24px;
   padding-top: 24px;
   border-top: 1px solid #d8dee6;

@@ -171,6 +171,7 @@ export function ConfirmationPage() {
                 restaurantId={reservation.restaurantId}
                 reservationStatusId={reservation.statusId}
                 reservationFlowCode={reservation.workflowFlowCode}
+                refundRequest={reservation.refundRequest}
               />
               {cancelAction ? (
                 <div className="reservation-confirmation-actions">

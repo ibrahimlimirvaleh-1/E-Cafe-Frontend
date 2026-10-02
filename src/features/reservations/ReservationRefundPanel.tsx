@@ -1,7 +1,7 @@
 import { Check, Eye, RotateCcw, Send } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { WorkflowAction } from '../../entities/types'
-import { ecafeApi, type ReservationRefundResponse } from '../../shared/api/ecafeApi'
+import { ecafeApi, type ReservationRefundRequestInfo, type ReservationRefundResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
@@ -17,15 +17,21 @@ type Props = {
   restaurantId: number
   reservationStatusId: number
   reservationFlowCode: string
+  refundRequest?: ReservationRefundRequestInfo | null
 }
 
-export function ReservationRefundPanel({ reservationId, restaurantId, reservationStatusId, reservationFlowCode }: Props) {
+export function ReservationRefundPanel({ reservationId, restaurantId, reservationStatusId, reservationFlowCode, refundRequest }: Props) {
   const [reloadKey, setReloadKey] = useState(0)
   const [pendingAction, setPendingAction] = useState<WorkflowAction | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isOpeningProof, setIsOpeningProof] = useState(false)
   const [actionError, setActionError] = useState('')
   const [payoutDetails, setPayoutDetails] = useState('')
+  useEffect(() => {
+    const refresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('ecafe:notifications-refresh', refresh)
+    return () => window.removeEventListener('ecafe:notifications-refresh', refresh)
+  }, [])
   const { data: refund, error, isLoading } = useAsyncData<ReservationRefundResponse | null>(
     () => ecafeApi.reservations.getRefund(String(reservationId)),
     null,
@@ -43,6 +49,12 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
     [],
     [refund?.id, refund?.statusId, restaurantId, reservationId, reservationStatusId, reservationFlowCode, isLoading, reloadKey],
   )
+
+  useEffect(() => {
+    if (isLoading || window.location.hash !== '#refund') return
+    const frame = window.requestAnimationFrame(() => document.getElementById('refund')?.scrollIntoView({ block: 'start' }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [isLoading, reservationId, Boolean(refund), Boolean(refundRequest)])
 
   if (isLoading || error) {
     return error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null
@@ -77,7 +89,6 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
         body: { transferId: transfer.id, ...(action.requiresReason ? { reason } : {}) },
       })
       setPendingAction(null)
-      setReloadKey((value) => value + 1)
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
     } catch (err) {
       setActionError(normalizeCaughtApiError(err, 'Geri ödəniş əməliyyatı tamamlanmadı.').message)
@@ -98,7 +109,6 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
     try {
       await ecafeApi.workflow.executeAction({ action, body: { details } })
       setPayoutDetails('')
-      setReloadKey((value) => value + 1)
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
     } catch (err) {
       setActionError(normalizeCaughtApiError(err, 'Geri ödəniş rekviziti göndərilmədi.').message)
@@ -113,7 +123,6 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
     try {
       await ecafeApi.workflow.executeAction({ action })
       setPendingAction(null)
-      setReloadKey((value) => value + 1)
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
     } catch (err) {
       setActionError(normalizeCaughtApiError(err, 'Geri ödəniş sorğusu göndərilmədi.').message)
@@ -122,18 +131,24 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
     }
   }
 
-  if (!refund && !requestAction) return null
+  if (!refund && !requestAction && !refundRequest) return null
 
   return (
-    <section className="reservation-refund-panel" aria-label="Geri ödəniş">
+    <section className="reservation-refund-panel" id="refund" aria-label="Geri ödəniş">
       <div className="reservation-refund-heading">
         <div>
           <span className="section-eyebrow">GERİ ÖDƏNİŞ</span>
           <h2>Geri ödəniş</h2>
         </div>
-        {refund ? <strong>{refund.amount.toFixed(2)} {refund.currencyCode}</strong> : null}
+        {refund || refundRequest ? <strong>{(refund?.amount ?? refundRequest!.amount).toFixed(2)} {refund?.currencyCode ?? refundRequest!.currencyCode}</strong> : null}
       </div>
+      {!refund && refundRequest ? (
+        <StatusMessage tone="info" autoHideMs={false} dismissible={false}>
+          {refundRequest.message}
+        </StatusMessage>
+      ) : null}
       {refund ? <p className="reservation-refund-status">{refund.status}</p> : null}
+      {refund?.customerNextStep ? <p className="reservation-refund-meta" role="status">{refund.customerNextStep}</p> : null}
       {refund?.eligibilityReason ? <p className="reservation-refund-meta">{refund.eligibilityReason}</p> : null}
       {refund?.payoutDetails ? <p className="reservation-refund-meta">Hesab: {refund.payoutDetails.maskedDetails}</p> : null}
       {requestAction ? (
@@ -213,7 +228,7 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
         description={pendingAction?.code === 'disputeTransfer'
           ? 'Köçürmə hesabınıza çatmayıbsa və ya məbləğ düzgün deyilsə, səbəbi yazın.'
           : pendingAction?.code === 'requestRefund'
-            ? 'Geri ödəniş hüququ backend qaydasına əsasən yoxlanacaq.'
+            ? 'Sorğunu göndərdikdən sonra geri ödəniş rekvizitlərinizi təqdim edə bilərsiniz.'
             : 'Məbləğin hesabınıza çatdığını yoxladıqdan sonra təsdiqləyin.'}
         confirmLabel={pendingAction?.label || ''}
         confirmVariant={pendingAction?.code === 'disputeTransfer' ? 'danger' : 'primary'}

@@ -237,6 +237,12 @@ export type CreateReservationRequest = {
   expectedDepositAmount?: number
 }
 
+export type ReservationRefundRequestInfo = {
+  amount: number
+  currencyCode: string
+  message: string
+}
+
 export type ReservationResponse = {
   id: number
   restaurantId: number
@@ -251,6 +257,7 @@ export type ReservationResponse = {
   workflowFlowCode: string
   depositAmount: number
   isRefundEligible: boolean
+  refundRequest?: ReservationRefundRequestInfo | null
   holdExpiresAt?: string | null
   restaurantResponseExpiresAt?: string | null
   cancellationDeadline?: string | null
@@ -319,6 +326,7 @@ export type ReservationRefundResponse = {
   currencyCode: string
   requestedAt: string
   eligibilityReason: string
+  customerNextStep?: string | null
   cancellationReason?: string | null
   refundedAt?: string | null
   payoutDetails?: { maskedDetails: string; submittedAt: string } | null
@@ -663,6 +671,8 @@ function mapTableAvailability(record: AnyRecord, restaurantId: string, fallbackR
 }
 
 function mapReservationResponse(record: AnyRecord): ReservationResponse {
+  const refundRequest = record.refundRequest && typeof record.refundRequest === 'object'
+    ? record.refundRequest as AnyRecord : null
   return {
     id: num(record.id || record.reservationId),
     restaurantId: num(record.restaurantId),
@@ -677,6 +687,13 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     workflowFlowCode: str(record.workflowFlowCode || record.flowCode),
     depositAmount: num(record.depositAmount),
     isRefundEligible: bool(record.isRefundEligible),
+    refundRequest: refundRequest
+      ? {
+          amount: num(refundRequest.amount),
+          currencyCode: str(refundRequest.currencyCode),
+          message: str(refundRequest.message),
+        }
+      : null,
     holdExpiresAt: str(record.holdExpiresAt || record.HoldExpiresAt) || null,
     restaurantResponseExpiresAt: str(record.restaurantResponseExpiresAt || record.RestaurantResponseExpiresAt) || null,
     cancellationDeadline: str(record.cancellationDeadline || record.CancellationDeadline) || null,

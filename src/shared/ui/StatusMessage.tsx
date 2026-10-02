@@ -5,6 +5,7 @@ type StatusMessageTone = 'success' | 'warning' | 'danger' | 'info'
 
 type StatusMessageProps = {
   autoHideMs?: number | false
+  dismissible?: boolean
   children: ReactNode
   className?: string
   details?: {
@@ -49,7 +50,7 @@ function inferTone(children: ReactNode): StatusMessageTone {
   return 'success'
 }
 
-export function StatusMessage({ autoHideMs, children, className = '', details = [], tone }: StatusMessageProps) {
+export function StatusMessage({ autoHideMs, dismissible = true, children, className = '', details = [], tone }: StatusMessageProps) {
   const [isVisible, setIsVisible] = useState(Boolean(children))
   const resolvedTone = tone ?? (details.length > 0 ? 'danger' : inferTone(children))
   const Icon = resolvedTone === 'success' ? CheckCircle2 : resolvedTone === 'danger' ? AlertTriangle : Info
@@ -94,9 +95,11 @@ export function StatusMessage({ autoHideMs, children, className = '', details = 
           </ul>
         ) : null}
       </span>
-      <button aria-label="Mesajı bağla" className="form-message-close" onClick={() => setIsVisible(false)} type="button">
-        <X size={18} />
-      </button>
+      {dismissible ? (
+        <button aria-label="Mesajı bağla" className="form-message-close" onClick={() => setIsVisible(false)} type="button">
+          <X size={18} />
+        </button>
+      ) : null}
     </div>
   )
 }
