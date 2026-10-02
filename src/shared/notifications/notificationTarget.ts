@@ -56,7 +56,8 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
     }
 
     if (reservationId && isInRole(user, [RoleIds.Customer])) {
-      return `/confirmation?reservationId=${encodeURIComponent(reservationId)}`
+      const section = payload.section === 'refund' ? '#refund' : ''
+      return `/confirmation?reservationId=${encodeURIComponent(reservationId)}${section}`
     }
 
     return '/admin/reservations'

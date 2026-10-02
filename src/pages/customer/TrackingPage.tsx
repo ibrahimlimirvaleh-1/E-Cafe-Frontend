@@ -128,6 +128,7 @@ export function TrackingPage() {
               restaurantId={reservation.restaurantId}
               reservationStatusId={reservation.statusId}
               reservationFlowCode={reservation.workflowFlowCode}
+              refundRequest={reservation.refundRequest}
             />
 
             <div className="tracking-page-actions">
