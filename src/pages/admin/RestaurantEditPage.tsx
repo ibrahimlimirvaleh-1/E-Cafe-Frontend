@@ -12,8 +12,9 @@ import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import { WorkingHoursField, createDefaultWorkingHours } from '../../shared/ui/WorkingHoursField'
+import { WorkingHoursList, createDefaultWorkingHours } from '../../shared/ui/WorkingHoursField'
 import { RestaurantDepositRulesPanel } from '../../features/reservations/RestaurantDepositRulesPanel'
+import { RestaurantSchedulePanel } from '../../features/reservations/RestaurantSchedulePanel'
 
 type GeocodeFormFields = { location: string; branchName: string; restaurantGroupName: string }
 
@@ -270,7 +271,10 @@ export function RestaurantEditPage() {
         <div className="form-grid two">
           <PhoneField label="Telefon" required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
         </div>
-        <WorkingHoursField value={form.workingHours} onChange={(workingHours) => setForm({ ...form, workingHours })} />
+        <div>
+          <h2 className="section-title">Hazırkı iş saatları</h2>
+          <WorkingHoursList workingHours={restaurant.workingHours} />
+        </div>
         {canEditRestrictedSettings ? (
           <>
             <SelectField label="Restoran qrupu" value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}>
@@ -333,6 +337,8 @@ export function RestaurantEditPage() {
           <ButtonLink to={`/admin/restaurants/${restaurantId}`} variant="secondary">Ləğv et</ButtonLink>
         </div>
       </form>
+      <RestaurantSchedulePanel restaurantId={restaurantId} workingHours={restaurant.workingHours}
+        onApplied={() => navigate(`/admin/restaurants/${restaurantId}`)} />
       <RestaurantDepositRulesPanel restaurantId={restaurantId} />
     </main>
   )

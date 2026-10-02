@@ -16,6 +16,7 @@ import { ReservationLateArrivalPanel } from '../../features/reservations/Reserva
 import type { ReservationHistoryResponse } from '../../shared/api/ecafeApi'
 import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
+import { ScheduleOfferPanel } from '../../features/reservations/ScheduleOfferPanel'
 
 export function ConfirmationPage() {
   const [searchParams] = useSearchParams()
@@ -142,6 +143,8 @@ export function ConfirmationPage() {
               </dl>
 
               <ReservationLateArrivalPanel reservation={reservation} refreshKey={reloadKey} onChanged={() => setReloadKey((value) => value + 1)} />
+              <ScheduleOfferPanel reservationId={String(reservation.id)} refreshKey={reloadKey}
+                onChanged={() => setReloadKey((value) => value + 1)} />
 
               {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
                 <section className="reservation-payment-note" aria-label="Depozit ödəniş məlumatı">
