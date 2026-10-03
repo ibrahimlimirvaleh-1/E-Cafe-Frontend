@@ -122,7 +122,7 @@ export function RestaurantCatalogPage() {
                 <div className="restaurant-card-footer">
                   <span className={openState.isOpen ? 'restaurant-open-status open' : 'restaurant-open-status closed'}>
                     <Clock size={16} />
-                    <span>{openState.label}</span>
+                    <span>{openState.isOpen ? 'Hazırda açıq' : 'Hazırda bağlı'}</span>
                   </span>
                   <span className="restaurant-hours">
                     <Clock size={16} />
