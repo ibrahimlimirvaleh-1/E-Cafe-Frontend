@@ -386,6 +386,10 @@ export type ReservationQuery = {
   restaurantName?: string
 }
 
+export type RestaurantReservationQuery = ReservationQuery & {
+  tableId?: string
+}
+
 type CopyTableRequest = {
   tableNo?: string
   name?: string
@@ -770,7 +774,7 @@ function mapPaymentProofResponse(record: AnyRecord): PaymentProofResponse {
   }
 }
 
-function appendReservationQuery(endpoint: string, query: ReservationQuery = {}) {
+function appendReservationQuery(endpoint: string, query: RestaurantReservationQuery = {}) {
   const params = new URLSearchParams()
 
   if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
@@ -778,6 +782,7 @@ function appendReservationQuery(endpoint: string, query: ReservationQuery = {}) 
   if (query.statusId) params.set('StatusId', String(query.statusId))
   if (query.reservedDate) params.set('ReservedDate', toUtcDayBoundary(query.reservedDate, 'start'))
   if (query.restaurantName?.trim()) params.set('RestaurantName', query.restaurantName.trim())
+  if (query.tableId) params.set('TableId', query.tableId)
 
   const search = params.toString()
   return search ? `${endpoint}?${search}` : endpoint
@@ -1926,7 +1931,7 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(appendReservationQuery(endpoints.reservations.my, query))
       return asPaginated(result.data, mapReservationResponse)
     },
-    listForRestaurant: async (restaurantId: string, query: ReservationQuery = {}) => {
+    listForRestaurant: async (restaurantId: string, query: RestaurantReservationQuery = {}) => {
       const result = await httpClient<unknown>(appendReservationQuery(endpoints.reservations.restaurantList(restaurantId), query))
       return asPaginated(result.data, mapReservationResponse)
     },

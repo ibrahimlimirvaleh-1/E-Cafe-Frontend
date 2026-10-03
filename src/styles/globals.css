@@ -8567,6 +8567,29 @@ body,
   gap: 16px;
 }
 
+.reservation-admin-toolbar {
+  flex-wrap: wrap;
+}
+
+.reservations-admin-page .reservation-admin-toolbar > .restaurant-select-field {
+  flex: 2 1 400px;
+  min-width: 240px;
+}
+
+.reservation-admin-toolbar > .reservation-table-filter {
+  flex: 1 1 230px;
+  min-width: 190px;
+}
+
+.reservation-admin-toolbar > .reservation-date-filter {
+  flex: 1 1 270px;
+  min-width: 220px;
+}
+
+.reservation-table-filter select {
+  min-height: 48px;
+}
+
 .reservation-list-toolbar {
   margin: -6px 0 20px;
 }
@@ -8745,6 +8768,15 @@ body,
   .reservation-admin-toolbar {
     align-items: stretch;
     flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .reservations-admin-page .reservation-admin-toolbar > .restaurant-select-field,
+  .reservation-admin-toolbar > .reservation-table-filter,
+  .reservation-admin-toolbar > .reservation-date-filter {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: 100%;
   }
 
     .reservation-admin-toolbar .restaurant-select-field,
