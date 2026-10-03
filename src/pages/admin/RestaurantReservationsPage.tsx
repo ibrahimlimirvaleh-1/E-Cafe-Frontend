@@ -32,14 +32,21 @@ export function RestaurantReservationsPage() {
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTableId, setSelectedTableId] = useState('')
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId)
     ? selectedRestaurantId
     : accessibleRestaurants[0]?.id || ''
+  const { data: restaurantTables, error: tablesError, isLoading: tablesLoading } = useAsyncData(
+    () => restaurantId ? ecafeApi.tables.list(restaurantId) : Promise.resolve([]),
+    [],
+    [restaurantId],
+  )
+  const availableTables = restaurantTables.filter((table) => table.restaurantId === restaurantId)
   const query = useMemo(
-    () => ({ pageNumber, pageSize, reservedDate: selectedDate }),
-    [pageNumber, pageSize, selectedDate],
+    () => ({ pageNumber, pageSize, reservedDate: selectedDate, tableId: selectedTableId }),
+    [pageNumber, pageSize, selectedDate, selectedTableId],
   )
   const { data, error, isLoading } = useAsyncData(
     () => restaurantId ? ecafeApi.reservations.listForRestaurant(restaurantId, query) : Promise.resolve(emptyPage),
@@ -56,15 +63,22 @@ export function RestaurantReservationsPage() {
 
   useEffect(() => {
     setPageNumber(1)
+    setSelectedTableId('')
   }, [restaurantId])
 
   function handleRestaurantChange(nextRestaurantId: string) {
     setSelectedRestaurantId(nextRestaurantId)
+    setSelectedTableId('')
     setPageNumber(1)
   }
 
   function handleDateChange(nextDate: string) {
     setSelectedDate(nextDate)
+    setPageNumber(1)
+  }
+
+  function handleTableChange(nextTableId: string) {
+    setSelectedTableId(nextTableId)
     setPageNumber(1)
   }
 
@@ -85,18 +99,34 @@ export function RestaurantReservationsPage() {
           restaurants={accessibleRestaurants}
           value={restaurantId}
         />
+        <label className="ui-field reservation-table-filter" htmlFor="reservation-table-filter">
+          <span>Masa</span>
+          <select
+            aria-label="Masa"
+            disabled={!restaurantId || tablesLoading || Boolean(tablesError)}
+            id="reservation-table-filter"
+            onChange={(event) => handleTableChange(event.target.value)}
+            value={selectedTableId}
+          >
+            <option value="">{tablesLoading ? 'Masalar yüklənir...' : 'Bütün masalar'}</option>
+            {availableTables.map((table) => (
+              <option key={table.id} value={table.id}>{table.name || `Masa-${table.number}`}</option>
+            ))}
+          </select>
+        </label>
         <ReservationDateFilter value={selectedDate} onChange={handleDateChange} />
       </section>
 
       {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>Rezervasiyaları görmək üçün restoran seçin.</StatusMessage> : null}
+      {tablesError ? <StatusMessage tone="danger" autoHideMs={false}>Masalar yüklənmədi: {tablesError}</StatusMessage> : null}
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
       {isLoading ? <p className="online-only">Rezervasiyalar yüklənir...</p> : null}
 
       {!isLoading && !error && data.items.length === 0 ? (
         <section className="reservation-empty-state reservation-empty-state-admin">
           <CalendarDays size={28} />
-          <h2>{selectedDate ? 'Seçilən tarix üçün rezervasiya yoxdur' : 'Rezervasiya yoxdur'}</h2>
-          <p>{selectedDate ? 'Başqa tarix seçərək rezervasiyalara baxa bilərsiniz.' : 'Bu restoran üçün yeni rezervasiya yarandıqda burada görünəcək.'}</p>
+          <h2>{selectedDate || selectedTableId ? 'Seçilən filtrə uyğun rezervasiya yoxdur' : 'Rezervasiya yoxdur'}</h2>
+          <p>{selectedDate || selectedTableId ? 'Tarixi və ya masanı dəyişərək yenidən baxın.' : 'Bu restoran üçün yeni rezervasiya yarandıqda burada görünəcək.'}</p>
         </section>
       ) : null}
 
