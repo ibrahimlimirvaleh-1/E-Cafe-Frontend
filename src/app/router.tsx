@@ -36,6 +36,7 @@ import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
 import { SetPasswordPage } from '../pages/auth/SetPasswordPage'
 import { ConfirmationPage } from '../pages/customer/ConfirmationPage'
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
+import { MobileAppPublicationPage } from '../pages/admin/MobileAppPublicationPage'
 import { NotificationsPage } from '../pages/customer/NotificationsPage'
 import { MyReservationsPage } from '../pages/customer/MyReservationsPage'
 import { ProfilePage } from '../pages/customer/ProfilePage'
@@ -84,6 +85,11 @@ function AdminDashboardEntry() {
   }
 
   return <AdminDashboardPage />
+}
+
+function PlatformAdminOnly({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
+  return isInRole(user, [RoleIds.PlatformAdmin]) ? <>{children}</> : <Navigate to={getHomePathForUser(user)} replace />
 }
 
 function AdminModuleAccessGuard({ moduleKey, children }: { moduleKey: keyof typeof adminModulePermissions; children: ReactNode }) {
@@ -167,6 +173,7 @@ export function AppRouter() {
         }
       >
         <Route index element={<AdminDashboardEntry />} />
+        <Route path="mobile-app" element={<PlatformAdminOnly><MobileAppPublicationPage /></PlatformAdminOnly>} />
         <Route path="contracts">
           <Route index element={<AdminProtected moduleKey="contracts"><ContractListPage /></AdminProtected>} />
           <Route path="new" element={<AdminProtected moduleKey="contracts"><ContractFormPage /></AdminProtected>} />

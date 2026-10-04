@@ -10,6 +10,8 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { SafeImage } from '../../shared/ui/SafeImage'
+import { MobileDownloadLink } from '../../features/mobileDownload/MobileDownloadLink'
+import { usePublicMobileRelease } from '../../features/mobileDownload/usePublicMobileRelease'
 import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
 import { getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 
@@ -22,6 +24,7 @@ export function RestaurantCatalogPage() {
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [mapRestaurant, setMapRestaurant] = useState<Restaurant | null>(null)
+  const mobileRelease = usePublicMobileRelease()
   const today = getTodayDateInputValue()
   const query = useMemo(() => {
     const params = new URLSearchParams({
@@ -64,6 +67,7 @@ export function RestaurantCatalogPage() {
             }}
           />
         </label>
+        <MobileDownloadLink release={mobileRelease} />
       </section>
 
       <div className="catalog-results-count" aria-live="polite">

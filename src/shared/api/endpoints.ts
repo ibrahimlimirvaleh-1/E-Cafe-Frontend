@@ -1,4 +1,10 @@
 export const endpoints = {
+  mobileApp: {
+    publicRelease: '/public/mobile-app/release',
+    publicRestaurantRelease: (restaurantId: string) => `/public/restaurants/${restaurantId}/mobile-app/release`,
+    restaurantModule: (restaurantId: string) => `/admin/restaurants/${restaurantId}/mobile-module`,
+    publication: '/admin/mobile-app/publication',
+  },
   schedule: {
     get: (id: string) => `/restaurants/${id}/schedule-change`,
     apply: (id: string) => `/restaurants/${id}/schedule-change/apply`,
