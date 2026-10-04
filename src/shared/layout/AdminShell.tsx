@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { MailWarning } from 'lucide-react'
+import { MailWarning, Smartphone } from 'lucide-react'
 import { adminModules } from '../../entities/mockData'
 import { useAuth } from '../auth/AuthContext'
 import { RoleIds, isInRole } from '../auth/authz'
@@ -40,6 +40,7 @@ export function AdminShell() {
               {permissionKey === 'restaurants' && !isPlatformAdmin ? 'Restoran' : title}
             </NavLink>
           ))}
+          {isPlatformAdmin ? <NavLink to="/admin/mobile-app"><Smartphone size={18} />Mobil tətbiq</NavLink> : null}
         </nav>
       </aside>
       <div className="admin-workspace">

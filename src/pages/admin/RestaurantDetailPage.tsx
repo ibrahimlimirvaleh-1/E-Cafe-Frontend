@@ -11,6 +11,7 @@ import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { WorkingHoursList } from '../../shared/ui/WorkingHoursField'
 import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
+import { RestaurantMobileModuleSection } from '../../features/mobileDownload/RestaurantMobileModuleSection'
 
 export function RestaurantDetailPage() {
   const { restaurantId = '' } = useParams()
@@ -68,6 +69,8 @@ export function RestaurantDetailPage() {
           <DetailItem label="Ləğv pəncərəsi">{restaurant.cancellationWindowMinutes ?? '-'} dəqiqə</DetailItem>
         </dl>
       </section>
+
+      {canCreateContracts ? <RestaurantMobileModuleSection key={restaurantId} restaurantId={restaurantId} /> : null}
 
       <div className="form-actions">
         <ButtonLink to="/admin/restaurants" variant="secondary">
