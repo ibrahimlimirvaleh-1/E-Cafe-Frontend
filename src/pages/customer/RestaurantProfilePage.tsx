@@ -11,8 +11,6 @@ import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { SafeImage } from '../../shared/ui/SafeImage'
 import { WorkingHoursList } from '../../shared/ui/WorkingHoursField'
 import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
-import { MobileDownloadLink } from '../../features/mobileDownload/MobileDownloadLink'
-import { usePublicMobileRelease } from '../../features/mobileDownload/usePublicMobileRelease'
 
 type ProfilePanel = 'tables' | 'menu'
 
@@ -24,7 +22,6 @@ export function RestaurantProfilePage() {
   const isCustomer = isInRole(user, [RoleIds.Customer])
   const [activePanel, setActivePanel] = useState<ProfilePanel>('tables')
   const [activeCategoryId, setActiveCategoryId] = useState('')
-  const mobileRelease = usePublicMobileRelease(restaurantId)
   const { data: restaurant } = useAsyncData<Restaurant | null>(() => ecafeApi.restaurants.detail(restaurantId), null, [restaurantId])
   const { data: tables, isLoading: tablesLoading } = useAsyncData(() => ecafeApi.tables.listPublic(restaurantId), [], [restaurantId])
   const { data: menuData, isLoading: menuLoading } = useAsyncData(
@@ -103,7 +100,6 @@ export function RestaurantProfilePage() {
               <BookOpen size={18} />
               Menyu
             </Button>
-            <MobileDownloadLink release={mobileRelease} />
           </div>
         </article>
       </section>
