@@ -13,6 +13,20 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 const defaultPageSize = 10
 const sentStatusId = 3
 const failedStatusId = 4
+const emailOutboxEventType = 'EmailNotificationRequested'
+const smsOutboxEventType = 'SmsNotificationRequested'
+
+function isLegacySms(message: OutboxMessage) {
+  return message.eventType === smsOutboxEventType
+}
+
+function canRetry(message: OutboxMessage) {
+  return message.eventType === emailOutboxEventType && message.statusId === failedStatusId
+}
+
+function channelLabel(message: OutboxMessage) {
+  return isLegacySms(message) ? 'SMS arxivi' : message.channel
+}
 
 type OutboxFilters = {
   search: string
@@ -132,6 +146,8 @@ export function OutboxPage() {
   }
 
   async function retryMessage(message: OutboxMessage) {
+    if (!canRetry(message)) return
+
     setActionMessage('')
     setActionError('')
 
@@ -228,7 +244,7 @@ export function OutboxPage() {
         <div className="section-heading-row">
           <div>
             <span className="eyebrow">Siyahı</span>
-            <h2>Göndərilmə növbəsi</h2>
+            <h2>Mesaj tarixçəsi</h2>
           </div>
           <strong>{messagePage.totalCount} mesaj</strong>
         </div>
@@ -255,7 +271,7 @@ export function OutboxPage() {
                 <strong>{message.subject}</strong>
                 <small>{message.recipient}</small>
               </div>
-              <span data-label="Kanal">{message.channel}</span>
+              <span data-label="Kanal">{channelLabel(message)}</span>
               <span data-label="Status">
                 <Badge tone={statusTone(message.statusId)}>{message.status}</Badge>
               </span>
@@ -274,7 +290,7 @@ export function OutboxPage() {
                 >
                   <Eye size={18} />
                 </button>
-                {message.statusId === failedStatusId ? (
+                {canRetry(message) ? (
                   <button
                     type="button"
                     className="ui-button ui-button-secondary action-icon-button"
@@ -369,7 +385,7 @@ function OutboxDetailModal({
           <>
             <div className="audit-detail-summary">
               <DetailItem label="Status" value={message.status} />
-              <DetailItem label="Kanal" value={message.channel} />
+              <DetailItem label="Kanal" value={channelLabel(message)} />
               <DetailItem label="Alıcı" value={message.recipient} />
               <DetailItem label="Alıcı adı" value={message.recipientName || '-'} />
               <DetailItem label="Retry" value={`${message.retryCount}/${message.maxRetryCount}`} />
@@ -389,7 +405,7 @@ function OutboxDetailModal({
               </div>
             </div>
 
-            {message.statusId === failedStatusId ? (
+            {canRetry(message) ? (
               <button type="button" className="ui-button ui-button-primary" onClick={() => onRetry(message)}>
                 <RotateCcw size={18} />
                 Yenidən göndər
