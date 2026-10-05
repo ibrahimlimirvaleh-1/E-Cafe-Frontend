@@ -15,6 +15,7 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { WorkingHoursList, createDefaultWorkingHours } from '../../shared/ui/WorkingHoursField'
 import { RestaurantDepositRulesPanel } from '../../features/reservations/RestaurantDepositRulesPanel'
 import { RestaurantSchedulePanel } from '../../features/reservations/RestaurantSchedulePanel'
+import { RestaurantMobileModuleSection } from '../../features/mobileDownload/RestaurantMobileModuleSection'
 
 type GeocodeFormFields = { location: string; branchName: string; restaurantGroupName: string }
 
@@ -226,6 +227,8 @@ export function RestaurantEditPage() {
   return (
     <main className="admin-page narrow">
       <PageHeader eyebrow="Restoran redaktəsi" title={restaurant.name} />
+
+      {canEditRestrictedSettings ? <RestaurantMobileModuleSection key={restaurantId} restaurantId={restaurantId} /> : null}
 
       <form className="admin-panel" onSubmit={handleSubmit}>
         <div className="form-grid two">
