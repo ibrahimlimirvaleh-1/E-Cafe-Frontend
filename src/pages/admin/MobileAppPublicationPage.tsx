@@ -86,7 +86,9 @@ export function MobileAppPublicationPage() {
             />
           </label>
           <p className="mobile-module-release-note">
-            {publication.releaseReady ? 'Android paketi yayıma hazırdır.' : 'Android paketi hələ hazır deyil; link saytda görünmür.'}
+            {publication.releaseReady
+              ? 'Android paketi saytda yayıma hazırdır.'
+              : 'APK saytda yayıma hazır deyil. Serverə yoxlanmış APK yükləmə linki və yayım məlumatları əlavə edilməlidir.'}
           </p>
           {error ? <StatusMessage autoHideMs={false} tone="danger">{error}</StatusMessage> : null}
           {success ? <StatusMessage tone="success">{success}</StatusMessage> : null}
