@@ -18,11 +18,11 @@ type MobileModuleSettingsPanelProps = {
 }
 
 export function MobileModuleSettingsPanel({ error, isSaving, onSave, settings, success }: MobileModuleSettingsPanelProps) {
-  const [mobilePushEnabled, setMobilePushEnabled] = useState(settings.mobilePushEnabled)
+  const [mobilePushEnabled, setMobilePushEnabled] = useState(settings.mobilePushEnabled && settings.showDownloadLink)
   const [showDownloadLink, setShowDownloadLink] = useState(settings.showDownloadLink)
 
   useEffect(() => {
-    setMobilePushEnabled(settings.mobilePushEnabled)
+    setMobilePushEnabled(settings.mobilePushEnabled && settings.showDownloadLink)
     setShowDownloadLink(settings.showDownloadLink)
   }, [settings.mobilePushEnabled, settings.showDownloadLink])
 
@@ -33,43 +33,46 @@ export function MobileModuleSettingsPanel({ error, isSaving, onSave, settings, s
       <div className="mobile-module-heading">
         <Smartphone size={20} aria-hidden="true" />
         <div>
-          <h2 id="mobile-module-title">Mobil bildiriş modulu</h2>
-          <p>Bu restoran üçün əlavə xidmətin əlçatanlığını idarə edin.</p>
+          <h2 id="mobile-module-title">Mobil tətbiq</h2>
+          <p>Bu restoran üçün işçi girişini və telefon bildirişlərini idarə edin.</p>
         </div>
       </div>
 
       <label className="mobile-module-option">
         <span>
-          <strong>Mobil push xidməti</strong>
-          <small>Yalnız xidmət satıldıqdan sonra aktivləşdirin.</small>
+          <strong>İşçilər üçün mobil giriş</strong>
+          <small>Aktiv müqaviləsi olan bu restoranın işçilərinə tətbiqə giriş və APK yükləmə icazəsi verir.</small>
         </span>
         <input
-          checked={mobilePushEnabled}
+          checked={showDownloadLink}
           disabled={isSaving}
-          onChange={(event) => setMobilePushEnabled(event.target.checked)}
+          onChange={(event) => {
+            setShowDownloadLink(event.target.checked)
+            if (!event.target.checked) setMobilePushEnabled(false)
+          }}
           type="checkbox"
         />
       </label>
 
       <label className="mobile-module-option">
         <span>
-          <strong>Android yükləmə linki</strong>
-          <small>Yayım hazır olduqda yalnız bu restoranın aktiv işçilərinin panelində görünə bilər.</small>
+          <strong>Mobil bildirişlər</strong>
+          <small>İşçi və müştərilər üçün push bildirişləri. Mobil giriş tələb olunur.</small>
         </span>
         <input
-          checked={showDownloadLink}
-          disabled={isSaving}
-          onChange={(event) => setShowDownloadLink(event.target.checked)}
+          checked={mobilePushEnabled}
+          disabled={isSaving || !showDownloadLink}
+          onChange={(event) => setMobilePushEnabled(event.target.checked)}
           type="checkbox"
         />
       </label>
 
-      <p className="mobile-module-release-note">İşçi keçidi serverdə yayım hazır olana qədər görünməyəcək.</p>
+      <p className="mobile-module-release-note">APK yalnız təsdiqlənmiş fayl serverdə hazır olduqda işçi panelində görünür.</p>
       {error ? <StatusMessage autoHideMs={false} tone="danger">{error}</StatusMessage> : null}
       {success ? <StatusMessage tone="success">{success}</StatusMessage> : null}
 
       <div className="mobile-module-actions">
-        <Button disabled={!isDirty || isSaving} onClick={() => void onSave({ mobilePushEnabled, showDownloadLink })} type="button">
+        <Button disabled={!isDirty || isSaving} onClick={() => void onSave({ mobilePushEnabled: mobilePushEnabled && showDownloadLink, showDownloadLink })} type="button">
           {isSaving ? 'Saxlanılır...' : 'Dəyişiklikləri saxla'}
         </Button>
       </div>
