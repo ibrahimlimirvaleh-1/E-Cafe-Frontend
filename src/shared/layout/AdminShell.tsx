@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { MailWarning, Smartphone } from 'lucide-react'
+import { MailWarning } from 'lucide-react'
 import { adminModules } from '../../entities/mockData'
 import { useAuth } from '../auth/AuthContext'
 import { RoleIds, isInRole } from '../auth/authz'
@@ -9,6 +9,7 @@ import { NotificationBell } from './NotificationBell'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
+import { EmployeeMobileDownload } from '../../features/mobileDownload/EmployeeMobileDownload'
 
 const outboxAdminModule = {
   permissionKey: 'audit-logs',
@@ -40,7 +41,6 @@ export function AdminShell() {
               {permissionKey === 'restaurants' && !isPlatformAdmin ? 'Restoran' : title}
             </NavLink>
           ))}
-          {isPlatformAdmin ? <NavLink to="/admin/mobile-app"><Smartphone size={18} />Mobil tətbiq</NavLink> : null}
         </nav>
       </aside>
       <div className="admin-workspace">
@@ -52,6 +52,7 @@ export function AdminShell() {
             <UserMenu />
           </div>
         </header>
+        <EmployeeMobileDownload />
         <div className="route-transition">
           <Outlet />
         </div>

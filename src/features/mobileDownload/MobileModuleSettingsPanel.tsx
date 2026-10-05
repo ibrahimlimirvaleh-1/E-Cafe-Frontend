@@ -54,7 +54,7 @@ export function MobileModuleSettingsPanel({ error, isSaving, onSave, settings, s
       <label className="mobile-module-option">
         <span>
           <strong>Android yükləmə linki</strong>
-          <small>İmzalanmış APK hazır olduqda bu restoranın profilində görünə bilər.</small>
+          <small>Yayım hazır olduqda yalnız bu restoranın aktiv işçilərinin panelində görünə bilər.</small>
         </span>
         <input
           checked={showDownloadLink}
@@ -64,7 +64,7 @@ export function MobileModuleSettingsPanel({ error, isSaving, onSave, settings, s
         />
       </label>
 
-      <p className="mobile-module-release-note">İmzalanmış Android paketi serverdə hazır olana qədər link görünməyəcək.</p>
+      <p className="mobile-module-release-note">İşçi keçidi serverdə yayım hazır olana qədər görünməyəcək.</p>
       {error ? <StatusMessage autoHideMs={false} tone="danger">{error}</StatusMessage> : null}
       {success ? <StatusMessage tone="success">{success}</StatusMessage> : null}
 

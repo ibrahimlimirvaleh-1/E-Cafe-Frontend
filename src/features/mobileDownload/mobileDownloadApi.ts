@@ -1,10 +1,9 @@
 import { endpoints } from '../../shared/api/endpoints'
-import { httpClient } from '../../shared/api/httpClient'
+import { fetchProtectedBlob, httpClient } from '../../shared/api/httpClient'
 
 export type MobileRelease = {
-  isVisible: boolean
   ready: boolean
-  apkUrl: string | null
+  downloadPath: string | null
   version: string | null
   versionCode: number | null
   sizeBytes: number | null
@@ -19,19 +18,13 @@ export type MobileModule = {
 
 export type MobileModuleUpdate = Pick<MobileModule, 'mobilePushEnabled' | 'showDownloadLink'>
 
-export type MobilePublication = {
-  publicDownloadEnabled: boolean
-  releaseReady: boolean
-}
-
 export const mobileDownloadApi = {
-  async publicRelease(): Promise<MobileRelease> {
-    const result = await httpClient<MobileRelease>(endpoints.mobileApp.publicRelease)
+  async staffRelease(restaurantId: string): Promise<MobileRelease> {
+    const result = await httpClient<MobileRelease>(endpoints.mobileApp.staffRelease(restaurantId))
     return result.data
   },
-  async restaurantRelease(restaurantId: string): Promise<MobileRelease> {
-    const result = await httpClient<MobileRelease>(endpoints.mobileApp.publicRestaurantRelease(restaurantId))
-    return result.data
+  download(restaurantId: string): Promise<Blob> {
+    return fetchProtectedBlob(`/api/v1${endpoints.mobileApp.staffDownload(restaurantId)}`, { redirect: 'error' })
   },
   async restaurantModule(restaurantId: string): Promise<MobileModule> {
     const result = await httpClient<MobileModule>(endpoints.mobileApp.restaurantModule(restaurantId))
@@ -41,17 +34,6 @@ export const mobileDownloadApi = {
     const result = await httpClient<MobileModule>(endpoints.mobileApp.restaurantModule(restaurantId), {
       method: 'PUT',
       body: JSON.stringify(update),
-    })
-    return result.data
-  },
-  async publication(): Promise<MobilePublication> {
-    const result = await httpClient<MobilePublication>(endpoints.mobileApp.publication)
-    return result.data
-  },
-  async updatePublication(publicDownloadEnabled: boolean): Promise<MobilePublication> {
-    const result = await httpClient<MobilePublication>(endpoints.mobileApp.publication, {
-      method: 'PUT',
-      body: JSON.stringify({ publicDownloadEnabled }),
     })
     return result.data
   },
