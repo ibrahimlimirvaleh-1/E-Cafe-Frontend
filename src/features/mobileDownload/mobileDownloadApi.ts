@@ -19,6 +19,13 @@ export type MobileModule = {
 export type MobileModuleUpdate = Pick<MobileModule, 'mobilePushEnabled' | 'showDownloadLink'>
 
 export const mobileDownloadApi = {
+  async customerRelease(): Promise<MobileRelease> {
+    const result = await httpClient<MobileRelease>(endpoints.mobileApp.customerRelease)
+    return result.data
+  },
+  downloadCustomer(): Promise<Blob> {
+    return fetchProtectedBlob(`/api/v1${endpoints.mobileApp.customerDownload}`, { redirect: 'error' })
+  },
   async staffRelease(restaurantId: string): Promise<MobileRelease> {
     const result = await httpClient<MobileRelease>(endpoints.mobileApp.staffRelease(restaurantId))
     return result.data

@@ -1,5 +1,7 @@
 export const endpoints = {
   mobileApp: {
+    customerRelease: '/mobile/customer/release',
+    customerDownload: '/mobile/customer/download',
     restaurantModule: (restaurantId: string) => `/admin/restaurants/${restaurantId}/mobile-module`,
     staffRelease: (restaurantId: string) => `/restaurants/${restaurantId}/mobile-app/release`,
     staffDownload: (restaurantId: string) => `/restaurants/${restaurantId}/mobile-app/download`,
