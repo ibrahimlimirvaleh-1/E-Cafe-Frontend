@@ -53,6 +53,81 @@
 
 .mobile-download-link:disabled { cursor: wait; opacity: .6; }
 
+.customer-mobile-page { max-width: 960px; }
+.customer-mobile-panel {
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  padding: 24px;
+  background: var(--surface-lowest);
+}
+.customer-mobile-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.customer-mobile-icon {
+  display: grid;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--primary);
+  background: var(--surface-high);
+}
+.customer-mobile-heading h2 {
+  margin: 0;
+  color: var(--on-surface);
+  font-size: 18px;
+  line-height: 24px;
+}
+.customer-mobile-heading p,
+.customer-mobile-status {
+  margin: 5px 0 0;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  line-height: 20px;
+}
+.customer-mobile-release {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 22px;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 18px;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+}
+.customer-mobile-release strong { color: var(--on-surface); }
+.customer-mobile-status { margin-top: 22px; }
+.customer-mobile-error { color: var(--danger); }
+.customer-mobile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+.customer-mobile-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--on-surface-variant);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.customer-mobile-refresh:hover,
+.customer-mobile-refresh:focus-visible { color: var(--primary); border-color: var(--primary); }
+.customer-mobile-refresh:disabled { cursor: wait; opacity: .6; }
+
 @media (max-width: 640px) {
   .employee-mobile-download { flex-wrap: wrap; padding: 12px 16px; }
   .employee-mobile-download-error { order: 3; width: 100%; }
@@ -169,4 +244,7 @@
   .mobile-module-actions .ui-button {
     width: 100%;
   }
+
+  .customer-mobile-panel { padding: 18px; }
+  .customer-mobile-actions > * { width: 100%; }
 }

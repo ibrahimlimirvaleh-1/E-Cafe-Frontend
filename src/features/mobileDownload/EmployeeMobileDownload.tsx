@@ -4,40 +4,36 @@ import { endpoints } from '../../shared/api/endpoints'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds } from '../../shared/auth/authz'
 import { mobileDownloadApi, type MobileRelease } from './mobileDownloadApi'
+import { isReadyMobileRelease, saveMobileRelease } from './releaseUtils'
 import './mobileDownload.css'
 
 const staffRoles: readonly string[] = [RoleIds.Owner, RoleIds.Manager, RoleIds.Waiter, RoleIds.Kitchen]
-
-function readyRelease(release: MobileRelease | null, restaurantId: string): release is MobileRelease {
-  return release?.ready === true &&
-    release.downloadPath === `/api/v1${endpoints.mobileApp.staffDownload(restaurantId)}` &&
-    Boolean(release.version?.trim()) &&
-    Number.isSafeInteger(release.versionCode) && (release.versionCode ?? 0) > 0 &&
-    Number.isSafeInteger(release.sizeBytes) && (release.sizeBytes ?? 0) > 0 &&
-    /^[a-f\d]{64}$/i.test(release.sha256 ?? '')
-}
 
 export function EmployeeMobileDownload() {
   const { user } = useAuth()
   const restaurantId = user?.restaurantId ?? ''
   const roleId = user?.roleId ?? ''
-  const profileKey = staffRoles.includes(roleId) && restaurantId ? `${restaurantId}:${roleId}` : ''
+  const profileKey = user?.userId && staffRoles.includes(roleId) && restaurantId ? `${user.userId}:${restaurantId}:${roleId}` : ''
   const currentProfile = useRef(profileKey)
   currentProfile.current = profileKey
+  const generation = useRef(0)
   const [releaseState, setReleaseState] = useState<{ key: string; release: MobileRelease } | null>(null)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!profileKey) return
+    const requestGeneration = ++generation.current
     let active = true
+    setDownloading(false)
+    setError('')
 
     const refresh = async () => {
       try {
         const release = await mobileDownloadApi.staffRelease(restaurantId)
-        if (active) setReleaseState(readyRelease(release, restaurantId) ? { key: profileKey, release } : null)
+        if (active && generation.current === requestGeneration) setReleaseState(isReadyMobileRelease(release, `/api/v1${endpoints.mobileApp.staffDownload(restaurantId)}`) ? { key: profileKey, release } : null)
       } catch {
-        if (active) setReleaseState(null)
+        if (active && generation.current === requestGeneration) setReleaseState(null)
       }
     }
 
@@ -49,6 +45,7 @@ export function EmployeeMobileDownload() {
     document.addEventListener('visibilitychange', onVisible)
     return () => {
       active = false
+      generation.current += 1
       window.clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
     }
@@ -62,33 +59,27 @@ export function EmployeeMobileDownload() {
 
   const download = async () => {
     if (downloading) return
+    const requestGeneration = generation.current
+    const isCurrent = () => generation.current === requestGeneration && currentProfile.current === profileKey
     setDownloading(true)
     setError('')
     try {
       const latest = await mobileDownloadApi.staffRelease(restaurantId)
-      if (currentProfile.current !== profileKey || !readyRelease(latest, restaurantId)) {
+      if (!isCurrent()) return
+      if (!isReadyMobileRelease(latest, `/api/v1${endpoints.mobileApp.staffDownload(restaurantId)}`)) {
         setReleaseState(null)
         return
       }
       const blob = await mobileDownloadApi.download(restaurantId)
-      if (currentProfile.current !== profileKey) return
-      if (blob.size !== latest.sizeBytes) throw new Error('APK ölçüsü uyğun gəlmir.')
-
-      const url = URL.createObjectURL(blob)
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = `ECafe-${latest.version!.replace(/[^a-zA-Z0-9.-]/g, '')}.apk`
-      document.body.appendChild(anchor)
-      anchor.click()
-      anchor.remove()
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+      if (!isCurrent()) return
+      saveMobileRelease(blob, latest)
     } catch {
-      if (currentProfile.current === profileKey) {
+      if (isCurrent()) {
         setReleaseState(null)
         setError('Yükləmə mümkün olmadı. Səhifəni yeniləyib təkrar yoxlayın.')
       }
     } finally {
-      if (currentProfile.current === profileKey) setDownloading(false)
+      if (isCurrent()) setDownloading(false)
     }
   }
 

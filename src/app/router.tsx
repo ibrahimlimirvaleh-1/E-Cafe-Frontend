@@ -35,6 +35,7 @@ import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
 import { SetPasswordPage } from '../pages/auth/SetPasswordPage'
 import { ConfirmationPage } from '../pages/customer/ConfirmationPage'
+import { CustomerMobileDownloadPage } from '../pages/customer/CustomerMobileDownloadPage'
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
 import { NotificationsPage } from '../pages/customer/NotificationsPage'
 import { MyReservationsPage } from '../pages/customer/MyReservationsPage'
@@ -117,6 +118,7 @@ export function AppRouter() {
         <Route path="restaurants/:restaurantId/menu" element={<CustomerOnly><MenuSelectionPage /></CustomerOnly>} />
         <Route path="reserve/menu" element={<CustomerOnly><MenuSelectionPage /></CustomerOnly>} />
         <Route path="confirmation" element={<CustomerOnly><ConfirmationPage /></CustomerOnly>} />
+        <Route path="mobile-app" element={<CustomerOnly><CustomerMobileDownloadPage /></CustomerOnly>} />
         <Route path="tracking/:token" element={<CustomerOnly><TrackingPage /></CustomerOnly>} />
         <Route
           path="notifications"

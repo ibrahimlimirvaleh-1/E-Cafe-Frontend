@@ -21,6 +21,7 @@ export function SiteShell() {
               <NavLink to="/">Restoranlar</NavLink>
               <NavLink to="/reservations">Rezervasiyalarım</NavLink>
               <NavLink to="/orders">Sifarişlərim</NavLink>
+              <NavLink to="/mobile-app">Android tətbiqi</NavLink>
               <NavLink to="/tracking/demo-token">İzləmə</NavLink>
             </nav>
           ) : null}
