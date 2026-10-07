@@ -49,7 +49,7 @@ export function RestaurantReservationDetailPage() {
         })
       : Promise.resolve([]),
     [],
-    [restaurantId, reservationId, reservation?.workflowFlowCode, reservation?.statusId],
+    [restaurantId, reservationId, reservation?.workflowFlowCode, reservation?.statusId, reloadKey],
   )
   const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
     () => restaurantId && reservationId
@@ -59,7 +59,8 @@ export function RestaurantReservationDetailPage() {
     [restaurantId, reservationId, reloadKey],
   )
   const sendPaymentInstructionAction = workflowActions.find((action) => action.code === 'sendPaymentInstruction')
-  const visibleActions = workflowActions.filter((action) => action.code !== 'sendPaymentInstruction' && action.code !== 'submitPaymentProof')
+  const visibleActions = workflowActions.filter((action) =>
+    action.code !== 'sendPaymentInstruction' && action.code !== 'submitPaymentProof' && action.code !== 'checkIn')
 
   function getActionVariant(action: WorkflowAction) {
     if (action.code === 'cancel' || action.code === 'rejectPaymentProof') {
@@ -151,6 +152,8 @@ export function RestaurantReservationDetailPage() {
           {reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt ? (
             <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ? 'Ödəniş üçün son vaxt' : 'Cavab üçün son vaxt'}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
           ) : null}
+          {reservation.arrivedAt ? <div><CheckCircle2 size={17} /><span><small>Restorana gəlib</small><strong>{formatReservationDateTime(reservation.arrivedAt)}</strong></span></div> : null}
+          {reservation.seatedAt ? <div><CheckCircle2 size={17} /><span><small>Masaya əyləşib</small><strong>{formatReservationDateTime(reservation.seatedAt)}</strong></span></div> : null}
         </div>
         <ReservationArrivalSummary reservation={reservation} />
         {reservation.latestPaymentInstruction ? (

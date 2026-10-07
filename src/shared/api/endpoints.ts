@@ -85,6 +85,7 @@ export const endpoints = {
     restaurantRefund: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/refund`,
     restaurantList: (restaurantId: string) => `/restaurants/${restaurantId}/reservations`,
+    restaurantService: (restaurantId: string) => `/restaurants/${restaurantId}/reservations/service`,
     restaurantDetail: (restaurantId: string, reservationId: string) => `/restaurants/${restaurantId}/reservations/${reservationId}`,
     restaurantHistory: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/history`,
