@@ -266,11 +266,28 @@ export type ReservationResponse = {
   canCancelWithRefund: boolean
   expectedArrivalAt?: string | null
   arrivalDecisionExpiresAt?: string | null
+  arrivedAt?: string | null
+  seatedAt?: string | null
   restaurantName?: string | null
   tableName?: string | null
   customerName?: string | null
   latestPaymentInstruction?: PaymentInstructionResponse | null
   latestPaymentProof?: PaymentProofResponse | null
+}
+
+export type ReservationServiceItemResponse = {
+  id: number
+  restaurantId: number
+  tableId: number
+  tableName: string
+  customerName: string
+  peopleCount: number
+  statusId: number
+  reservedAt: string
+  noShowDeadlineAt: string
+  mustVacateAt: string | null
+  arrivedAt: string | null
+  seatedAt: string | null
 }
 
 export type ReservationHistoryItem = {
@@ -706,6 +723,8 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     canCancelWithRefund: bool(record.canCancelWithRefund),
     expectedArrivalAt: str(record.expectedArrivalAt) || null,
     arrivalDecisionExpiresAt: str(record.arrivalDecisionExpiresAt) || null,
+    arrivedAt: str(record.arrivedAt) || null,
+    seatedAt: str(record.seatedAt) || null,
     restaurantName: str(record.restaurantName || record.RestaurantName) || null,
     tableName: str(record.tableName || record.TableName) || null,
     customerName: str(record.customerName || record.CustomerName) || null,
@@ -1934,6 +1953,23 @@ export const ecafeApi = {
     listForRestaurant: async (restaurantId: string, query: RestaurantReservationQuery = {}) => {
       const result = await httpClient<unknown>(appendReservationQuery(endpoints.reservations.restaurantList(restaurantId), query))
       return asPaginated(result.data, mapReservationResponse)
+    },
+    listForService: async (restaurantId: string, query: RestaurantReservationQuery = {}) => {
+      const result = await httpClient<unknown>(appendReservationQuery(endpoints.reservations.restaurantService(restaurantId), query))
+      return asPaginated(result.data, (record): ReservationServiceItemResponse => ({
+        id: num(record.id),
+        restaurantId: num(record.restaurantId),
+        tableId: num(record.tableId),
+        tableName: str(record.tableName),
+        customerName: str(record.customerName),
+        peopleCount: num(record.peopleCount),
+        statusId: num(record.statusId),
+        reservedAt: str(record.reservedAt),
+        noShowDeadlineAt: str(record.noShowDeadlineAt),
+        mustVacateAt: str(record.mustVacateAt) || null,
+        arrivedAt: str(record.arrivedAt) || null,
+        seatedAt: str(record.seatedAt) || null,
+      }))
     },
     getById: async (reservationId: string) => {
       const result = await httpClient<unknown>(endpoints.reservations.getById(reservationId))

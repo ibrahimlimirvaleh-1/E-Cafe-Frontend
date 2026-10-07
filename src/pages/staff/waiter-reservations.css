@@ -1,0 +1,33 @@
+.waiter-reservations-page { max-width: 1120px; }
+.waiter-reservations-filters { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.waiter-reservations-filters label { display: grid; gap: 7px; color: var(--on-surface-variant); font-size: 13px; font-weight: 700; }
+.waiter-reservations-filters input, .waiter-reservations-filters select { height: 46px; min-width: 190px; padding: 0 12px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--on-surface); font: inherit; }
+.waiter-restaurant-name { margin-right: auto; color: var(--on-surface); }
+.waiter-reservations-list { display: grid; gap: 12px; }
+.waiter-reservation { display: grid; gap: 14px; padding: 20px; border: 1px solid var(--outline-variant); border-radius: 8px; background: var(--surface-lowest); }
+.waiter-reservation.is-selected { border-color: var(--on-surface-variant); }
+.waiter-reservation-top { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.waiter-reservation-top small { color: var(--on-surface-variant); font-size: 11px; font-weight: 800; }
+.waiter-reservation-top h2 { margin: 4px 0 0; font-size: 20px; line-height: 1.3; }
+.waiter-reservation-state { padding: 6px 9px; border-radius: 4px; background: var(--surface-low); color: var(--on-surface-variant); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.waiter-reservation-state.is-arrived { background: var(--warning-bg); color: var(--warning); }
+.waiter-reservation-state.is-seated { background: var(--success-bg); color: var(--success); }
+.waiter-reservation-meta { display: flex; gap: 12px 22px; flex-wrap: wrap; color: var(--on-surface-variant); font-size: 14px; }
+.waiter-reservation-meta span { display: inline-flex; align-items: center; gap: 7px; }
+.waiter-reservation-detail { display: grid; justify-items: start; gap: 10px; padding-top: 14px; border-top: 1px solid var(--outline-variant); }
+.waiter-reservation-detail p { margin: 0; color: var(--on-surface-variant); font-size: 13px; }
+.waiter-reservation-select { justify-self: start; }
+.waiter-reservations-muted { color: var(--on-surface-variant); font-size: 13px; }
+.waiter-reservations-empty { padding: 36px 18px; border: 1px dashed var(--outline-variant); border-radius: 8px; text-align: center; color: var(--on-surface-variant); }
+@media (max-width: 600px) {
+  .waiter-reservations-page { width: min(100% - 24px, 1120px); }
+  .waiter-reservations-filters { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+  .waiter-reservations-filters label, .waiter-restaurant-name { grid-column: 1 / -1; }
+  .waiter-reservations-filters input, .waiter-reservations-filters select { width: 100%; min-width: 0; }
+  .waiter-reservation { padding: 16px; }
+  .waiter-reservation-top { flex-wrap: wrap; }
+  .waiter-reservation-top h2 { font-size: 18px; }
+  .waiter-reservation-state { white-space: normal; }
+  .waiter-reservation-meta { display: grid; }
+  .waiter-reservation-select, .waiter-reservation-detail .ui-button { width: 100%; }
+}
