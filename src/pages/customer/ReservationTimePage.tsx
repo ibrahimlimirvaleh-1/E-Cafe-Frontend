@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ecafeApi, type TableAvailabilityResponse } from '../../shared/api/ecafeApi'
 import { Button } from '../../shared/ui/Button'
+import { LocalizedDateInput } from '../../shared/ui/LocalizedDateInput'
 import { PageHeader } from '../../shared/ui/PageHeader'
 
 function toDateInputValue(date: Date) {
@@ -105,7 +106,7 @@ export function ReservationTimePage() {
         <form className="reservation-time-form" onSubmit={handleSubmit}>
           <label className="reservation-field">
             <span>Tarix</span>
-            <input min={toDateInputValue(new Date())} onChange={(event) => setDate(event.target.value)} type="date" value={date} />
+            <LocalizedDateInput min={toDateInputValue(new Date())} onChange={(event) => setDate(event.target.value)} value={date} />
           </label>
           <label className="reservation-field">
             <span>Gəliş saatı</span>

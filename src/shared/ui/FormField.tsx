@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
+import { LocalizedDateInput } from './LocalizedDateInput'
 
 type FieldShellProps = {
   error?: ReactNode
@@ -21,7 +22,9 @@ function FieldShell({ children, error, hint, label }: FieldShellProps) {
 export function TextField({ error, label, hint, ...props }: InputHTMLAttributes<HTMLInputElement> & { error?: ReactNode; label: string; hint?: ReactNode }) {
   return (
     <FieldShell label={label} error={error} hint={hint}>
-      <input aria-invalid={Boolean(error) || props['aria-invalid']} {...props} />
+      {props.type === 'date'
+        ? <LocalizedDateInput {...props} aria-invalid={Boolean(error) || props['aria-invalid']} value={String(props.value ?? '')} />
+        : <input aria-invalid={Boolean(error) || props['aria-invalid']} {...props} />}
     </FieldShell>
   )
 }

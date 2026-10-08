@@ -1,4 +1,5 @@
-import { CalendarDays, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { LocalizedDateInput } from '../../shared/ui/LocalizedDateInput'
 
 type ReservationDateFilterProps = {
   value: string
@@ -10,12 +11,9 @@ export function ReservationDateFilter({ onChange, value }: ReservationDateFilter
     <div className={`reservation-date-filter${value ? ' reservation-date-filter-active' : ''}`}>
       <span className="reservation-date-filter-label">Rezervasiya tarixi</span>
       <label className="reservation-date-filter-control">
-        <CalendarDays aria-hidden="true" size={18} />
-        <input
+        <LocalizedDateInput
           aria-label="Rezervasiya tarixini seçin"
-          className="reservation-date-filter-input"
           onChange={(event) => onChange(event.target.value)}
-          type="date"
           value={value}
         />
       </label>

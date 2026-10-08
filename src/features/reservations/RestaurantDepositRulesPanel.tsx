@@ -1,10 +1,11 @@
-import { CalendarDays, Save, Trash2 } from 'lucide-react'
+import { Save, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatDateOnlyAz, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 import { Button } from '../../shared/ui/Button'
+import { LocalizedDateInput } from '../../shared/ui/LocalizedDateInput'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function RestaurantDepositRulesPanel({ restaurantId }: { restaurantId: string }) {
@@ -87,7 +88,7 @@ export function RestaurantDepositRulesPanel({ restaurantId }: { restaurantId: st
       <form className="deposit-rules-form" onSubmit={handleSave}>
         <label>
           <span>Rezervasiya tarixi</span>
-          <span className="deposit-rules-input"><CalendarDays size={18} /><input min={today} onChange={(event) => setDate(event.target.value)} type="date" value={date} /></span>
+          <LocalizedDateInput className="deposit-rules-input" min={today} onChange={(event) => setDate(event.target.value)} value={date} />
         </label>
         <label>
           <span>Depozit (AZN)</span>
