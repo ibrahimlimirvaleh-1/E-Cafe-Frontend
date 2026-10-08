@@ -82,7 +82,7 @@ export function TrackingPage() {
                   <strong>{reservation.peopleCount} nəfər</strong>
                 </div>
                 <ul>
-                  <li><CalendarDays size={17} />{formatReservationDateTime(reservation.reservedAt)}</li>
+                  <li><CalendarDays size={17} />{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</li>
                   <li><MapPin size={17} />{reservation.tableName || `Masa ${reservation.tableId}`}</li>
                   <li><Users size={17} />{reservation.peopleCount} nəfər</li>
                 </ul>
@@ -136,7 +136,7 @@ export function TrackingPage() {
             </div>
           </section>
 
-          <ReservationHistoryTimeline items={history?.items || []} />
+          <ReservationHistoryTimeline items={history?.items || []} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} timeZone={reservation.timeZone || undefined} />
         </div>
       ) : null}
     </main>

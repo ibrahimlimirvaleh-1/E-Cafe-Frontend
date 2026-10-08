@@ -17,7 +17,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
+import { getReservationStatusPresentation, isReservationConfirmed } from '../../shared/lib/reservationStatus'
 
 export function RestaurantReservationDetailPage() {
   const { user } = useAuth()
@@ -145,15 +145,16 @@ export function RestaurantReservationDetailPage() {
           <Badge tone={presentation.tone}>{presentation.label}</Badge>
         </div>
         <div className="reservation-detail-grid">
-          <div><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><strong>{formatReservationDateTime(reservation.reservedAt)}</strong></span></div>
+          <div><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><strong>{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</strong></span></div>
           <div><Users size={17} /><span><small>Qonaq sayı</small><strong>{reservation.peopleCount} nəfər</strong></span></div>
           <div><Clock3 size={17} /><span><small>Depozit</small><strong>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong></span></div>
-          {reservation.mustVacateAt ? <div><Clock3 size={17} /><span><small>Masanı təhvil vaxtı</small><strong>{formatReservationDateTime(reservation.mustVacateAt)}</strong></span></div> : null}
+          {reservation.mustVacateAt ? <div><Clock3 size={17} /><span><small>Masanı təhvil vaxtı</small><strong>{formatReservationDateTime(reservation.mustVacateAt, reservation.timeZone || undefined)}</strong></span></div> : null}
+          {isReservationConfirmed(reservation.status) && !reservation.arrivedAt ? <div><Clock3 size={17} /><span><small>Gəliş üçün son vaxt</small><strong>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</strong></span></div> : null}
           {reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt ? (
             <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ? 'Ödəniş üçün son vaxt' : 'Cavab üçün son vaxt'}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
           ) : null}
-          {reservation.arrivedAt ? <div><CheckCircle2 size={17} /><span><small>Restorana gəlib</small><strong>{formatReservationDateTime(reservation.arrivedAt)}</strong></span></div> : null}
-          {reservation.seatedAt ? <div><CheckCircle2 size={17} /><span><small>Masaya əyləşib</small><strong>{formatReservationDateTime(reservation.seatedAt)}</strong></span></div> : null}
+          {reservation.arrivedAt ? <div><CheckCircle2 size={17} /><span><small>Restorana gəlib</small><strong>{formatReservationDateTime(reservation.arrivedAt, reservation.timeZone || undefined)}</strong></span></div> : null}
+          {reservation.seatedAt ? <div><CheckCircle2 size={17} /><span><small>Masaya əyləşib</small><strong>{formatReservationDateTime(reservation.seatedAt, reservation.timeZone || undefined)}</strong></span></div> : null}
         </div>
         <ReservationArrivalSummary reservation={reservation} />
         {reservation.latestPaymentInstruction ? (
@@ -224,7 +225,7 @@ export function RestaurantReservationDetailPage() {
           </ButtonLink>
         </nav>
         </div>
-        <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} />
+        <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} timeZone={reservation.timeZone || undefined} />
       </div>
       <ReservationReasonDialog
         confirmLabel={pendingAction?.label || 'Təsdiqlə'}

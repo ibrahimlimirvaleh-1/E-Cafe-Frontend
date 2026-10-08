@@ -85,15 +85,17 @@ export function EmployeeMobileDownload() {
 
   return (
     <section className="employee-mobile-download" aria-label="Android tətbiqi">
-      <div className="employee-mobile-download-copy">
-        <Smartphone size={20} aria-hidden="true" />
-        <span><strong>ECafe Android</strong><small>Versiya {release.version}</small></span>
+      <div className="employee-mobile-download-inner">
+        <div className="employee-mobile-download-copy">
+          <Smartphone size={20} aria-hidden="true" />
+          <span><strong>ECafe Android</strong><small>Versiya {release.version}</small></span>
+        </div>
+        {error ? <span className="employee-mobile-download-error" role="alert">{error}</span> : null}
+        <button className="mobile-download-link" disabled={downloading} onClick={() => void download()} type="button">
+          <Download size={17} aria-hidden="true" />
+          {downloading ? 'Yüklənir...' : 'Tətbiqi yüklə'}
+        </button>
       </div>
-      {error ? <span className="employee-mobile-download-error" role="alert">{error}</span> : null}
-      <button className="mobile-download-link" disabled={downloading} onClick={() => void download()} type="button">
-        <Download size={17} aria-hidden="true" />
-        {downloading ? 'Yüklənir...' : 'Tətbiqi yüklə'}
-      </button>
     </section>
   )
 }
