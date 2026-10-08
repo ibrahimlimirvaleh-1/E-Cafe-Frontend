@@ -6,7 +6,6 @@ import { UserMenu } from './UserMenu'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 import { useAuth } from '../auth/AuthContext'
 import { RoleIds, isInRole } from '../auth/authz'
-import { EmployeeMobileDownload } from '../../features/mobileDownload/EmployeeMobileDownload'
 
 type StaffShellProps = {
   title: string
@@ -44,7 +43,6 @@ export function StaffShell({ title }: StaffShellProps) {
           <UserMenu />
         </div>
       </header>
-      <EmployeeMobileDownload />
       <div className="route-transition">
         <Outlet />
       </div>

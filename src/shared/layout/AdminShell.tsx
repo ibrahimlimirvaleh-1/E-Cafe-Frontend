@@ -9,7 +9,6 @@ import { NotificationBell } from './NotificationBell'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
-import { EmployeeMobileDownload } from '../../features/mobileDownload/EmployeeMobileDownload'
 
 const outboxAdminModule = {
   permissionKey: 'audit-logs',
@@ -52,7 +51,6 @@ export function AdminShell() {
             <UserMenu />
           </div>
         </header>
-        <EmployeeMobileDownload />
         <div className="route-transition">
           <Outlet />
         </div>
