@@ -12542,3 +12542,24 @@ body {
     height: 160px;
   }
 }
+
+@media (max-width: 760px) {
+  .staff-shell .staff-topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .staff-shell .staff-topbar > strong { display: none; }
+  .staff-shell .staff-topbar .brand { grid-column: 1; grid-row: 1; }
+  .staff-shell .staff-topbar .site-actions { grid-column: 2; grid-row: 1; width: auto; gap: 6px; justify-content: flex-end; }
+  .staff-shell .staff-topbar .staff-nav { grid-column: 1 / -1; grid-row: 2; min-width: 0; width: 100%; margin: 0; overflow-x: auto; }
+  .staff-shell .staff-topbar .workspace-switcher-home { width: 42px; min-width: 42px; padding: 0; }
+  .staff-shell .staff-topbar .workspace-switcher-home span { display: none; }
+  .staff-shell .staff-topbar .user-pill { width: 44px; min-width: 44px; max-width: 44px; padding: 6px; justify-content: center; }
+  .staff-shell .staff-topbar .user-pill > span:not(.user-pill-avatar),
+  .staff-shell .staff-topbar .user-pill > svg:last-child { display: none; }
+}
+
+@media (max-width: 420px) {
+  .staff-shell .staff-topbar { padding-inline: 10px; }
+  .staff-shell .staff-topbar .site-actions { gap: 4px; }
+  .staff-shell .staff-topbar .icon-action,
+  .staff-shell .staff-topbar .workspace-switcher-home,
+  .staff-shell .staff-topbar .user-pill { width: 38px; min-width: 38px; height: 38px; padding: 0; }
+}

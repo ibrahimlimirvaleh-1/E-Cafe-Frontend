@@ -7,7 +7,14 @@ type ReservationHistoryTimelineProps = {
   items: ReservationHistoryItem[]
   viewer?: 'customer' | 'manager'
   currentStatus?: string
+  arrivedAt?: string | null
+  seatedAt?: string | null
+  timeZone?: string
 }
+
+type TimelineEvent =
+  | { kind: 'status'; item: ReservationHistoryItem; changedAt: string }
+  | { kind: 'arrival'; changedAt: string }
 
 function actorLabel(actorType: ReservationHistoryItem['actorType'], viewer: 'customer' | 'manager') {
   if (actorType === 'Customer') return viewer === 'customer' ? 'Siz' : 'Müştəri'
@@ -66,9 +73,14 @@ function eventLabel(item: ReservationHistoryItem) {
   return getReservationStatusPresentation(item.toStatus).label
 }
 
-export function ReservationHistoryTimeline({ items, viewer = 'customer', currentStatus }: ReservationHistoryTimelineProps) {
-  const lastEvent = items[items.length - 1]
-  const currentPresentation = getReservationStatusPresentation(currentStatus || lastEvent?.toStatus || '')
+export function ReservationHistoryTimeline({ items, viewer = 'customer', currentStatus, arrivedAt, seatedAt, timeZone }: ReservationHistoryTimelineProps) {
+  const events: TimelineEvent[] = items.map((item) => ({ kind: 'status', item, changedAt: item.changedAt }))
+  if (arrivedAt && (!seatedAt || new Date(arrivedAt).getTime() !== new Date(seatedAt).getTime())) {
+    events.push({ kind: 'arrival', changedAt: arrivedAt })
+  }
+  events.sort((left, right) => new Date(left.changedAt).getTime() - new Date(right.changedAt).getTime())
+  const lastEvent = events[events.length - 1]
+  const currentPresentation = getReservationStatusPresentation(currentStatus || items[items.length - 1]?.toStatus || '')
 
   return (
     <section className="reservation-history-panel" aria-label="Rezervasiya tarixçəsi">
@@ -86,19 +98,30 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
             <span className="section-eyebrow">CARİ VƏZİYYƏT</span>
             <strong>{currentPresentation.label}</strong>
           </div>
-          <span>Son yenilənmə: <time dateTime={lastEvent.changedAt}>{formatReservationDateTime(lastEvent.changedAt)}</time></span>
+          <span>Son yenilənmə: <time dateTime={lastEvent.changedAt}>{formatReservationDateTime(lastEvent.changedAt, timeZone)}</time></span>
         </div>
       ) : null}
 
-      {items.length === 0 ? (
+      {events.length === 0 ? (
         <p className="reservation-history-empty">Bu rezervasiya üçün hələ tarixçə yoxdur.</p>
       ) : (
         <div className="reservation-history-events" role="region" aria-label="Tarixçə hadisələri" tabIndex={0}>
           {viewer === 'manager' ? <h3>Hadisələr</h3> : null}
           <ol className="reservation-history-timeline">
-            {items.map((item, index) => {
+            {events.map((event, index) => {
+              const isCurrent = index === events.length - 1
+              if (event.kind === 'arrival') {
+                return <li className={`reservation-history-item reservation-history-item-success${isCurrent ? ' is-current' : ''}`} key={`arrival-${event.changedAt}`}>
+                  <span className="reservation-history-marker" aria-hidden="true"><Check size={16} /></span>
+                  <div className="reservation-history-content">
+                    <div className="reservation-history-title-row"><strong>Müştəri restorana gəldi</strong>{viewer === 'customer' && isCurrent ? <span className="reservation-history-current">Hazırkı mərhələ</span> : null}</div>
+                    <div className="reservation-history-meta"><time dateTime={event.changedAt}>{formatReservationDateTime(event.changedAt, timeZone)}</time><span><Store size={15} aria-hidden="true" />Restoran</span></div>
+                    {viewer === 'customer' ? <p>Gəlişiniz qeydə alındı. Masa hələ açılmayıb.</p> : null}
+                  </div>
+                </li>
+              }
+              const { item } = event
               const presentation = getReservationStatusPresentation(item.toStatus)
-              const isCurrent = index === items.length - 1
               const reason = item.reason?.trim()
 
               return (
@@ -115,7 +138,7 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                       {viewer === 'customer' && isCurrent ? <span className="reservation-history-current">Hazırkı mərhələ</span> : null}
                     </div>
                     <div className="reservation-history-meta">
-                      <time dateTime={item.changedAt}>{formatReservationDateTime(item.changedAt)}</time>
+                      <time dateTime={item.changedAt}>{formatReservationDateTime(item.changedAt, timeZone)}</time>
                       <span><ActorIcon actorType={item.actorType} />{actorLabel(item.actorType, viewer)}</span>
                     </div>
                     {reason && reason !== presentation.label && (viewer === 'customer' || !routineReasons.has(reason))

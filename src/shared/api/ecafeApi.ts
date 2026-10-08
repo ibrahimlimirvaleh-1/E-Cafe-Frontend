@@ -284,6 +284,7 @@ export type ReservationServiceItemResponse = {
   peopleCount: number
   statusId: number
   reservedAt: string
+  timeZone?: string | null
   noShowDeadlineAt: string
   mustVacateAt: string | null
   arrivedAt: string | null
@@ -320,6 +321,8 @@ export type ReservationArrivalOptions = {
 
 export type ReservationHistoryResponse = {
   reservationId: number
+  arrivedAt?: string | null
+  seatedAt?: string | null
   items: ReservationHistoryItem[]
 }
 
@@ -768,6 +771,8 @@ function mapReservationHistoryResponse(record: AnyRecord): ReservationHistoryRes
 
   return {
     reservationId: num(record.reservationId),
+    arrivedAt: str(record.arrivedAt) || null,
+    seatedAt: str(record.seatedAt) || null,
     items,
   }
 }
@@ -897,6 +902,17 @@ function mapWorkflowAction(record: AnyRecord): WorkflowAction {
     requiresReason: bool(record.requiresReason),
     sortOrder: num(record.sortOrder),
   }
+}
+
+type WorkflowActionsQuery = { flowCode: string; statusId: number; restaurantId?: string; entityId?: string }
+
+async function fetchWorkflowActions(request: WorkflowActionsQuery): Promise<WorkflowAction[]> {
+  const params = new URLSearchParams({ statusId: String(request.statusId) })
+  if (request.restaurantId) params.set('restaurantId', request.restaurantId)
+  if (request.entityId) params.set('entityId', request.entityId)
+
+  const result = await httpClient<unknown>(`${endpoints.workflow.actions(request.flowCode)}?${params.toString()}`)
+  return asArray<AnyRecord>(result.data).map(mapWorkflowAction)
 }
 
 function mapAuditLog(record: AnyRecord): AuditLogEntry {
@@ -1392,20 +1408,8 @@ export const ecafeApi = {
   },
 
   workflow: {
-    actions: (request: { flowCode: string; statusId: number; restaurantId?: string; entityId?: string }) =>
-      safe(async () => {
-        const params = new URLSearchParams()
-        params.set('statusId', String(request.statusId))
-        if (request.restaurantId) {
-          params.set('restaurantId', request.restaurantId)
-        }
-        if (request.entityId) {
-          params.set('entityId', request.entityId)
-        }
-
-        const result = await httpClient<unknown>(`${endpoints.workflow.actions(request.flowCode)}?${params.toString()}`)
-        return asArray<AnyRecord>(result.data).map(mapWorkflowAction)
-      }, [] as WorkflowAction[]),
+    actions: (request: WorkflowActionsQuery) => safe(() => fetchWorkflowActions(request), [] as WorkflowAction[]),
+    actionsStrict: fetchWorkflowActions,
     executeAction: <T = unknown>({ action, body }: WorkflowActionRequest) =>
       httpClient<T>(normalizeWorkflowActionEndpoint(action.endpoint), {
         method: action.httpMethod || 'POST',
@@ -1965,6 +1969,7 @@ export const ecafeApi = {
         peopleCount: num(record.peopleCount),
         statusId: num(record.statusId),
         reservedAt: str(record.reservedAt),
+        timeZone: str(record.timeZone) || null,
         noShowDeadlineAt: str(record.noShowDeadlineAt),
         mustVacateAt: str(record.mustVacateAt) || null,
         arrivedAt: str(record.arrivedAt) || null,

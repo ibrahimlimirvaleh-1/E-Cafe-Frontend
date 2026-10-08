@@ -132,13 +132,13 @@ export function ConfirmationPage() {
           {reservation ? (
             <>
               <dl className="reservation-confirmation-details">
-                <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt)}</dd></div>
+                <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</dd></div>
                 <div><dt>Masa</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
                 <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
                 <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
                 <div><dt>Depozit</dt><dd>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</dd></div>
                 {!reservation.expectedArrivalAt && isReservationConfirmed(reservation.status) ? <div><dt>Gəliş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</dd></div> : null}
-                {reservation.mustVacateAt ? <div><dt>Masanı təhvil vaxtı</dt><dd>{formatReservationDateTime(reservation.mustVacateAt)}</dd></div> : null}
+                {reservation.mustVacateAt ? <div><dt>Masanı təhvil vaxtı</dt><dd>{formatReservationDateTime(reservation.mustVacateAt, reservation.timeZone || undefined)}</dd></div> : null}
                 {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
               </dl>
 
@@ -195,7 +195,7 @@ export function ConfirmationPage() {
         </article>
 
         <aside className="reservation-confirmation-side">
-          {reservation ? <ReservationHistoryTimeline items={history?.items || []} /> : null}
+          {reservation ? <ReservationHistoryTimeline items={history?.items || []} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} timeZone={reservation.timeZone || undefined} /> : null}
           <ButtonLink to={reservation ? `/tracking/${reservation.id}` : '/reservations'}>Rezervasiyanı izlə</ButtonLink>
         </aside>
       </div>
