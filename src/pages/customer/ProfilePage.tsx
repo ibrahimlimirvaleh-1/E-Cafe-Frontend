@@ -2,6 +2,7 @@ import { LogOut, MonitorSmartphone, Save } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { UserSession } from '../../entities/types'
+import { EmployeeMobileDownload } from '../../features/mobileDownload/EmployeeMobileDownload'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -194,6 +195,8 @@ export function ProfilePage() {
           </div>
         </div>
       </section>
+
+      <EmployeeMobileDownload />
 
       <div className="admin-grid profile-account-grid">
         <form className="admin-panel profile-account-form" onSubmit={handleProfileSubmit}>

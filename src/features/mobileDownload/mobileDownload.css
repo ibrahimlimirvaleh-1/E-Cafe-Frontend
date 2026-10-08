@@ -1,6 +1,7 @@
 .employee-mobile-download {
+  margin: 20px 0 28px;
+  border-top: 1px solid var(--outline-variant);
   border-bottom: 1px solid var(--outline-variant);
-  background: var(--surface-lowest);
 }
 
 .employee-mobile-download-inner {
@@ -8,11 +9,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  width: min(var(--container), calc(100% - 48px));
+  width: 100%;
   min-width: 0;
   min-height: 68px;
   margin: 0 auto;
-  padding: 10px 0;
+  padding: 12px 0;
 }
 
 .employee-mobile-download-copy {
@@ -135,7 +136,7 @@
 .customer-mobile-refresh:disabled { cursor: wait; opacity: .6; }
 
 @media (max-width: 640px) {
-  .employee-mobile-download-inner { flex-wrap: wrap; width: calc(100% - 32px); padding: 12px 0; }
+  .employee-mobile-download-inner { flex-wrap: wrap; padding: 12px 0; }
   .employee-mobile-download-error { order: 3; width: 100%; }
   .mobile-download-link {
     width: 100%;
