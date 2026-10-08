@@ -13,7 +13,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
+import { formatReservationDateTime, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 import {
   ReservationDateFilter,
@@ -31,7 +31,7 @@ export function RestaurantReservationsPage() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
-  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedDate, setSelectedDate] = useState(getTodayDateInputValue)
   const [selectedTableId, setSelectedTableId] = useState('')
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])

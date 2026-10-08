@@ -3615,6 +3615,14 @@ img {
   min-width: 180px;
 }
 
+.filter-date-summary {
+  display: block;
+  margin-top: 6px;
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  line-height: 18px;
+}
+
 .filter-panel {
   position: absolute;
   top: calc(100% + 8px);

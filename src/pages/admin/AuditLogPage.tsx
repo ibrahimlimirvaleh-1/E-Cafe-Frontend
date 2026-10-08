@@ -5,6 +5,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { formatDateOnlyAz, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 import { Badge } from '../../shared/ui/Badge'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -23,6 +24,11 @@ const emptyAuditFilters: AuditFilters = {
   action: '',
   dateFrom: '',
   dateTo: '',
+}
+
+function todayAuditFilters(): AuditFilters {
+  const today = getTodayDateInputValue()
+  return { ...emptyAuditFilters, dateFrom: today, dateTo: today }
 }
 
 function toLocalDateTime(value: string) {
@@ -49,8 +55,8 @@ export function AuditLogPage() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
-  const [filters, setFilters] = useState<AuditFilters>(emptyAuditFilters)
-  const [draftFilters, setDraftFilters] = useState<AuditFilters>(emptyAuditFilters)
+  const [filters, setFilters] = useState<AuditFilters>(todayAuditFilters)
+  const [draftFilters, setDraftFilters] = useState<AuditFilters>(todayAuditFilters)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null)
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
@@ -143,6 +149,8 @@ export function AuditLogPage() {
             <SlidersHorizontal size={18} />
             Filter
           </button>
+
+          {filters.dateFrom || filters.dateTo ? <span className="filter-date-summary">{filters.dateFrom === filters.dateTo ? formatDateOnlyAz(filters.dateFrom) : 'Tarix aralığı seçilib'}</span> : null}
 
           {isFilterOpen ? (
             <div className="filter-panel" role="dialog" aria-label="Audit log filterləri">

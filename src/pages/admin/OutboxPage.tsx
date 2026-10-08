@@ -4,6 +4,7 @@ import type { OutboxMessage, StatusTone } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { formatDateOnlyAz, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 import { Badge } from '../../shared/ui/Badge'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -44,6 +45,11 @@ const emptyOutboxFilters: OutboxFilters = {
   dateTo: '',
 }
 
+function todayOutboxFilters(): OutboxFilters {
+  const today = getTodayDateInputValue()
+  return { ...emptyOutboxFilters, dateFrom: today, dateTo: today }
+}
+
 function formatDateTime(value?: string) {
   if (!value) {
     return '-'
@@ -76,8 +82,8 @@ function statusTone(statusId: number): StatusTone {
 }
 
 export function OutboxPage() {
-  const [filters, setFilters] = useState<OutboxFilters>(emptyOutboxFilters)
-  const [draftFilters, setDraftFilters] = useState<OutboxFilters>(emptyOutboxFilters)
+  const [filters, setFilters] = useState<OutboxFilters>(todayOutboxFilters)
+  const [draftFilters, setDraftFilters] = useState<OutboxFilters>(todayOutboxFilters)
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [reloadKey, setReloadKey] = useState(0)
@@ -203,6 +209,8 @@ export function OutboxPage() {
             <SlidersHorizontal size={18} />
             Filter
           </button>
+
+          {filters.dateFrom || filters.dateTo ? <span className="filter-date-summary">{filters.dateFrom === filters.dateTo ? formatDateOnlyAz(filters.dateFrom) : 'Tarix aralığı seçilib'}</span> : null}
 
           {isFilterOpen ? (
             <div className="filter-panel" role="dialog" aria-label="Sistem mesajları filterləri">

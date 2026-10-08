@@ -9,7 +9,7 @@ import { Button, ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
+import { formatReservationDateTime, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 import { getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import {
@@ -27,7 +27,7 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 
 export function MyReservationsPage() {
   const [reloadKey, setReloadKey] = useState(0)
-  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedDate, setSelectedDate] = useState(getTodayDateInputValue)
   const [searchInput, setSearchInput] = useState('')
   const [restaurantName, setRestaurantName] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
@@ -147,7 +147,7 @@ export function MyReservationsPage() {
       {!isLoading && !error && data.items.length === 0 ? (
         <section className="reservation-empty-state">
           <CalendarDays size={28} />
-          <h2>{hasFilters ? 'Axtarışa uyğun rezervasiya yoxdur' : 'Hələ rezervasiyanız yoxdur'}</h2>
+          <h2>{restaurantName ? 'Filtrlərə uyğun rezervasiya yoxdur' : selectedDate ? 'Seçilən tarix üçün rezervasiya yoxdur' : 'Hələ rezervasiyanız yoxdur'}</h2>
           <p>{hasFilters ? 'Restoran adını və ya tarixi dəyişərək yenidən yoxlayın.' : 'Restoran seçərək uyğun masa üçün rezervasiya yarada bilərsiniz.'}</p>
           {hasFilters ? <Button onClick={clearFilters} variant="secondary">Filtrləri təmizlə</Button> : <ButtonLink to="/">Restoranlara bax</ButtonLink>}
         </section>

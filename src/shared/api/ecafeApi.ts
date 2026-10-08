@@ -48,6 +48,7 @@ import {
 } from './mappers'
 import type { AnyRecord, PaginatedResponse } from './responseUtils'
 import { asArray, asPaginated, bool, num, str } from './responseUtils'
+import { toUtcZonedDayBoundary, toZonedDayStartOffset } from '../lib/dateFormatting'
 
 type LoginRequest = {
   email: string
@@ -804,7 +805,7 @@ function appendReservationQuery(endpoint: string, query: RestaurantReservationQu
   if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
   if (query.pageSize) params.set('PageSize', String(query.pageSize))
   if (query.statusId) params.set('StatusId', String(query.statusId))
-  if (query.reservedDate) params.set('ReservedDate', toUtcDayBoundary(query.reservedDate, 'start'))
+  if (query.reservedDate) params.set('ReservedDate', toZonedDayStartOffset(query.reservedDate))
   if (query.restaurantName?.trim()) params.set('RestaurantName', query.restaurantName.trim())
   if (query.tableId) params.set('TableId', query.tableId)
 
@@ -980,8 +981,8 @@ function buildAuditLogQuery(query: AuditLogQuery = {}) {
   const params = new URLSearchParams()
 
   if (query.action?.trim()) params.set('Action', query.action.trim())
-  if (query.dateFrom) params.set('DateFrom', toUtcDayBoundary(query.dateFrom, 'start'))
-  if (query.dateTo) params.set('DateTo', toUtcDayBoundary(query.dateTo, 'end'))
+  if (query.dateFrom) params.set('DateFrom', toUtcZonedDayBoundary(query.dateFrom, 'start'))
+  if (query.dateTo) params.set('DateTo', toUtcZonedDayBoundary(query.dateTo, 'end'))
   if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
   if (query.pageSize) params.set('PageSize', String(query.pageSize))
 
@@ -1039,8 +1040,8 @@ function buildOutboxQuery(query: OutboxMessageQuery = {}) {
   if (query.statusId) params.set('StatusId', query.statusId)
   if (query.channelId) params.set('ChannelId', query.channelId)
   if (query.search?.trim()) params.set('Search', query.search.trim())
-  if (query.dateFrom) params.set('DateFrom', toUtcDayBoundary(query.dateFrom, 'start'))
-  if (query.dateTo) params.set('DateTo', toUtcDayBoundary(query.dateTo, 'end'))
+  if (query.dateFrom) params.set('DateFrom', toUtcZonedDayBoundary(query.dateFrom, 'start'))
+  if (query.dateTo) params.set('DateTo', toUtcZonedDayBoundary(query.dateTo, 'end'))
   if (query.pageNumber) params.set('PageNumber', String(query.pageNumber))
   if (query.pageSize) params.set('PageSize', String(query.pageSize))
 
