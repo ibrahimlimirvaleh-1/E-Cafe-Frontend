@@ -10,6 +10,7 @@ import { RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 import { Button } from '../../shared/ui/Button'
+import { LocalizedDateInput } from '../../shared/ui/LocalizedDateInput'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
@@ -98,7 +99,7 @@ export function WaiterDashboardPage() {
       {restaurantIds.length > 1 ? <label className="waiter-restaurant-filter">Restoran<select value={restaurantId} onChange={(event) => { selectProfile({ restaurantId: event.target.value, roleId: RoleIds.Waiter }); setPage(1); setSelectedId(null) }}>
         {restaurantIds.map((id) => <option key={id} value={id}>{profiles.find((profile) => profile.restaurantId === id)?.restaurantName || `Restoran ${id}`}</option>)}
       </select></label> : <div className="waiter-restaurant-name"><span>Restoran</span><strong><Store size={18} aria-hidden="true" />{profiles.find((profile) => profile.restaurantId === restaurantId)?.restaurantName || 'Restoran rezervasiyaları'}</strong></div>}
-      <label className="waiter-date-filter">Rezervasiya tarixi<input type="date" value={date} onChange={(event) => { setDate(event.target.value); setPage(1); setSelectedId(null) }} /></label>
+      <label className="waiter-date-filter">Rezervasiya tarixi<LocalizedDateInput value={date} onChange={(event) => { setDate(event.target.value); setPage(1); setSelectedId(null) }} /></label>
       <Button type="button" variant="secondary" onClick={() => setReloadKey((value) => value + 1)} title="Siyahını yenilə" aria-label="Siyahını yenilə"><RefreshCw size={18} /></Button>
     </div>
     {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}

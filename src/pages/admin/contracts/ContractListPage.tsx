@@ -10,6 +10,7 @@ import { formatDateInBaku } from '../../../shared/lib/dateFormatting'
 import { ActionIconLink } from '../../../shared/ui/ActionIconButton'
 import { Badge } from '../../../shared/ui/Badge'
 import { ButtonLink } from '../../../shared/ui/Button'
+import { LocalizedDateInput } from '../../../shared/ui/LocalizedDateInput'
 import { PageHeader } from '../../../shared/ui/PageHeader'
 import { RestaurantSelectField } from '../../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../../shared/ui/StatusMessage'
@@ -183,17 +184,15 @@ export function ContractListPage() {
             ) : null}
             <label>
               Bitmə tarixi başlanğıc
-              <input
+              <LocalizedDateInput
                 onChange={(event) => setFilters((current) => ({ ...current, dateFrom: event.target.value }))}
-                type="date"
                 value={filters.dateFrom}
               />
             </label>
             <label>
               Bitmə tarixi son
-              <input
+              <LocalizedDateInput
                 onChange={(event) => setFilters((current) => ({ ...current, dateTo: event.target.value }))}
-                type="date"
                 value={filters.dateTo}
               />
             </label>
