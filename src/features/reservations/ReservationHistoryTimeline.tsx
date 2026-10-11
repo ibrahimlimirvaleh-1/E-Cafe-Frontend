@@ -9,6 +9,7 @@ type ReservationHistoryTimelineProps = {
   currentStatus?: string
   arrivedAt?: string | null
   seatedAt?: string | null
+  requiresReceptionReview?: boolean
   timeZone?: string
 }
 
@@ -53,6 +54,9 @@ function eventLabel(item: ReservationHistoryItem) {
   const status = item.toStatus.toLocaleLowerCase('az-AZ')
   const previous = item.fromStatus?.toLocaleLowerCase('az-AZ') || ''
   if (status === previous && item.reason === 'Müştəri yeni gəliş və masanın təhvil şərtlərini qəbul etdi.') return 'Gəliş vaxtı yeniləndi'
+  if (status === previous &&
+    (item.reason?.startsWith('Masa dəyişdirildi:') || item.reason?.startsWith('Rezervasiyanın masası dəyişdirildi:')))
+    return 'Masa dəyişdirildi'
 
   if (!item.fromStatus && item.reason === 'Mövcud rezervasiyanın ilkin statusu.') return 'İlkin vəziyyət qeydə alındı'
   if (!item.fromStatus) return 'Rezervasiya yaradıldı'
@@ -73,7 +77,7 @@ function eventLabel(item: ReservationHistoryItem) {
   return getReservationStatusPresentation(item.toStatus).label
 }
 
-export function ReservationHistoryTimeline({ items, viewer = 'customer', currentStatus, arrivedAt, seatedAt, timeZone }: ReservationHistoryTimelineProps) {
+export function ReservationHistoryTimeline({ items, viewer = 'customer', currentStatus, arrivedAt, seatedAt, requiresReceptionReview, timeZone }: ReservationHistoryTimelineProps) {
   const events: TimelineEvent[] = items.map((item) => ({ kind: 'status', item, changedAt: item.changedAt }))
   if (arrivedAt && (!seatedAt || new Date(arrivedAt).getTime() !== new Date(seatedAt).getTime())) {
     events.push({ kind: 'arrival', changedAt: arrivedAt })
@@ -96,9 +100,9 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
         <div className="reservation-history-summary">
           <div>
             <span className="section-eyebrow">CARİ VƏZİYYƏT</span>
-            <strong>{currentPresentation.label}</strong>
+            <strong>{requiresReceptionReview ? 'Nəticə yoxlanmalıdır' : currentPresentation.label}</strong>
           </div>
-          <span>Son yenilənmə: <time dateTime={lastEvent.changedAt}>{formatReservationDateTime(lastEvent.changedAt, timeZone)}</time></span>
+          <span>{requiresReceptionReview ? 'Son hadisə' : 'Son yenilənmə'}: <time dateTime={lastEvent.changedAt}>{formatReservationDateTime(lastEvent.changedAt, timeZone)}</time></span>
         </div>
       ) : null}
 
@@ -114,7 +118,7 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                 return <li className={`reservation-history-item reservation-history-item-success${isCurrent ? ' is-current' : ''}`} key={`arrival-${event.changedAt}`}>
                   <span className="reservation-history-marker" aria-hidden="true"><Check size={16} /></span>
                   <div className="reservation-history-content">
-                    <div className="reservation-history-title-row"><strong>Müştəri restorana gəldi</strong>{viewer === 'customer' && isCurrent ? <span className="reservation-history-current">Hazırkı mərhələ</span> : null}</div>
+                    <div className="reservation-history-title-row"><strong>Müştəri restorana gəldi</strong>{viewer === 'customer' && isCurrent ? <span className="reservation-history-current">{requiresReceptionReview ? 'Son qeyd' : 'Hazırkı mərhələ'}</span> : null}</div>
                     <div className="reservation-history-meta"><time dateTime={event.changedAt}>{formatReservationDateTime(event.changedAt, timeZone)}</time><span><Store size={15} aria-hidden="true" />Restoran</span></div>
                     {viewer === 'customer' ? <p>Gəlişiniz qeydə alındı. Masa hələ açılmayıb.</p> : null}
                   </div>
@@ -135,7 +139,7 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                   <div className="reservation-history-content">
                     <div className="reservation-history-title-row">
                       <strong>{viewer === 'manager' || item.fromStatus === item.toStatus ? eventLabel(item) : presentation.label}</strong>
-                      {viewer === 'customer' && isCurrent ? <span className="reservation-history-current">Hazırkı mərhələ</span> : null}
+                      {viewer === 'customer' && isCurrent ? <span className="reservation-history-current">{requiresReceptionReview ? 'Son qeyd' : 'Hazırkı mərhələ'}</span> : null}
                     </div>
                     <div className="reservation-history-meta">
                       <time dateTime={item.changedAt}>{formatReservationDateTime(item.changedAt, timeZone)}</time>

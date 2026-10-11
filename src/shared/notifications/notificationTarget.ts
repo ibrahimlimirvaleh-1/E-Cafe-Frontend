@@ -50,13 +50,20 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
 
   if (relatedType.includes('reservation')) {
     const reservationId = valueAsString(payload.reservationId || payload.ReservationId || notification.relatedEntityId)
+    if (reservationId && payload.section === 'waiting' && isInRole(user, [RoleIds.Waiter], restaurantId)) {
+      const query = new URLSearchParams({ waitingOnly: 'true', reservationId })
+      if (restaurantId) query.set('restaurantId', restaurantId)
+      return `/waiter?${query.toString()}`
+    }
+
     if (reservationId && canAccessAdminModule(user, 'reservations', restaurantId)) {
       const query = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
-      return `/admin/reservations/${encodeURIComponent(reservationId)}${query}`
+      const section = payload.section === 'waiting' ? '#waiting' : ''
+      return `/admin/reservations/${encodeURIComponent(reservationId)}${query}${section}`
     }
 
     if (reservationId && isInRole(user, [RoleIds.Customer])) {
-      const section = payload.section === 'refund' ? '#refund' : payload.section === 'schedule-offer' ? '#schedule-offer' : ''
+      const section = payload.section === 'refund' ? '#refund' : payload.section === 'schedule-offer' ? '#schedule-offer' : payload.section === 'waiting' ? '#waiting' : ''
       return `/confirmation?reservationId=${encodeURIComponent(reservationId)}${section}`
     }
 

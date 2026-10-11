@@ -133,7 +133,7 @@ export function NotificationBell() {
     const target = getNotificationTarget(notification, user)
     setIsOpen(false)
     if (target) {
-      const restaurantId = new URLSearchParams(target.split('?')[1] || '').get('restaurantId')
+      const restaurantId = new URL(target, window.location.origin).searchParams.get('restaurantId')
       if (restaurantId) {
         selectProfileForRestaurant(restaurantId)
       }

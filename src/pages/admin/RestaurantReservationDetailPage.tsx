@@ -6,9 +6,12 @@ import { ReservationHistoryTimeline } from '../../features/reservations/Reservat
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { RestaurantRefundPanel } from '../../features/reservations/RestaurantRefundPanel'
 import { ReservationArrivalSummary } from '../../features/reservations/ReservationArrivalSummary'
+import { ReservationWaitingSummary } from '../../features/reservations/ReservationWaitingSummary'
+import { ReservationWaitingManagement } from '../../features/reservations/ReservationWaitingManagement'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { isInRole, RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import { Badge } from '../../shared/ui/Badge'
@@ -17,7 +20,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { getReservationStatusPresentation, isReservationConfirmed } from '../../shared/lib/reservationStatus'
+import { getReservationDepartureReasonLabel, getReservationStatusPresentation, isReservationConfirmed } from '../../shared/lib/reservationStatus'
 
 export function RestaurantReservationDetailPage() {
   const { user } = useAuth()
@@ -39,6 +42,14 @@ export function RestaurantReservationDetailPage() {
     null,
     [restaurantId, reservationId, reloadKey],
   )
+  const isWaiting = Boolean(reservation?.waiting || reservation?.requiresReceptionReview)
+  useEffect(() => {
+    if (!isWaiting) return
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setReloadKey((value) => value + 1)
+    }, 30_000)
+    return () => window.clearInterval(timer)
+  }, [isWaiting])
   const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
     () => reservation && restaurantId && reservationId && reservation.workflowFlowCode
       ? ecafeApi.workflow.actions({
@@ -155,8 +166,10 @@ export function RestaurantReservationDetailPage() {
           ) : null}
           {reservation.arrivedAt ? <div><CheckCircle2 size={17} /><span><small>Restorana gəlib</small><strong>{formatReservationDateTime(reservation.arrivedAt, reservation.timeZone || undefined)}</strong></span></div> : null}
           {reservation.seatedAt ? <div><CheckCircle2 size={17} /><span><small>Masaya əyləşib</small><strong>{formatReservationDateTime(reservation.seatedAt, reservation.timeZone || undefined)}</strong></span></div> : null}
+          {reservation.departureReason ? <div><Ban size={17} /><span><small>Ayrılma səbəbi</small><strong>{getReservationDepartureReasonLabel(reservation.departureReason)}</strong></span></div> : null}
         </div>
         <ReservationArrivalSummary reservation={reservation} />
+        <ReservationWaitingSummary waiting={reservation.waiting} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone} viewer="manager" />
         {reservation.latestPaymentInstruction ? (
           <div className="reservation-payment-note">
             <strong>Son göndərilən ödəniş məlumatı</strong>
@@ -210,6 +223,9 @@ export function RestaurantReservationDetailPage() {
           </div>
         ) : null}
       </section>
+      {isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) && (reservation.waiting || reservation.requiresReceptionReview) ?
+        <ReservationWaitingManagement key={reservation.id} reservation={reservation} restaurantId={restaurantId}
+          onChanged={(message) => { setActionMessage(message); setReloadKey((value) => value + 1) }} /> : null}
       <RestaurantRefundPanel key={reservation.id} reservationId={String(reservation.id)} restaurantId={restaurantId} />
       {sendPaymentInstructionAction ? (
         <ReservationPaymentInstructionPanel
@@ -225,7 +241,7 @@ export function RestaurantReservationDetailPage() {
           </ButtonLink>
         </nav>
         </div>
-        <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} timeZone={reservation.timeZone || undefined} />
+        <ReservationHistoryTimeline items={history?.items || []} viewer="manager" currentStatus={reservation.status} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone || undefined} />
       </div>
       <ReservationReasonDialog
         confirmLabel={pendingAction?.label || 'Təsdiqlə'}

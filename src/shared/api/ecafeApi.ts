@@ -268,6 +268,9 @@ export type ReservationResponse = {
   arrivalDecisionExpiresAt?: string | null
   arrivedAt?: string | null
   seatedAt?: string | null
+  waiting?: ReservationWaitingInfo | null
+  requiresReceptionReview: boolean
+  departureReason?: 1 | 2 | null
   restaurantName?: string | null
   tableName?: string | null
   customerName?: string | null
@@ -289,6 +292,18 @@ export type ReservationServiceItemResponse = {
   mustVacateAt: string | null
   arrivedAt: string | null
   seatedAt: string | null
+  waitingSinceAt: string | null
+  waitingMinutes: number
+  serviceDelayMinutes: number
+  isWaitingOverdue: boolean
+  requiresReceptionReview: boolean
+}
+
+export type ReservationWaitingInfo = {
+  waitingSinceAt: string
+  waitingMinutes: number
+  serviceDelayMinutes: number
+  isOverdue: boolean
 }
 
 export type ReservationHistoryItem = {
@@ -408,6 +423,7 @@ export type ReservationQuery = {
 
 export type RestaurantReservationQuery = ReservationQuery & {
   tableId?: string
+  waitingOnly?: boolean
 }
 
 type CopyTableRequest = {
@@ -728,6 +744,17 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     arrivalDecisionExpiresAt: str(record.arrivalDecisionExpiresAt) || null,
     arrivedAt: str(record.arrivedAt) || null,
     seatedAt: str(record.seatedAt) || null,
+    waiting: record.waiting && typeof record.waiting === 'object'
+      ? {
+          waitingSinceAt: str((record.waiting as AnyRecord).waitingSinceAt),
+          waitingMinutes: num((record.waiting as AnyRecord).waitingMinutes),
+          serviceDelayMinutes: num((record.waiting as AnyRecord).serviceDelayMinutes),
+          isOverdue: bool((record.waiting as AnyRecord).isOverdue),
+        }
+      : null,
+    requiresReceptionReview: bool(record.requiresReceptionReview),
+    departureReason: [1, 2].includes(num(record.departureReason))
+      ? num(record.departureReason) as 1 | 2 : null,
     restaurantName: str(record.restaurantName || record.RestaurantName) || null,
     tableName: str(record.tableName || record.TableName) || null,
     customerName: str(record.customerName || record.CustomerName) || null,
@@ -807,6 +834,7 @@ function appendReservationQuery(endpoint: string, query: RestaurantReservationQu
   if (query.reservedDate) params.set('ReservedDate', toUtcDayBoundary(query.reservedDate, 'start'))
   if (query.restaurantName?.trim()) params.set('RestaurantName', query.restaurantName.trim())
   if (query.tableId) params.set('TableId', query.tableId)
+  if (query.waitingOnly) params.set('WaitingOnly', 'true')
 
   const search = params.toString()
   return search ? `${endpoint}?${search}` : endpoint
@@ -1687,6 +1715,10 @@ export const ecafeApi = {
   },
 
   tables: {
+    listStrict: async (restaurantId: string) => {
+      const result = await httpClient<unknown>(endpoints.tables.list(restaurantId))
+      return asArray<AnyRecord>(result.data).map((table) => mapTable(table, restaurantId))
+    },
     list: (restaurantId: string) =>
       safe(async () => {
         const result = await httpClient<unknown>(endpoints.tables.list(restaurantId))
@@ -1974,6 +2006,11 @@ export const ecafeApi = {
         mustVacateAt: str(record.mustVacateAt) || null,
         arrivedAt: str(record.arrivedAt) || null,
         seatedAt: str(record.seatedAt) || null,
+        waitingSinceAt: str(record.waitingSinceAt) || null,
+        waitingMinutes: num(record.waitingMinutes),
+        serviceDelayMinutes: num(record.serviceDelayMinutes),
+        isWaitingOverdue: bool(record.isWaitingOverdue),
+        requiresReceptionReview: bool(record.requiresReceptionReview),
       }))
     },
     getById: async (reservationId: string) => {
@@ -2001,6 +2038,14 @@ export const ecafeApi = {
       const data = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapReservationResponse(data)
     },
+    recordDeparture: async (restaurantId: string, reservationId: string, reasonCode: 1 | 2, reason: string) =>
+      (await httpClient<ReservationActionResponse>(endpoints.reservations.departure(restaurantId, reservationId), {
+        method: 'POST', body: JSON.stringify({ reasonCode, reason }),
+      })).data,
+    changeTable: async (restaurantId: string, reservationId: string, tableId: number) =>
+      (await httpClient<ReservationActionResponse>(endpoints.reservations.tableChange(restaurantId, reservationId), {
+        method: 'POST', body: JSON.stringify({ tableId, customerConsent: true }),
+      })).data,
     getArrivalOptions: async (reservationId: string) =>
       (await httpClient<ReservationArrivalOptions>(endpoints.reservations.arrivalOptions(reservationId))).data,
     offerArrival: async (reservationId: string, arrivalAt: string) =>

@@ -1,5 +1,6 @@
-import { CalendarDays, CalendarX2, CheckCircle2, RefreshCw, Store, Table2, Users } from 'lucide-react'
+import { CalendarDays, CalendarX2, CheckCircle2, RefreshCw, Store, Table2, Users, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { WorkflowAction } from '../../entities/types'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { ecafeApi, type ReservationServiceItemResponse } from '../../shared/api/ecafeApi'
@@ -22,15 +23,19 @@ const emptyPage: PaginatedResponse<ReservationServiceItemResponse> = {
 
 export function WaiterDashboardPage() {
   const { user, selectProfile } = useAuth()
+  const [searchParams] = useSearchParams()
+  const waitingQuery = searchParams.get('waitingOnly') === 'true'
+  const targetReservationId = Number(searchParams.get('reservationId'))
   const profiles = useMemo(() => user?.profiles.filter((profile) => profile.roleId === RoleIds.Waiter && profile.isActive !== false) || [], [user])
   const restaurantIds = useMemo(() => [...new Set([
     ...profiles.map((profile) => profile.restaurantId),
     ...(user?.roleId === RoleIds.Waiter && user.restaurantId ? [user.restaurantId] : []),
   ])], [user, profiles])
   const restaurantId = user?.restaurantId && restaurantIds.includes(user.restaurantId) ? user.restaurantId : restaurantIds[0] || ''
-  const [date, setDate] = useState(getTodayDateInputValue)
+  const [date, setDate] = useState(() => waitingQuery ? '' : getTodayDateInputValue())
+  const [waitingOnly, setWaitingOnly] = useState(waitingQuery)
   const [page, setPage] = useState(1)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedId, setSelectedId] = useState<number | null>(Number.isInteger(targetReservationId) && targetReservationId > 0 ? targetReservationId : null)
   const [reloadKey, setReloadKey] = useState(0)
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState('')
@@ -51,10 +56,18 @@ export function WaiterDashboardPage() {
     }
   }, [])
 
-  const pageKey = `${restaurantId}:${date}:${page}:${reloadKey}`
+  useEffect(() => {
+    if (!waitingQuery) return
+    setWaitingOnly(true)
+    setDate('')
+    setPage(1)
+    if (Number.isInteger(targetReservationId) && targetReservationId > 0) setSelectedId(targetReservationId)
+  }, [waitingQuery, targetReservationId])
+
+  const pageKey = `${restaurantId}:${date}:${waitingOnly}:${page}:${reloadKey}`
   const { data: pageResult, error, isLoading } = useAsyncData(
     () => restaurantId ? ecafeApi.reservations.listForService(restaurantId, {
-      pageNumber: page, pageSize: 20, reservedDate: date,
+      pageNumber: page, pageSize: 20, reservedDate: date || undefined, waitingOnly,
     }).then((result) => ({ key: pageKey, page: result })) : Promise.resolve({ key: pageKey, page: emptyPage }),
     { key: '', page: emptyPage },
     [pageKey],
@@ -99,34 +112,40 @@ export function WaiterDashboardPage() {
       {restaurantIds.length > 1 ? <label className="waiter-restaurant-filter">Restoran<select value={restaurantId} onChange={(event) => { selectProfile({ restaurantId: event.target.value, roleId: RoleIds.Waiter }); setPage(1); setSelectedId(null) }}>
         {restaurantIds.map((id) => <option key={id} value={id}>{profiles.find((profile) => profile.restaurantId === id)?.restaurantName || `Restoran ${id}`}</option>)}
       </select></label> : <div className="waiter-restaurant-name"><span>Restoran</span><strong><Store size={18} aria-hidden="true" />{profiles.find((profile) => profile.restaurantId === restaurantId)?.restaurantName || 'Restoran rezervasiyaları'}</strong></div>}
-      <label className="waiter-date-filter">Rezervasiya tarixi<LocalizedDateInput value={date} onChange={(event) => { setDate(event.target.value); setPage(1); setSelectedId(null) }} /></label>
+      <div className="waiter-date-filter"><span>Rezervasiya tarixi</span><div className="waiter-date-control"><LocalizedDateInput aria-label="Rezervasiya tarixi" value={date} onChange={(event) => { setDate(event.target.value); setPage(1); setSelectedId(null) }} />{date ? <button aria-label="Tarix filtrini təmizlə" onClick={() => { setDate(''); setPage(1); setSelectedId(null) }} title="Tarix filtrini təmizlə" type="button"><X size={17} /></button> : null}</div></div>
       <Button type="button" variant="secondary" onClick={() => setReloadKey((value) => value + 1)} title="Siyahını yenilə" aria-label="Siyahını yenilə"><RefreshCw size={18} /></Button>
+    </div>
+    <div className="waiter-reservation-modes" role="group" aria-label="Rezervasiya görünüşü">
+      <button aria-pressed={!waitingOnly} className={!waitingOnly ? 'is-active' : ''} onClick={() => { setWaitingOnly(false); setDate(getTodayDateInputValue()); setPage(1); setSelectedId(null) }} type="button">Bütün rezervasiyalar</button>
+      <button aria-pressed={waitingOnly} className={waitingOnly ? 'is-active' : ''} onClick={() => { setWaitingOnly(true); setDate(''); setPage(1); setSelectedId(null) }} type="button">Gəlişi yoxlanacaq</button>
     </div>
     {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
     {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>Sizə aid restoran tapılmadı.</StatusMessage> : null}
     {listLoading ? <p className="waiter-reservations-muted">Rezervasiyalar yüklənir...</p> : null}
     {!listLoading && !error && restaurantId && data.items.length === 0 ? <div className="waiter-reservations-empty" role="status">
       <span className="waiter-reservations-empty-icon"><CalendarX2 size={22} aria-hidden="true" /></span>
-      <div><strong>Aktiv rezervasiya yoxdur</strong><p>Seçilən tarix üçün gəlişi idarə ediləcək rezervasiya tapılmadı.</p></div>
+      <div><strong>{waitingOnly ? 'Yoxlanacaq gəliş yoxdur' : 'Aktiv rezervasiya yoxdur'}</strong><p>{waitingOnly ? 'Hazırda gəlib masaya əyləşməmiş qonaq tapılmadı.' : 'Seçilən tarix üçün gəlişi idarə ediləcək rezervasiya tapılmadı.'}</p></div>
     </div> : null}
     <section className="waiter-reservations-list" aria-label="Servis rezervasiyaları">
       {!listLoading && !error && data.items.map((item) => {
         const isSelected = selectedId === item.id
         const startsAt = new Date(item.reservedAt).getTime()
         const deadlineAt = new Date(item.noShowDeadlineAt).getTime()
-        const state = item.seatedAt ? 'Masaya əyləşib' : item.arrivedAt ? 'Gəlib, masa gözləyir' : now < startsAt ? 'Vaxtı çatmayıb' : now >= deadlineAt ? 'Gəliş müddəti bitib' : 'Gəliş gözlənilir'
+        const state = item.seatedAt ? 'Masaya əyləşib' : item.requiresReceptionReview ? 'Nəticə yoxlanmalıdır' : item.isWaitingOverdue ? 'Masa gözləyir · gecikir' : item.arrivedAt ? 'Gəlib, masa gözləyir' : now < startsAt ? 'Vaxtı çatmayıb' : now >= deadlineAt ? 'Gəliş müddəti bitib' : 'Gəliş gözlənilir'
         return <article className={`waiter-reservation${isSelected ? ' is-selected' : ''}`} key={item.id}>
-          <div className="waiter-reservation-top"><div><small>REZERVASİYA #{item.id}</small><h2>{item.customerName}</h2></div><span className={`waiter-reservation-state${item.seatedAt ? ' is-seated' : item.arrivedAt ? ' is-arrived' : ''}`}>{state}</span></div>
+          <div className="waiter-reservation-top"><div><small>REZERVASİYA #{item.id}</small><h2>{item.customerName}</h2></div><span className={`waiter-reservation-state${item.requiresReceptionReview ? ' is-review' : item.seatedAt ? ' is-seated' : item.isWaitingOverdue ? ' is-overdue' : item.arrivedAt ? ' is-arrived' : ''}`}>{state}</span></div>
           <div className="waiter-reservation-meta"><span><Table2 size={17} />{item.tableName}</span><span><CalendarDays size={17} />{formatReservationDateTime(item.reservedAt, item.timeZone || 'Asia/Baku')}</span><span><Users size={17} />{item.peopleCount} nəfər</span></div>
+          {item.waitingSinceAt && !item.requiresReceptionReview ? <div className="waiter-reservation-waiting"><span>Gözləmə <strong>{item.waitingMinutes} dəq</strong></span><span>Servis gecikməsi <strong>{item.serviceDelayMinutes} dəq</strong></span></div> : null}
           {isSelected ? <div className="waiter-reservation-detail">
             <p>Gəliş üçün son vaxt: {formatReservationDateTime(item.noShowDeadlineAt, item.timeZone || 'Asia/Baku')}</p>
             {item.mustVacateAt ? <p>Masanı təhvil vaxtı: {formatReservationDateTime(item.mustVacateAt, item.timeZone || 'Asia/Baku')}</p> : null}
             {item.arrivedAt ? <p>Gəliş qeyd edildi: {formatReservationDateTime(item.arrivedAt, item.timeZone || 'Asia/Baku')}</p> : null}
+            {item.requiresReceptionReview ? <p className="waiter-reservation-review-note">Xidmət müddəti bitib. Nəticəni restoran menecerinə bildirin; rezervasiya avtomatik ləğv edilməyib.</p> : null}
             {actionsLoading ? <span className="waiter-reservations-muted">Əməliyyatlar yoxlanılır...</span> : null}
             {actionsError ? <StatusMessage tone="danger" autoHideMs={false}>{actionsError}</StatusMessage> : null}
-            {!actionsLoading && !actionsError && !item.seatedAt && checkIn ? <Button type="button" disabled={busy} onClick={() => setPendingAction(checkIn)}><Table2 size={17} />Masaya əyləşdir</Button> : null}
-            {!actionsLoading && !actionsError && !item.seatedAt && !item.arrivedAt && markArrived ? <Button type="button" variant="secondary" disabled={busy} onClick={() => void execute(markArrived)}><CheckCircle2 size={17} />Gəlişi qeyd et</Button> : null}
-            {!actionsLoading && !actionsError && !item.seatedAt && !markArrived && !checkIn ? <span className="waiter-reservations-muted">{now < startsAt ? 'Rezervasiya vaxtı hələ çatmayıb.' : !item.arrivedAt && now >= deadlineAt ? 'Gəliş müddəti bitib. No-show statusu yenilənəcək.' : 'Hazırda icra edilə bilən əməliyyat yoxdur.'}</span> : null}
+            {!actionsLoading && !actionsError && !item.seatedAt && !item.requiresReceptionReview && checkIn ? <Button type="button" disabled={busy} onClick={() => setPendingAction(checkIn)}><Table2 size={17} />Masaya əyləşdir</Button> : null}
+            {!actionsLoading && !actionsError && !item.seatedAt && !item.arrivedAt && !item.requiresReceptionReview && markArrived ? <Button type="button" variant="secondary" disabled={busy} onClick={() => void execute(markArrived)}><CheckCircle2 size={17} />Gəlişi qeyd et</Button> : null}
+            {!actionsLoading && !actionsError && !item.seatedAt && !item.requiresReceptionReview && !markArrived && !checkIn ? <span className="waiter-reservations-muted">{now < startsAt ? 'Rezervasiya vaxtı hələ çatmayıb.' : !item.arrivedAt && now >= deadlineAt ? 'Gəliş müddəti bitib. No-show statusu yenilənəcək.' : 'Hazırda icra edilə bilən əməliyyat yoxdur.'}</span> : null}
             {actionError ? <StatusMessage tone="danger">{actionError}</StatusMessage> : null}
             {actionMessage ? <StatusMessage tone="success">{actionMessage}</StatusMessage> : null}
           </div> : null}
@@ -135,6 +154,6 @@ export function WaiterDashboardPage() {
       })}
     </section>
     <PaginationControls ariaLabel="Rezervasiya səhifələri" hasNextPage={data.hasNextPage} hasPreviousPage={data.hasPreviousPage} pageIndex={data.pageIndex} totalPages={data.totalPages} onPageChange={(next) => { setPage(next); setSelectedId(null) }} />
-    <ReservationReasonDialog isOpen={Boolean(pendingAction)} title="Müştərini masaya əyləşdirirsiniz?" description="Bu əməliyyat masa sessiyasını açacaq. Müştərinin həqiqətən masaya əyləşdiyini yoxlayın." confirmLabel="Masaya əyləşdir" confirmVariant="primary" isSubmitting={busy} error={pendingAction ? actionError : ''} requireReason={false} showReason={false} onClose={() => setPendingAction(null)} onConfirm={() => { if (pendingAction) void execute(pendingAction) }} />
+    <ReservationReasonDialog isOpen={Boolean(pendingAction)} title="Müştərini masaya əyləşdirirsiniz?" description="Bu əməliyyat gəlişi qeyd edəcək və masa sessiyasını açacaq. Masanın hazır olduğunu yoxlayın." confirmLabel="Masaya əyləşdir" confirmVariant="primary" isSubmitting={busy} error={pendingAction ? actionError : ''} requireReason={false} showReason={false} onClose={() => setPendingAction(null)} onConfirm={() => { if (pendingAction) void execute(pendingAction) }} />
   </main>
 }

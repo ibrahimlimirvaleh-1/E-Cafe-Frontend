@@ -1,0 +1,120 @@
+.reservation-waiting-summary {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 0;
+  border-block: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  text-align: left;
+}
+
+.reservation-waiting-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.reservation-waiting-heading > svg { color: var(--secondary); }
+.reservation-waiting-summary.is-review .reservation-waiting-heading > svg { color: var(--warning); }
+.reservation-waiting-summary p { margin: 0; color: var(--on-surface-variant); font-size: 14px; line-height: 1.5; }
+.reservation-waiting-alert { color: var(--warning); font-size: 12px; font-weight: 800; }
+
+.reservation-waiting-summary dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.reservation-waiting-summary dt { margin-bottom: 4px; color: var(--on-surface-variant); font-size: 12px; }
+.reservation-waiting-summary dd { margin: 0; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+
+@media (max-width: 600px) {
+  .reservation-waiting-summary dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reservation-waiting-summary dl > div:first-child { grid-column: 1 / -1; }
+}
+
+.reservation-waiting-management {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+}
+
+.reservation-waiting-management-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.reservation-waiting-management h2 { margin: 4px 0 0; font-size: 19px; line-height: 1.3; }
+
+.reservation-waiting-modes {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 6px;
+  background: var(--surface-low);
+}
+.reservation-waiting-modes.is-review { grid-template-columns: minmax(0, 1fr); }
+
+.reservation-waiting-modes button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--on-surface-variant);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reservation-waiting-modes button.is-active {
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.reservation-waiting-modes button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.reservation-waiting-form { display: grid; justify-items: start; gap: 14px; min-width: 0; }
+.reservation-waiting-form > .ui-field { width: min(100%, 420px); }
+.reservation-waiting-form > .ui-button { min-height: 44px; }
+.reservation-waiting-form select { min-height: 44px; }
+.reservation-waiting-form .ui-field textarea { width: min(100%, 520px); }
+.reservation-waiting-consent { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; line-height: 1.4; cursor: pointer; }
+.reservation-waiting-consent input { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; accent-color: var(--primary); }
+.reservation-waiting-muted { margin: 0; color: var(--on-surface-variant); font-size: 13px; }
+.reservation-waiting-error { display: flex; align-items: center; gap: 8px; }
+
+.reservation-waiting-filter { display: inline-grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 100%; padding: 4px; margin: 0 0 18px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-low); }
+.reservation-waiting-filter button { min-height: 38px; padding: 7px 13px; border: 0; border-radius: 4px; background: transparent; color: var(--on-surface-variant); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.reservation-waiting-filter button.is-active { background: var(--surface-lowest); color: var(--on-surface); box-shadow: var(--shadow-sm); }
+.reservation-waiting-filter button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.admin-reservation-waiting { display: block; margin-top: 8px; color: var(--on-surface-variant); font-size: 12px; font-weight: 700; line-height: 1.4; }
+.admin-reservation-waiting.is-overdue { color: var(--warning); }
+.admin-reservation-waiting.is-review { color: var(--warning); }
+
+@media (max-width: 600px) {
+  .reservation-waiting-management { padding: 18px; }
+  .reservation-waiting-modes { width: 100%; }
+  .reservation-waiting-modes button { padding-inline: 6px; }
+  .reservation-waiting-form, .reservation-waiting-form > .ui-field, .reservation-waiting-form > .ui-button { width: 100%; }
+  .reservation-waiting-filter { display: grid; width: 100%; }
+}

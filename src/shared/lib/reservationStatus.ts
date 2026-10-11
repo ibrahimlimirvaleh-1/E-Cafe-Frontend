@@ -51,3 +51,10 @@ export function isReservationConfirmed(status: string) {
   const normalized = status.toLocaleLowerCase('az-AZ')
   return normalized.includes('confirmed') || normalized.includes('təsdiqlənib')
 }
+
+// Ayrılma səbəbini bütün rezervasiya görünüşlərində eyni mətnlə göstəririk.
+export function getReservationDepartureReasonLabel(reason: 1 | 2 | null | undefined) {
+  if (reason === 1) return 'Restoran masa təmin edə bilmədi'
+  if (reason === 2) return 'Qonaq özü ayrıldı'
+  return ''
+}
