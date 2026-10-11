@@ -1,15 +1,16 @@
-import { CalendarDays, MapPin, Users } from 'lucide-react'
+import { CalendarDays, LogOut, MapPin, Users } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
 import { ReservationLateArrivalPanel } from '../../features/reservations/ReservationLateArrivalPanel'
+import { ReservationWaitingSummary } from '../../features/reservations/ReservationWaitingSummary'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
+import { getReservationDepartureReasonLabel, getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -35,6 +36,14 @@ export function TrackingPage() {
     null,
     [token, reloadKey],
   )
+  const isWaiting = Boolean(reservation?.waiting || reservation?.requiresReceptionReview)
+  useEffect(() => {
+    if (!isWaiting) return
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setReloadKey((value) => value + 1)
+    }, 30_000)
+    return () => window.clearInterval(timer)
+  }, [isWaiting])
   const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
     () => reservation ? ecafeApi.reservations.getHistory(String(reservation.id)) : Promise.resolve(null),
     null,
@@ -85,6 +94,7 @@ export function TrackingPage() {
                   <li><CalendarDays size={17} />{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</li>
                   <li><MapPin size={17} />{reservation.tableName || `Masa ${reservation.tableId}`}</li>
                   <li><Users size={17} />{reservation.peopleCount} nəfər</li>
+                  {reservation.departureReason ? <li><LogOut size={17} />Ayrılma: {getReservationDepartureReasonLabel(reservation.departureReason)}</li> : null}
                 </ul>
               </section>
               <section className="tracking-total" aria-label="Depozit məlumatı">
@@ -100,6 +110,7 @@ export function TrackingPage() {
               </section>
             </div>
 
+            <ReservationWaitingSummary waiting={reservation.waiting} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone} viewer="customer" />
             <ReservationLateArrivalPanel reservation={reservation} refreshKey={reloadKey} onChanged={() => setReloadKey((value) => value + 1)} />
             {reservation.latestPaymentInstruction ? (
               <div className="reservation-payment-note">
@@ -136,7 +147,7 @@ export function TrackingPage() {
             </div>
           </section>
 
-          <ReservationHistoryTimeline items={history?.items || []} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} timeZone={reservation.timeZone || undefined} />
+          <ReservationHistoryTimeline items={history?.items || []} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone || undefined} />
         </div>
       ) : null}
     </main>

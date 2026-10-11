@@ -60,7 +60,7 @@ export function NotificationsPage() {
     const route = getNotificationTarget(notification, user)
     setReloadKey((value) => value + 1)
     if (route) {
-      const restaurantId = new URLSearchParams(route.split('?')[1] || '').get('restaurantId')
+      const restaurantId = new URL(route, window.location.origin).searchParams.get('restaurantId')
       if (restaurantId) {
         selectProfileForRestaurant(restaurantId)
       }

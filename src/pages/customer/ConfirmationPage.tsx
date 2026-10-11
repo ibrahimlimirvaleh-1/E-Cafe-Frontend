@@ -8,11 +8,12 @@ import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import type { WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { isReservationAwaitingPayment, isReservationConfirmed } from '../../shared/lib/reservationStatus'
+import { getReservationDepartureReasonLabel, isReservationAwaitingPayment, isReservationConfirmed } from '../../shared/lib/reservationStatus'
 import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
 import { ReservationLateArrivalPanel } from '../../features/reservations/ReservationLateArrivalPanel'
+import { ReservationWaitingSummary } from '../../features/reservations/ReservationWaitingSummary'
 import type { ReservationHistoryResponse } from '../../shared/api/ecafeApi'
 import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
@@ -44,6 +45,14 @@ export function ConfirmationPage() {
     null,
     [reservationId, reloadKey],
   )
+  const isWaiting = Boolean(reservation?.waiting || reservation?.requiresReceptionReview)
+  useEffect(() => {
+    if (!isWaiting) return
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setReloadKey((value) => value + 1)
+    }, 30_000)
+    return () => window.clearInterval(timer)
+  }, [isWaiting])
   useEffect(() => {
     if (!reservation) return
     const previous = previousReservationRef.current
@@ -136,11 +145,14 @@ export function ConfirmationPage() {
                 <div><dt>Masa</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
                 <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
                 <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
+                {reservation.departureReason ? <div><dt>Ayrılma səbəbi</dt><dd>{getReservationDepartureReasonLabel(reservation.departureReason)}</dd></div> : null}
                 <div><dt>Depozit</dt><dd>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</dd></div>
-                {!reservation.expectedArrivalAt && isReservationConfirmed(reservation.status) ? <div><dt>Gəliş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</dd></div> : null}
+                {!reservation.expectedArrivalAt && !reservation.arrivedAt && isReservationConfirmed(reservation.status) ? <div><dt>Gəliş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</dd></div> : null}
                 {reservation.mustVacateAt ? <div><dt>Masanı təhvil vaxtı</dt><dd>{formatReservationDateTime(reservation.mustVacateAt, reservation.timeZone || undefined)}</dd></div> : null}
                 {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
               </dl>
+
+              <ReservationWaitingSummary waiting={reservation.waiting} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone} viewer="customer" />
 
               <ReservationLateArrivalPanel reservation={reservation} refreshKey={reloadKey} onChanged={() => setReloadKey((value) => value + 1)} />
               <ScheduleOfferPanel reservationId={String(reservation.id)} refreshKey={reloadKey}
@@ -195,7 +207,7 @@ export function ConfirmationPage() {
         </article>
 
         <aside className="reservation-confirmation-side">
-          {reservation ? <ReservationHistoryTimeline items={history?.items || []} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} timeZone={reservation.timeZone || undefined} /> : null}
+          {reservation ? <ReservationHistoryTimeline items={history?.items || []} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone || undefined} /> : null}
           <ButtonLink to={reservation ? `/tracking/${reservation.id}` : '/reservations'}>Rezervasiyanı izlə</ButtonLink>
         </aside>
       </div>

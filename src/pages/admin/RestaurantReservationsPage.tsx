@@ -18,6 +18,7 @@ import { getReservationStatusPresentation } from '../../shared/lib/reservationSt
 import {
   ReservationDateFilter,
 } from '../../features/reservations/ReservationDateFilter'
+import '../../features/reservations/reservation-waiting.css'
 
 const defaultPageSize = 20
 
@@ -33,6 +34,13 @@ export function RestaurantReservationsPage() {
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTableId, setSelectedTableId] = useState('')
+  const [waitingOnly, setWaitingOnly] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  useEffect(() => {
+    const refresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('ecafe:notifications-refresh', refresh)
+    return () => window.removeEventListener('ecafe:notifications-refresh', refresh)
+  }, [])
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId)
@@ -45,13 +53,13 @@ export function RestaurantReservationsPage() {
   )
   const availableTables = restaurantTables.filter((table) => table.restaurantId === restaurantId)
   const query = useMemo(
-    () => ({ pageNumber, pageSize, reservedDate: selectedDate, tableId: selectedTableId }),
-    [pageNumber, pageSize, selectedDate, selectedTableId],
+    () => ({ pageNumber, pageSize, reservedDate: selectedDate, tableId: selectedTableId, waitingOnly }),
+    [pageNumber, pageSize, selectedDate, selectedTableId, waitingOnly],
   )
   const { data, error, isLoading } = useAsyncData(
     () => restaurantId ? ecafeApi.reservations.listForRestaurant(restaurantId, query) : Promise.resolve(emptyPage),
     emptyPage,
-    [restaurantId, query],
+    [restaurantId, query, reloadKey],
   )
 
   useEffect(() => {
@@ -117,6 +125,11 @@ export function RestaurantReservationsPage() {
         <ReservationDateFilter value={selectedDate} onChange={handleDateChange} />
       </section>
 
+      <div className="reservation-waiting-filter" role="group" aria-label="Rezervasiya görünüşü">
+        <button aria-pressed={!waitingOnly} className={!waitingOnly ? 'is-active' : ''} onClick={() => { setWaitingOnly(false); setPageNumber(1) }} type="button">Hamısı</button>
+        <button aria-pressed={waitingOnly} className={waitingOnly ? 'is-active' : ''} onClick={() => { setWaitingOnly(true); setSelectedDate(''); setPageNumber(1) }} type="button">Gəlişi yoxlanacaq</button>
+      </div>
+
       {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>Rezervasiyaları görmək üçün restoran seçin.</StatusMessage> : null}
       {tablesError ? <StatusMessage tone="danger" autoHideMs={false}>Masalar yüklənmədi: {tablesError}</StatusMessage> : null}
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
@@ -125,8 +138,8 @@ export function RestaurantReservationsPage() {
       {!isLoading && !error && data.items.length === 0 ? (
         <section className="reservation-empty-state reservation-empty-state-admin">
           <CalendarDays size={28} />
-          <h2>{selectedDate || selectedTableId ? 'Seçilən filtrə uyğun rezervasiya yoxdur' : 'Rezervasiya yoxdur'}</h2>
-          <p>{selectedDate || selectedTableId ? 'Tarixi və ya masanı dəyişərək yenidən baxın.' : 'Bu restoran üçün yeni rezervasiya yarandıqda burada görünəcək.'}</p>
+          <h2>{waitingOnly ? 'Yoxlanacaq gəliş yoxdur' : selectedDate || selectedTableId ? 'Seçilən filtrə uyğun rezervasiya yoxdur' : 'Rezervasiya yoxdur'}</h2>
+          <p>{waitingOnly ? 'Hazırda gəlib masaya əyləşməmiş qonaq tapılmadı.' : selectedDate || selectedTableId ? 'Tarixi və ya masanı dəyişərək yenidən baxın.' : 'Bu restoran üçün yeni rezervasiya yarandıqda burada görünəcək.'}</p>
         </section>
       ) : null}
 
@@ -149,6 +162,7 @@ export function RestaurantReservationsPage() {
                     <span className="reservation-card-kicker">Rezervasiya #{reservation.id}</span>
                     <h2>{reservation.customerName || 'Müştəri'}</h2>
                     <span className="admin-reservation-secondary">{reservation.restaurantName || 'Restoran'} · {reservation.tableName || `Masa ${reservation.tableId}`}</span>
+                    {reservation.requiresReceptionReview ? <span className="admin-reservation-waiting is-review">Nəticə yoxlanmalıdır</span> : reservation.waiting ? <span className={`admin-reservation-waiting${reservation.waiting.isOverdue ? ' is-overdue' : ''}`}>Masa gözləyir · {reservation.waiting.waitingMinutes} dəq gözləmə · {reservation.waiting.serviceDelayMinutes} dəq servis gecikməsi</span> : null}
                   </div>
                   <div className="admin-reservation-row-meta">
                     <span><CalendarDays size={16} /><b>{formatReservationDateTime(reservation.reservedAt)}</b></span>

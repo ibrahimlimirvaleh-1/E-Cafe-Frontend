@@ -87,6 +87,10 @@ export const endpoints = {
     restaurantList: (restaurantId: string) => `/restaurants/${restaurantId}/reservations`,
     restaurantService: (restaurantId: string) => `/restaurants/${restaurantId}/reservations/service`,
     restaurantDetail: (restaurantId: string, reservationId: string) => `/restaurants/${restaurantId}/reservations/${reservationId}`,
+    departure: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/departure`,
+    tableChange: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/table-change`,
     restaurantHistory: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/history`,
     sendPaymentInstruction: (restaurantId: string, reservationId: string) =>
