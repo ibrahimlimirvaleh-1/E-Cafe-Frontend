@@ -45,13 +45,11 @@ export function WaiterDashboardPage() {
   useEffect(() => {
     const refresh = () => setReloadKey((value) => value + 1)
     window.addEventListener('ecafe:notifications-refresh', refresh)
-    window.addEventListener('focus', refresh)
     const timer = window.setInterval(() => {
       if (!document.hidden) refresh()
     }, 30_000)
     return () => {
       window.removeEventListener('ecafe:notifications-refresh', refresh)
-      window.removeEventListener('focus', refresh)
       window.clearInterval(timer)
     }
   }, [])
@@ -64,28 +62,28 @@ export function WaiterDashboardPage() {
     if (Number.isInteger(targetReservationId) && targetReservationId > 0) setSelectedId(targetReservationId)
   }, [waitingQuery, targetReservationId])
 
-  const pageKey = `${restaurantId}:${date}:${waitingOnly}:${page}:${reloadKey}`
-  const { data: pageResult, error, isLoading } = useAsyncData(
+  const pageKey = `${restaurantId}:${date}:${waitingOnly}:${page}`
+  const { data: pageResult, error } = useAsyncData(
     () => restaurantId ? ecafeApi.reservations.listForService(restaurantId, {
       pageNumber: page, pageSize: 20, reservedDate: date || undefined, waitingOnly,
     }).then((result) => ({ key: pageKey, page: result })) : Promise.resolve({ key: pageKey, page: emptyPage }),
     { key: '', page: emptyPage },
-    [pageKey],
+    [pageKey, reloadKey],
   )
   const data = pageResult.key === pageKey ? pageResult.page : emptyPage
-  const listLoading = isLoading || (pageResult.key !== pageKey && !error)
+  const listLoading = pageResult.key !== pageKey && !error
   const selected = data.items.find((item) => item.id === selectedId)
-  const actionsKey = selected ? `${restaurantId}:${selected.id}:${selected.statusId}:${selected.arrivedAt || ''}:${reloadKey}` : ''
-  const { data: actionsResult, error: actionsError, isLoading: actionsPending } = useAsyncData(
+  const actionsKey = selected ? `${restaurantId}:${selected.id}:${selected.statusId}:${selected.arrivedAt || ''}` : ''
+  const { data: actionsResult, error: actionsError } = useAsyncData(
     () => selected && restaurantId
       ? ecafeApi.workflow.actionsStrict({ flowCode: 'reservation', statusId: selected.statusId, restaurantId, entityId: String(selected.id) })
         .then((items) => ({ key: actionsKey, items }))
       : Promise.resolve({ key: actionsKey, items: [] as WorkflowAction[] }),
     { key: '', items: [] as WorkflowAction[] },
-    [actionsKey],
+    [actionsKey, reloadKey],
   )
   const actions = actionsResult.key === actionsKey ? actionsResult.items : []
-  const actionsLoading = Boolean(selected) && (actionsPending || actionsResult.key !== actionsKey) && !actionsError
+  const actionsLoading = Boolean(selected) && actionsResult.key !== actionsKey && !actionsError
   const now = Date.now()
   const markArrived = actions.find((action) => action.code === 'markArrived')
   const checkIn = actions.find((action) => action.code === 'checkIn')
@@ -131,13 +129,13 @@ export function WaiterDashboardPage() {
         const isSelected = selectedId === item.id
         const startsAt = new Date(item.reservedAt).getTime()
         const deadlineAt = new Date(item.noShowDeadlineAt).getTime()
-        const state = item.seatedAt ? 'Masaya əyləşib' : item.requiresReceptionReview ? 'Nəticə yoxlanmalıdır' : item.isWaitingOverdue ? 'Masa gözləyir · gecikir' : item.arrivedAt ? 'Gəlib, masa gözləyir' : now < startsAt ? 'Vaxtı çatmayıb' : now >= deadlineAt ? 'Gəliş müddəti bitib' : 'Gəliş gözlənilir'
+        const state = item.seatedAt ? 'Masaya əyləşib' : item.requiresReceptionReview ? 'Nəticə yoxlanmalıdır' : item.isWaitingOverdue ? 'Masa gözləyir · gecikir' : item.arrivedAt ? 'Gəlib, masa gözləyir' : now >= deadlineAt ? 'Gəliş müddəti bitib' : 'Gəliş gözlənilir'
         return <article className={`waiter-reservation${isSelected ? ' is-selected' : ''}`} key={item.id}>
           <div className="waiter-reservation-top"><div><small>REZERVASİYA #{item.id}</small><h2>{item.customerName}</h2></div><span className={`waiter-reservation-state${item.requiresReceptionReview ? ' is-review' : item.seatedAt ? ' is-seated' : item.isWaitingOverdue ? ' is-overdue' : item.arrivedAt ? ' is-arrived' : ''}`}>{state}</span></div>
           <div className="waiter-reservation-meta"><span><Table2 size={17} />{item.tableName}</span><span><CalendarDays size={17} />{formatReservationDateTime(item.reservedAt, item.timeZone || 'Asia/Baku')}</span><span><Users size={17} />{item.peopleCount} nəfər</span></div>
           {item.waitingSinceAt && !item.requiresReceptionReview ? <div className="waiter-reservation-waiting"><span>Gözləmə <strong>{item.waitingMinutes} dəq</strong></span><span>Servis gecikməsi <strong>{item.serviceDelayMinutes} dəq</strong></span></div> : null}
           {isSelected ? <div className="waiter-reservation-detail">
-            <p>Gəliş üçün son vaxt: {formatReservationDateTime(item.noShowDeadlineAt, item.timeZone || 'Asia/Baku')}</p>
+            {!item.arrivedAt ? <p>Gəliş üçün son vaxt: {formatReservationDateTime(item.noShowDeadlineAt, item.timeZone || 'Asia/Baku')}</p> : null}
             {item.mustVacateAt ? <p>Masanı təhvil vaxtı: {formatReservationDateTime(item.mustVacateAt, item.timeZone || 'Asia/Baku')}</p> : null}
             {item.arrivedAt ? <p>Gəliş qeyd edildi: {formatReservationDateTime(item.arrivedAt, item.timeZone || 'Asia/Baku')}</p> : null}
             {item.requiresReceptionReview ? <p className="waiter-reservation-review-note">Xidmət müddəti bitib. Nəticəni restoran menecerinə bildirin; rezervasiya avtomatik ləğv edilməyib.</p> : null}
@@ -145,7 +143,7 @@ export function WaiterDashboardPage() {
             {actionsError ? <StatusMessage tone="danger" autoHideMs={false}>{actionsError}</StatusMessage> : null}
             {!actionsLoading && !actionsError && !item.seatedAt && !item.requiresReceptionReview && checkIn ? <Button type="button" disabled={busy} onClick={() => setPendingAction(checkIn)}><Table2 size={17} />Masaya əyləşdir</Button> : null}
             {!actionsLoading && !actionsError && !item.seatedAt && !item.arrivedAt && !item.requiresReceptionReview && markArrived ? <Button type="button" variant="secondary" disabled={busy} onClick={() => void execute(markArrived)}><CheckCircle2 size={17} />Gəlişi qeyd et</Button> : null}
-            {!actionsLoading && !actionsError && !item.seatedAt && !item.requiresReceptionReview && !markArrived && !checkIn ? <span className="waiter-reservations-muted">{now < startsAt ? 'Rezervasiya vaxtı hələ çatmayıb.' : !item.arrivedAt && now >= deadlineAt ? 'Gəliş müddəti bitib. No-show statusu yenilənəcək.' : 'Hazırda icra edilə bilən əməliyyat yoxdur.'}</span> : null}
+            {!actionsLoading && !actionsError && !item.seatedAt && !item.requiresReceptionReview && !markArrived && !checkIn ? <span className="waiter-reservations-muted">{now < startsAt ? 'Gəliş əməliyyatı hazırda əlçatan deyil.' : !item.arrivedAt && now >= deadlineAt ? 'Gəliş müddəti bitib. No-show statusu yenilənəcək.' : 'Hazırda icra edilə bilən əməliyyat yoxdur.'}</span> : null}
             {actionError ? <StatusMessage tone="danger">{actionError}</StatusMessage> : null}
             {actionMessage ? <StatusMessage tone="success">{actionMessage}</StatusMessage> : null}
           </div> : null}
