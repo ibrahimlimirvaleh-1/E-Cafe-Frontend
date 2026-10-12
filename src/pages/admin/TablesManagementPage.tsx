@@ -5,7 +5,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -39,9 +39,10 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const restaurantQuery = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
   const createTablePath = `/admin/tables/new${restaurantQuery}`
   const tablesListPath = `/admin/tables${restaurantQuery}`
-  const { data: tables, isLoading } = useAsyncData(
+  const { data: tables, isLoading } = useKeyedAsyncData(
     () => (restaurantId ? ecafeApi.tables.list(restaurantId) : Promise.resolve([])),
     [],
+    restaurantId,
     [restaurantId, reloadKey],
   )
   const editingTable = mode === 'edit' ? tables.find((table) => table.id === tableId) : undefined

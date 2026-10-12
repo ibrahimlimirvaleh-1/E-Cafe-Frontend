@@ -7,7 +7,7 @@ import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/h
 import { restaurantRow } from '../../shared/api/mappers'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, isInRole, isPlatformAdmin } from '../../shared/auth/authz'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { DataTable } from '../../shared/ui/DataTable'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
@@ -154,20 +154,21 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
 
     return `?${params.toString()}`
   }, [pageNumber, pageSize, search])
-  const { data: restaurantPage, isLoading } = useAsyncData(() => ecafeApi.restaurants.page(query), {
+  const { data: restaurantPage, isLoading } = useKeyedAsyncData(() => ecafeApi.restaurants.page(query), {
     items: [],
     pageIndex: 1,
     totalPages: 1,
     totalCount: 0,
     hasPreviousPage: false,
     hasNextPage: false,
-  }, [query, reloadKey])
-  const { data: groups } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
+  }, query, [query, reloadKey])
+  const { data: groups } = useKeyedAsyncData(() => ecafeApi.restaurantGroups.list(), [], 'groups', [reloadKey])
   const canCreateRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
   const canSearchRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
-  const { data: users } = useAsyncData(
+  const { data: users } = useKeyedAsyncData(
     () => (mode === 'create' && canCreateRestaurants ? ecafeApi.users.list() : Promise.resolve([])),
     [],
+    `${canCreateRestaurants}:${mode}`,
     [canCreateRestaurants, mode, reloadKey],
   )
   const pageTitle = mode === 'create' ? 'Yeni restoran' : canSearchRestaurants ? 'Restoranlar' : 'Restoran'

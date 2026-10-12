@@ -6,7 +6,7 @@ import type { ContractStatus, RestaurantContract, StatusTone, WorkflowAction } f
 import { ecafeApi } from '../../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../../shared/api/httpClient'
 import { contractStatusLabel } from '../../../shared/api/mappers'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Badge } from '../../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../../shared/ui/Button'
 import { TextareaField } from '../../../shared/ui/FormField'
@@ -76,9 +76,10 @@ export function ContractDetailPage() {
   const [isOpeningFile, setIsOpeningFile] = useState(false)
   const [isDownloadingFile, setIsDownloadingFile] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
-  const { data: record, isLoading } = useAsyncData(
+  const { data: record, isLoading } = useKeyedAsyncData(
     () => ecafeApi.contracts.get(contractId, restaurantIdFromQuery),
     null,
+    `${restaurantIdFromQuery || ''}:${contractId}`,
     [contractId, restaurantIdFromQuery, reloadKey],
   )
   const contract = record?.contract

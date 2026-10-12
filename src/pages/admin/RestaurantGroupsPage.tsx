@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
@@ -21,7 +21,7 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
-  const { data: groups, isLoading } = useAsyncData(() => ecafeApi.restaurantGroups.list(), [], [reloadKey])
+  const { data: groups, isLoading } = useKeyedAsyncData(() => ecafeApi.restaurantGroups.list(), [], 'groups', [reloadKey])
   const duplicateGroupEmail = groups.filter((group) => normalizeEmail(group.email || '') === normalizeEmail(email) && normalizeEmail(email).length > 0)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

@@ -6,7 +6,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, getAccessibleItems, hasPermission, isInRole } from '../../shared/auth/authz'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -70,14 +70,16 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   const restaurantQuery = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
   const createStaffPath = `/admin/staff/new${restaurantQuery}`
   const staffListPath = `/admin/staff${restaurantQuery}`
-  const { data: staff, isLoading } = useAsyncData(
+  const { data: staff, isLoading } = useKeyedAsyncData(
     () => (restaurantId ? ecafeApi.staff.byRestaurant(restaurantId) : Promise.resolve([])),
     [],
+    restaurantId,
     [restaurantId, reloadKey],
   )
-  const { data: staffDetail } = useAsyncData(
+  const { data: staffDetail } = useKeyedAsyncData(
     () => (mode === 'edit' && restaurantId && staffId ? ecafeApi.staff.detail(restaurantId, staffId) : Promise.resolve(null)),
     null,
+    `${mode}:${restaurantId}:${staffId}`,
     [mode, restaurantId, staffId, reloadKey],
   )
   const editingStaff = mode === 'edit' ? staffDetail ?? staff.find((member) => member.id === staffId) : undefined

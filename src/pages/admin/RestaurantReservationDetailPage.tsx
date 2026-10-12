@@ -12,7 +12,7 @@ import type { ReservationHistoryResponse, ReservationResponse } from '../../shar
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { isInRole, RoleIds } from '../../shared/auth/authz'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -37,10 +37,12 @@ export function RestaurantReservationDetailPage() {
   const [actionError, setActionError] = useState('')
   const [actionMessage, setActionMessage] = useState('')
   const [pendingAction, setPendingAction] = useState<WorkflowAction | null>(null)
-  const { data: reservation, error, isLoading } = useAsyncData<ReservationResponse | null>(
+  const reservationScope = `${user?.userId || ''}:${restaurantId}:${reservationId}`
+  const { data: reservation, error, isLoading } = useKeyedAsyncData<ReservationResponse | null>(
     () => restaurantId && reservationId ? ecafeApi.reservations.getForRestaurant(restaurantId, reservationId) : Promise.resolve(null),
     null,
-    [restaurantId, reservationId, reloadKey],
+    reservationScope,
+    [user?.userId, restaurantId, reservationId, reloadKey],
   )
   const isWaiting = Boolean(reservation?.waiting || reservation?.requiresReceptionReview)
   useEffect(() => {
@@ -50,7 +52,8 @@ export function RestaurantReservationDetailPage() {
     }, 30_000)
     return () => window.clearInterval(timer)
   }, [isWaiting])
-  const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
+  const actionsScope = `${reservationScope}:${reservation?.workflowFlowCode || ''}:${reservation?.statusId || ''}`
+  const { data: workflowActions } = useKeyedAsyncData<WorkflowAction[]>(
     () => reservation && restaurantId && reservationId && reservation.workflowFlowCode
       ? ecafeApi.workflow.actions({
           flowCode: reservation.workflowFlowCode,
@@ -60,14 +63,16 @@ export function RestaurantReservationDetailPage() {
         })
       : Promise.resolve([]),
     [],
-    [restaurantId, reservationId, reservation?.workflowFlowCode, reservation?.statusId, reloadKey],
+    actionsScope,
+    [user?.userId, restaurantId, reservationId, reservation?.workflowFlowCode, reservation?.statusId, reloadKey],
   )
-  const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
+  const { data: history } = useKeyedAsyncData<ReservationHistoryResponse | null>(
     () => restaurantId && reservationId
       ? ecafeApi.reservations.getHistoryForRestaurant(restaurantId, reservationId)
       : Promise.resolve(null),
     null,
-    [restaurantId, reservationId, reloadKey],
+    reservationScope,
+    [user?.userId, restaurantId, reservationId, reloadKey],
   )
   const sendPaymentInstructionAction = workflowActions.find((action) => action.code === 'sendPaymentInstruction')
   const visibleActions = workflowActions.filter((action) =>
@@ -144,6 +149,7 @@ export function RestaurantReservationDetailPage() {
 
   return (
     <main className="admin-page narrow reservation-detail-page">
+      {error ? <StatusMessage tone="warning" autoHideMs={false}>{error}</StatusMessage> : null}
       <PageHeader eyebrow="Rezervasiya detalı" title={`Rezervasiya #${reservation.id}`} description={reservation.customerName || 'Müştəri rezervasiyası'} />
       <div className="reservation-detail-layout">
         <div className="reservation-detail-main">

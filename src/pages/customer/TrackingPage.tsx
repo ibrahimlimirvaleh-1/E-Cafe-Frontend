@@ -8,7 +8,8 @@ import { ReservationLateArrivalPanel } from '../../features/reservations/Reserva
 import { ReservationWaitingSummary } from '../../features/reservations/ReservationWaitingSummary'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAuth } from '../../shared/auth/AuthContext'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { getReservationDepartureReasonLabel, getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
@@ -17,6 +18,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function TrackingPage() {
+  const { user } = useAuth()
   const { token = '' } = useParams()
   const [reloadKey, setReloadKey] = useState(0)
   useEffect(() => {
@@ -24,7 +26,7 @@ export function TrackingPage() {
     window.addEventListener('ecafe:notifications-refresh', onRefresh)
     return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
   }, [])
-  const { data: reservation, error, isLoading } = useAsyncData<ReservationResponse | null>(
+  const { data: reservation, error, hasData, isLoading } = useKeyedAsyncData<ReservationResponse | null>(
     async () => {
       if (/^\d+$/.test(token)) {
         return ecafeApi.reservations.getById(token)
@@ -34,7 +36,8 @@ export function TrackingPage() {
       return result.items[0] ?? null
     },
     null,
-    [token, reloadKey],
+    `${user?.userId || ''}:${token}`,
+    [user?.userId, token, reloadKey],
   )
   const isWaiting = Boolean(reservation?.waiting || reservation?.requiresReceptionReview)
   useEffect(() => {
@@ -44,10 +47,11 @@ export function TrackingPage() {
     }, 30_000)
     return () => window.clearInterval(timer)
   }, [isWaiting])
-  const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
+  const { data: history } = useKeyedAsyncData<ReservationHistoryResponse | null>(
     () => reservation ? ecafeApi.reservations.getHistory(String(reservation.id)) : Promise.resolve(null),
     null,
-    [reservation?.id, reloadKey],
+    `${user?.userId || ''}:${reservation?.id || ''}`,
+    [user?.userId, reservation?.id, reloadKey],
   )
 
   const presentation = reservation ? getReservationStatusPresentation(reservation.status) : null
@@ -63,7 +67,7 @@ export function TrackingPage() {
       {isLoading ? <p className="online-only">Rezervasiya məlumatları yüklənir...</p> : null}
       {error ? <StatusMessage autoHideMs={false} tone="danger">{error}</StatusMessage> : null}
 
-      {!isLoading && !error && !reservation ? (
+      {!isLoading && (!error || hasData) && !reservation ? (
         <section className="tracking-panel reservation-empty-state">
           <CalendarDays size={28} />
           <h2>İzlənəcək rezervasiya yoxdur</h2>

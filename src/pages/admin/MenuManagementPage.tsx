@@ -6,7 +6,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -51,14 +51,16 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const menuCreatePath = `/admin/menu/new${restaurantQuery}`
   const categoriesListPath = `/admin/categories${restaurantQuery}`
   const categoryCreatePath = `/admin/categories/new${restaurantQuery}`
-  const { data: categories } = useAsyncData(
+  const { data: categories } = useKeyedAsyncData(
     () => (restaurantId ? ecafeApi.menu.categories(restaurantId) : Promise.resolve([])),
     [],
+    restaurantId,
     [restaurantId, reloadKey],
   )
-  const { data: items, isLoading } = useAsyncData(
+  const { data: items, isLoading } = useKeyedAsyncData(
     () => (restaurantId ? ecafeApi.menu.adminItems(restaurantId) : Promise.resolve([])),
     [],
+    restaurantId,
     [restaurantId, reloadKey],
   )
   const activeStatuses = useMemo(() => itemStatuses.filter((status) => status.id > 0), [itemStatuses])

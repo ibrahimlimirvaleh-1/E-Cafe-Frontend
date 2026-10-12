@@ -5,7 +5,7 @@ import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
@@ -56,10 +56,12 @@ export function RestaurantReservationsPage() {
     () => ({ pageNumber, pageSize, reservedDate: selectedDate, tableId: selectedTableId, waitingOnly }),
     [pageNumber, pageSize, selectedDate, selectedTableId, waitingOnly],
   )
-  const { data, error, isLoading } = useAsyncData(
+  const listScope = JSON.stringify([user?.userId, restaurantId, query])
+  const { data, error, hasData, isLoading } = useKeyedAsyncData(
     () => restaurantId ? ecafeApi.reservations.listForRestaurant(restaurantId, query) : Promise.resolve(emptyPage),
     emptyPage,
-    [restaurantId, query, reloadKey],
+    listScope,
+    [user?.userId, restaurantId, query, reloadKey],
   )
 
   useEffect(() => {
@@ -135,7 +137,7 @@ export function RestaurantReservationsPage() {
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
       {isLoading ? <p className="online-only">Rezervasiyalar yüklənir...</p> : null}
 
-      {!isLoading && !error && data.items.length === 0 ? (
+      {!isLoading && (!error || hasData) && data.items.length === 0 ? (
         <section className="reservation-empty-state reservation-empty-state-admin">
           <CalendarDays size={28} />
           <h2>{waitingOnly ? 'Yoxlanacaq gəliş yoxdur' : selectedDate || selectedTableId ? 'Seçilən filtrə uyğun rezervasiya yoxdur' : 'Rezervasiya yoxdur'}</h2>
@@ -143,7 +145,7 @@ export function RestaurantReservationsPage() {
         </section>
       ) : null}
 
-      {!isLoading && !error && restaurantId ? (
+      {!isLoading && (!error || hasData) && restaurantId && data.items.length > 0 ? (
         <>
           <section className="admin-reservation-list" aria-label="Restoran rezervasiyaları">
             <div className="admin-reservation-list-header">
