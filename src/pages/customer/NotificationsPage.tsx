@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import type { NotificationItem, StatusTone } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { getNotificationTarget } from '../../shared/notifications/notificationTarget'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
@@ -48,8 +48,8 @@ export function NotificationsPage() {
     window.addEventListener('ecafe:notifications-refresh', onRefresh)
     return () => window.removeEventListener('ecafe:notifications-refresh', onRefresh)
   }, [])
-  const activeProfileKey = `${user?.restaurantId || ''}:${user?.roleId || ''}`
-  const { data: notifications, isLoading } = useAsyncData(() => ecafeApi.notifications.list(), [], [activeProfileKey, reloadKey])
+  const activeProfileKey = `${user?.userId || ''}:${user?.restaurantId || ''}:${user?.roleId || ''}`
+  const { data: notifications, isLoading } = useKeyedAsyncData(() => ecafeApi.notifications.list(), [], activeProfileKey, [activeProfileKey, reloadKey])
   const unreadCount = useMemo(() => notifications.filter((notification) => !notification.isRead).length, [notifications])
 
   const openNotification = async (notification: NotificationItem) => {

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import type { WorkflowAction } from '../../entities/types'
 import { ecafeApi, type ReservationRefundRequestInfo, type ReservationRefundResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { Button } from '../../shared/ui/Button'
 import { TextareaField } from '../../shared/ui/FormField'
@@ -32,12 +32,14 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
     window.addEventListener('ecafe:notifications-refresh', refresh)
     return () => window.removeEventListener('ecafe:notifications-refresh', refresh)
   }, [])
-  const { data: refund, error, isLoading } = useAsyncData<ReservationRefundResponse | null>(
+  const { data: refund, error, hasData, isLoading } = useKeyedAsyncData<ReservationRefundResponse | null>(
     () => ecafeApi.reservations.getRefund(String(reservationId)),
     null,
+    String(reservationId),
     [reservationId, reloadKey],
   )
-  const { data: actions, isLoading: areActionsLoading } = useAsyncData<WorkflowAction[]>(
+  const actionsScope = `${restaurantId}:${reservationId}:${refund?.id || ''}:${refund?.statusId || reservationStatusId}:${refund?.workflowFlowCode || reservationFlowCode}`
+  const { data: actions, isLoading: areActionsLoading } = useKeyedAsyncData<WorkflowAction[]>(
     () => !isLoading
       ? ecafeApi.workflow.actions({
           flowCode: refund?.workflowFlowCode || reservationFlowCode,
@@ -47,6 +49,7 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
         })
       : Promise.resolve([]),
     [],
+    actionsScope,
     [refund?.id, refund?.statusId, restaurantId, reservationId, reservationStatusId, reservationFlowCode, isLoading, reloadKey],
   )
 
@@ -56,7 +59,7 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
     return () => window.cancelAnimationFrame(frame)
   }, [isLoading, reservationId, Boolean(refund), Boolean(refundRequest)])
 
-  if (isLoading || error) {
+  if (isLoading || (error && !hasData)) {
     return error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null
   }
 
@@ -135,6 +138,7 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
 
   return (
     <section className="reservation-refund-panel" id="refund" aria-label="Geri ödəniş">
+      {error ? <StatusMessage tone="warning" autoHideMs={false}>{error}</StatusMessage> : null}
       <div className="reservation-refund-heading">
         <div>
           <span className="section-eyebrow">GERİ ÖDƏNİŞ</span>

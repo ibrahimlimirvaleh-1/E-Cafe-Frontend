@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import type { WorkflowAction } from '../../entities/types'
 import { ecafeApi, type ReservationRefundResponse, type RestaurantRefundPayoutDetailsResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { Button } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
@@ -28,12 +28,15 @@ export function RestaurantRefundPanel({ reservationId, restaurantId }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const { data: refund, error, isLoading } = useAsyncData<ReservationRefundResponse | null>(
+  const refundScope = `${restaurantId}:${reservationId}`
+  const { data: refund, error, hasData, isLoading } = useKeyedAsyncData<ReservationRefundResponse | null>(
     () => ecafeApi.reservations.getRefundForRestaurant(restaurantId, reservationId),
     null,
+    refundScope,
     [restaurantId, reservationId, reloadKey],
   )
-  const { data: actions, isLoading: areActionsLoading } = useAsyncData<WorkflowAction[]>(
+  const actionsScope = `${refundScope}:${refund?.id || ''}:${refund?.statusId || ''}`
+  const { data: actions, isLoading: areActionsLoading } = useKeyedAsyncData<WorkflowAction[]>(
     () => refund
       ? ecafeApi.workflow.actions({
           flowCode: refund.workflowFlowCode,
@@ -43,6 +46,7 @@ export function RestaurantRefundPanel({ reservationId, restaurantId }: Props) {
         })
       : Promise.resolve([]),
     [],
+    actionsScope,
     [refund?.id, refund?.statusId, restaurantId, reloadKey],
   )
 
@@ -52,7 +56,7 @@ export function RestaurantRefundPanel({ reservationId, restaurantId }: Props) {
     return () => window.clearTimeout(timeout)
   }, [payoutDetails])
 
-  if (isLoading || error || !refund) {
+  if (isLoading || (error && !hasData) || !refund) {
     return error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null
   }
 
@@ -121,6 +125,7 @@ export function RestaurantRefundPanel({ reservationId, restaurantId }: Props) {
 
   return (
     <section className="reservation-refund-panel reservation-manager-refund" aria-label="Geri ödəniş">
+      {error ? <StatusMessage tone="warning" autoHideMs={false}>{error}</StatusMessage> : null}
       <div className="reservation-refund-heading">
         <div>
           <span className="section-eyebrow">GERİ ÖDƏNİŞ</span>

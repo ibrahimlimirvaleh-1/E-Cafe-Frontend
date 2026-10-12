@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import type { WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
@@ -20,6 +21,7 @@ import { Badge } from '../../shared/ui/Badge'
 import { ScheduleOfferPanel } from '../../features/reservations/ScheduleOfferPanel'
 
 export function ConfirmationPage() {
+  const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const reservationId = searchParams.get('reservationId')
   const [reloadKey, setReloadKey] = useState(0)
@@ -40,10 +42,12 @@ export function ConfirmationPage() {
   const previousReservationRef = useRef<{ id: number; depositAmount: number } | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
-  const { data: reservation, error, isLoading } = useAsyncData(
+  const reservationScope = `${user?.userId || ''}:${reservationId || ''}`
+  const { data: reservation, error, hasData, isLoading } = useKeyedAsyncData(
     () => reservationId ? ecafeApi.reservations.getById(reservationId) : Promise.resolve(null),
     null,
-    [reservationId, reloadKey],
+    reservationScope,
+    [user?.userId, reservationId, reloadKey],
   )
   const isWaiting = Boolean(reservation?.waiting || reservation?.requiresReceptionReview)
   useEffect(() => {
@@ -61,7 +65,8 @@ export function ConfirmationPage() {
     }
     previousReservationRef.current = { id: reservation.id, depositAmount: reservation.depositAmount }
   }, [reservation])
-  const { data: workflowActions } = useAsyncData<WorkflowAction[]>(
+  const actionsScope = `${reservationScope}:${reservation?.workflowFlowCode || ''}:${reservation?.statusId || ''}:${reservation?.restaurantId || ''}`
+  const { data: workflowActions } = useKeyedAsyncData<WorkflowAction[]>(
     () => reservation && reservationId && reservation.workflowFlowCode
       ? ecafeApi.workflow.actions({
           flowCode: reservation.workflowFlowCode,
@@ -71,12 +76,14 @@ export function ConfirmationPage() {
         })
       : Promise.resolve([]),
     [],
-    [reservationId, reservation?.workflowFlowCode, reservation?.statusId, reservation?.restaurantId, reloadKey],
+    actionsScope,
+    [user?.userId, reservationId, reservation?.workflowFlowCode, reservation?.statusId, reservation?.restaurantId, reloadKey],
   )
-  const { data: history } = useAsyncData<ReservationHistoryResponse | null>(
+  const { data: history } = useKeyedAsyncData<ReservationHistoryResponse | null>(
     () => reservationId ? ecafeApi.reservations.getHistory(reservationId) : Promise.resolve(null),
     null,
-    [reservationId, reloadKey],
+    reservationScope,
+    [user?.userId, reservationId, reloadKey],
   )
 
   const cancelAction = workflowActions.find((action) => action.code === 'cancel')
@@ -137,7 +144,7 @@ export function ConfirmationPage() {
               : 'Sifariş məlumatları restorana göndərildi.'}
           </p>
           {reservationId && isLoading ? <p className="online-only">Rezervasiya detalları yüklənir...</p> : null}
-          {reservationId && error ? <p className="reservation-availability-message danger">Rezervasiya detalları yüklənmədi.</p> : null}
+          {reservationId && error ? <p className="reservation-availability-message danger">{hasData ? 'Son məlumat yenilənmədi. Yenidən yoxlanacaq.' : 'Rezervasiya detalları yüklənmədi.'}</p> : null}
           {reservation ? (
             <>
               <dl className="reservation-confirmation-details">

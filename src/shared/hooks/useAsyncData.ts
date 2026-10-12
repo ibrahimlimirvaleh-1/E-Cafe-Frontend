@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { normalizeCaughtApiError } from '../api/httpClient'
 
 type AsyncState<T> = {
@@ -42,4 +42,27 @@ export function useAsyncData<T>(loader: () => Promise<T>, initialData: T, depend
   }, dependencies)
 
   return { data, error, isLoading }
+}
+
+export function useKeyedAsyncData<T>(
+  loader: () => Promise<T>,
+  initialData: T,
+  scopeKey: string,
+  dependencies: unknown[],
+) {
+  const initialDataRef = useRef(initialData)
+  const { data: result, error, isLoading } = useAsyncData(
+    () => loader().then((data) => ({ scopeKey, data, loaded: true })),
+    { scopeKey: '', data: initialDataRef.current, loaded: false },
+    [scopeKey, ...dependencies],
+  )
+  const hasCurrentData = result.loaded && result.scopeKey === scopeKey
+
+  return {
+    data: hasCurrentData ? result.data : initialDataRef.current,
+    error,
+    hasData: hasCurrentData,
+    isLoading: !hasCurrentData && isLoading,
+    isRefreshing: hasCurrentData && isLoading,
+  }
 }
