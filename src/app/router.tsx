@@ -243,7 +243,7 @@ export function AppRouter() {
         path="kitchen"
         element={
           <RequireAuth allowedRoleIds={[RoleIds.Kitchen]}>
-            <StaffShell title="Mətbəx paneli" />
+            <StaffShell title="Mətbəx paneli" variant="kitchen" />
           </RequireAuth>
         }
       >
@@ -262,7 +262,7 @@ export function AppRouter() {
         path="waiter"
         element={
           <RequireAuth allowedRoleIds={[RoleIds.Waiter]}>
-            <StaffShell title="Ofisiant paneli" />
+            <StaffShell title="Ofisiant paneli" variant="waiter" />
           </RequireAuth>
         }
       >
