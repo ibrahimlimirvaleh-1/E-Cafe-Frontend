@@ -32,7 +32,7 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const activeProfileKey = `${user?.restaurantId || ''}:${user?.roleId || ''}`
+  const activeProfileKey = `${user?.userId || ''}:${user?.restaurantId || ''}:${user?.roleId || ''}`
 
   const loadNotifications = useCallback(async () => {
     if (!isAuthenticated) {

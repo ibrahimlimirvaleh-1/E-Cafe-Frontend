@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, Clock3, Eye, RefreshCw, RotateCcw, Sliders
 import type { OutboxMessage, StatusTone } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { SelectField, TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -104,14 +104,14 @@ export function OutboxPage() {
 
   const { data: statuses } = useAsyncData(() => ecafeApi.lookups.outboxStatuses(), [], [])
   const { data: channels } = useAsyncData(() => ecafeApi.lookups.notificationChannels(), [], [])
-  const { data: messagePage, error, isLoading } = useAsyncData(() => ecafeApi.outbox.page(query), {
+  const { data: messagePage, error, isLoading } = useKeyedAsyncData(() => ecafeApi.outbox.page(query), {
     items: [],
     pageIndex: 1,
     totalPages: 1,
     totalCount: 0,
     hasPreviousPage: false,
     hasNextPage: false,
-  }, [query, reloadKey])
+  }, JSON.stringify(query), [query, reloadKey])
 
   const pendingCount = messagePage.items.filter((message) => message.statusId !== sentStatusId && message.statusId !== failedStatusId).length
   const sentCount = messagePage.items.filter((message) => message.statusId === sentStatusId).length

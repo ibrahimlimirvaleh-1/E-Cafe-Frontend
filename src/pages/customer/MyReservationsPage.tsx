@@ -2,8 +2,9 @@ import { ArrowRight, CalendarDays, Clock3, MapPin, Search, Users, X } from 'luci
 import { useEffect, useMemo, useState } from 'react'
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
+import { useAuth } from '../../shared/auth/AuthContext'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -26,6 +27,7 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 }
 
 export function MyReservationsPage() {
+  const { user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
   const [selectedDate, setSelectedDate] = useState('')
   const [searchInput, setSearchInput] = useState('')
@@ -42,10 +44,12 @@ export function MyReservationsPage() {
     () => ({ pageNumber, pageSize, reservedDate: selectedDate, restaurantName }),
     [pageNumber, pageSize, selectedDate, restaurantName],
   )
-  const { data, error, isLoading } = useAsyncData(
+  const listScope = JSON.stringify([user?.userId, query])
+  const { data, error, hasData, isLoading } = useKeyedAsyncData(
     () => ecafeApi.reservations.listMine(query),
     emptyPage,
-    [query, reloadKey],
+    listScope,
+    [user?.userId, query, reloadKey],
   )
 
   useEffect(() => {
@@ -124,7 +128,7 @@ export function MyReservationsPage() {
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
       {isLoading ? <p className="online-only">Rezervasiyalar yüklənir...</p> : null}
 
-      {!isLoading && !error && data.items.length > 0 ? (
+      {!isLoading && (!error || hasData) && data.items.length > 0 ? (
         <section className="reservation-overview" aria-label="Rezervasiya xülasəsi">
           <div>
             <span>Bu səhifədə aktiv</span>
@@ -144,7 +148,7 @@ export function MyReservationsPage() {
         </section>
       ) : null}
 
-      {!isLoading && !error && data.items.length === 0 ? (
+      {!isLoading && (!error || hasData) && data.items.length === 0 ? (
         <section className="reservation-empty-state">
           <CalendarDays size={28} />
           <h2>{hasFilters ? 'Axtarışa uyğun rezervasiya yoxdur' : 'Hələ rezervasiyanız yoxdur'}</h2>
@@ -216,7 +220,7 @@ export function MyReservationsPage() {
           )
         })}
       </section>
-      {!isLoading && !error ? (
+      {!isLoading && (!error || hasData) ? (
         <PaginationControls
           ariaLabel="Rezervasiyalarım səhifələməsi"
           hasNextPage={data.hasNextPage}

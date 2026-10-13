@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems, hasPermission } from '../../shared/auth/authz'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { useFormFeedback } from '../../shared/hooks/useFormFeedback'
 import { ActionIconButton } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
@@ -129,12 +129,13 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     : accessibleRestaurants[0]?.id || ''
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
 
-  const { data: inventoryItems, isLoading: inventoryLoading } = useAsyncData(
+  const { data: inventoryItems, isLoading: inventoryLoading } = useKeyedAsyncData(
     () => (restaurantId ? ecafeApi.inventory.list(restaurantId, { onlyLowStock }) : Promise.resolve([])),
     [],
+    `${restaurantId}:${onlyLowStock}`,
     [restaurantId, onlyLowStock, reloadKey],
   )
-  const { data: movementInventoryPage, isLoading: movementInventoryLoading } = useAsyncData(
+  const { data: movementInventoryPage, isLoading: movementInventoryLoading } = useKeyedAsyncData(
     () =>
       restaurantId && mode === 'movements'
         ? ecafeApi.inventory.listPaginated(restaurantId, {
@@ -144,11 +145,13 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           })
         : Promise.resolve(emptyPage<InventoryItem>()),
     emptyPage<InventoryItem>(),
+    `${restaurantId}:${mode}:${onlyLowStock}:${inventoryPageNumber}:${inventoryPageSize}`,
     [restaurantId, mode, onlyLowStock, inventoryPageNumber, inventoryPageSize, reloadKey],
   )
-  const { data: menuItems } = useAsyncData(
+  const { data: menuItems } = useKeyedAsyncData(
     () => (restaurantId ? ecafeApi.menu.adminItems(restaurantId) : Promise.resolve([])),
     [],
+    restaurantId,
     [restaurantId, reloadKey],
   )
   const { data: movementTypes } = useAsyncData(() => ecafeApi.lookups.inventoryMovementTypes(), [], [])
@@ -169,7 +172,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     () => menuItems.find((item) => item.id === selectedMenuItemId) ?? menuItems[0],
     [menuItems, selectedMenuItemId],
   )
-  const { data: movementPage } = useAsyncData(
+  const { data: movementPage } = useKeyedAsyncData(
     () =>
       restaurantId && inventoryItem
         ? ecafeApi.inventory.movementsPaginated(restaurantId, inventoryItem.id, {
@@ -178,11 +181,13 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           })
         : Promise.resolve(emptyPage<InventoryMovement>()),
     emptyPage<InventoryMovement>(),
+    `${restaurantId}:${inventoryItem?.id || ''}:${movementPageNumber}:${movementPageSize}`,
     [restaurantId, inventoryItem?.id, movementPageNumber, movementPageSize, reloadKey],
   )
-  const { data: recipes } = useAsyncData(
+  const { data: recipes } = useKeyedAsyncData(
     () => (restaurantId && menuItem ? ecafeApi.recipes.list(restaurantId, menuItem.id) : Promise.resolve([])),
     [],
+    `${restaurantId}:${menuItem?.id || ''}`,
     [restaurantId, menuItem?.id, reloadKey],
   )
   const movements = movementPage.items
