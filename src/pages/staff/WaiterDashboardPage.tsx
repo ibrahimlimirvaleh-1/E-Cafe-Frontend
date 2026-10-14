@@ -15,6 +15,7 @@ import { LocalizedDateInput } from '../../shared/ui/LocalizedDateInput'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
+import { WaiterTableSessionsView } from './WaiterTableSessionsView'
 import './waiter-reservations.css'
 
 const emptyPage: PaginatedResponse<ReservationServiceItemResponse> = {
@@ -23,7 +24,8 @@ const emptyPage: PaginatedResponse<ReservationServiceItemResponse> = {
 
 export function WaiterDashboardPage() {
   const { user, selectProfile } = useAuth()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const showTables = searchParams.get('view') === 'tables'
   const waitingQuery = searchParams.get('waitingOnly') === 'true'
   const targetReservationId = Number(searchParams.get('reservationId'))
   const profiles = useMemo(() => user?.profiles.filter((profile) => profile.roleId === RoleIds.Waiter && profile.isActive !== false) || [], [user])
@@ -62,9 +64,9 @@ export function WaiterDashboardPage() {
     if (Number.isInteger(targetReservationId) && targetReservationId > 0) setSelectedId(targetReservationId)
   }, [waitingQuery, targetReservationId])
 
-  const pageKey = `${restaurantId}:${date}:${waitingOnly}:${page}`
+  const pageKey = showTables ? 'inactive' : `${restaurantId}:${date}:${waitingOnly}:${page}`
   const { data: pageResult, error } = useAsyncData(
-    () => restaurantId ? ecafeApi.reservations.listForService(restaurantId, {
+    () => !showTables && restaurantId ? ecafeApi.reservations.listForService(restaurantId, {
       pageNumber: page, pageSize: 20, reservedDate: date || undefined, waitingOnly,
     }).then((result) => ({ key: pageKey, page: result })) : Promise.resolve({ key: pageKey, page: emptyPage }),
     { key: '', page: emptyPage },
@@ -104,8 +106,21 @@ export function WaiterDashboardPage() {
     }
   }
 
+  // Seçilmiş görünüşü URL-də saxlayır ki, səhifə yenilənəndə eyni bölmə açılsın.
+  function changeView(view: 'arrivals' | 'tables') {
+    const next = new URLSearchParams(searchParams)
+    if (view === 'tables') next.set('view', 'tables')
+    else next.delete('view')
+    setSearchParams(next)
+  }
+
   return <main className="staff-page waiter-reservations-page">
-    <PageHeader eyebrow="REZERVASİYALAR" title="Müştəri gəlişi" description="Rezervasiyaların gəliş və masa vəziyyətini idarə edin." />
+    <PageHeader eyebrow="OFİSİANT PANELİ" title={showTables ? 'Xidmət etdiyim masalar' : 'Müştəri gəlişi'} description={showTables ? 'Sizə təyin edilmiş açıq masa sessiyalarını izləyin.' : 'Rezervasiyaların gəliş və masa vəziyyətini idarə edin.'} />
+    <div className="waiter-main-modes" role="group" aria-label="Ofisiant paneli görünüşü">
+      <button type="button" className={!showTables ? 'is-active' : ''} aria-pressed={!showTables} onClick={() => changeView('arrivals')}>Müştəri gəlişi</button>
+      <button type="button" className={showTables ? 'is-active' : ''} aria-pressed={showTables} onClick={() => changeView('tables')}>Xidmət etdiyim masalar</button>
+    </div>
+    {showTables ? <WaiterTableSessionsView key={restaurantId} restaurantId={restaurantId} restaurantName={profiles.find((profile) => profile.restaurantId === restaurantId)?.restaurantName || 'Restoran'} restaurantOptions={restaurantIds.map((id) => ({ id, name: profiles.find((profile) => profile.restaurantId === id)?.restaurantName || `Restoran ${id}` }))} onRestaurantChange={(id) => selectProfile({ restaurantId: id, roleId: RoleIds.Waiter })} reloadKey={reloadKey} /> : <>
     <div className="waiter-reservations-filters">
       {restaurantIds.length > 1 ? <label className="waiter-restaurant-filter">Restoran<select value={restaurantId} onChange={(event) => { selectProfile({ restaurantId: event.target.value, roleId: RoleIds.Waiter }); setPage(1); setSelectedId(null) }}>
         {restaurantIds.map((id) => <option key={id} value={id}>{profiles.find((profile) => profile.restaurantId === id)?.restaurantName || `Restoran ${id}`}</option>)}
@@ -153,5 +168,6 @@ export function WaiterDashboardPage() {
     </section>
     <PaginationControls ariaLabel="Rezervasiya səhifələri" hasNextPage={data.hasNextPage} hasPreviousPage={data.hasPreviousPage} pageIndex={data.pageIndex} totalPages={data.totalPages} onPageChange={(next) => { setPage(next); setSelectedId(null) }} />
     <ReservationReasonDialog isOpen={Boolean(pendingAction)} title="Müştərini masaya əyləşdirirsiniz?" description="Bu əməliyyat gəlişi qeyd edəcək və masa sessiyasını açacaq. Masanın hazır olduğunu yoxlayın." confirmLabel="Masaya əyləşdir" confirmVariant="primary" isSubmitting={busy} error={pendingAction ? actionError : ''} requireReason={false} showReason={false} onClose={() => setPendingAction(null)} onConfirm={() => { if (pendingAction) void execute(pendingAction) }} />
+    </>}
   </main>
 }
