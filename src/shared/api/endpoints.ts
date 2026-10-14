@@ -145,6 +145,10 @@ export const endpoints = {
     deactivate: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}/deactivate`,
     delete: (restaurantId: string, tableId: string) => `/restaurants/${restaurantId}/tables/${tableId}`,
   },
+  tableSessions: {
+    mine: (restaurantId: string) => `/restaurants/${restaurantId}/table-sessions/mine`,
+    mineDetail: (restaurantId: string, sessionId: number) => `/restaurants/${restaurantId}/table-sessions/mine/${sessionId}`,
+  },
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,
     detail: (restaurantId: string, staffId: string) => `/staff/${restaurantId}/detail/${staffId}`,

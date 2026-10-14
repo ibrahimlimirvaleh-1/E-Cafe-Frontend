@@ -299,6 +299,41 @@ export type ReservationServiceItemResponse = {
   requiresReceptionReview: boolean
 }
 
+export type WaiterTableSessionResponse = {
+  id: number
+  restaurantId: number
+  tableId: number
+  tableNo: number
+  tableName: string | null
+  tableCapacity: number
+  statusId: number
+  reservationId: number | null
+  customerName: string | null
+  peopleCount: number | null
+  openedAt: string
+  mustVacateAt: string | null
+  timeZone: string
+}
+
+// API cavabını ofisiantın masa sessiyası modelinə çevirir.
+function mapWaiterTableSession(record: AnyRecord): WaiterTableSessionResponse {
+  return {
+    id: num(record.id),
+    restaurantId: num(record.restaurantId),
+    tableId: num(record.tableId),
+    tableNo: num(record.tableNo),
+    tableName: record.tableName == null ? null : str(record.tableName),
+    tableCapacity: num(record.tableCapacity),
+    statusId: num(record.statusId),
+    reservationId: record.reservationId == null ? null : num(record.reservationId),
+    customerName: record.customerName == null ? null : str(record.customerName),
+    peopleCount: record.peopleCount == null ? null : num(record.peopleCount),
+    openedAt: str(record.openedAt),
+    mustVacateAt: record.mustVacateAt == null ? null : str(record.mustVacateAt),
+    timeZone: str(record.timeZone, 'Asia/Baku'),
+  }
+}
+
 export type ReservationWaitingInfo = {
   waitingSinceAt: string
   waitingMinutes: number
@@ -1979,6 +2014,19 @@ export const ecafeApi = {
       httpClient<unknown>(endpoints.menu.deleteItem(restaurantId, itemId), {
         method: 'DELETE',
       }),
+  },
+
+  tableSessions: {
+    listMine: async (restaurantId: string, pageNumber: number, pageSize = 20) => {
+      const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      const result = await httpClient<unknown>(`${endpoints.tableSessions.mine(restaurantId)}?${query}`)
+      return asPaginated(result.data, mapWaiterTableSession)
+    },
+    getMineById: async (restaurantId: string, sessionId: number) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.mineDetail(restaurantId, sessionId))
+      const record = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
+      return mapWaiterTableSession(record)
+    },
   },
 
   reservations: {
