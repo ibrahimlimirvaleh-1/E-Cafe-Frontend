@@ -1423,8 +1423,9 @@ export const ecafeApi = {
         const result = await httpClient<unknown>(endpoints.users.adminList)
         return asArray<AnyRecord>(result.data).map(mapUserProfile)
       }, [] as UserProfile[]),
-    updateRole: async (userId: string, roleId: number) => {
-      const result = await httpClient<unknown>(`${endpoints.users.updateRole(userId)}?roleId=${encodeURIComponent(roleId)}`, {
+    updateRole: async (userId: string, roleId: number, restaurantId: string) => {
+      const query = new URLSearchParams({ roleId: String(roleId), restaurantId })
+      const result = await httpClient<unknown>(`${endpoints.users.updateRole(userId)}?${query.toString()}`, {
         method: 'PATCH',
       })
       return extractAuthTokens(result.data)
