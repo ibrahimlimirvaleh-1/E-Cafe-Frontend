@@ -5,6 +5,7 @@ import type { Role, StaffMember } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { getUserFromToken } from '../../shared/auth/jwt'
 import { RoleIds, getAccessibleItems, hasPermission, isInRole } from '../../shared/auth/authz'
 import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
@@ -265,12 +266,19 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       return
     }
 
+    const targetRestaurantId = Number(restaurantId)
+    if (!Number.isSafeInteger(targetRestaurantId) || targetRestaurantId <= 0 || member.restaurantId !== restaurantId) {
+      setMessage('Rol dəyişikliyi üçün düzgün restoran seçilməlidir.')
+      setMessageDetails([])
+      return
+    }
+
     setMessage('')
     setMessageDetails([])
     setUpdatingRoleUserId(member.id)
     try {
-      const tokens = await ecafeApi.users.updateRole(member.id, roleId)
-      if (tokens.accessToken) {
+      const tokens = await ecafeApi.users.updateRole(member.id, roleId, String(targetRestaurantId))
+      if (tokens.accessToken && member.id === user?.userId && getUserFromToken(tokens.accessToken)?.userId === user.userId) {
         setSession(tokens)
       }
 
@@ -528,6 +536,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                         <>
                           <select
                             aria-label={`${member.name} üçün rol`}
+                            disabled={updatingRoleUserId === member.id}
                             value={selectedRoleId(member)}
                             onChange={(event) =>
                               setRoleSelections((current) => ({

@@ -369,10 +369,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        setUser(withSelectedProfile(refreshedUser))
+        const selectedUser = withSelectedProfile(refreshedUser)
+        setUser(selectedUser)
         logoutTimerId = window.setTimeout(() => {
           window.sessionStorage.setItem(SESSION_NOTICE_STORAGE_KEY, JSON.stringify(notice))
-          navigate(getHomePathForUser(refreshedUser), { replace: true })
+          navigate(getHomePathForUser(selectedUser), { replace: true })
         }, 1200)
       },
       onRestaurantAccessChanged: (payload) => {
