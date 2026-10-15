@@ -315,6 +315,35 @@ export type WaiterTableSessionResponse = {
   timeZone: string
 }
 
+export type CreateSessionOrderRequest = {
+  note?: string
+  items: { itemId: number; quantity: number; note?: string; expectedUnitPrice: number }[]
+}
+
+export type SessionOrderResponse = {
+  id: number
+  restaurantId: number
+  tableId: number
+  tableSessionId: number | null
+  reservationId: number | null
+  waiterUserId: number | null
+  sourceId: number
+  statusId: number
+  openedAt: string
+  sentToKitchenAt: string | null
+  note: string | null
+  subtotal: number
+  items: {
+    id: number
+    itemId: number
+    name: string
+    quantity: number
+    unitPrice: number
+    lineTotal: number
+    note: string | null
+  }[]
+}
+
 // API cavabını ofisiantın masa sessiyası modelinə çevirir.
 function mapWaiterTableSession(record: AnyRecord): WaiterTableSessionResponse {
   return {
@@ -331,6 +360,33 @@ function mapWaiterTableSession(record: AnyRecord): WaiterTableSessionResponse {
     openedAt: str(record.openedAt),
     mustVacateAt: record.mustVacateAt == null ? null : str(record.mustVacateAt),
     timeZone: str(record.timeZone, 'Asia/Baku'),
+  }
+}
+
+// Sifarişin serverdə saxlanmış məhsul və qiymət şəklini UI modelinə çevirir.
+function mapSessionOrder(record: AnyRecord): SessionOrderResponse {
+  return {
+    id: num(record.id),
+    restaurantId: num(record.restaurantId),
+    tableId: num(record.tableId),
+    tableSessionId: record.tableSessionId == null ? null : num(record.tableSessionId),
+    reservationId: record.reservationId == null ? null : num(record.reservationId),
+    waiterUserId: record.waiterUserId == null ? null : num(record.waiterUserId),
+    sourceId: num(record.sourceId),
+    statusId: num(record.statusId),
+    openedAt: str(record.openedAt),
+    sentToKitchenAt: record.sentToKitchenAt == null ? null : str(record.sentToKitchenAt),
+    note: record.note == null ? null : str(record.note),
+    subtotal: num(record.subtotal),
+    items: asArray<AnyRecord>(record.items).map((item) => ({
+      id: num(item.id),
+      itemId: num(item.itemId),
+      name: str(item.name),
+      quantity: num(item.quantity),
+      unitPrice: num(item.unitPrice),
+      lineTotal: num(item.lineTotal),
+      note: item.note == null ? null : str(item.note),
+    })),
   }
 }
 
@@ -1909,6 +1965,7 @@ export const ecafeApi = {
 
   menu: {
     publicMenu: (restaurantId: string) => safe(() => fetchPublicMenu(restaurantId), fallbackPublicMenu(restaurantId)),
+    publicMenuStrict: fetchPublicMenu,
     publicCategories: (restaurantId: string) =>
       safe(async () => {
         const menu = await fetchPublicMenu(restaurantId)
@@ -2026,6 +2083,23 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(endpoints.tableSessions.mineDetail(restaurantId, sessionId))
       const record = result.data && typeof result.data === 'object' ? result.data as AnyRecord : {}
       return mapWaiterTableSession(record)
+    },
+    listOrders: async (restaurantId: string, sessionId: number, pageNumber: number, pageSize = 20) => {
+      const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      const result = await httpClient<unknown>(`${endpoints.tableSessions.orders(restaurantId, sessionId)}?${query}`)
+      return asPaginated(result.data, mapSessionOrder)
+    },
+    getOrder: async (restaurantId: string, sessionId: number, orderId: number) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.orderDetail(restaurantId, sessionId, orderId))
+      return mapSessionOrder(result.data as AnyRecord)
+    },
+    createOrder: async (restaurantId: string, sessionId: number, key: string, payload: string) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.orders(restaurantId, sessionId), {
+        method: 'POST',
+        headers: { 'Idempotency-Key': key },
+        body: payload,
+      })
+      return mapSessionOrder(result.data as AnyRecord)
     },
   },
 

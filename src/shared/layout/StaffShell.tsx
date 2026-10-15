@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Brand } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { ThemeToggle } from './ThemeToggle'
@@ -14,6 +14,7 @@ type StaffShellProps = {
 
 export function StaffShell({ title, variant }: StaffShellProps) {
   const { user } = useAuth()
+  const location = useLocation()
   const isKitchen = isInRole(user, [RoleIds.Kitchen])
   const isWaiter = isInRole(user, [RoleIds.Waiter])
   const isWaiterShell = variant === 'waiter'
@@ -31,7 +32,7 @@ export function StaffShell({ title, variant }: StaffShellProps) {
       {isWaiterShell && isWaiter ? (
         <>
           <NavLink end to="/waiter">Panel</NavLink>
-          <NavLink to="/waiter/orders">Sifarişlər</NavLink>
+          <NavLink to="/waiter/orders" className={({ isActive }) => isActive || /^\/waiter\/restaurants\/\d+\/sessions\/\d+\/orders$/.test(location.pathname) ? 'active' : ''}>Sifarişlər</NavLink>
         </>
       ) : null}
     </nav>
