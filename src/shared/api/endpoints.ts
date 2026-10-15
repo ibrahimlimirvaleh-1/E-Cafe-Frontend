@@ -91,6 +91,10 @@ export const endpoints = {
       `/restaurants/${restaurantId}/reservations/${reservationId}/departure`,
     tableChange: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/table-change`,
+    complete: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/complete`,
+    completeService: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/complete-service`,
     restaurantHistory: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/history`,
     sendPaymentInstruction: (restaurantId: string, reservationId: string) =>
@@ -148,6 +152,9 @@ export const endpoints = {
   tableSessions: {
     mine: (restaurantId: string) => `/restaurants/${restaurantId}/table-sessions/mine`,
     mineDetail: (restaurantId: string, sessionId: number) => `/restaurants/${restaurantId}/table-sessions/mine/${sessionId}`,
+    closeReviews: (restaurantId: string) => `/restaurants/${restaurantId}/table-sessions/close-reviews`,
+    continueService: (restaurantId: string, sessionId: number) =>
+      `/restaurants/${restaurantId}/table-sessions/${sessionId}/continue-service`,
     orders: (restaurantId: string, sessionId: number) => `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders`,
     orderDetail: (restaurantId: string, sessionId: number, orderId: number) =>
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}`,

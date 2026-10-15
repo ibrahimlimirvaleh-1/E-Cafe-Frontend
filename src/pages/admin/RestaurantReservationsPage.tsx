@@ -1,10 +1,11 @@
 import { ArrowRight, CalendarDays, Clock3, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { RestaurantSessionCloseReviewQueue } from '../../features/reservations/RestaurantSessionCloseReviewQueue'
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
-import { getAccessibleItems } from '../../shared/auth/authz'
+import { getAccessibleItems, isInRole, RoleIds } from '../../shared/auth/authz'
 import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { Badge } from '../../shared/ui/Badge'
@@ -100,6 +101,8 @@ export function RestaurantReservationsPage() {
         description="Müştəri rezervasiyalarını statusuna görə idarə edin."
       />
 
+      {isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) ? <RestaurantSessionCloseReviewQueue restaurantId={restaurantId} userId={user?.userId || ''} reloadKey={reloadKey} /> : null}
+
       <section className="admin-panel reservation-admin-toolbar">
         <RestaurantSelectField
           emptyOption={null}
@@ -164,6 +167,7 @@ export function RestaurantReservationsPage() {
                     <span className="reservation-card-kicker">Rezervasiya #{reservation.id}</span>
                     <h2>{reservation.customerName || 'Müştəri'}</h2>
                     <span className="admin-reservation-secondary">{reservation.restaurantName || 'Restoran'} · {reservation.tableName || `Masa ${reservation.tableId}`}</span>
+                    {reservation.requiresSessionCloseReview ? <span className="admin-reservation-waiting is-review">Bağlanması yoxlanmalıdır</span> : null}
                     {reservation.requiresReceptionReview ? <span className="admin-reservation-waiting is-review">Nəticə yoxlanmalıdır</span> : reservation.waiting ? <span className={`admin-reservation-waiting${reservation.waiting.isOverdue ? ' is-overdue' : ''}`}>Masa gözləyir · {reservation.waiting.waitingMinutes} dəq gözləmə · {reservation.waiting.serviceDelayMinutes} dəq servis gecikməsi</span> : null}
                   </div>
                   <div className="admin-reservation-row-meta">

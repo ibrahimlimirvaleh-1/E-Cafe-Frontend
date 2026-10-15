@@ -8,6 +8,7 @@ import { RestaurantRefundPanel } from '../../features/reservations/RestaurantRef
 import { ReservationArrivalSummary } from '../../features/reservations/ReservationArrivalSummary'
 import { ReservationWaitingSummary } from '../../features/reservations/ReservationWaitingSummary'
 import { ReservationWaitingManagement } from '../../features/reservations/ReservationWaitingManagement'
+import { SessionCloseReviewActions } from '../../features/reservations/SessionCloseReviewActions'
 import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -229,6 +230,12 @@ export function RestaurantReservationDetailPage() {
           </div>
         ) : null}
       </section>
+      {isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) && reservation.tableSessionId !== null ?
+        <SessionCloseReviewActions restaurantId={restaurantId} reservationId={reservation.id} sessionId={reservation.tableSessionId}
+          canComplete={reservation.canCompleteSession} completeAs="manager" canContinue={reservation.requiresSessionCloseReview}
+          requiresReview={reservation.requiresSessionCloseReview} reviewDueAt={reservation.sessionCloseReviewDueAt}
+          reviewConfirmedAt={reservation.sessionCloseReviewConfirmedAt} timeZone={reservation.timeZone}
+          onChanged={(message) => { setActionMessage(message); setReloadKey((value) => value + 1) }} /> : null}
       {isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) && (reservation.waiting || reservation.requiresReceptionReview) ?
         <ReservationWaitingManagement key={reservation.id} reservation={reservation} restaurantId={restaurantId}
           onChanged={(message) => { setActionMessage(message); setReloadKey((value) => value + 1) }} /> : null}

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { WorkflowAction } from '../../entities/types'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
+import { SessionCloseReviewActions } from '../../features/reservations/SessionCloseReviewActions'
 import { ecafeApi, type ReservationServiceItemResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
@@ -144,9 +145,9 @@ export function WaiterDashboardPage() {
         const isSelected = selectedId === item.id
         const startsAt = new Date(item.reservedAt).getTime()
         const deadlineAt = new Date(item.noShowDeadlineAt).getTime()
-        const state = item.seatedAt ? 'Masaya əyləşib' : item.requiresReceptionReview ? 'Nəticə yoxlanmalıdır' : item.isWaitingOverdue ? 'Masa gözləyir · gecikir' : item.arrivedAt ? 'Gəlib, masa gözləyir' : now >= deadlineAt ? 'Gəliş müddəti bitib' : 'Gəliş gözlənilir'
+        const state = item.requiresSessionCloseReview ? 'Bağlanması yoxlanmalıdır' : item.seatedAt ? 'Masaya əyləşib' : item.requiresReceptionReview ? 'Nəticə yoxlanmalıdır' : item.isWaitingOverdue ? 'Masa gözləyir · gecikir' : item.arrivedAt ? 'Gəlib, masa gözləyir' : now >= deadlineAt ? 'Gəliş müddəti bitib' : 'Gəliş gözlənilir'
         return <article className={`waiter-reservation${isSelected ? ' is-selected' : ''}`} key={item.id}>
-          <div className="waiter-reservation-top"><div><small>REZERVASİYA #{item.id}</small><h2>{item.customerName}</h2></div><span className={`waiter-reservation-state${item.requiresReceptionReview ? ' is-review' : item.seatedAt ? ' is-seated' : item.isWaitingOverdue ? ' is-overdue' : item.arrivedAt ? ' is-arrived' : ''}`}>{state}</span></div>
+          <div className="waiter-reservation-top"><div><small>REZERVASİYA #{item.id}</small><h2>{item.customerName}</h2></div><span className={`waiter-reservation-state${item.requiresSessionCloseReview || item.requiresReceptionReview ? ' is-review' : item.seatedAt ? ' is-seated' : item.isWaitingOverdue ? ' is-overdue' : item.arrivedAt ? ' is-arrived' : ''}`}>{state}</span></div>
           <div className="waiter-reservation-meta"><span><Table2 size={17} />{item.tableName}</span><span><CalendarDays size={17} />{formatReservationDateTime(item.reservedAt, item.timeZone || 'Asia/Baku')}</span><span><Users size={17} />{item.peopleCount} nəfər</span></div>
           {item.waitingSinceAt && !item.requiresReceptionReview ? <div className="waiter-reservation-waiting"><span>Gözləmə <strong>{item.waitingMinutes} dəq</strong></span><span>Servis gecikməsi <strong>{item.serviceDelayMinutes} dəq</strong></span></div> : null}
           {isSelected ? <div className="waiter-reservation-detail">
@@ -154,6 +155,7 @@ export function WaiterDashboardPage() {
             {item.mustVacateAt ? <p>Masanı təhvil vaxtı: {formatReservationDateTime(item.mustVacateAt, item.timeZone || 'Asia/Baku')}</p> : null}
             {item.arrivedAt ? <p>Gəliş qeyd edildi: {formatReservationDateTime(item.arrivedAt, item.timeZone || 'Asia/Baku')}</p> : null}
             {item.requiresReceptionReview ? <p className="waiter-reservation-review-note">Xidmət müddəti bitib. Nəticəni restoran menecerinə bildirin; rezervasiya avtomatik ləğv edilməyib.</p> : null}
+            {item.tableSessionId !== null ? <SessionCloseReviewActions restaurantId={restaurantId} reservationId={item.id} sessionId={item.tableSessionId} canComplete={item.canCompleteSession} completeAs="waiter" canContinue={false} requiresReview={item.requiresSessionCloseReview} reviewDueAt={item.sessionCloseReviewDueAt} reviewConfirmedAt={item.sessionCloseReviewConfirmedAt} timeZone={item.timeZone} onChanged={(message) => { setActionMessage(message); setReloadKey((value) => value + 1) }} /> : null}
             {actionsLoading ? <span className="waiter-reservations-muted">Əməliyyatlar yoxlanılır...</span> : null}
             {actionsError ? <StatusMessage tone="danger" autoHideMs={false}>{actionsError}</StatusMessage> : null}
             {!actionsLoading && !actionsError && !item.seatedAt && !item.requiresReceptionReview && checkIn ? <Button type="button" disabled={busy} onClick={() => setPendingAction(checkIn)}><Table2 size={17} />Masaya əyləşdir</Button> : null}

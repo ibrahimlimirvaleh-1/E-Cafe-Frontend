@@ -16,6 +16,7 @@
 .waiter-session-table { display: inline-flex; align-items: center; gap: 9px; min-width: 0; font-size: 17px; font-weight: 750; }
 .waiter-session-table svg { flex: 0 0 auto; color: var(--primary); }
 .waiter-session-state { padding: 5px 8px; border-radius: 4px; background: var(--success-bg); color: var(--success); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.waiter-session-state.is-review { background: var(--warning-bg); color: var(--warning); }
 .waiter-session-row-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--on-surface-variant); font-size: 13px; }
 .waiter-session-row-meta > span { display: inline-flex; align-items: center; gap: 6px; }
 .waiter-session-customer { color: var(--on-surface-variant); font-size: 13px; }
@@ -34,6 +35,7 @@
 @media (max-width: 600px) {
   .waiter-session-row { padding: 15px; }
   .waiter-session-row-heading { align-items: start; }
+  .waiter-session-state { white-space: normal; text-align: right; }
   .waiter-session-detail { padding: 16px; }
   .waiter-session-table { font-size: 16px; }
 }

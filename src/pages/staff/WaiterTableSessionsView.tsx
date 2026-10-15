@@ -1,5 +1,6 @@
 import { CalendarClock, Clock3, RefreshCw, Store, Table2, Users, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { SessionCloseReviewActions } from '../../features/reservations/SessionCloseReviewActions'
 import { ecafeApi, type WaiterTableSessionResponse } from '../../shared/api/ecafeApi'
 import { ApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
@@ -40,6 +41,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
   const [listRevision, setListRevision] = useState(0)
   const [detailRevision, setDetailRevision] = useState(0)
   const [notice, setNotice] = useState('')
+  const [noticeTone, setNoticeTone] = useState<'warning' | 'success'>('warning')
   const listKey = `${restaurantId}:${page}`
   const list = useKeyedAsyncData(
     () => restaurantId ? ecafeApi.tableSessions.listMine(restaurantId, page) : Promise.resolve(emptyPage),
@@ -67,6 +69,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
     if (!detail.hasData || detail.data?.kind !== 'missing') return
     setSelectedId(null)
     setNotice('Bu masa sessiyası artıq açıq deyil. Siyahı yeniləndi.')
+    setNoticeTone('warning')
     setListRevision((value) => value + 1)
   }, [detail.data, detail.hasData])
 
@@ -97,7 +100,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
     </div>
     {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>Sizə aid restoran tapılmadı.</StatusMessage> : null}
     {list.error ? <StatusMessage tone="danger" autoHideMs={false}>{list.error}</StatusMessage> : null}
-    {notice ? <StatusMessage tone="warning" autoHideMs={false}>{notice}</StatusMessage> : null}
+    {notice ? <StatusMessage tone={noticeTone} autoHideMs={false}>{notice}</StatusMessage> : null}
     <div className="waiter-sessions-summary"><strong>{list.hasData && !list.error ? `${list.data.totalCount} açıq masa` : 'Açıq masalar'}</strong>{list.isRefreshing ? <span role="status">Yenilənir...</span> : null}</div>
     {list.isLoading ? <p className="waiter-reservations-muted" role="status">Masa sessiyaları yüklənir...</p> : null}
     {!list.isLoading && !list.error && list.hasData && sessions.length === 0 ? <div className="waiter-reservations-empty" role="status">
@@ -107,7 +110,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
     {list.hasData && sessions.length > 0 ? <div className="waiter-sessions-layout">
       <div className="waiter-sessions-list" aria-label="Açıq masa sessiyaları">
         {sessions.map((session) => <button className={`waiter-session-row${selectedId === session.id ? ' is-selected' : ''}`} type="button" key={session.id} aria-expanded={selectedId === session.id} onClick={() => { setNotice(''); setSelectedId(session.id) }}>
-          <span className="waiter-session-row-heading"><span className="waiter-session-table"><Table2 size={18} aria-hidden="true" />{tableLabel(session)}</span><span className="waiter-session-state">Xidmətdə</span></span>
+          <span className="waiter-session-row-heading"><span className="waiter-session-table"><Table2 size={18} aria-hidden="true" />{tableLabel(session)}</span><span className={`waiter-session-state${session.requiresCloseReview ? ' is-review' : ''}`}>{session.requiresCloseReview ? 'Bağlanması yoxlanmalıdır' : 'Xidmətdə'}</span></span>
           <span className="waiter-session-row-meta"><span><Clock3 size={15} aria-hidden="true" />{sessionTime(session.openedAt, session.timeZone)}</span><span><Users size={15} aria-hidden="true" />{session.peopleCount == null ? 'Qonaq sayı qeyd olunmayıb' : `${session.peopleCount} nəfər`}</span></span>
           {session.customerName ? <span className="waiter-session-customer">{session.customerName}</span> : null}
         </button>)}
@@ -124,6 +127,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
           {selected.reservationId !== null ? <div><dt>Rezervasiya</dt><dd>#{selected.reservationId}</dd></div> : null}
           {selected.mustVacateAt ? <div><dt><CalendarClock size={16} aria-hidden="true" />Masanı təhvil vaxtı</dt><dd>{sessionTime(selected.mustVacateAt, selected.timeZone)}</dd></div> : null}
         </dl> : null}
+        {selected ? <SessionCloseReviewActions restaurantId={restaurantId} reservationId={selected.reservationId} sessionId={selected.id} canComplete={selected.reservationId !== null} completeAs="waiter" canContinue={false} requiresReview={selected.requiresCloseReview} reviewDueAt={selected.closeReviewDueAt} reviewConfirmedAt={selected.closeReviewConfirmedAt} timeZone={selected.timeZone} onChanged={(message) => { setSelectedId(null); setNotice(message); setNoticeTone('success'); setListRevision((value) => value + 1) }} /> : null}
         {selected ? <ButtonLink to={`/waiter/restaurants/${restaurantId}/sessions/${selected.id}/orders`}>Masa sifarişləri</ButtonLink> : null}
       </aside> : null}
     </div> : null}
