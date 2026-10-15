@@ -268,6 +268,11 @@ export type ReservationResponse = {
   arrivalDecisionExpiresAt?: string | null
   arrivedAt?: string | null
   seatedAt?: string | null
+  tableSessionId: number | null
+  requiresSessionCloseReview: boolean
+  sessionCloseReviewDueAt: string | null
+  sessionCloseReviewConfirmedAt: string | null
+  canCompleteSession: boolean
   waiting?: ReservationWaitingInfo | null
   requiresReceptionReview: boolean
   departureReason?: 1 | 2 | null
@@ -292,6 +297,11 @@ export type ReservationServiceItemResponse = {
   mustVacateAt: string | null
   arrivedAt: string | null
   seatedAt: string | null
+  tableSessionId: number | null
+  requiresSessionCloseReview: boolean
+  sessionCloseReviewDueAt: string | null
+  sessionCloseReviewConfirmedAt: string | null
+  canCompleteSession: boolean
   waitingSinceAt: string | null
   waitingMinutes: number
   serviceDelayMinutes: number
@@ -312,6 +322,9 @@ export type WaiterTableSessionResponse = {
   peopleCount: number | null
   openedAt: string
   mustVacateAt: string | null
+  requiresCloseReview: boolean
+  closeReviewDueAt: string | null
+  closeReviewConfirmedAt: string | null
   timeZone: string
 }
 
@@ -359,6 +372,9 @@ function mapWaiterTableSession(record: AnyRecord): WaiterTableSessionResponse {
     peopleCount: record.peopleCount == null ? null : num(record.peopleCount),
     openedAt: str(record.openedAt),
     mustVacateAt: record.mustVacateAt == null ? null : str(record.mustVacateAt),
+    requiresCloseReview: bool(record.requiresCloseReview),
+    closeReviewDueAt: str(record.closeReviewDueAt) || null,
+    closeReviewConfirmedAt: str(record.closeReviewConfirmedAt) || null,
     timeZone: str(record.timeZone, 'Asia/Baku'),
   }
 }
@@ -835,6 +851,11 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     arrivalDecisionExpiresAt: str(record.arrivalDecisionExpiresAt) || null,
     arrivedAt: str(record.arrivedAt) || null,
     seatedAt: str(record.seatedAt) || null,
+    tableSessionId: record.tableSessionId == null ? null : num(record.tableSessionId),
+    requiresSessionCloseReview: bool(record.requiresSessionCloseReview),
+    sessionCloseReviewDueAt: str(record.sessionCloseReviewDueAt) || null,
+    sessionCloseReviewConfirmedAt: str(record.sessionCloseReviewConfirmedAt) || null,
+    canCompleteSession: bool(record.canCompleteSession),
     waiting: record.waiting && typeof record.waiting === 'object'
       ? {
           waitingSinceAt: str((record.waiting as AnyRecord).waitingSinceAt),
@@ -2074,6 +2095,17 @@ export const ecafeApi = {
   },
 
   tableSessions: {
+    listCloseReviews: async (restaurantId: string, pageNumber: number, pageSize = 20) => {
+      const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      const result = await httpClient<unknown>(`${endpoints.tableSessions.closeReviews(restaurantId)}?${query}`)
+      return asPaginated(result.data, mapWaiterTableSession)
+    },
+    continueService: async (restaurantId: string, sessionId: number, reviewAgainAt: string, reason: string) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.continueService(restaurantId, sessionId), {
+        method: 'POST', body: JSON.stringify({ reviewAgainAt, reason: reason.trim() }),
+      })
+      return mapWaiterTableSession(result.data as AnyRecord)
+    },
     listMine: async (restaurantId: string, pageNumber: number, pageSize = 20) => {
       const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
       const result = await httpClient<unknown>(`${endpoints.tableSessions.mine(restaurantId)}?${query}`)
@@ -2129,6 +2161,11 @@ export const ecafeApi = {
         mustVacateAt: str(record.mustVacateAt) || null,
         arrivedAt: str(record.arrivedAt) || null,
         seatedAt: str(record.seatedAt) || null,
+        tableSessionId: record.tableSessionId == null ? null : num(record.tableSessionId),
+        requiresSessionCloseReview: bool(record.requiresSessionCloseReview),
+        sessionCloseReviewDueAt: str(record.sessionCloseReviewDueAt) || null,
+        sessionCloseReviewConfirmedAt: str(record.sessionCloseReviewConfirmedAt) || null,
+        canCompleteSession: bool(record.canCompleteSession),
         waitingSinceAt: str(record.waitingSinceAt) || null,
         waitingMinutes: num(record.waitingMinutes),
         serviceDelayMinutes: num(record.serviceDelayMinutes),
@@ -2169,6 +2206,14 @@ export const ecafeApi = {
       (await httpClient<ReservationActionResponse>(endpoints.reservations.tableChange(restaurantId, reservationId), {
         method: 'POST', body: JSON.stringify({ tableId, customerConsent: true }),
       })).data,
+    completeSession: async (restaurantId: string, reservationId: string) => {
+      const result = await httpClient<unknown>(endpoints.reservations.complete(restaurantId, reservationId), { method: 'POST' })
+      return mapReservationActionResponse(result.data as AnyRecord)
+    },
+    completeService: async (restaurantId: string, reservationId: string) => {
+      const result = await httpClient<unknown>(endpoints.reservations.completeService(restaurantId, reservationId), { method: 'POST' })
+      return mapReservationActionResponse(result.data as AnyRecord)
+    },
     getArrivalOptions: async (reservationId: string) =>
       (await httpClient<ReservationArrivalOptions>(endpoints.reservations.arrivalOptions(reservationId))).data,
     offerArrival: async (reservationId: string, arrivalAt: string) =>
