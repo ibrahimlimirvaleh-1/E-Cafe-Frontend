@@ -49,6 +49,7 @@ import { TrackingPage } from '../pages/customer/TrackingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { KitchenBoardPage } from '../pages/staff/KitchenBoardPage'
 import { WaiterDashboardPage } from '../pages/staff/WaiterDashboardPage'
+import { WaiterSessionOrdersPage } from '../pages/staff/WaiterSessionOrdersPage'
 import { WaiterOrdersPage } from '../pages/staff/WaiterOrdersPage'
 import { StitchFramePage } from '../pages/stitch/StitchFramePage'
 import { StitchIndexPage } from '../pages/stitch/StitchIndexPage'
@@ -269,6 +270,7 @@ export function AppRouter() {
         <Route index element={<WaiterDashboardPage />} />
         <Route path="home" element={<WaiterDashboardPage />} />
         <Route path="orders" element={<WaiterOrdersPage />} />
+        <Route path="restaurants/:restaurantId/sessions/:sessionId/orders" element={<WaiterSessionOrdersPage />} />
       </Route>
 
       <Route path="pages" element={<StitchIndexPage />} />

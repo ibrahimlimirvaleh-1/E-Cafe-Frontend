@@ -5,7 +5,7 @@ import { ApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { Button } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import './waiter-sessions.css'
@@ -124,6 +124,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
           {selected.reservationId !== null ? <div><dt>Rezervasiya</dt><dd>#{selected.reservationId}</dd></div> : null}
           {selected.mustVacateAt ? <div><dt><CalendarClock size={16} aria-hidden="true" />Masanı təhvil vaxtı</dt><dd>{sessionTime(selected.mustVacateAt, selected.timeZone)}</dd></div> : null}
         </dl> : null}
+        {selected ? <ButtonLink to={`/waiter/restaurants/${restaurantId}/sessions/${selected.id}/orders`}>Masa sifarişləri</ButtonLink> : null}
       </aside> : null}
     </div> : null}
     {list.hasData && !list.error ? <PaginationControls ariaLabel="Masa sessiyası səhifələri" pageIndex={list.data.pageIndex} totalPages={list.data.totalPages} hasNextPage={list.data.hasNextPage} hasPreviousPage={list.data.hasPreviousPage} totalCount={list.data.totalCount} pageSize={20} onPageChange={(next) => { setPage(next); setSelectedId(null); setNotice('') }} /> : null}
