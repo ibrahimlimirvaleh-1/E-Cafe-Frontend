@@ -2100,6 +2100,7 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(`${endpoints.tableSessions.closeReviews(restaurantId)}?${query}`)
       return asPaginated(result.data, mapWaiterTableSession)
     },
+    // Menecerin davam qərarı sessiyanı bağlamır; növbəti yoxlama vaxtını server saxlayır.
     continueService: async (restaurantId: string, sessionId: number, reviewAgainAt: string, reason: string) => {
       const result = await httpClient<unknown>(endpoints.tableSessions.continueService(restaurantId, sessionId), {
         method: 'POST', body: JSON.stringify({ reviewAgainAt, reason: reason.trim() }),

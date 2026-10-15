@@ -32,6 +32,26 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
     (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
   const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
 
+  const isSessionCloseReview = notification.typeName?.toLowerCase() === 'tablesessionclosereviewrequired' ||
+    (notification.relatedEntityType?.toLowerCase() === 'tablesession' && payload.section === 'session-close-review')
+  if (isSessionCloseReview) {
+    if (!restaurantId || (notification.restaurantId && valueAsString(notification.restaurantId) !== restaurantId)) return ''
+    const sessionId = valueAsString(payload.tableSessionId || payload.TableSessionId || notification.relatedEntityId)
+    const reservationId = valueAsString(payload.reservationId || payload.ReservationId)
+    if (isInRole(user, [RoleIds.Waiter], restaurantId)) {
+      const query = new URLSearchParams({ view: 'tables', restaurantId })
+      if (/^[1-9]\d*$/.test(sessionId)) query.set('tableSessionId', sessionId)
+      return `/waiter?${query.toString()}`
+    }
+    if (isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId)) {
+      const query = `?restaurantId=${encodeURIComponent(restaurantId)}`
+      return /^[1-9]\d*$/.test(reservationId)
+        ? `/admin/reservations/${encodeURIComponent(reservationId)}${query}#session-close-review`
+        : `/admin/reservations${query}#session-close-review`
+    }
+    return ''
+  }
+
   if (contractId && canAccessAdminModule(user, 'contracts', restaurantId)) {
     return buildContractTarget(contractId, restaurantId)
   }

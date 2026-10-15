@@ -1,6 +1,6 @@
 import { CalendarDays, CalendarX2, CheckCircle2, RefreshCw, Store, Table2, Users, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import type { WorkflowAction } from '../../entities/types'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { SessionCloseReviewActions } from '../../features/reservations/SessionCloseReviewActions'
@@ -25,16 +25,21 @@ const emptyPage: PaginatedResponse<ReservationServiceItemResponse> = {
 
 export function WaiterDashboardPage() {
   const { user, selectProfile } = useAuth()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const showTables = searchParams.get('view') === 'tables'
   const waitingQuery = searchParams.get('waitingOnly') === 'true'
   const targetReservationId = Number(searchParams.get('reservationId'))
+  const requestedRestaurantId = searchParams.get('restaurantId') || ''
+  const requestedSessionId = Number(searchParams.get('tableSessionId'))
   const profiles = useMemo(() => user?.profiles.filter((profile) => profile.roleId === RoleIds.Waiter && profile.isActive !== false) || [], [user])
   const restaurantIds = useMemo(() => [...new Set([
     ...profiles.map((profile) => profile.restaurantId),
     ...(user?.roleId === RoleIds.Waiter && user.restaurantId ? [user.restaurantId] : []),
   ])], [user, profiles])
   const restaurantId = user?.restaurantId && restaurantIds.includes(user.restaurantId) ? user.restaurantId : restaurantIds[0] || ''
+  const targetSessionId = (!requestedRestaurantId || requestedRestaurantId === restaurantId) &&
+    Number.isSafeInteger(requestedSessionId) && requestedSessionId > 0 ? requestedSessionId : null
   const [date, setDate] = useState(() => waitingQuery ? '' : getTodayDateInputValue())
   const [waitingOnly, setWaitingOnly] = useState(waitingQuery)
   const [page, setPage] = useState(1)
@@ -44,6 +49,13 @@ export function WaiterDashboardPage() {
   const [actionError, setActionError] = useState('')
   const [actionMessage, setActionMessage] = useState('')
   const [pendingAction, setPendingAction] = useState<WorkflowAction | null>(null)
+
+  useEffect(() => {
+    if (!showTables || !requestedRestaurantId || requestedRestaurantId === restaurantId) return
+    if (profiles.some((profile) => profile.restaurantId === requestedRestaurantId)) {
+      selectProfile({ restaurantId: requestedRestaurantId, roleId: RoleIds.Waiter })
+    }
+  }, [showTables, requestedRestaurantId, restaurantId, profiles, selectProfile])
 
   useEffect(() => {
     const refresh = () => setReloadKey((value) => value + 1)
@@ -121,7 +133,7 @@ export function WaiterDashboardPage() {
       <button type="button" className={!showTables ? 'is-active' : ''} aria-pressed={!showTables} onClick={() => changeView('arrivals')}>Müştəri gəlişi</button>
       <button type="button" className={showTables ? 'is-active' : ''} aria-pressed={showTables} onClick={() => changeView('tables')}>Xidmət etdiyim masalar</button>
     </div>
-    {showTables ? <WaiterTableSessionsView key={restaurantId} restaurantId={restaurantId} restaurantName={profiles.find((profile) => profile.restaurantId === restaurantId)?.restaurantName || 'Restoran'} restaurantOptions={restaurantIds.map((id) => ({ id, name: profiles.find((profile) => profile.restaurantId === id)?.restaurantName || `Restoran ${id}` }))} onRestaurantChange={(id) => selectProfile({ restaurantId: id, roleId: RoleIds.Waiter })} reloadKey={reloadKey} /> : <>
+    {showTables ? <WaiterTableSessionsView key={restaurantId} restaurantId={restaurantId} restaurantName={profiles.find((profile) => profile.restaurantId === restaurantId)?.restaurantName || 'Restoran'} restaurantOptions={restaurantIds.map((id) => ({ id, name: profiles.find((profile) => profile.restaurantId === id)?.restaurantName || `Restoran ${id}` }))} onRestaurantChange={(id) => selectProfile({ restaurantId: id, roleId: RoleIds.Waiter })} reloadKey={reloadKey} targetSessionId={targetSessionId} selectionKey={location.key} /> : <>
     <div className="waiter-reservations-filters">
       {restaurantIds.length > 1 ? <label className="waiter-restaurant-filter">Restoran<select value={restaurantId} onChange={(event) => { selectProfile({ restaurantId: event.target.value, roleId: RoleIds.Waiter }); setPage(1); setSelectedId(null) }}>
         {restaurantIds.map((id) => <option key={id} value={id}>{profiles.find((profile) => profile.restaurantId === id)?.restaurantName || `Restoran ${id}`}</option>)}

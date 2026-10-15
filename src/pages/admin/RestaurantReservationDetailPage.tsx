@@ -1,6 +1,6 @@
 import { ArrowLeft, Ban, CalendarDays, CheckCircle2, CircleDollarSign, Clock3, Eye, Users, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
@@ -25,6 +25,7 @@ import { getReservationDepartureReasonLabel, getReservationStatusPresentation, i
 
 export function RestaurantReservationDetailPage() {
   const { user } = useAuth()
+  const location = useLocation()
   const { reservationId = '' } = useParams()
   const [searchParams] = useSearchParams()
   const restaurantId = searchParams.get('restaurantId') || user?.restaurantId || user?.profiles[0]?.restaurantId || ''
@@ -45,6 +46,10 @@ export function RestaurantReservationDetailPage() {
     reservationScope,
     [user?.userId, restaurantId, reservationId, reloadKey],
   )
+  useEffect(() => {
+    if (location.hash !== '#session-close-review' || isLoading || !reservation?.requiresSessionCloseReview) return
+    document.getElementById('session-close-review')?.scrollIntoView({ block: 'start' })
+  }, [location.key, location.hash, isLoading, reservation?.requiresSessionCloseReview])
   const isWaiting = Boolean(reservation?.waiting || reservation?.requiresReceptionReview)
   useEffect(() => {
     if (!isWaiting) return
@@ -231,7 +236,7 @@ export function RestaurantReservationDetailPage() {
         ) : null}
       </section>
       {isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) && reservation.tableSessionId !== null ?
-        <SessionCloseReviewActions restaurantId={restaurantId} reservationId={reservation.id} sessionId={reservation.tableSessionId}
+        <SessionCloseReviewActions id="session-close-review" restaurantId={restaurantId} reservationId={reservation.id} sessionId={reservation.tableSessionId}
           canComplete={reservation.canCompleteSession} completeAs="manager" canContinue={reservation.requiresSessionCloseReview}
           requiresReview={reservation.requiresSessionCloseReview} reviewDueAt={reservation.sessionCloseReviewDueAt}
           reviewConfirmedAt={reservation.sessionCloseReviewConfirmedAt} timeZone={reservation.timeZone}
