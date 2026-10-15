@@ -10,6 +10,7 @@ import { SessionContinueDialog } from './SessionContinueDialog'
 import './session-close-review.css'
 
 type Props = {
+  id?: string
   restaurantId: string
   reservationId: number | null
   sessionId: number | null
@@ -23,7 +24,7 @@ type Props = {
   onChanged: (message: string) => void
 }
 
-export function SessionCloseReviewActions({ restaurantId, reservationId, sessionId, canComplete, completeAs, canContinue, requiresReview, reviewDueAt, reviewConfirmedAt, timeZone, onChanged }: Props) {
+export function SessionCloseReviewActions({ id, restaurantId, reservationId, sessionId, canComplete, completeAs, canContinue, requiresReview, reviewDueAt, reviewConfirmedAt, timeZone, onChanged }: Props) {
   const [dialog, setDialog] = useState<'complete' | 'continue' | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -64,7 +65,7 @@ export function SessionCloseReviewActions({ restaurantId, reservationId, session
 
   if (!requiresReview && !canComplete && !reviewConfirmedAt) return null
 
-  return <div className="session-close-review">
+  return <div className="session-close-review" id={id}>
     {requiresReview ? <div className="session-close-review-warning" role="status">
       <Clock3 size={18} aria-hidden="true" />
       <div><strong>Bağlanması yoxlanmalıdır</strong>

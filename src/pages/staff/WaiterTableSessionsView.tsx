@@ -23,6 +23,8 @@ type Props = {
   restaurantOptions: { id: string; name: string }[]
   onRestaurantChange: (restaurantId: string) => void
   reloadKey: number
+  targetSessionId: number | null
+  selectionKey: string
 }
 
 // Masa adı verilməyəndə nömrə ilə oxunaqlı ad göstərir.
@@ -35,13 +37,16 @@ function sessionTime(value: string, timeZone: string) {
   return formatReservationDateTime(value, timeZone || 'Asia/Baku')
 }
 
-export function WaiterTableSessionsView({ restaurantId, restaurantName, restaurantOptions, onRestaurantChange, reloadKey }: Props) {
+export function WaiterTableSessionsView({ restaurantId, restaurantName, restaurantOptions, onRestaurantChange, reloadKey, targetSessionId, selectionKey }: Props) {
   const [page, setPage] = useState(1)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedId, setSelectedId] = useState<number | null>(targetSessionId)
   const [listRevision, setListRevision] = useState(0)
   const [detailRevision, setDetailRevision] = useState(0)
   const [notice, setNotice] = useState('')
   const [noticeTone, setNoticeTone] = useState<'warning' | 'success'>('warning')
+  useEffect(() => {
+    if (targetSessionId !== null) setSelectedId(targetSessionId)
+  }, [targetSessionId, selectionKey])
   const listKey = `${restaurantId}:${page}`
   const list = useKeyedAsyncData(
     () => restaurantId ? ecafeApi.tableSessions.listMine(restaurantId, page) : Promise.resolve(emptyPage),
@@ -107,7 +112,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
       <span className="waiter-reservations-empty-icon"><Table2 size={22} aria-hidden="true" /></span>
       <div><strong>Açıq masa sessiyası yoxdur</strong><p>Hazırda sizə təyin edilmiş açıq masa tapılmadı.</p></div>
     </div> : null}
-    {list.hasData && sessions.length > 0 ? <div className="waiter-sessions-layout">
+    {list.hasData && (sessions.length > 0 || selectedId !== null) ? <div className="waiter-sessions-layout">
       <div className="waiter-sessions-list" aria-label="Açıq masa sessiyaları">
         {sessions.map((session) => <button className={`waiter-session-row${selectedId === session.id ? ' is-selected' : ''}`} type="button" key={session.id} aria-expanded={selectedId === session.id} onClick={() => { setNotice(''); setSelectedId(session.id) }}>
           <span className="waiter-session-row-heading"><span className="waiter-session-table"><Table2 size={18} aria-hidden="true" />{tableLabel(session)}</span><span className={`waiter-session-state${session.requiresCloseReview ? ' is-review' : ''}`}>{session.requiresCloseReview ? 'Bağlanması yoxlanmalıdır' : 'Xidmətdə'}</span></span>
