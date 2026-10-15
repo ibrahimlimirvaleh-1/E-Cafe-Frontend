@@ -1,4 +1,4 @@
-import { ArrowLeft, Minus, Plus, RefreshCw, ShoppingBasket, Table2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Minus, Plus, RefreshCw, Search, ShoppingBasket, Table2, Trash2, UsersRound, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import type { MenuItem } from '../../entities/types'
@@ -10,7 +10,6 @@ import { useAuth } from '../../shared/auth/AuthContext'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { Button, ButtonLink } from '../../shared/ui/Button'
-import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import './waiter-orders.css'
@@ -41,9 +40,10 @@ function buildOrderBody(cart: CartLine[], note: string): CreateSessionOrderReque
   }
 }
 
-function OrderSummary({ order, title, timeZone }: { order: SessionOrderResponse; title: string; timeZone?: string }) {
+// Seçilmiş sifarişin dəyişməz məzmununu göstərir; onClose yalnız detalı bağlayır.
+function OrderSummary({ order, timeZone, onClose }: { order: SessionOrderResponse; timeZone?: string; onClose: () => void }) {
   return <div className="waiter-order-summary">
-    <div className="waiter-order-summary-heading"><div><span>SİFARİŞ #{order.id}</span><h3>{title}</h3></div><strong>{money(order.subtotal)}</strong></div>
+    <div className="waiter-order-summary-heading"><div><span>SİFARİŞ #{order.id}</span><h3>Sifariş detalı</h3></div><div><strong>{money(order.subtotal)}</strong><button type="button" aria-label="Sifariş detalını bağla" title="Sifariş detalını bağla" onClick={onClose}><X size={16} /></button></div></div>
     <p>{formatReservationDateTime(order.openedAt, timeZone)} · {order.sentToKitchenAt ? 'Mətbəxə göndərilib' : 'Mətbəxə göndərilməyib'}</p>
     <ul>{order.items.map((line) => <li key={line.id}><span><strong>{line.quantity} × {line.name}</strong>{line.note ? <small>{line.note}</small> : null}</span><strong>{money(line.lineTotal)}</strong></li>)}</ul>
     {order.note ? <p className="waiter-order-note">Qeyd: {order.note}</p> : null}
@@ -108,8 +108,11 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     restaurantId, [menuRevision],
   )
   const ordersKey = `${scopeKey}:${page}`
-  const orders = useKeyedAsyncData(
-    () => ecafeApi.tableSessions.listOrders(restaurantId, sessionId, page),
+  const orders = useKeyedAsyncData<PaginatedResponse<SessionOrderResponse> | null>(
+    async () => {
+      try { return await ecafeApi.tableSessions.listOrders(restaurantId, sessionId, page) }
+      catch (error) { if (error instanceof ApiError && error.statusCode === 404) return null; throw error }
+    },
     emptyOrders, ordersKey, [reloadKey, ordersRevision],
   )
   const detailKey = selectedOrderId === null ? '' : `${scopeKey}:${selectedOrderId}`
@@ -129,20 +132,22 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   }, [detail.data, detail.hasData])
 
   useEffect(() => {
-    if (orders.hasData && page > orders.data.totalPages) {
+    if (orders.hasData && orders.data && page > orders.data.totalPages) {
       setPage(Math.max(1, orders.data.totalPages))
       setSelectedOrderId(null)
     }
-  }, [orders.data.totalPages, orders.hasData, page])
+  }, [orders.data, orders.hasData, page])
 
-  const sessionUnavailable = closed || (session.hasData && !session.data)
-  const canEdit = Boolean(session.hasData && session.data && !session.error && !pendingIntent && !busy && !closed)
+  const sessionUnavailable = closed || (session.hasData && !session.data && !session.error) || (orders.hasData && !orders.data && !orders.error)
+  const canEdit = Boolean(session.hasData && session.data && !session.error && !pendingIntent && !busy && !sessionUnavailable)
   const visibleItems = useMemo(() => menu.hasData && !menu.error
     ? menu.data.items.filter((item) => item.isActive && (categoryId === 'all' || item.categoryId === categoryId) &&
       item.name.toLocaleLowerCase('az').includes(search.trim().toLocaleLowerCase('az')))
     : [], [menu.hasData, menu.error, menu.data.items, categoryId, search])
   const subtotal = cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0)
+  const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0)
   const selectedOrder = detail.hasData && detail.data?.kind === 'found' && !detail.error ? detail.data.order : null
+  const orderPage = orders.hasData && !orders.error ? orders.data : null
   const pendingBody = pendingIntent ? JSON.parse(pendingIntent.payload) as CreateSessionOrderRequest : null
 
   // Nəticəsi bilinməyən POST-u yalnız əvvəlcədən saxlanmış açar və payload ilə təkrarlayır.
@@ -252,12 +257,17 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   }
 
   return <main className="staff-page waiter-orders-page">
-    <ButtonLink to="/waiter?view=tables" variant="ghost" className="waiter-orders-back"><ArrowLeft size={17} />Açıq masalara qayıt</ButtonLink>
-    <PageHeader eyebrow="MASA SİFARİŞLƏRİ" title={session.data ? `${session.data.tableName || `Masa-${session.data.tableNo}`} sifarişləri` : 'Masa sifarişləri'} description="Məhsul seçin və bu açıq masa üçün sifariş yaradın." />
+    <header className="waiter-orders-heading">
+      <ButtonLink to="/waiter?view=tables" variant="ghost" className="waiter-orders-back"><ArrowLeft size={17} />Açıq masalar</ButtonLink>
+      <div><span>MASA SİFARİŞLƏRİ</span><h1>{session.data ? `${session.data.tableName || `Masa-${session.data.tableNo}`} sifarişləri` : 'Masa sifarişləri'}</h1></div>
+    </header>
     {session.isLoading ? <p role="status">Masa sessiyası yüklənir...</p> : null}
     {session.error ? <StatusMessage tone="danger" autoHideMs={false}>{session.error}</StatusMessage> : null}
-    {sessionUnavailable ? <StatusMessage tone="warning" autoHideMs={false}>Bu masa sessiyası artıq açıq deyil. Yeni sifariş göndərmək mümkün deyil.{pendingIntent ? ' Əvvəlki cəhdin nəticəsini menecer ilə yoxlayın.' : ''}</StatusMessage> : null}
-    {session.data && !sessionUnavailable ? <div className="waiter-orders-session"><Table2 size={18} aria-hidden="true" /><strong>{session.data.tableName || `Masa-${session.data.tableNo}`}</strong><span>{session.data.customerName || 'Ad qeyd olunmayıb'}</span><span>{session.data.peopleCount == null ? 'Qonaq sayı qeyd olunmayıb' : `${session.data.peopleCount} nəfər`}</span></div> : null}
+    {sessionUnavailable ? <StatusMessage tone="warning" autoHideMs={false}>Bu masa sessiyası sizə aid deyil və ya artıq bağlanıb.{pendingIntent ? ' Əvvəlki cəhdin nəticəsini menecer ilə yoxlayın.' : ''}</StatusMessage> : null}
+    {sessionUnavailable && orders.error ? <StatusMessage tone="danger" autoHideMs={false}>Sifariş siyahısı yenilənmədi: {orders.error}</StatusMessage> : null}
+    {sessionUnavailable && detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}
+    {sessionUnavailable && menu.error ? <StatusMessage tone="danger" autoHideMs={false}>{menu.error}</StatusMessage> : null}
+    {session.data && !sessionUnavailable ? <div className="waiter-orders-session"><span><Table2 size={17} aria-hidden="true" /><strong>{session.data.tableName || `Masa-${session.data.tableNo}`}</strong></span><span>{session.data.customerName || 'Ad qeyd olunmayıb'}</span><span><UsersRound size={16} aria-hidden="true" />{session.data.peopleCount == null ? 'Qonaq sayı qeyd olunmayıb' : `${session.data.peopleCount} nəfər`}</span></div> : null}
     {createdOrder ? <StatusMessage tone="success" autoHideMs={false}>Sifariş #{createdOrder.id} yaradıldı. Məhsul cəmi {money(createdOrder.subtotal)}. Sifariş mətbəxə göndərilməyib.</StatusMessage> : null}
     {feedback && !sessionUnavailable ? <StatusMessage tone={pendingIntent || priceConflict || keyConflict ? 'warning' : 'danger'} autoHideMs={false}>{feedback}</StatusMessage> : null}
     {pendingIntent && !sessionUnavailable ? <div className="waiter-order-pending">
@@ -271,31 +281,30 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     {!sessionUnavailable && !session.error ? <div className="waiter-orders-compose">
       <section className="waiter-orders-menu" aria-label="Restoran menyusu">
         <div className="waiter-orders-section-heading"><h2>Menyu</h2><Button type="button" variant="secondary" title="Menyunu yenilə" aria-label="Menyunu yenilə" onClick={() => setMenuRevision((value) => value + 1)}><RefreshCw size={17} /></Button></div>
-        <div className="waiter-orders-menu-filters"><label>Məhsul axtar<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Məhsul adı" /></label><label>Kateqoriya<select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="all">Hamısı</option>{menu.data.categories.filter((category) => category.isActive).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label></div>
+        <div className="waiter-orders-menu-filters"><label>Məhsul axtar<span className="waiter-orders-search"><Search size={16} aria-hidden="true" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Məhsul adı" /></span></label><label>Kateqoriya<select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="all">Hamısı</option>{menu.data.categories.filter((category) => category.isActive).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label></div>
         {menu.isLoading ? <p role="status">Menyu yüklənir...</p> : null}
         {menu.error ? <StatusMessage tone="danger" autoHideMs={false}>{menu.error}</StatusMessage> : null}
         {menu.hasData && !menu.error && visibleItems.length === 0 ? <p className="waiter-orders-muted">Uyğun məhsul tapılmadı.</p> : null}
-        <div className="waiter-orders-menu-list">{visibleItems.map((item) => <div className="waiter-orders-menu-item" key={item.id}><div><strong>{item.name}</strong><span>{item.categoryName || 'Menyu'}</span></div><strong>{money(item.price)}</strong><Button type="button" variant="secondary" disabled={!canEdit} onClick={() => addItem(item)} aria-label={`${item.name} əlavə et`}><Plus size={17} /></Button></div>)}</div>
+        <div className="waiter-orders-menu-list">{visibleItems.map((item) => <div className="waiter-orders-menu-item" key={item.id}><div><strong>{item.name}</strong><span>{item.categoryName || 'Menyu'}</span></div><strong>{money(item.price)}</strong><Button type="button" variant="secondary" disabled={!canEdit} onClick={() => addItem(item)} title={`${item.name} əlavə et`} aria-label={`${item.name} əlavə et`}><Plus size={17} /></Button></div>)}</div>
       </section>
       <section className="waiter-orders-cart" aria-label="Yeni sifariş">
-        <div className="waiter-orders-section-heading"><h2>Yeni sifariş</h2><ShoppingBasket size={19} aria-hidden="true" /></div>
+        <div className="waiter-orders-section-heading"><div><h2>Yeni sifariş</h2><span>{itemCount} ədəd</span></div><ShoppingBasket size={18} aria-hidden="true" /></div>
         {cart.length === 0 ? <p className="waiter-orders-muted">Sifariş üçün menyudan məhsul əlavə edin.</p> : <div className="waiter-orders-cart-lines">{cart.map((line) => <div className="waiter-orders-cart-line" key={line.item.id}>
-          <div className="waiter-orders-cart-line-title"><strong>{line.item.name}</strong><button type="button" disabled={!canEdit} title="Məhsulu sil" aria-label={`${line.item.name} sil`} onClick={() => setCart((current) => current.filter((item) => item.item.id !== line.item.id))}><Trash2 size={16} /></button></div>
-          <div className="waiter-orders-cart-line-controls"><div className="waiter-orders-stepper"><button type="button" disabled={!canEdit} aria-label={`${line.item.name} azalt`} onClick={() => changeQuantity(line.item.id, -1)}><Minus size={15} /></button><span>{line.quantity}</span><button type="button" disabled={!canEdit || line.quantity >= 100} aria-label={`${line.item.name} artır`} onClick={() => changeQuantity(line.item.id, 1)}><Plus size={15} /></button></div><strong>{money(line.item.price * line.quantity)}</strong></div>
-          <label>Məhsul qeydi<input value={line.note} maxLength={500} disabled={!canEdit} onChange={(event) => setCart((current) => current.map((item) => item.item.id === line.item.id ? { ...item, note: event.target.value } : item))} placeholder="İstəyə bağlı" /></label>
+          <div className="waiter-orders-cart-line-main"><strong>{line.item.name}</strong><div className="waiter-orders-stepper"><button type="button" disabled={!canEdit} aria-label={`${line.item.name} azalt`} onClick={() => changeQuantity(line.item.id, -1)}><Minus size={15} /></button><span>{line.quantity}</span><button type="button" disabled={!canEdit || line.quantity >= 100} aria-label={`${line.item.name} artır`} onClick={() => changeQuantity(line.item.id, 1)}><Plus size={15} /></button></div><strong className="waiter-orders-line-total">{money(line.item.price * line.quantity)}</strong><button className="waiter-orders-remove" type="button" disabled={!canEdit} title="Məhsulu sil" aria-label={`${line.item.name} sil`} onClick={() => setCart((current) => current.filter((item) => item.item.id !== line.item.id))}><Trash2 size={16} /></button></div>
+          <details className="waiter-orders-note"><summary>{line.note ? `Qeyd: ${line.note}` : 'Qeyd əlavə et'}</summary><label>Məhsul qeydi<input value={line.note} maxLength={500} disabled={!canEdit} onChange={(event) => setCart((current) => current.map((item) => item.item.id === line.item.id ? { ...item, note: event.target.value } : item))} placeholder="İstəyə bağlı" /></label></details>
         </div>)}</div>}
-        <label className="waiter-orders-general-note">Sifariş qeydi<textarea value={note} maxLength={1000} disabled={!canEdit} onChange={(event) => setNote(event.target.value)} rows={3} placeholder="İstəyə bağlı" /></label>
+        <details className="waiter-orders-note waiter-orders-general-note"><summary>{note ? `Sifariş qeydi: ${note}` : 'Sifariş qeydi əlavə et'}</summary><label>Sifariş qeydi<textarea value={note} maxLength={1000} disabled={!canEdit} onChange={(event) => setNote(event.target.value)} rows={3} placeholder="İstəyə bağlı" /></label></details>
         <div className="waiter-orders-cart-footer"><div><span>Məhsul cəmi</span><strong>{money(subtotal)}</strong></div><Button type="button" disabled={!canEdit || !cart.length || !menu.hasData || Boolean(menu.error)} onClick={submitNewOrder}>{busy ? 'Göndərilir...' : 'Sifarişi yarat'}</Button></div>
       </section>
     </div> : null}
-    <section className="waiter-orders-history" aria-label="Masa sifarişləri">
-      <div className="waiter-orders-section-heading"><div><h2>Sifarişlər</h2><span>{orders.hasData && !orders.error ? `${orders.data.totalCount} sifariş` : ''}</span></div><Button type="button" variant="secondary" title="Sifarişləri yenilə" aria-label="Sifarişləri yenilə" onClick={() => setOrdersRevision((value) => value + 1)}><RefreshCw size={17} /></Button></div>
+    {!sessionUnavailable ? <section className="waiter-orders-history" aria-label="Masa sifarişləri">
+      <div className="waiter-orders-section-heading"><div><h2>Sifarişlər</h2><span>{orderPage ? `${orderPage.totalCount} sifariş` : ''}</span></div><Button type="button" variant="secondary" title="Sifarişləri yenilə" aria-label="Sifarişləri yenilə" onClick={() => setOrdersRevision((value) => value + 1)}><RefreshCw size={17} /></Button></div>
       {orders.isLoading ? <p role="status">Sifarişlər yüklənir...</p> : null}
       {orders.error ? <StatusMessage tone="danger" autoHideMs={false}>Sifariş siyahısı yenilənmədi: {orders.error}</StatusMessage> : null}
-      {orders.hasData && !orders.error && orders.data.items.length === 0 ? <p className="waiter-orders-muted">Bu masa üçün sifariş yoxdur.</p> : null}
-      {orders.hasData && !orders.error ? <div className="waiter-orders-history-list">{orders.data.items.map((order) => <button type="button" className={selectedOrderId === order.id ? 'is-selected' : ''} key={order.id} onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}><span><strong>Sifariş #{order.id}</strong><small>{formatReservationDateTime(order.openedAt, session.data?.timeZone)} · {order.items.length} məhsul</small></span><strong>{money(order.subtotal)}</strong></button>)}</div> : null}
-      {orders.hasData && !orders.error ? <PaginationControls ariaLabel="Masa sifarişi səhifələri" pageIndex={orders.data.pageIndex} totalPages={orders.data.totalPages} totalCount={orders.data.totalCount} pageSize={20} hasPreviousPage={orders.data.hasPreviousPage} hasNextPage={orders.data.hasNextPage} onPageChange={(next) => { setPage(next); setSelectedOrderId(null) }} /> : null}
-      {selectedOrderId !== null ? <div className="waiter-orders-detail" aria-label="Sifariş detalı">{detail.isLoading ? <p role="status">Sifariş detalı yüklənir...</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} title="Sifariş detalı" timeZone={session.data?.timeZone} /> : null}</div> : null}
-    </section>
+      {orderPage && orderPage.items.length === 0 ? <p className="waiter-orders-muted">Bu masa üçün sifariş yoxdur.</p> : null}
+      {orderPage && orderPage.items.length > 0 ? <div className="waiter-orders-history-list"><div className="waiter-orders-history-columns" aria-hidden="true"><span>Sifariş</span><span>Yaradılıb</span><span>Miqdar</span><span>Məbləğ</span></div>{orderPage.items.map((order) => <button type="button" className={selectedOrderId === order.id ? 'is-selected' : ''} key={order.id} onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}><strong>Sifariş #{order.id}</strong><span>{formatReservationDateTime(order.openedAt, session.data?.timeZone)}</span><span>{order.items.reduce((sum, line) => sum + line.quantity, 0)} ədəd</span><strong>{money(order.subtotal)}</strong></button>)}</div> : null}
+      {orderPage ? <PaginationControls ariaLabel="Masa sifarişi səhifələri" pageIndex={orderPage.pageIndex} totalPages={orderPage.totalPages} totalCount={orderPage.totalCount} pageSize={20} hasPreviousPage={orderPage.hasPreviousPage} hasNextPage={orderPage.hasNextPage} onPageChange={(next) => { setPage(next); setSelectedOrderId(null) }} /> : null}
+      {selectedOrderId !== null ? <div className="waiter-orders-detail" aria-label="Sifariş detalı">{detail.isLoading ? <p role="status">Sifariş detalı yüklənir...</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} timeZone={session.data?.timeZone} onClose={() => setSelectedOrderId(null)} /> : null}</div> : null}
+    </section> : null}
   </main>
 }
