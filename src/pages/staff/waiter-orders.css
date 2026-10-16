@@ -63,6 +63,9 @@
 .waiter-orders-history-list > button { min-height: 44px; border: 0; border-bottom: 1px solid var(--outline-variant); background: transparent; color: var(--on-surface); font: inherit; font-size: 13px; cursor: pointer; }
 .waiter-orders-history-list > button:hover, .waiter-orders-history-list > button.is-selected { background: var(--surface-low); }
 .waiter-orders-history-list > button > span { color: var(--on-surface-variant); }
+.waiter-order-history-id { display: grid; gap: 3px; min-width: 0; }
+.waiter-order-history-id strong { color: var(--on-surface); }
+.waiter-order-history-id small { color: var(--on-surface-variant); font-size: 11px; }
 .waiter-orders-history-columns > :last-child, .waiter-orders-history-list > button > :last-child { text-align: right; white-space: nowrap; }
 .waiter-orders-detail { padding-top: 4px; }
 .waiter-order-summary { display: grid; gap: 10px; padding: 14px 0 0; border-top: 1px solid var(--outline-variant); }
@@ -77,6 +80,9 @@
 .waiter-order-summary li span { display: grid; gap: 3px; min-width: 0; }
 .waiter-order-summary li small { color: var(--on-surface-variant); }
 .waiter-order-summary li > strong { white-space: nowrap; }
+.waiter-order-dispatch { justify-self: start; }
+.waiter-order-dispatch-spinner { animation: waiter-order-spin .8s linear infinite; }
+@keyframes waiter-order-spin { to { transform: rotate(360deg); } }
 :is(.waiter-orders-remove, .waiter-orders-stepper button, .waiter-order-summary-heading button, .waiter-orders-history-list > button, .waiter-orders-note summary):focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
 @media (max-width: 900px) {
   .waiter-orders-compose { grid-template-columns: minmax(0, 1fr); }
@@ -99,6 +105,7 @@
   .waiter-orders-history-list > button > :nth-child(3) { grid-column: 2; grid-row: 2; text-align: right; }
   .waiter-orders-history-list > button > :nth-child(4) { grid-column: 2; grid-row: 1; }
   .waiter-order-pending .ui-button, .waiter-order-price-review .ui-button { width: 100%; }
+  .waiter-order-dispatch { width: 100%; }
 }
 @media (max-width: 460px) {
   .waiter-orders-menu-filters { grid-template-columns: minmax(0, 1fr); }

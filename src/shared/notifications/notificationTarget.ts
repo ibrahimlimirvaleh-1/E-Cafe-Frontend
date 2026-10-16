@@ -30,7 +30,9 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
   const contractId =
     valueAsString(payload.contractId || payload.ContractId) ||
     (relatedType.includes('contract') ? valueAsString(notification.relatedEntityId) : '')
-  const restaurantId = valueAsString(payload.restaurantId || payload.RestaurantId || notification.restaurantId)
+  const payloadRestaurantId = valueAsString(payload.restaurantId || payload.RestaurantId)
+  const notificationRestaurantId = valueAsString(notification.restaurantId)
+  const restaurantId = payloadRestaurantId || notificationRestaurantId
 
   const isSessionCloseReview = notification.typeName?.toLowerCase() === 'tablesessionclosereviewrequired' ||
     (notification.relatedEntityType?.toLowerCase() === 'tablesession' && payload.section === 'session-close-review')
@@ -57,15 +59,16 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
   }
 
   if (relatedType.includes('order')) {
+    if (payloadRestaurantId && notificationRestaurantId && payloadRestaurantId !== notificationRestaurantId) return ''
     if (isInRole(user, [RoleIds.Kitchen], restaurantId)) {
-      return '/kitchen'
+      return `/kitchen?restaurantId=${encodeURIComponent(restaurantId)}`
     }
 
     if (isInRole(user, [RoleIds.Waiter], restaurantId)) {
       return '/waiter/orders'
     }
 
-    return '/admin/orders'
+    return canAccessAdminModule(user, 'orders', restaurantId) ? '/admin/orders' : ''
   }
 
   if (relatedType.includes('reservation')) {
