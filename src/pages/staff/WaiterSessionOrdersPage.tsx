@@ -1,12 +1,13 @@
 import { ArrowLeft, LoaderCircle, Minus, Plus, RefreshCw, Search, SendHorizontal, ShoppingBasket, Table2, Trash2, UsersRound, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import type { MenuItem } from '../../entities/types'
 import { clearPendingOrderIntent, pendingOrderStorageKey, readPendingOrderIntent, savePendingOrderIntent, type PendingOrderIntent } from '../../features/orders/pendingOrderIntent'
 import { ecafeApi, type CreateSessionOrderRequest, type SessionOrderResponse, type WaiterTableSessionResponse } from '../../shared/api/ecafeApi'
 import { ApiError, normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { orderKitchenLabel, orderStatusId } from '../../shared/lib/orderStatus'
@@ -58,18 +59,41 @@ function OrderSummary({ order, timeZone, onClose, onSend, sending, canSend, retr
 }
 
 export function WaiterSessionOrdersPage() {
-  const { user } = useAuth()
+  const { user, selectProfile } = useAuth()
   const { restaurantId = '', sessionId = '' } = useParams()
+  const [searchParams] = useSearchParams()
   const parsedSessionId = Number(sessionId)
+  const requestedOrderId = searchParams.get('orderId')
+  const readyOrderId = requestedOrderId && Number.isSafeInteger(Number(requestedOrderId)) && Number(requestedOrderId) > 0
+    ? requestedOrderId : null
+  const readyLinkKey = `${restaurantId}:${sessionId}:${readyOrderId}`
+  const profileSelectionKeyRef = useRef('')
+  const hasWaiterProfile = isInRole(user, [RoleIds.Waiter], restaurantId)
 
-  if (!user || user.restaurantId !== restaurantId || !Number.isSafeInteger(parsedSessionId) || parsedSessionId <= 0) {
+  useEffect(() => {
+    if (!user || !readyOrderId || !hasWaiterProfile || !Number.isSafeInteger(parsedSessionId) || parsedSessionId <= 0 ||
+      profileSelectionKeyRef.current === readyLinkKey) return
+    profileSelectionKeyRef.current = readyLinkKey
+    if (user.restaurantId !== restaurantId || user.roleId !== RoleIds.Waiter) {
+      selectProfile({ restaurantId, roleId: RoleIds.Waiter })
+    }
+  }, [user, readyOrderId, readyLinkKey, hasWaiterProfile, parsedSessionId, restaurantId, selectProfile])
+
+  if (!user || !hasWaiterProfile || !Number.isSafeInteger(parsedSessionId) || parsedSessionId <= 0) {
     return <Navigate to="/waiter?view=tables" replace />
+  }
+  if (user.restaurantId !== restaurantId || user.roleId !== RoleIds.Waiter) {
+    return readyOrderId ? <main className="staff-page" role="status">Restoran konteksti yüklənir...</main> : <Navigate to="/waiter?view=tables" replace />
   }
 
   return <SessionOrderWorkspace key={`${user.userId}:${restaurantId}:${parsedSessionId}`} userId={user.userId} restaurantId={restaurantId} sessionId={parsedSessionId} />
 }
 
 function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: string; restaurantId: string; sessionId: number }) {
+  const [searchParams] = useSearchParams()
+  const requestedOrderId = searchParams.get('orderId')
+  const parsedRequestedOrderId = Number(requestedOrderId)
+  const validRequestedOrderId = requestedOrderId && Number.isSafeInteger(parsedRequestedOrderId) && parsedRequestedOrderId > 0 ? parsedRequestedOrderId : null
   const storageKey = pendingOrderStorageKey(userId, restaurantId, sessionId)
   const [pendingIntent, setPendingIntent] = useState<PendingOrderIntent | null>(() => readPendingOrderIntent(storageKey))
   const [cart, setCart] = useState<CartLine[]>([])
@@ -80,7 +104,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const [reloadKey, setReloadKey] = useState(0)
   const [menuRevision, setMenuRevision] = useState(0)
   const [ordersRevision, setOrdersRevision] = useState(0)
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(validRequestedOrderId)
   const [createdOrder, setCreatedOrder] = useState<SessionOrderResponse | null>(null)
   const [feedback, setFeedback] = useState(pendingIntent ? 'Əvvəlki sifariş cəhdinin nəticəsi bilinmir. Eyni cəhdi yenidən yoxlayın.' : '')
   const [priceConflict, setPriceConflict] = useState(false)
@@ -96,6 +120,10 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const sendInFlightRef = useRef(false)
   const mountedRef = useRef(true)
   const scopeKey = `${restaurantId}:${sessionId}`
+
+  useEffect(() => {
+    if (validRequestedOrderId !== null) setSelectedOrderId(validRequestedOrderId)
+  }, [validRequestedOrderId])
 
   useEffect(() => {
     mountedRef.current = true
