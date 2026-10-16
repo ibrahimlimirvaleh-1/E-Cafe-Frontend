@@ -47,7 +47,9 @@ export function StaffShell({ title, variant }: StaffShellProps) {
   return (
     <div className="staff-shell">
       <header className={isWaiterShell ? 'site-topbar' : 'staff-topbar'}>
-        {isWaiterShell ? <div className="site-topbar-inner">{headerContent}</div> : headerContent}
+        <div className={isWaiterShell ? 'site-topbar-inner' : 'staff-topbar-inner'}>
+          {headerContent}
+        </div>
       </header>
       <div className="route-transition">
         <Outlet />

@@ -357,6 +357,44 @@ export type SessionOrderResponse = {
   }[]
 }
 
+export type CustomerTableSessionResponse = {
+  id: number
+  restaurantId: number
+  restaurantName: string
+  tableId: number
+  tableName: string
+  reservationId: number | null
+  statusId: number
+  openedAt: string
+  closedAt: string | null
+  timeZone: string
+}
+
+export type CustomerSessionOrderResponse = {
+  id: number
+  restaurantId: number
+  tableId: number
+  tableSessionId: number
+  reservationId: number | null
+  statusId: number
+  openedAt: string
+  sentToKitchenAt: string | null
+  acceptedAt: string | null
+  preparingAt: string | null
+  readyAt: string | null
+  servedAt: string | null
+  closedAt: string | null
+  subtotal: number
+  items: {
+    id: number
+    itemId: number
+    name: string
+    quantity: number
+    unitPrice: number
+    lineTotal: number
+  }[]
+}
+
 export type KitchenOrderResponse = {
   id: number
   restaurantId: number
@@ -426,6 +464,50 @@ function mapSessionOrder(record: AnyRecord): SessionOrderResponse {
       unitPrice: num(item.unitPrice),
       lineTotal: num(item.lineTotal),
       note: item.note == null ? null : str(item.note),
+    })),
+  }
+}
+
+// Müştəri cavabını işçi sessiyası modelindən ayrı saxlayır.
+function mapCustomerTableSession(record: AnyRecord): CustomerTableSessionResponse {
+  return {
+    id: num(record.id),
+    restaurantId: num(record.restaurantId),
+    restaurantName: str(record.restaurantName),
+    tableId: num(record.tableId),
+    tableName: str(record.tableName),
+    reservationId: record.reservationId == null ? null : num(record.reservationId),
+    statusId: num(record.statusId),
+    openedAt: str(record.openedAt),
+    closedAt: record.closedAt == null ? null : str(record.closedAt),
+    timeZone: str(record.timeZone).trim() || 'Asia/Baku',
+  }
+}
+
+// Müştəri cavabına daxili qeyd və işçi identifikatoru daşımır.
+function mapCustomerSessionOrder(record: AnyRecord): CustomerSessionOrderResponse {
+  return {
+    id: num(record.id),
+    restaurantId: num(record.restaurantId),
+    tableId: num(record.tableId),
+    tableSessionId: num(record.tableSessionId),
+    reservationId: record.reservationId == null ? null : num(record.reservationId),
+    statusId: num(record.statusId),
+    openedAt: str(record.openedAt),
+    sentToKitchenAt: record.sentToKitchenAt == null ? null : str(record.sentToKitchenAt),
+    acceptedAt: record.acceptedAt == null ? null : str(record.acceptedAt),
+    preparingAt: record.preparingAt == null ? null : str(record.preparingAt),
+    readyAt: record.readyAt == null ? null : str(record.readyAt),
+    servedAt: record.servedAt == null ? null : str(record.servedAt),
+    closedAt: record.closedAt == null ? null : str(record.closedAt),
+    subtotal: num(record.subtotal),
+    items: asArray<AnyRecord>(record.items).map((item) => ({
+      id: num(item.id),
+      itemId: num(item.itemId),
+      name: str(item.name),
+      quantity: num(item.quantity),
+      unitPrice: num(item.unitPrice),
+      lineTotal: num(item.lineTotal),
     })),
   }
 }
@@ -2196,6 +2278,27 @@ export const ecafeApi = {
         method: 'POST',
       })
       return mapSessionOrder(result.data as AnyRecord)
+    },
+  },
+
+  customerTableSessions: {
+    listMine: async (pageNumber: number, pageSize = 20, signal?: AbortSignal) => {
+      const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      const result = await httpClient<unknown>(`${endpoints.customerTableSessions.mine}?${query}`, { signal })
+      return asPaginated(result.data, mapCustomerTableSession)
+    },
+    getById: async (sessionId: number, signal?: AbortSignal) => {
+      const result = await httpClient<unknown>(endpoints.customerTableSessions.detail(sessionId), { signal })
+      return mapCustomerTableSession(result.data as AnyRecord)
+    },
+    listOrders: async (sessionId: number, pageNumber: number, pageSize = 20, signal?: AbortSignal) => {
+      const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      const result = await httpClient<unknown>(`${endpoints.customerTableSessions.orders(sessionId)}?${query}`, { signal })
+      return asPaginated(result.data, mapCustomerSessionOrder)
+    },
+    getOrder: async (sessionId: number, orderId: number, signal?: AbortSignal) => {
+      const result = await httpClient<unknown>(endpoints.customerTableSessions.orderDetail(sessionId, orderId), { signal })
+      return mapCustomerSessionOrder(result.data as AnyRecord)
     },
   },
 

@@ -39,11 +39,11 @@ import { CustomerMobileDownloadPage } from '../pages/customer/CustomerMobileDown
 import { MenuSelectionPage } from '../pages/customer/MenuSelectionPage'
 import { NotificationsPage } from '../pages/customer/NotificationsPage'
 import { MyReservationsPage } from '../pages/customer/MyReservationsPage'
+import { MyOrdersPage } from '../pages/customer/MyOrdersPage'
 import { ProfilePage } from '../pages/customer/ProfilePage'
 import { RestaurantCatalogPage } from '../pages/customer/RestaurantCatalogPage'
 import { RestaurantProfilePage } from '../pages/customer/RestaurantProfilePage'
 import { ReservationTimePage } from '../pages/customer/ReservationTimePage'
-import { SimpleCustomerPage } from '../pages/customer/SimpleCustomerPage'
 import { TableSelectionPage } from '../pages/customer/TableSelectionPage'
 import { TrackingPage } from '../pages/customer/TrackingPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -139,7 +139,7 @@ export function AppRouter() {
           path="orders"
           element={
             <CustomerOnly>
-              <SimpleCustomerPage title="Sifarişlərim" />
+              <MyOrdersPage />
             </CustomerOnly>
           }
         />

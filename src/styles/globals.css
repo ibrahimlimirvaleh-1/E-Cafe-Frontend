@@ -91,7 +91,7 @@ img {
 }
 
 .site-topbar-inner,
-.staff-topbar {
+.staff-topbar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5450,7 +5450,7 @@ img {
   }
 
   .site-topbar-inner,
-  .staff-topbar,
+  .staff-topbar-inner,
   .admin-topbar {
     padding: 12px 14px;
   }
@@ -6355,7 +6355,7 @@ body,
 
 @media (max-width: 1080px) {
   .site-topbar-inner,
-  .staff-topbar {
+  .staff-topbar-inner {
     align-items: stretch;
   }
 
@@ -10662,7 +10662,7 @@ body,
 /* Phone viewport pass: prevent cramped headers, forms, and long content. */
 @media (max-width: 640px) {
   .site-topbar-inner,
-  .staff-topbar {
+  .staff-topbar-inner {
     width: 100%;
     padding-inline: 12px;
   }
@@ -12567,8 +12567,8 @@ body {
 }
 
 @media (max-width: 760px) {
-  .staff-shell .staff-topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
-  .staff-shell .staff-topbar > strong { display: none; }
+  .staff-shell .staff-topbar-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .staff-shell .staff-topbar-inner > strong { display: none; }
   .staff-shell .staff-topbar .brand { grid-column: 1; grid-row: 1; }
   .staff-shell .staff-topbar .site-actions { grid-column: 2; grid-row: 1; width: auto; gap: 6px; justify-content: flex-end; }
   .staff-shell .staff-topbar .staff-nav { grid-column: 1 / -1; grid-row: 2; min-width: 0; width: 100%; margin: 0; overflow-x: auto; }
@@ -12580,7 +12580,7 @@ body {
 }
 
 @media (max-width: 420px) {
-  .staff-shell .staff-topbar { padding-inline: 10px; }
+  .staff-shell .staff-topbar-inner { padding-inline: 10px; }
   .staff-shell .staff-topbar .site-actions { gap: 4px; }
   .staff-shell .staff-topbar .icon-action,
   .staff-shell .staff-topbar .workspace-switcher-home,

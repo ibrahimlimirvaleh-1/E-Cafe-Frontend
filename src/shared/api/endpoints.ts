@@ -163,6 +163,12 @@ export const endpoints = {
     sendOrderToKitchen: (restaurantId: string, sessionId: number, orderId: number) =>
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/send-to-kitchen`,
   },
+  customerTableSessions: {
+    mine: '/public/table-sessions/my',
+    detail: (sessionId: number) => `/public/table-sessions/${sessionId}`,
+    orders: (sessionId: number) => `/public/table-sessions/${sessionId}/orders`,
+    orderDetail: (sessionId: number, orderId: number) => `/public/table-sessions/${sessionId}/orders/${orderId}`,
+  },
   kitchen: {
     orders: (restaurantId: string) => `/restaurants/${restaurantId}/kitchen/orders`,
     orderAction: (restaurantId: string, orderId: number, action: KitchenProgressAction) =>
