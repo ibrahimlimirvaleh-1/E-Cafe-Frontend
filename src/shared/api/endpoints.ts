@@ -1,3 +1,5 @@
+export type KitchenProgressAction = 'accept' | 'start' | 'ready'
+
 export const endpoints = {
   mobileApp: {
     customerRelease: '/mobile/customer/release',
@@ -163,6 +165,8 @@ export const endpoints = {
   },
   kitchen: {
     orders: (restaurantId: string) => `/restaurants/${restaurantId}/kitchen/orders`,
+    orderAction: (restaurantId: string, orderId: number, action: KitchenProgressAction) =>
+      `/restaurants/${restaurantId}/kitchen/orders/${orderId}/${action}`,
   },
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,

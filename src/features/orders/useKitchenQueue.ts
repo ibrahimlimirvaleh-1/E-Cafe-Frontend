@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ecafeApi, type KitchenOrderResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
@@ -18,6 +18,25 @@ const pollDelayMs = 20_000
 export function useKitchenQueue(userId: string, restaurantId: string, page: number, revision: number) {
   const scopeKey = `${userId}:${restaurantId}:${page}`
   const [state, setState] = useState<QueueState>(initialState)
+  const scopeRef = useRef(scopeKey)
+  const confirmedOrdersRef = useRef(new Map<number, KitchenOrderResponse>())
+  scopeRef.current = scopeKey
+
+  useEffect(() => {
+    confirmedOrdersRef.current.clear()
+  }, [scopeKey])
+
+  // POST cavabı GET-dən əvvəl gəlirsə, həmin sifarişin statusunu dərhal göstərir.
+  const applyOrder = useCallback((order: KitchenOrderResponse) => {
+    if (scopeRef.current !== scopeKey || String(order.restaurantId) !== restaurantId) return
+    const previous = confirmedOrdersRef.current.get(order.id)
+    const confirmed = previous && previous.statusId > order.statusId ? previous : order
+    confirmedOrdersRef.current.set(order.id, confirmed)
+    setState((current) => current.scopeKey !== scopeKey || !current.data ? current : {
+      ...current,
+      data: { ...current.data, items: current.data.items.map((item) => item.id === order.id && item.statusId <= confirmed.statusId ? confirmed : item) },
+    })
+  }, [scopeKey, restaurantId])
 
   useEffect(() => {
     let active = true
@@ -35,9 +54,20 @@ export function useKitchenQueue(userId: string, restaurantId: string, page: numb
       })
       try {
         const data = await ecafeApi.kitchen.listOrders(restaurantId, page, 20, controller.signal)
-        if (active) setState({ scopeKey, data, error: '', isLoading: false, isRefreshing: false })
+        if (active && scopeRef.current === scopeKey) {
+          const items = data.items.map((order) => {
+            const confirmed = confirmedOrdersRef.current.get(order.id)
+            if (!confirmed) return order
+            if (order.statusId >= confirmed.statusId) {
+              confirmedOrdersRef.current.delete(order.id)
+              return order
+            }
+            return confirmed
+          })
+          setState({ scopeKey, data: { ...data, items }, error: '', isLoading: false, isRefreshing: false })
+        }
       } catch (error) {
-        if (active && !controller.signal.aborted) {
+        if (active && scopeRef.current === scopeKey && !controller.signal.aborted) {
           setState({ scopeKey, data: null, error: normalizeCaughtApiError(error, 'Mətbəx növbəsi yüklənmədi.').message, isLoading: false, isRefreshing: false })
         }
       } finally {
@@ -70,5 +100,5 @@ export function useKitchenQueue(userId: string, restaurantId: string, page: numb
     }
   }, [scopeKey, restaurantId, page, revision])
 
-  return state.scopeKey === scopeKey ? state : { ...initialState, scopeKey }
+  return { ...(state.scopeKey === scopeKey ? state : { ...initialState, scopeKey }), applyOrder }
 }

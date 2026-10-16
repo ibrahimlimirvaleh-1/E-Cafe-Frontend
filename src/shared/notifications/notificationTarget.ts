@@ -65,6 +65,12 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
     }
 
     if (isInRole(user, [RoleIds.Waiter], restaurantId)) {
+      if (payload.section === 'order-ready' || notification.typeName?.toLowerCase() === 'orderready') {
+        const sessionId = valueAsString(payload.tableSessionId || payload.TableSessionId)
+        const orderId = valueAsString(payload.orderId || payload.OrderId || notification.relatedEntityId)
+        if (!restaurantId || !/^[1-9]\d*$/.test(sessionId) || !/^[1-9]\d*$/.test(orderId)) return ''
+        return `/waiter/restaurants/${encodeURIComponent(restaurantId)}/sessions/${encodeURIComponent(sessionId)}/orders?orderId=${encodeURIComponent(orderId)}`
+      }
       return '/waiter/orders'
     }
 

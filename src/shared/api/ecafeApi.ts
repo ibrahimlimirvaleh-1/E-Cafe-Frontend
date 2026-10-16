@@ -30,7 +30,7 @@ import type {
   RestaurantWorkingHour,
   WorkflowAction,
 } from '../../entities/types'
-import { endpoints } from './endpoints'
+import { endpoints, type KitchenProgressAction } from './endpoints'
 import { ApiError, fetchProtectedBlob, getApiOrigin, httpClient } from './httpClient'
 import {
   categoryRow,
@@ -368,6 +368,15 @@ export type KitchenOrderResponse = {
   statusId: number
   openedAt: string
   sentToKitchenAt: string
+  acceptedAt: string | null
+  preparingAt: string | null
+  readyAt: string | null
+  acceptedByUserId: number | null
+  preparingByUserId: number | null
+  readyByUserId: number | null
+  canAccept: boolean
+  canStartPreparing: boolean
+  canMarkReady: boolean
   note: string | null
   items: { id: number; itemId: number; name: string; quantity: number; note: string | null }[]
 }
@@ -434,6 +443,15 @@ function mapKitchenOrder(record: AnyRecord): KitchenOrderResponse {
     statusId: num(record.statusId),
     openedAt: str(record.openedAt),
     sentToKitchenAt: str(record.sentToKitchenAt),
+    acceptedAt: record.acceptedAt == null ? null : str(record.acceptedAt),
+    preparingAt: record.preparingAt == null ? null : str(record.preparingAt),
+    readyAt: record.readyAt == null ? null : str(record.readyAt),
+    acceptedByUserId: record.acceptedByUserId == null ? null : num(record.acceptedByUserId),
+    preparingByUserId: record.preparingByUserId == null ? null : num(record.preparingByUserId),
+    readyByUserId: record.readyByUserId == null ? null : num(record.readyByUserId),
+    canAccept: bool(record.canAccept),
+    canStartPreparing: bool(record.canStartPreparing),
+    canMarkReady: bool(record.canMarkReady),
     note: record.note == null ? null : str(record.note),
     items: asArray<AnyRecord>(record.items).map((item) => ({
       id: num(item.id),
@@ -2186,6 +2204,10 @@ export const ecafeApi = {
       const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
       const result = await httpClient<unknown>(`${endpoints.kitchen.orders(restaurantId)}?${query}`, { signal })
       return asPaginated(result.data, mapKitchenOrder)
+    },
+    progressOrder: async (restaurantId: string, orderId: number, action: KitchenProgressAction) => {
+      const result = await httpClient<unknown>(endpoints.kitchen.orderAction(restaurantId, orderId, action), { method: 'POST' })
+      return mapKitchenOrder(result.data as AnyRecord)
     },
   },
 
