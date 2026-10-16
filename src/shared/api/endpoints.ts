@@ -158,6 +158,11 @@ export const endpoints = {
     orders: (restaurantId: string, sessionId: number) => `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders`,
     orderDetail: (restaurantId: string, sessionId: number, orderId: number) =>
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}`,
+    sendOrderToKitchen: (restaurantId: string, sessionId: number, orderId: number) =>
+      `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/send-to-kitchen`,
+  },
+  kitchen: {
+    orders: (restaurantId: string) => `/restaurants/${restaurantId}/kitchen/orders`,
   },
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,

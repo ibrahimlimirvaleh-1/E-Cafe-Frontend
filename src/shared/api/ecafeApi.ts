@@ -357,6 +357,21 @@ export type SessionOrderResponse = {
   }[]
 }
 
+export type KitchenOrderResponse = {
+  id: number
+  restaurantId: number
+  tableId: number
+  tableName: string
+  timeZone: string
+  tableSessionId: number | null
+  waiterUserId: number | null
+  statusId: number
+  openedAt: string
+  sentToKitchenAt: string
+  note: string | null
+  items: { id: number; itemId: number; name: string; quantity: number; note: string | null }[]
+}
+
 // API cavabını ofisiantın masa sessiyası modelinə çevirir.
 function mapWaiterTableSession(record: AnyRecord): WaiterTableSessionResponse {
   return {
@@ -401,6 +416,30 @@ function mapSessionOrder(record: AnyRecord): SessionOrderResponse {
       quantity: num(item.quantity),
       unitPrice: num(item.unitPrice),
       lineTotal: num(item.lineTotal),
+      note: item.note == null ? null : str(item.note),
+    })),
+  }
+}
+
+// Mətbəx modeli yalnız hazırlıq üçün lazım olan məhsul və vaxt məlumatını daşıyır.
+function mapKitchenOrder(record: AnyRecord): KitchenOrderResponse {
+  return {
+    id: num(record.id),
+    restaurantId: num(record.restaurantId),
+    tableId: num(record.tableId),
+    tableName: str(record.tableName),
+    timeZone: str(record.timeZone).trim() || 'Asia/Baku',
+    tableSessionId: record.tableSessionId == null ? null : num(record.tableSessionId),
+    waiterUserId: record.waiterUserId == null ? null : num(record.waiterUserId),
+    statusId: num(record.statusId),
+    openedAt: str(record.openedAt),
+    sentToKitchenAt: str(record.sentToKitchenAt),
+    note: record.note == null ? null : str(record.note),
+    items: asArray<AnyRecord>(record.items).map((item) => ({
+      id: num(item.id),
+      itemId: num(item.itemId),
+      name: str(item.name),
+      quantity: num(item.quantity),
       note: item.note == null ? null : str(item.note),
     })),
   }
@@ -2133,6 +2172,20 @@ export const ecafeApi = {
         body: payload,
       })
       return mapSessionOrder(result.data as AnyRecord)
+    },
+    sendOrderToKitchen: async (restaurantId: string, sessionId: number, orderId: number) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.sendOrderToKitchen(restaurantId, sessionId, orderId), {
+        method: 'POST',
+      })
+      return mapSessionOrder(result.data as AnyRecord)
+    },
+  },
+
+  kitchen: {
+    listOrders: async (restaurantId: string, pageNumber: number, pageSize = 20, signal?: AbortSignal) => {
+      const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      const result = await httpClient<unknown>(`${endpoints.kitchen.orders(restaurantId)}?${query}`, { signal })
+      return asPaginated(result.data, mapKitchenOrder)
     },
   },
 
