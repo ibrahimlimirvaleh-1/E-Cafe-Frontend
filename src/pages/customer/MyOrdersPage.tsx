@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarClock, Check, Clock3, ReceiptText, RefreshCw, Table2, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CalendarClock, Check, Clock3, ReceiptText, RefreshCw, Table2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { StatusTone } from '../../entities/types'
@@ -25,17 +25,24 @@ function useScopedQuery<T>(scope: string, enabled: boolean, refresh: number, loa
   const [state, setState] = useState<QueryState<T>>({ scope: '', data: null, error: null, loading: false })
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled) {
+      setState((previous) => previous.data === null && previous.error === null && !previous.loading
+        ? previous : { scope, data: null, error: null, loading: false })
+      return
+    }
     const controller = new AbortController()
     let active = true
-    setState((previous) => ({
-      scope,
-      data: previous.scope === scope ? previous.data : null,
-      error: null,
-      loading: true,
-    }))
+    // Eyni kontekstdə fon yoxlaması mövcud məzmunu və onun ölçülərini dəyişmir.
+    setState((previous) => {
+      if (previous.scope === scope && previous.data !== null) return previous
+      if (previous.scope === scope && previous.loading) return previous
+      return { scope, data: null, error: null, loading: true }
+    })
     void loaderRef.current(controller.signal).then((data) => {
-      if (active) setState({ scope, data, error: null, loading: false })
+      if (active) setState((previous) => {
+        if (previous.scope === scope && previous.error === null && !previous.loading && JSON.stringify(previous.data) === JSON.stringify(data)) return previous
+        return { scope, data, error: null, loading: false }
+      })
     }).catch((error: unknown) => {
       if (!active || controller.signal.aborted) return
       const normalized = normalizeCaughtApiError(error, 'Məlumat yüklənmədi.')
@@ -135,6 +142,7 @@ export function MyOrdersPage() {
   const [sessionPage, setSessionPage] = useState(1)
   const [orderPage, setOrderPage] = useState(1)
   const [revision, setRevision] = useState(0)
+  const [autoSession, setAutoSession] = useState<{ scope: string; id: number } | null>(null)
   const lastRefreshRef = useRef(0)
   const workspaceRef = useRef<HTMLElement | null>(null)
   const isCustomer = isInRole(user, [RoleIds.Customer])
@@ -166,7 +174,16 @@ export function MyOrdersPage() {
     `${userScope}:sessions:${sessionPage}`, isCustomer, revision,
     (signal) => ecafeApi.customerTableSessions.listMine(sessionPage, 10, signal),
   )
-  const sessionId = requestedSessionId ?? sessions.data?.items[0]?.id ?? null
+  const selectionScope = `${userScope}:sessions:${sessionPage}`
+  const sessionId = requestedSessionId ?? (sessions.data?.items.length
+    ? autoSession?.scope === selectionScope ? autoSession.id : sessions.data.items[0].id
+    : null)
+  useEffect(() => {
+    const first = sessions.data?.items[0]?.id
+    if (!isCustomer || first === undefined) return
+    // Yeni sessiya siyahının əvvəlinə gələndə artıq seçilmiş sessiyanı dəyişmir.
+    setAutoSession((previous) => previous?.scope === selectionScope ? previous : { scope: selectionScope, id: first })
+  }, [isCustomer, selectionScope, sessions.data])
   const selectedSession = useScopedQuery<CustomerTableSessionResponse>(
     `${userScope}:session:${sessionId}`, isCustomer && sessionId !== null, revision,
     (signal) => ecafeApi.customerTableSessions.getById(sessionId!, signal),
@@ -209,18 +226,28 @@ export function MyOrdersPage() {
     if (id) next.set('orderId', String(id))
     else next.delete('orderId')
     setSearchParams(next)
+    if (id && window.matchMedia('(max-width: 850px)').matches) {
+      window.requestAnimationFrame(() => workspaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    }
   }
 
   return <main className="page customer-orders-page">
     <PageHeader eyebrow="Hesab" title="Sifarişlərim" description="Masa sessiyalarınızı və sifarişlərin hazırlanma gedişatını izləyin."
-      action={<Button variant="secondary" onClick={() => setRevision((value) => value + 1)} type="button"><RefreshCw size={17} />Yenilə</Button>} />
+      action={<Button aria-label="Sifarişləri yenilə" title="Sifarişləri yenilə" variant="secondary" onClick={() => setRevision((value) => value + 1)} type="button"><RefreshCw size={17} /><span>Yenilə</span></Button>} />
 
     <div className="customer-orders-layout">
       <section className="customer-order-sessions" aria-label="Masa sessiyaları">
         <div className="customer-orders-section-heading"><div><span className="customer-orders-kicker">Tarixçə</span><h2>Masa sessiyaları</h2></div>{sessions.data ? <small>{sessions.data.totalCount} sessiya</small> : null}</div>
         {sessions.error ? <p className="customer-orders-error" role="alert">{errorMessage(sessions.error, 'Sessiyalar')}</p> : null}
         {sessions.loading && !sessions.data ? <p className="customer-orders-muted" role="status">Sessiyalar yüklənir...</p> : null}
-        {!sessions.loading && !sessions.error && sessions.data?.items.length === 0 ? <div className="customer-orders-empty"><Table2 size={24} /><h3>Hələ masa sessiyanız yoxdur</h3><p>Restoranda masa sessiyanız açıldıqda sifarişləriniz burada görünəcək.</p><ButtonLink to="/reservations" variant="secondary">Rezervasiyalarıma bax</ButtonLink></div> : null}
+        {sessions.data?.items.length === 0 ? <div className="customer-orders-empty"><Table2 size={24} /><h3>Hələ masa sessiyanız yoxdur</h3><p>Restoranda masa sessiyanız açıldıqda sifarişləriniz burada görünəcək.</p><ButtonLink to="/reservations" variant="secondary">Rezervasiyalarıma bax</ButtonLink></div> : null}
+        {sessions.data?.items.length ? <div className="customer-order-session-picker">
+          <label htmlFor="customer-order-session-select">Restoran və masa</label>
+          <select id="customer-order-session-select" value={sessionId ?? ''} onChange={(event) => chooseSession(Number(event.target.value))}>
+            {sessionId !== null && !sessions.data.items.some((session) => session.id === sessionId) ? <option value={sessionId}>{validSession ? `${validSession.restaurantName} · ${validSession.tableName}` : `Sessiya #${sessionId}`}</option> : null}
+            {sessions.data.items.map((session) => <option key={session.id} value={session.id}>{session.restaurantName || `Restoran #${session.restaurantId}`} · {session.tableName || `Masa #${session.tableId}`} · #{session.id}</option>)}
+          </select>
+        </div> : null}
         <div className="customer-order-session-items">{sessions.data?.items.map((session) => {
           const status = sessionStatus(session.statusId)
           return <button className={`customer-order-session${session.id === sessionId ? ' is-selected' : ''}`} type="button" key={session.id} aria-pressed={session.id === sessionId} onClick={() => chooseSession(session.id)}>
@@ -232,25 +259,27 @@ export function MyOrdersPage() {
         {sessions.data ? <PaginationControls ariaLabel="Masa sessiyaları səhifələməsi" hasNextPage={sessions.data.hasNextPage} hasPreviousPage={sessions.data.hasPreviousPage} pageIndex={sessions.data.pageIndex} totalPages={sessions.data.totalPages} totalCount={sessions.data.totalCount} onPageChange={setSessionPage} /> : null}
       </section>
 
-      <section className="customer-order-workspace" aria-label="Sessiyanın sifarişləri" ref={workspaceRef}>
+      <section className={`customer-order-workspace${requestedOrderId !== null ? ' has-open-detail' : ''}`} aria-label="Sessiyanın sifarişləri" ref={workspaceRef}>
         {sessionId === null ? <div className="customer-orders-placeholder"><ReceiptText size={28} /><h2>Sifarişləriniz burada görünəcək</h2><p>Masa sessiyası seçin və sifarişlərin gedişatına baxın.</p></div> : null}
         {sessionId !== null && selectedSession.loading && !validSession ? <p className="customer-orders-muted" role="status">Sessiya yüklənir...</p> : null}
         {sessionId !== null && selectedSession.error && !validSession ? <div className="customer-orders-empty"><h2>Sessiya əlçatan deyil</h2><p role="alert">{errorMessage(selectedSession.error, 'Sessiya')}</p><Button variant="secondary" onClick={() => { if (requestedSessionId) { const next = new URLSearchParams(searchParams); next.delete('sessionId'); next.delete('orderId'); setSearchParams(next) } else setRevision((value) => value + 1) }} type="button">{requestedSessionId ? 'Siyahıya qayıt' : 'Yenidən yoxla'}</Button></div> : null}
         {validSession ? <>
           <div className="customer-orders-section-heading customer-order-workspace-heading"><div><span className="customer-orders-kicker">{validSession.restaurantName || 'Restoran'}</span><h2>{validSession.tableName || `Masa #${validSession.tableId}`}</h2><p><Clock3 size={15} /> Açılış: {formatReservationDateTime(validSession.openedAt, validSession.timeZone)}</p></div><Badge tone={sessionStatus(validSession.statusId).tone}>{sessionStatus(validSession.statusId).label}</Badge></div>
-          {selectedSession.loading && validSession ? <span className="customer-orders-sync" role="status">Yenilənir...</span> : null}
           {selectedSession.error ? <p className="customer-orders-error" role="alert">Sessiya yenilənmədi. Son yüklənmiş məlumat göstərilir.</p> : null}
-          {orders.error ? <p className="customer-orders-error" role="alert">{errorMessage(orders.error, 'Sifarişlər')}</p> : null}
-          {orders.loading && !orders.data ? <p className="customer-orders-muted" role="status">Sifarişlər yüklənir...</p> : null}
-          {!orders.loading && !orders.error && orders.data?.items.length === 0 ? <div className="customer-orders-empty"><ReceiptText size={25} /><h3>Bu sessiyada hələ sifariş yoxdur</h3><p>Sifariş yaradıldıqda onun gedişatı burada görünəcək.</p></div> : null}
+          {requestedOrderId !== null ? <button className="customer-order-detail-back" onClick={() => chooseOrder(null)} type="button"><ArrowLeft size={17} />Sifarişlərə qayıt</button> : null}
           {requestedOrderId !== null && selectedOrder.loading && !selectedOrder.data ? <p className="customer-orders-muted" role="status">Sifariş detalı yüklənir...</p> : null}
           {requestedOrderId !== null && selectedOrder.error ? <p className="customer-orders-error" role="alert">{errorMessage(selectedOrder.error, 'Sifariş')}</p> : null}
           {selectedOrder.data ? <OrderDetail order={selectedOrder.data} timeZone={validSession.timeZone} onClose={() => chooseOrder(null)} /> : null}
-          {orders.data && orders.data.items.length > 0 ? <div className="customer-order-list"><h3>Sifarişlər <span>{orders.data.totalCount}</span></h3>{orders.data.items.map((order) => <article className="customer-order-row" key={order.id}>
-            <div className="customer-order-row-main"><span className="customer-orders-kicker">Sifariş #{order.id}</span><strong>{order.items.length ? order.items.map((item) => item.name).join(', ') : 'Məhsul məlumatı yoxdur'}</strong><small>{formatReservationDateTime(order.openedAt, validSession.timeZone)} · {order.items.length} məhsul</small></div>
-            <div className="customer-order-row-action"><span className="customer-order-amount"><small>Məhsul cəmi</small><strong>{money(order.subtotal)}</strong></span><Badge tone={orderTone(order.statusId)}>{orderKitchenLabel(order.statusId, order.sentToKitchenAt)}</Badge><button aria-label={`Sifariş #${order.id} detalına bax`} onClick={() => chooseOrder(order.id)} title="Detallara bax" type="button"><ArrowRight size={18} /></button></div>
-          </article>)}</div> : null}
-          {orders.data ? <PaginationControls ariaLabel="Sifarişlər səhifələməsi" hasNextPage={orders.data.hasNextPage} hasPreviousPage={orders.data.hasPreviousPage} pageIndex={orders.data.pageIndex} totalPages={orders.data.totalPages} totalCount={orders.data.totalCount} onPageChange={setOrderPage} /> : null}
+          <div className="customer-order-list-area">
+            {orders.error ? <p className="customer-orders-error" role="alert">{errorMessage(orders.error, 'Sifarişlər')}</p> : null}
+            {orders.loading && !orders.data ? <p className="customer-orders-muted" role="status">Sifarişlər yüklənir...</p> : null}
+            {orders.data?.items.length === 0 ? <div className="customer-orders-empty"><ReceiptText size={25} /><h3>Bu sessiyada hələ sifariş yoxdur</h3><p>Sifariş yaradıldıqda onun gedişatı burada görünəcək.</p></div> : null}
+            {orders.data && orders.data.items.length > 0 ? <div className="customer-order-list"><h3>Sifarişlər <span>{orders.data.totalCount}</span></h3>{orders.data.items.map((order) => <article className="customer-order-row" key={order.id}>
+              <div className="customer-order-row-main"><span className="customer-orders-kicker">Sifariş #{order.id}</span><strong>{order.items.length ? order.items.map((item) => item.name).join(', ') : 'Məhsul məlumatı yoxdur'}</strong><small>{formatReservationDateTime(order.openedAt, validSession.timeZone)} · {order.items.length} məhsul</small></div>
+              <div className="customer-order-row-action"><span className="customer-order-amount"><small>Məhsul cəmi</small><strong>{money(order.subtotal)}</strong></span><Badge tone={orderTone(order.statusId)}>{orderKitchenLabel(order.statusId, order.sentToKitchenAt)}</Badge><button aria-label={`Sifariş #${order.id} detalına bax`} onClick={() => chooseOrder(order.id)} title="Detallara bax" type="button"><ArrowRight size={18} /></button></div>
+            </article>)}</div> : null}
+            {orders.data ? <PaginationControls ariaLabel="Sifarişlər səhifələməsi" hasNextPage={orders.data.hasNextPage} hasPreviousPage={orders.data.hasPreviousPage} pageIndex={orders.data.pageIndex} totalPages={orders.data.totalPages} totalCount={orders.data.totalCount} onPageChange={setOrderPage} /> : null}
+          </div>
         </> : null}
       </section>
     </div>
