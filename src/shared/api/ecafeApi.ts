@@ -2425,6 +2425,10 @@ export const ecafeApi = {
       (await httpClient<ReservationRefundResponse>(endpoints.refunds.testOutcome(refundId), {
         method: 'POST', body: JSON.stringify({ outcome }),
       })).data,
+    refreshRefund: async (refundId: number) =>
+      (await httpClient<ReservationRefundResponse>(endpoints.refunds.refresh(refundId), {
+        method: 'POST',
+      })).data,
   },
   orders: {
     list: () => orders,

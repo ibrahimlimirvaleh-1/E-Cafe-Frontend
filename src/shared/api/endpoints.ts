@@ -113,6 +113,7 @@ export const endpoints = {
     testOutcome: (paymentId: number) => `/payments/${paymentId}/test-outcome`,
   },
   refunds: {
+    refresh: (refundId: number) => `/refunds/${refundId}/refresh`,
     testOutcome: (refundId: number) => `/refunds/${refundId}/test-outcome`,
   },
   menu: {

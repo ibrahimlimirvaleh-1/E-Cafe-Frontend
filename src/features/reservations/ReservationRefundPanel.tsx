@@ -1,9 +1,11 @@
 import { RefreshCw, RotateCcw } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { WorkflowAction } from '../../entities/types'
 import { ecafeApi, type PaymentCapabilities, type ReservationRefundRequestInfo, type ReservationRefundResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
+import { useAuth } from '../../shared/auth/AuthContext'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
+import { refundStatusId } from '../../shared/lib/paymentStatus'
 import { Button } from '../../shared/ui/Button'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { ReservationReasonDialog } from './ReservationReasonDialog'
@@ -18,10 +20,19 @@ type Props = {
 }
 
 export function ReservationRefundPanel({ reservationId, restaurantId, reservationStatusId, reservationFlowCode, refundRequest }: Props) {
+  const { user } = useAuth()
+  const scope = `${user?.userId || ''}:${restaurantId}:${reservationId}`
+  const scopeRef = useRef(scope)
+  scopeRef.current = scope
   const [reloadKey, setReloadKey] = useState(0)
   const [isRequestOpen, setIsRequestOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [actionError, setActionError] = useState('')
+  useEffect(() => {
+    setIsRequestOpen(false)
+    setIsSubmitting(false)
+    setActionError('')
+  }, [scope])
   useEffect(() => {
     const refresh = () => setReloadKey((value) => value + 1)
     window.addEventListener('ecafe:notifications-refresh', refresh)
@@ -30,14 +41,14 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
   const { data: refund, error, hasData, isLoading } = useKeyedAsyncData<ReservationRefundResponse | null>(
     () => ecafeApi.reservations.getRefund(String(reservationId)),
     null,
-    String(reservationId),
-    [reservationId, reloadKey],
+    scope,
+    [scope, reloadKey],
   )
   const { data: paymentCapabilities } = useKeyedAsyncData<PaymentCapabilities | null>(
     () => ecafeApi.reservationPayments.capabilities(),
     null,
-    String(reservationId),
-    [reservationId],
+    scope,
+    [scope],
   )
   const { data: actions, isLoading: areActionsLoading } = useKeyedAsyncData<WorkflowAction[]>(
     () => !isLoading && !refund
@@ -49,8 +60,8 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
         })
       : Promise.resolve([]),
     [],
-    `${restaurantId}:${reservationId}:${refund?.id || ''}:${reservationStatusId}:${reservationFlowCode}`,
-    [restaurantId, reservationId, reservationStatusId, reservationFlowCode, refund?.id, isLoading, reloadKey],
+    `${scope}:${refund?.id || ''}:${reservationStatusId}:${reservationFlowCode}`,
+    [scope, reservationStatusId, reservationFlowCode, refund?.id, isLoading, reloadKey],
   )
 
   useEffect(() => {
@@ -92,6 +103,24 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
     }
   }
 
+  async function refreshRefund() {
+    if (!paymentCapabilities?.enabled || !refund || refund.statusId !== refundStatusId.processing ||
+      refund.sourcePaymentId == null || refund.requiresManualReview || isSubmitting) return
+    const requestedScope = scope
+    setActionError('')
+    setIsSubmitting(true)
+    try {
+      await ecafeApi.reservationPayments.refreshRefund(refund.id)
+      if (scopeRef.current !== requestedScope) return
+      window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+    } catch (cause) {
+      if (scopeRef.current !== requestedScope) return
+      setActionError(normalizeCaughtApiError(cause, 'Geri ödənişin vəziyyəti yoxlanılmadı.').message)
+    } finally {
+      if (scopeRef.current === requestedScope) setIsSubmitting(false)
+    }
+  }
+
   if (isLoading || (error && !hasData)) {
     return error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null
   }
@@ -112,6 +141,14 @@ export function ReservationRefundPanel({ reservationId, restaurantId, reservatio
       {refund?.eligibilityReason ? <p className="reservation-refund-meta">{refund.eligibilityReason}</p> : null}
       {refund?.isTest ? <StatusMessage tone="info" autoHideMs={false}>Test geri ödənişi: real pul köçürülmür.</StatusMessage> : null}
       {requestAction ? <div className="reservation-refund-actions"><Button disabled={isSubmitting} onClick={() => setIsRequestOpen(true)}><RotateCcw size={17} /> {requestAction.label}</Button></div> : null}
+      {paymentCapabilities?.enabled && refund?.statusId === refundStatusId.processing &&
+        refund.sourcePaymentId != null && !refund.requiresManualReview ? (
+          <div className="reservation-refund-actions">
+            <Button disabled={isSubmitting} onClick={() => void refreshRefund()} variant="secondary">
+              <RefreshCw size={17} /> {isSubmitting ? 'Yoxlanılır...' : 'Vəziyyəti yoxla'}
+            </Button>
+          </div>
+        ) : null}
       {paymentCapabilities?.enabled && paymentCapabilities.isTest && refund?.canSimulate && refund.isTest ? (
         <div className="reservation-checkout-test">
           <strong>Test nəticəsi</strong>

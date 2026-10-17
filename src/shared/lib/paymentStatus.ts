@@ -7,6 +7,10 @@ export const paymentStatusId = {
   refunded: 3005,
 } as const
 
+export const refundStatusId = {
+  processing: 8004,
+} as const
+
 const paymentStatusLabels: Record<number, string> = {
   [paymentStatusId.pending]: 'Ödəniş gözlənilir',
   [paymentStatusId.paid]: 'Ödəniş tamamlanıb',
