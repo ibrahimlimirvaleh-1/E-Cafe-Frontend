@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { RoleIds, isInRole } from '../auth/authz'
 import { Brand } from './Brand'
@@ -10,6 +11,21 @@ import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 export function SiteShell() {
   const { isAuthenticated, user } = useAuth()
   const isCustomer = isInRole(user, [RoleIds.Customer])
+  const { pathname } = useLocation()
+  const navRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const alignActive = () => {
+      const nav = navRef.current
+      if (!nav || nav.scrollWidth <= nav.clientWidth) return
+      const active = nav.querySelector<HTMLElement>('a.active')
+      if (!active) return
+      nav.scrollLeft = active.offsetLeft - nav.offsetLeft - (nav.clientWidth - active.clientWidth) / 2
+    }
+    alignActive()
+    window.addEventListener('resize', alignActive)
+    return () => window.removeEventListener('resize', alignActive)
+  }, [pathname, isCustomer])
 
   return (
     <div className="app-shell">
@@ -17,7 +33,7 @@ export function SiteShell() {
         <div className="site-topbar-inner">
           <Brand />
           {isAuthenticated && isCustomer ? (
-            <nav className="site-nav" aria-label="Sayt naviqasiyası">
+            <nav className="site-nav" aria-label="Sayt naviqasiyası" ref={navRef}>
               <NavLink to="/">Restoranlar</NavLink>
               <NavLink to="/reservations">Rezervasiyalarım</NavLink>
               <NavLink to="/orders">Sifarişlərim</NavLink>
