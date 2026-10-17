@@ -402,6 +402,7 @@ function translateErrorCode(code: string) {
     TableNotBelongToRestaurant: 'Seçdiyiniz masa bu restorana aid deyil. Başqa masa seçin.',
     RestaurantClosedForReservation: 'Seçdiyiniz tarix və saatda restoran bağlıdır. Başqa vaxt seçin.',
     ReservationNotFound: 'Rezervasiya tapılmadı. Səhifəni yeniləyib yenidən yoxlayın.',
+    OrderCannotMarkServed: 'Sifariş hazır olmadığı və ya artıq təqdim edildiyi üçün bu əməliyyat mümkün deyil. Sifarişi yeniləyin.',
   }
 
   return messages[normalized]

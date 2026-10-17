@@ -1,4 +1,4 @@
-import { ArrowLeft, LoaderCircle, Minus, Plus, RefreshCw, Search, SendHorizontal, ShoppingBasket, Table2, Trash2, UsersRound, X } from 'lucide-react'
+import { ArrowLeft, CircleCheck, LoaderCircle, Minus, Plus, RefreshCw, Search, SendHorizontal, ShoppingBasket, Table2, Trash2, UsersRound, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import type { MenuItem } from '../../entities/types'
@@ -43,17 +43,22 @@ function buildOrderBody(cart: CartLine[], note: string): CreateSessionOrderReque
 }
 
 // Seçilmiş sifarişin dəyişməz məzmununu göstərir; onClose yalnız detalı bağlayır.
-function OrderSummary({ order, timeZone, onClose, onSend, sending, canSend, retrying }: { order: SessionOrderResponse; timeZone?: string; onClose: () => void; onSend: () => void; sending: boolean; canSend: boolean; retrying: boolean }) {
+function OrderSummary({ order, timeZone, onClose, onSend, onServe, sending, serving, canSend, canServe, retrying, retryingServe }: { order: SessionOrderResponse; timeZone?: string; onClose: () => void; onSend: () => void; onServe: () => void; sending: boolean; serving: boolean; canSend: boolean; canServe: boolean; retrying: boolean; retryingServe: boolean }) {
   const canDispatch = order.statusId === orderStatusId.created && !order.sentToKitchenAt
   return <div className="waiter-order-summary">
     <div className="waiter-order-summary-heading"><div><span>SİFARİŞ #{order.id}</span><h3>Sifariş detalı</h3></div><div><strong>{money(order.subtotal)}</strong><button type="button" aria-label="Sifariş detalını bağla" title="Sifariş detalını bağla" onClick={onClose}><X size={16} /></button></div></div>
     <p>{formatReservationDateTime(order.openedAt, timeZone)} · <strong>{orderKitchenLabel(order.statusId, order.sentToKitchenAt)}</strong></p>
     {order.sentToKitchenAt ? <p>Mətbəxə göndərilib: {formatReservationDateTime(order.sentToKitchenAt, timeZone)}</p> : null}
+    {order.servedAt ? <p>Təqdim edilib: {formatReservationDateTime(order.servedAt, timeZone)}</p> : null}
     <ul>{order.items.map((line) => <li key={line.id}><span><strong>{line.quantity} × {line.name}</strong>{line.note ? <small>{line.note}</small> : null}</span><strong>{money(line.lineTotal)}</strong></li>)}</ul>
     {order.note ? <p className="waiter-order-note">Qeyd: {order.note}</p> : null}
     {canDispatch ? <Button type="button" className="waiter-order-dispatch" disabled={!canSend || sending} onClick={onSend}>
       {sending ? <LoaderCircle className="waiter-order-dispatch-spinner" size={17} /> : <SendHorizontal size={17} />}
       {sending ? 'Göndərilir...' : retrying ? 'Eyni sifarişi təkrar göndər' : 'Mətbəxə göndər'}
+    </Button> : null}
+    {order.canMarkServed ? <Button type="button" className="waiter-order-serve" disabled={!canServe || serving} onClick={onServe}>
+      {serving ? <LoaderCircle className="waiter-order-dispatch-spinner" size={17} /> : <CircleCheck size={17} />}
+      {serving ? 'Qeyd edilir...' : retryingServe ? 'Eyni sifarişin nəticəsini yoxla' : 'Təqdim edildi kimi qeyd et'}
     </Button> : null}
   </div>
 }
@@ -116,8 +121,15 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const [dispatchError, setDispatchError] = useState('')
   const [dispatchNotice, setDispatchNotice] = useState('')
   const [sentOrderTimes, setSentOrderTimes] = useState<Record<number, string>>({})
+  const [servingOrderId, setServingOrderId] = useState<number | null>(null)
+  const [uncertainServedId, setUncertainServedId] = useState<number | null>(null)
+  const [serveError, setServeError] = useState('')
+  const [serveNotice, setServeNotice] = useState('')
+  const [servedOrders, setServedOrders] = useState<Record<number, SessionOrderResponse>>({})
+  const [serveAccessDenied, setServeAccessDenied] = useState(false)
   const inFlightRef = useRef(false)
   const sendInFlightRef = useRef(false)
+  const serveInFlightRef = useRef(false)
   const mountedRef = useRef(true)
   const scopeKey = `${restaurantId}:${sessionId}`
 
@@ -179,7 +191,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     }
   }, [orders.data, orders.hasData, page])
 
-  const sessionUnavailable = closed || (session.hasData && !session.data && !session.error) || (orders.hasData && !orders.data && !orders.error)
+  const sessionUnavailable = closed || serveAccessDenied || (session.hasData && !session.data && !session.error) || (orders.hasData && !orders.data && !orders.error)
   const canEdit = Boolean(session.hasData && session.data && !session.error && !pendingIntent && !busy && !sessionUnavailable)
   const visibleItems = useMemo(() => menu.hasData && !menu.error
     ? menu.data.items.filter((item) => item.isActive && (categoryId === 'all' || item.categoryId === categoryId) &&
@@ -188,9 +200,11 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const subtotal = cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0)
   const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0)
   const selectedOrderRecord = detail.hasData && detail.data?.kind === 'found' && !detail.error ? detail.data.order : null
-  const selectedOrder = selectedOrderRecord && sentOrderTimes[selectedOrderRecord.id]
-    ? { ...selectedOrderRecord, sentToKitchenAt: sentOrderTimes[selectedOrderRecord.id] }
-    : selectedOrderRecord
+  const selectedOrder = selectedOrderRecord && servedOrders[selectedOrderRecord.id] && !selectedOrderRecord.servedAt && selectedOrderRecord.statusId === orderStatusId.ready
+    ? servedOrders[selectedOrderRecord.id]
+    : selectedOrderRecord && sentOrderTimes[selectedOrderRecord.id]
+      ? { ...selectedOrderRecord, sentToKitchenAt: sentOrderTimes[selectedOrderRecord.id] }
+      : selectedOrderRecord
   const orderPage = orders.hasData && !orders.error ? orders.data : null
   const pendingBody = pendingIntent ? JSON.parse(pendingIntent.payload) as CreateSessionOrderRequest : null
   const uncertainOrderConfirmed = uncertainOrderId !== null && Boolean(
@@ -204,6 +218,17 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     setDispatchError('')
     setDispatchNotice(`Sifariş #${uncertainOrderId} mətbəxə göndərildi.`)
   }, [uncertainOrderConfirmed, uncertainOrderId])
+
+  const uncertainServeConfirmed = uncertainServedId !== null && Boolean(
+    (selectedOrderRecord?.id === uncertainServedId && selectedOrderRecord.servedAt) ||
+    orderPage?.items.find((order) => order.id === uncertainServedId)?.servedAt,
+  )
+  useEffect(() => {
+    if (!uncertainServeConfirmed || uncertainServedId === null) return
+    setUncertainServedId(null)
+    setServeError('')
+    setServeNotice(`Sifariş #${uncertainServedId} təqdim edildi.`)
+  }, [uncertainServeConfirmed, uncertainServedId])
 
   // Cavabı itmiş göndərmə yalnız həmin sifariş ID-si ilə təkrarlanır; yeni sifariş yaradılmır.
   async function sendToKitchen(orderId: number) {
@@ -235,6 +260,47 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     } finally {
       sendInFlightRef.current = false
       if (mountedRef.current) setSendingOrderId(null)
+    }
+  }
+
+  // Nəticəsi itən təqdimetmə eyni sifarişə təkrarlanır; yeni sifariş və ödəniş yaratmır.
+  async function markServed(orderId: number) {
+    if (serveInFlightRef.current || sessionUnavailable || session.error || busy) return
+    serveInFlightRef.current = true
+    setServingOrderId(orderId)
+    setServeError('')
+    setServeNotice('')
+    try {
+      const updated = await ecafeApi.tableSessions.serveOrder(restaurantId, sessionId, orderId)
+      if (updated.id !== orderId || updated.statusId !== orderStatusId.served || !updated.servedAt) {
+        throw new Error('Təqdimetmə cavabı təsdiqlənmədi.')
+      }
+      if (!mountedRef.current) return
+      setServedOrders((current) => ({ ...current, [orderId]: updated }))
+      setUncertainServedId(null)
+      setServeNotice(`Sifariş #${orderId} təqdim edildi.`)
+      setOrdersRevision((value) => value + 1)
+    } catch (error) {
+      if (!mountedRef.current) return
+      if (error instanceof ApiError && (error.statusCode === 403 || error.statusCode === 404)) {
+        setServeAccessDenied(true)
+        setUncertainServedId(null)
+        setServedOrders({})
+        setSelectedOrderId((current) => current === orderId ? null : current)
+        setServeError('Bu sifariş və ya masa sessiyası artıq sizə əlçatan deyil.')
+        setReloadKey((value) => value + 1)
+      } else if (error instanceof ApiError && [400, 409, 422].includes(error.statusCode)) {
+        setUncertainServedId(null)
+        setServeError(normalizeCaughtApiError(error, 'Sifariş təqdim edildi kimi qeyd oluna bilmədi.').message)
+        setOrdersRevision((value) => value + 1)
+      } else {
+        setUncertainServedId(orderId)
+        setServeError(`Sifariş #${orderId} üçün təqdimetmənin nəticəsi bilinmir. Eyni sifarişin nəticəsini yenidən yoxlayın.`)
+        setOrdersRevision((value) => value + 1)
+      }
+    } finally {
+      serveInFlightRef.current = false
+      if (mountedRef.current) setServingOrderId(null)
     }
   }
 
@@ -359,6 +425,8 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     {createdOrder ? <StatusMessage tone="success" autoHideMs={false}>Sifariş #{createdOrder.id} yaradıldı. Məhsul cəmi {money(createdOrder.subtotal)}. Sifariş mətbəxə göndərilməyib.</StatusMessage> : null}
     {dispatchNotice ? <StatusMessage tone="success" autoHideMs={false}>{dispatchNotice}</StatusMessage> : null}
     {dispatchError ? <StatusMessage tone={uncertainOrderId !== null ? 'warning' : 'danger'} autoHideMs={false}>{dispatchError}</StatusMessage> : null}
+    {serveNotice ? <StatusMessage tone="success" autoHideMs={false}>{serveNotice}</StatusMessage> : null}
+    {serveError ? <StatusMessage tone={uncertainServedId !== null ? 'warning' : 'danger'} autoHideMs={false}>{serveError}</StatusMessage> : null}
     {feedback && !sessionUnavailable ? <StatusMessage tone={pendingIntent || priceConflict || keyConflict ? 'warning' : 'danger'} autoHideMs={false}>{feedback}</StatusMessage> : null}
     {pendingIntent && !sessionUnavailable ? <div className="waiter-order-pending">
       <div><strong>Nəticəsi bilinməyən cəhd</strong><p>Bu cəhd avtomatik təkrarlanmır. Təkrar yoxlama eyni açar və dəyişməz sifariş məzmunu ilə aparılır.</p>
@@ -392,9 +460,12 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       {orders.isLoading ? <p role="status">Sifarişlər yüklənir...</p> : null}
       {orders.error ? <StatusMessage tone="danger" autoHideMs={false}>Sifariş siyahısı yenilənmədi: {orders.error}</StatusMessage> : null}
       {orderPage && orderPage.items.length === 0 ? <p className="waiter-orders-muted">Bu masa üçün sifariş yoxdur.</p> : null}
-      {orderPage && orderPage.items.length > 0 ? <div className="waiter-orders-history-list"><div className="waiter-orders-history-columns" aria-hidden="true"><span>Sifariş</span><span>Yaradılıb</span><span>Miqdar</span><span>Məbləğ</span></div>{orderPage.items.map((order) => <button type="button" className={selectedOrderId === order.id ? 'is-selected' : ''} key={order.id} onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}><span className="waiter-order-history-id"><strong>Sifariş #{order.id}</strong><small>{orderKitchenLabel(order.statusId, sentOrderTimes[order.id] || order.sentToKitchenAt)}</small></span><span>{formatReservationDateTime(order.openedAt, session.data?.timeZone)}</span><span>{order.items.reduce((sum, line) => sum + line.quantity, 0)} ədəd</span><strong>{money(order.subtotal)}</strong></button>)}</div> : null}
+      {orderPage && orderPage.items.length > 0 ? <div className="waiter-orders-history-list"><div className="waiter-orders-history-columns" aria-hidden="true"><span>Sifariş</span><span>Yaradılıb</span><span>Miqdar</span><span>Məbləğ</span></div>{orderPage.items.map((record) => {
+        const order = servedOrders[record.id] && !record.servedAt && record.statusId === orderStatusId.ready ? servedOrders[record.id] : record
+        return <button type="button" className={selectedOrderId === order.id ? 'is-selected' : ''} key={order.id} onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}><span className="waiter-order-history-id"><strong>Sifariş #{order.id}</strong><small>{orderKitchenLabel(order.statusId, sentOrderTimes[order.id] || order.sentToKitchenAt)}</small></span><span>{formatReservationDateTime(order.openedAt, session.data?.timeZone)}</span><span>{order.items.reduce((sum, line) => sum + line.quantity, 0)} ədəd</span><strong>{money(order.subtotal)}</strong></button>
+      })}</div> : null}
       {orderPage ? <PaginationControls ariaLabel="Masa sifarişi səhifələri" pageIndex={orderPage.pageIndex} totalPages={orderPage.totalPages} totalCount={orderPage.totalCount} pageSize={20} hasPreviousPage={orderPage.hasPreviousPage} hasNextPage={orderPage.hasNextPage} onPageChange={(next) => { setPage(next); setSelectedOrderId(null) }} /> : null}
-      {selectedOrderId !== null ? <div className="waiter-orders-detail" aria-label="Sifariş detalı">{detail.isLoading ? <p role="status">Sifariş detalı yüklənir...</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} timeZone={session.data?.timeZone} onClose={() => setSelectedOrderId(null)} onSend={() => void sendToKitchen(selectedOrder.id)} sending={sendingOrderId === selectedOrder.id} canSend={!busy && !sessionUnavailable && Boolean(session.data) && !session.error} retrying={uncertainOrderId === selectedOrder.id} /> : null}</div> : null}
+      {selectedOrderId !== null ? <div className="waiter-orders-detail" aria-label="Sifariş detalı">{detail.isLoading ? <p role="status">Sifariş detalı yüklənir...</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} timeZone={session.data?.timeZone} onClose={() => setSelectedOrderId(null)} onSend={() => void sendToKitchen(selectedOrder.id)} onServe={() => void markServed(selectedOrder.id)} sending={sendingOrderId === selectedOrder.id} serving={servingOrderId === selectedOrder.id} canSend={!busy && !sessionUnavailable && Boolean(session.data) && !session.error} canServe={!busy && !sessionUnavailable && Boolean(session.data) && !session.error} retrying={uncertainOrderId === selectedOrder.id} retryingServe={uncertainServedId === selectedOrder.id} /> : null}</div> : null}
     </section> : null}
   </main>
 }
