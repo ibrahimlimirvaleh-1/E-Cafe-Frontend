@@ -81,6 +81,7 @@
 .waiter-order-summary li small { color: var(--on-surface-variant); }
 .waiter-order-summary li > strong { white-space: nowrap; }
 .waiter-order-dispatch { justify-self: start; }
+.waiter-order-serve { justify-self: start; }
 .waiter-order-dispatch-spinner { animation: waiter-order-spin .8s linear infinite; }
 @keyframes waiter-order-spin { to { transform: rotate(360deg); } }
 :is(.waiter-orders-remove, .waiter-orders-stepper button, .waiter-order-summary-heading button, .waiter-orders-history-list > button, .waiter-orders-note summary):focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
@@ -106,6 +107,7 @@
   .waiter-orders-history-list > button > :nth-child(4) { grid-column: 2; grid-row: 1; }
   .waiter-order-pending .ui-button, .waiter-order-price-review .ui-button { width: 100%; }
   .waiter-order-dispatch { width: 100%; }
+  .waiter-order-serve { width: 100%; }
 }
 @media (max-width: 460px) {
   .waiter-orders-menu-filters { grid-template-columns: minmax(0, 1fr); }
