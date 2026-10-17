@@ -402,6 +402,14 @@ function translateErrorCode(code: string) {
     TableNotBelongToRestaurant: 'Seçdiyiniz masa bu restorana aid deyil. Başqa masa seçin.',
     RestaurantClosedForReservation: 'Seçdiyiniz tarix və saatda restoran bağlıdır. Başqa vaxt seçin.',
     ReservationNotFound: 'Rezervasiya tapılmadı. Səhifəni yeniləyib yenidən yoxlayın.',
+    PaymentsUnavailable: 'Onlayn ödəniş hazırda aktiv deyil.',
+    PaymentSimulationUnavailable: 'Test ödənişi bu mühitdə aktiv deyil.',
+    ManualPaymentRetired: 'Rekvizit və çek göndərmə addımları bağlanıb. Ödəniş səhifəsindən istifadə edin.',
+    PaymentNotFound: 'Ödəniş tapılmadı. Vəziyyəti yenidən yoxlayın.',
+    PaymentTransitionNotAllowed: 'Bu mərhələdə ödəniş əməliyyatı mümkün deyil. Vəziyyəti yeniləyin.',
+    PaymentProviderMismatch: 'Ödənişin provayderi uyğun deyil. Dəstək ilə əlaqə saxlayın.',
+    PaymentRequestKeyRequired: 'Ödəniş cəhdi təsdiqlənmədi. Yenidən yoxlayın.',
+    PaymentRequestKeyConflict: 'Bu ödəniş açarı başqa cəhdə aiddir. Vəziyyəti yeniləyin.',
   }
 
   return messages[normalized]

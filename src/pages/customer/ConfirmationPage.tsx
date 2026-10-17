@@ -9,8 +9,8 @@ import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import type { WorkflowAction } from '../../entities/types'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { getReservationDepartureReasonLabel, isReservationAwaitingPayment, isReservationConfirmed } from '../../shared/lib/reservationStatus'
-import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
+import { getReservationDepartureReasonLabel, isReservationConfirmed } from '../../shared/lib/reservationStatus'
+import { CustomerDepositCheckoutPanel } from '../../features/reservations/CustomerDepositCheckoutPanel'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
 import { ReservationLateArrivalPanel } from '../../features/reservations/ReservationLateArrivalPanel'
@@ -87,7 +87,6 @@ export function ConfirmationPage() {
   )
 
   const cancelAction = workflowActions.find((action) => action.code === 'cancel')
-  const submitPaymentProofAction = workflowActions.find((action) => action.code === 'submitPaymentProof')
 
   async function cancelReservation(reason: string) {
     if (!reservationId || !cancelAction) {
@@ -165,27 +164,12 @@ export function ConfirmationPage() {
               <ScheduleOfferPanel reservationId={String(reservation.id)} refreshKey={reloadKey}
                 onChanged={() => setReloadKey((value) => value + 1)} />
 
-              {reservation.latestPaymentInstruction && isReservationAwaitingPayment(reservation.status) ? (
-                <section className="reservation-payment-note" aria-label="Depozit ödəniş məlumatı">
-                  <strong>Depozit ödəniş məlumatı</strong>
-                  <p role={reservation.latestPaymentInstruction.isDetailsAvailable ? undefined : 'alert'}>
-                    {reservation.latestPaymentInstruction.isDetailsAvailable
-                      ? reservation.latestPaymentInstruction.displayText
-                      : 'Ödəniş məlumatı hazırda əlçatan deyil. Restoranla əlaqə saxlayın.'}
-                  </p>
-                  <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
-                </section>
-              ) : null}
-
-              {reservation.latestPaymentInstruction?.isDetailsAvailable && isReservationAwaitingPayment(reservation.status) ? (
-                <ReservationPaymentProofPanel
+              {reservation.depositAmount > 0 ? (
+                <CustomerDepositCheckoutPanel
                   restaurantId={String(reservation.restaurantId)}
                   reservationId={String(reservation.id)}
-                  amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
-                  action={submitPaymentProofAction}
-                  statusId={reservation.statusId}
-                  workflowFlowCode={reservation.workflowFlowCode}
-                  onSubmitted={() => setReloadKey((value) => value + 1)}
+                  amount={reservation.depositAmount}
+                  onChanged={() => setReloadKey((value) => value + 1)}
                 />
               ) : null}
               <ReservationRefundPanel

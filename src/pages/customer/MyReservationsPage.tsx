@@ -12,7 +12,6 @@ import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
-import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
 import {
   ReservationDateFilter,
 } from '../../features/reservations/ReservationDateFilter'
@@ -34,6 +33,12 @@ export function MyReservationsPage() {
   const [restaurantName, setRestaurantName] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+
+  useEffect(() => {
+    const refresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('ecafe:notifications-refresh', refresh)
+    return () => window.removeEventListener('ecafe:notifications-refresh', refresh)
+  }, [])
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => setRestaurantName(searchInput.trim()), 300)
@@ -181,27 +186,11 @@ export function MyReservationsPage() {
                 <span className="reservation-meta-item"><Clock3 size={17} /><span><small>Depozit</small><b>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</b></span></span>
               </div>
 
-              {reservation.latestPaymentInstruction ? (
+              {reservation.depositAmount > 0 ? (
                 <div className="reservation-payment-note">
-                  <strong>Ödəniş məlumatı</strong>
-                  <p role={reservation.latestPaymentInstruction.isDetailsAvailable ? undefined : 'alert'}>
-                    {reservation.latestPaymentInstruction.isDetailsAvailable
-                      ? reservation.latestPaymentInstruction.maskedDetails || 'Detallara baxın'
-                      : 'Ödəniş məlumatı əlçatan deyil. Restoranla əlaqə saxlayın.'}
-                  </p>
-                  <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
+                  <strong>Depozit: {reservation.depositAmount.toFixed(2)} AZN</strong>
+                  <p>Ödəniş vəziyyətini və növbəti addımı rezervasiya detalında görün.</p>
                 </div>
-              ) : null}
-
-              {reservation.latestPaymentInstruction?.isDetailsAvailable && isReservationAwaitingPayment(reservation.status) ? (
-                <ReservationPaymentProofPanel
-                  restaurantId={String(reservation.restaurantId)}
-                  reservationId={String(reservation.id)}
-                  amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
-                  statusId={reservation.statusId}
-                  workflowFlowCode={reservation.workflowFlowCode}
-                  onSubmitted={() => setReloadKey((value) => value + 1)}
-                />
               ) : null}
 
               <div className="customer-reservation-card-footer">

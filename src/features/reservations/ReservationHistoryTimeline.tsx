@@ -64,7 +64,7 @@ function eventLabel(item: ReservationHistoryItem) {
   if (status.includes('pendingpayment') || status.includes('ödəniş gözlənilir')) {
     return previous.includes('paymentsubmitted') || previous.includes('çek göndərilib')
       ? 'Ödəniş çeki rədd edildi'
-      : 'Ödəniş məlumatı göndərildi'
+      : 'Depozit ödənişi gözlənilir'
   }
   if (status.includes('paymentsubmitted') || status.includes('çek göndərilib')) return 'Ödəniş çeki göndərildi'
   if (status.includes('confirmed') || status.includes('təsdiqlənib')) return 'Rezervasiya təsdiqləndi'

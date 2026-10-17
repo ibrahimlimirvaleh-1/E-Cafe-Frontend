@@ -86,6 +86,10 @@ export const endpoints = {
     refund: (reservationId: string) => `/public/reservations/${reservationId}/refund`,
     restaurantRefund: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/refund`,
+    payment: (reservationId: string) => `/reservations/${reservationId}/payment`,
+    paymentCheckout: (reservationId: string) => `/reservations/${reservationId}/payment/checkout`,
+    authorizePayment: (restaurantId: string, reservationId: string) =>
+      `/restaurants/${restaurantId}/reservations/${reservationId}/payment/authorize`,
     restaurantList: (restaurantId: string) => `/restaurants/${restaurantId}/reservations`,
     restaurantService: (restaurantId: string) => `/restaurants/${restaurantId}/reservations/service`,
     restaurantDetail: (restaurantId: string, reservationId: string) => `/restaurants/${restaurantId}/reservations/${reservationId}`,
@@ -99,17 +103,17 @@ export const endpoints = {
       `/restaurants/${restaurantId}/reservations/${reservationId}/complete-service`,
     restaurantHistory: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/history`,
-    sendPaymentInstruction: (restaurantId: string, reservationId: string) =>
-      `/restaurants/${restaurantId}/reservations/${reservationId}/payment-instructions`,
-    submitPaymentProof: (restaurantId: string, reservationId: string) =>
-      `/restaurants/${restaurantId}/reservations/${reservationId}/payment-proofs`,
-    approvePaymentProof: (restaurantId: string, reservationId: string) =>
-      `/restaurants/${restaurantId}/reservations/${reservationId}/payment-proofs/approve`,
-    rejectPaymentProof: (restaurantId: string, reservationId: string) =>
-      `/restaurants/${restaurantId}/reservations/${reservationId}/payment-proofs/reject`,
     customerCancel: (reservationId: string) => `/public/reservations/${reservationId}/cancel`,
     restaurantCancel: (restaurantId: string, reservationId: string) =>
       `/restaurants/${restaurantId}/reservations/${reservationId}/cancel`,
+  },
+  payments: {
+    capabilities: '/payments/capabilities',
+    refresh: (paymentId: number) => `/payments/${paymentId}/refresh`,
+    testOutcome: (paymentId: number) => `/payments/${paymentId}/test-outcome`,
+  },
+  refunds: {
+    testOutcome: (refundId: number) => `/refunds/${refundId}/test-outcome`,
   },
   menu: {
     categories: (restaurantId: string) => `/category/${restaurantId}`,

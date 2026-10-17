@@ -6,8 +6,8 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 const metrics = [
   { label: 'Bugünkü rezervasiya', value: reservations.length.toString(), hint: 'Təsdiqlənmiş masa rezervləri' },
   { label: 'Aktiv sifariş', value: orders.length.toString(), hint: 'Ofisiant tərəfindən yaradılan sifarişlər' },
-  { label: 'Online ödəniş', value: `${payments.reduce((sum, item) => sum + item.amount, 0).toFixed(2)} ₼`, hint: 'Yalnız sistemdə izlənən ödənişlər' },
-  { label: 'Personal qazancı', value: `${settlements.reduce((sum, item) => sum + item.payableAmount, 0).toFixed(2)} ₼`, hint: 'Ödəniş dövrünə düşən məbləğ' },
+  { label: 'Demo ödəniş', value: `${payments.reduce((sum, item) => sum + item.amount, 0).toFixed(2)} ₼`, hint: 'Real əməliyyat deyil' },
+  { label: 'Demo hesablaşma', value: `${settlements.reduce((sum, item) => sum + item.payableAmount, 0).toFixed(2)} ₼`, hint: 'Real hesablaşma deyil' },
 ]
 
 export function AdminDashboardPage() {
@@ -38,8 +38,8 @@ export function AdminDashboardPage() {
         <article className="business-alert">
           <WalletCards size={24} />
           <div>
-            <strong>Online-only payment</strong>
-            <p>Ödənişlər yalnız online izlənir; nağd bağlama aktiv deyil.</p>
+            <strong>Ödəniş hazırlığı</strong>
+            <p>Bu paneldəki maliyyə rəqəmləri demo məlumatlarıdır; real köçürmə göstərmir.</p>
           </div>
         </article>
       </section>
