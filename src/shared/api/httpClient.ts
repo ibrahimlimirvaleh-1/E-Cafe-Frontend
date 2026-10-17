@@ -199,34 +199,37 @@ export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }
 }
 
 async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
+  let response: Response
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoints.auth.refresh}`, {
+    response = await fetch(`${API_BASE_URL}${endpoints.auth.refresh}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
     })
-
-    if (!response.ok) {
-      clearAuthTokens()
-      return null
-    }
-
-    const payload = await response.json().catch(() => null)
-    const result = normalizeApiResult<{ accessToken: string }>(payload, response.status, response.ok)
-
-    if (!result.data?.accessToken) {
-      clearAuthTokens()
-      return null
-    }
-
-    saveAuthTokens(result.data)
-    return result.data
   } catch {
+    throw new ApiError('Bağlantı kəsildi. Sessiyanı yoxlamaq mümkün olmadı.', 0)
+  }
+
+  if (response.status === 401 || response.status === 403) {
     clearAuthTokens()
     return null
   }
+
+  if (!response.ok) {
+    throw new ApiError('Sessiya müvəqqəti yoxlanıla bilmədi. Yenidən cəhd edin.', response.status)
+  }
+
+  const payload = await response.json().catch(() => null)
+  const result = normalizeApiResult<{ accessToken: string }>(payload, response.status, response.ok)
+
+  if (!result.data?.accessToken) {
+    throw new ApiError('Sessiya cavabı natamamdır. Yenidən cəhd edin.', response.status)
+  }
+
+  saveAuthTokens(result.data)
+  return result.data
 }
 
 export function normalizeCaughtApiError(error: unknown, fallbackMessage = 'Sorğu icra olunmadı.') {
