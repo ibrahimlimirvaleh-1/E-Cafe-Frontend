@@ -342,6 +342,8 @@ export type SessionOrderResponse = {
   statusId: number
   openedAt: string
   sentToKitchenAt: string | null
+  servedAt: string | null
+  canMarkServed: boolean
   note: string | null
   subtotal: number
   items: {
@@ -452,6 +454,8 @@ function mapSessionOrder(record: AnyRecord): SessionOrderResponse {
     statusId: num(record.statusId),
     openedAt: str(record.openedAt),
     sentToKitchenAt: record.sentToKitchenAt == null ? null : str(record.sentToKitchenAt),
+    servedAt: record.servedAt == null ? null : str(record.servedAt),
+    canMarkServed: bool(record.canMarkServed),
     note: record.note == null ? null : str(record.note),
     subtotal: num(record.subtotal),
     items: asArray<AnyRecord>(record.items).map((item) => ({
@@ -2231,6 +2235,12 @@ export const ecafeApi = {
     },
     sendOrderToKitchen: async (restaurantId: string, sessionId: number, orderId: number) => {
       const result = await httpClient<unknown>(endpoints.tableSessions.sendOrderToKitchen(restaurantId, sessionId, orderId), {
+        method: 'POST',
+      })
+      return mapSessionOrder(result.data as AnyRecord)
+    },
+    serveOrder: async (restaurantId: string, sessionId: number, orderId: number) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.serveOrder(restaurantId, sessionId, orderId), {
         method: 'POST',
       })
       return mapSessionOrder(result.data as AnyRecord)

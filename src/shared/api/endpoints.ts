@@ -167,6 +167,8 @@ export const endpoints = {
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}`,
     sendOrderToKitchen: (restaurantId: string, sessionId: number, orderId: number) =>
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/send-to-kitchen`,
+    serveOrder: (restaurantId: string, sessionId: number, orderId: number) =>
+      `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/serve`,
   },
   customerTableSessions: {
     mine: '/public/table-sessions/my',
