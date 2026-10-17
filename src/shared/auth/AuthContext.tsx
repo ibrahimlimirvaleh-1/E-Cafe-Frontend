@@ -10,6 +10,7 @@ import { refreshAccessToken } from '../api/httpClient'
 import { createUserSessionEventsConnection } from '../realtime/userSessionEvents'
 import { getHomePathForUser } from './authz'
 import { profileKey, readStoredProfileKey, writeStoredProfileKey } from './activeProfileStorage'
+import { Button } from '../ui/Button'
 
 const SESSION_TERMINATED_MESSAGE = 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.'
 const ROLE_CHANGED_MESSAGE = 'Rolunuz dəyişdirildi. Sessiya məlumatları yenilənir.'
@@ -125,6 +126,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return token ? withSelectedProfile(getUserFromToken(token)) : null
   })
   const [isAuthReady, setIsAuthReady] = useState(() => Boolean(getAccessToken()))
+  const [restoreRetry, setRestoreRetry] = useState(0)
+  const [restoreError, setRestoreError] = useState('')
+  const [isRestoring, setIsRestoring] = useState(false)
 
   const showSessionNotice = useCallback((notice: SessionNotice, autoHideMs: number | false = 2000) => {
     window.clearTimeout(noticeTimerRef.current)
@@ -173,25 +177,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (hasManualLogoutMarker()) {
+      setRestoreError('')
       setIsAuthReady(true)
       return
     }
 
     didBootstrapSessionRef.current = true
     let isCurrent = true
+    setIsRestoring(true)
 
     async function restoreSessionFromCookie() {
       try {
         const tokens = await refreshAccessToken({ notifyOnFailure: false })
         const restoredUser = tokens ? getUserFromToken(tokens.accessToken) : null
 
-        if (isCurrent && restoredUser) {
-          setUser(withSelectedProfile(restoredUser))
-        }
-      } finally {
         if (isCurrent) {
+          if (restoredUser) setUser(withSelectedProfile(restoredUser))
+          setRestoreError('')
           setIsAuthReady(true)
         }
+      } catch {
+        if (isCurrent) {
+          setRestoreError('Sessiyanı yoxlamaq mümkün olmadı. Bağlantını yoxlayıb yenidən cəhd edin.')
+          setIsAuthReady(false)
+        }
+      } finally {
+        if (isCurrent) setIsRestoring(false)
       }
     }
 
@@ -201,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isCurrent = false
       didBootstrapSessionRef.current = false
     }
-  }, [user])
+  }, [user, restoreRetry])
 
   useEffect(() => {
     function terminateSession(message = SESSION_TERMINATED_MESSAGE) {
@@ -211,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }, false)
       clearAuthTokens()
       setUser(null)
+      setRestoreError('')
 
       window.setTimeout(() => {
         if (window.location.pathname !== '/') {
@@ -285,7 +297,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
+      let refreshedTokens: AuthTokens | null
+      try {
+        refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
+      } catch {
+        return
+      }
       const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
 
       if (!isCurrent || !refreshedUser) {
@@ -352,7 +369,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         showPersistentSessionNotice(notice, 2000)
 
         window.clearTimeout(logoutTimerId)
-        const refreshedTokens = await refreshAccessToken()
+        let refreshedTokens: AuthTokens | null
+        try {
+          refreshedTokens = await refreshAccessToken()
+        } catch {
+          showSessionNotice({
+            title: 'Sessiya yenilənmədi',
+            message: 'Bağlantı problemi səbəbindən yeni rol hələ yüklənmədi. Yenidən cəhd edin.',
+          }, false)
+          return
+        }
         const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
 
         if (!refreshedUser) {
@@ -390,11 +416,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       },
       onConnectionRestored: async () => {
-        const refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
-        const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
+        try {
+          const refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
+          const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
 
-        if (refreshedUser) {
-          setUser(withSelectedProfile(refreshedUser))
+          if (refreshedUser) {
+            setUser(withSelectedProfile(refreshedUser))
+          }
+        } catch {
+          // The next session reconciliation can retry after a transient failure.
         }
       },
     })
@@ -437,6 +467,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const nextUser = withSelectedProfile(getUserFromToken(tokens.accessToken))
         profilePromptUserIdRef.current = ''
         setUser(nextUser)
+        setRestoreError('')
         setIsAuthReady(true)
       },
       updateUser: (patch) => {
@@ -552,7 +583,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {restoreError && !user ? (
+        <main className="auth-page">
+          <section className="auth-card" role="alert">
+            <h1>Bağlantı problemi</h1>
+            <p>{restoreError}</p>
+            <Button disabled={isRestoring} onClick={() => setRestoreRetry((value) => value + 1)} type="button">
+              {isRestoring ? 'Yoxlanılır...' : 'Yenidən yoxla'}
+            </Button>
+          </section>
+        </main>
+      ) : children}
       {user && isProfilePromptOpen ? (
         <ProfileSelectionPrompt
           profiles={user.profiles}
