@@ -9484,6 +9484,56 @@ body,
   background: #f7faff;
 }
 
+.reservation-payment-state {
+  margin: 10px 0 0;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+}
+
+.reservation-checkout-status {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface-lowest);
+}
+
+.reservation-checkout-status span,
+.reservation-checkout-status small,
+.reservation-checkout-footnote {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+}
+
+.reservation-checkout-status strong { color: var(--on-surface); }
+
+.reservation-checkout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reservation-checkout-test {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.reservation-checkout-test > strong { font-size: 13px; }
+
+.reservation-checkout-footnote {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .reservation-checkout-actions .ui-button { flex: 1 1 100%; justify-content: center; }
+}
+
 .reservation-proof-header {
   display: flex;
   align-items: flex-start;

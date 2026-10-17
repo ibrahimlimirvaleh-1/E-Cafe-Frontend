@@ -2,7 +2,7 @@ import { CalendarDays, LogOut, MapPin, Users } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
-import { ReservationPaymentProofPanel } from '../../features/reservations/ReservationPaymentProofPanel'
+import { CustomerDepositCheckoutPanel } from '../../features/reservations/CustomerDepositCheckoutPanel'
 import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
 import { ReservationLateArrivalPanel } from '../../features/reservations/ReservationLateArrivalPanel'
 import { ReservationWaitingSummary } from '../../features/reservations/ReservationWaitingSummary'
@@ -11,7 +11,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { getReservationDepartureReasonLabel, getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
+import { getReservationDepartureReasonLabel, getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
 import { ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -116,26 +116,12 @@ export function TrackingPage() {
 
             <ReservationWaitingSummary waiting={reservation.waiting} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone} viewer="customer" />
             <ReservationLateArrivalPanel reservation={reservation} refreshKey={reloadKey} onChanged={() => setReloadKey((value) => value + 1)} />
-            {reservation.latestPaymentInstruction ? (
-              <div className="reservation-payment-note">
-                <strong>Ödəniş məlumatı</strong>
-                <p role={reservation.latestPaymentInstruction.isDetailsAvailable ? undefined : 'alert'}>
-                  {reservation.latestPaymentInstruction.isDetailsAvailable
-                    ? reservation.latestPaymentInstruction.displayText
-                    : 'Ödəniş məlumatı hazırda əlçatan deyil. Restoranla əlaqə saxlayın.'}
-                </p>
-                <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
-              </div>
-            ) : null}
-
-            {reservation.latestPaymentInstruction?.isDetailsAvailable && isReservationAwaitingPayment(reservation.status) ? (
-              <ReservationPaymentProofPanel
+            {reservation.depositAmount > 0 ? (
+              <CustomerDepositCheckoutPanel
                 restaurantId={String(reservation.restaurantId)}
                 reservationId={String(reservation.id)}
-                amount={reservation.latestPaymentInstruction.amount || reservation.depositAmount}
-                statusId={reservation.statusId}
-                workflowFlowCode={reservation.workflowFlowCode}
-                onSubmitted={() => setReloadKey((value) => value + 1)}
+                amount={reservation.depositAmount}
+                onChanged={() => setReloadKey((value) => value + 1)}
               />
             ) : null}
             <ReservationRefundPanel

@@ -1,7 +1,7 @@
-import { ArrowLeft, Ban, CalendarDays, CheckCircle2, CircleDollarSign, Clock3, Eye, Users, XCircle } from 'lucide-react'
+import { ArrowLeft, Ban, CalendarDays, CheckCircle2, CircleDollarSign, Clock3, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
-import { ReservationPaymentInstructionPanel } from '../../features/reservations/ReservationPaymentInstructionPanel'
+import { ManagerDepositPaymentPanel } from '../../features/reservations/ManagerDepositPaymentPanel'
 import { ReservationHistoryTimeline } from '../../features/reservations/ReservationHistoryTimeline'
 import { ReservationReasonDialog } from '../../features/reservations/ReservationReasonDialog'
 import { RestaurantRefundPanel } from '../../features/reservations/RestaurantRefundPanel'
@@ -80,12 +80,11 @@ export function RestaurantReservationDetailPage() {
     reservationScope,
     [user?.userId, restaurantId, reservationId, reloadKey],
   )
-  const sendPaymentInstructionAction = workflowActions.find((action) => action.code === 'sendPaymentInstruction')
   const visibleActions = workflowActions.filter((action) =>
-    action.code !== 'sendPaymentInstruction' && action.code !== 'submitPaymentProof' && action.code !== 'checkIn')
+    !['sendPaymentInstruction', 'submitPaymentProof', 'approvePaymentProof', 'rejectPaymentProof', 'checkIn'].includes(action.code))
 
   function getActionVariant(action: WorkflowAction) {
-    if (action.code === 'cancel' || action.code === 'rejectPaymentProof') {
+    if (action.code === 'cancel') {
       return 'danger' as const
     }
 
@@ -120,30 +119,6 @@ export function RestaurantReservationDetailPage() {
     }
 
     void runAction(action)
-  }
-
-  async function openPaymentProof() {
-    const proofUrl = reservation?.latestPaymentProof?.fileViewUrl
-    if (!proofUrl) {
-      return
-    }
-
-    const previewWindow = window.open('', '_blank')
-    if (!previewWindow) {
-      setActionError('Çekə baxmaq üçün brauzer pəncərəsinə icazə verin.')
-      return
-    }
-
-    previewWindow.document.title = 'Ödəniş çeki yüklənir...'
-    try {
-      const blob = await ecafeApi.files.viewBlob(proofUrl)
-      const objectUrl = URL.createObjectURL(blob)
-      previewWindow.location.href = objectUrl
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
-    } catch (err) {
-      previewWindow.close()
-      setActionError(normalizeCaughtApiError(err, 'Ödəniş çeki açıla bilmədi.').message)
-    }
   }
 
   if (isLoading) return <main className="admin-page narrow"><p className="online-only">Rezervasiya yüklənir...</p></main>
@@ -182,29 +157,6 @@ export function RestaurantReservationDetailPage() {
         </div>
         <ReservationArrivalSummary reservation={reservation} />
         <ReservationWaitingSummary waiting={reservation.waiting} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone} viewer="manager" />
-        {reservation.latestPaymentInstruction ? (
-          <div className="reservation-payment-note">
-            <strong>Son göndərilən ödəniş məlumatı</strong>
-            <p role={reservation.latestPaymentInstruction.isDetailsAvailable ? undefined : 'alert'}>
-              {reservation.latestPaymentInstruction.isDetailsAvailable
-                ? reservation.latestPaymentInstruction.displayText
-                : 'Ödəniş məlumatının tam mətni açıla bilmir. Dəstək ilə əlaqə saxlayın.'}
-            </p>
-            <small>{formatReservationDateTime(reservation.latestPaymentInstruction.sentAt)}</small>
-          </div>
-        ) : null}
-        {reservation.latestPaymentProof ? (
-          <div className="reservation-payment-proof-note">
-            <div>
-              <strong>Son ödəniş çeki</strong>
-              <p>{formatReservationDateTime(reservation.latestPaymentProof.submittedAt)} · {reservation.latestPaymentProof.amount.toFixed(2)} AZN</p>
-            </div>
-            <Button onClick={() => void openPaymentProof()} type="button" variant="secondary">
-              <Eye size={17} />
-              Çekə bax
-            </Button>
-          </div>
-        ) : null}
         {(visibleActions.length > 0 || actionError || actionMessage) ? (
           <div className="reservation-detail-actions">
             <div>
@@ -221,9 +173,7 @@ export function RestaurantReservationDetailPage() {
                 >
                   {action.code === 'cancel'
                     ? <Ban size={17} />
-                    : action.code === 'rejectPaymentProof'
-                      ? <XCircle size={17} />
-                      : action.code === 'waiveDeposit'
+                    : action.code === 'waiveDeposit'
                         ? <CircleDollarSign size={17} />
                       : <CheckCircle2 size={17} />}
                   {actionName === action.code ? 'İcra olunur...' : action.label}
@@ -245,9 +195,8 @@ export function RestaurantReservationDetailPage() {
         <ReservationWaitingManagement key={reservation.id} reservation={reservation} restaurantId={restaurantId}
           onChanged={(message) => { setActionMessage(message); setReloadKey((value) => value + 1) }} /> : null}
       <RestaurantRefundPanel key={reservation.id} reservationId={String(reservation.id)} restaurantId={restaurantId} />
-      {sendPaymentInstructionAction ? (
-        <ReservationPaymentInstructionPanel
-          action={sendPaymentInstructionAction}
+      {reservation.depositAmount > 0 && isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) ? (
+        <ManagerDepositPaymentPanel
           restaurantId={restaurantId}
           reservationId={String(reservation.id)}
           amount={`${reservation.depositAmount.toFixed(2)} AZN`}

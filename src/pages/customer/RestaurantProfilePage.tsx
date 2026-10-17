@@ -1,4 +1,4 @@
-import { BookOpen, Clock, MapPin, Phone, ShieldCheck, Star, Table2 } from 'lucide-react'
+import { BookOpen, Clock, MapPin, Phone, Star, Table2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
@@ -78,10 +78,6 @@ export function RestaurantProfilePage() {
             <span className={openState.isOpen ? 'restaurant-open-status open' : 'restaurant-open-status closed'}>
               <Clock size={18} />
               {openState.label}
-            </span>
-            <span>
-              <ShieldCheck size={18} />
-              Ödəniş fiziki/offline
             </span>
           </div>
           <WorkingHoursList workingHours={restaurant.workingHours} />
