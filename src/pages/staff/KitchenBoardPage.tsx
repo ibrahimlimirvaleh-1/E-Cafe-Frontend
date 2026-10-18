@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { BadgeCheck, Check, ClipboardList, CookingPot, LoaderCircle, RefreshCw, Store } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -40,14 +41,14 @@ function KitchenTicket({ order, actionState, onAction }: { order: KitchenOrderRe
   const stageAt = order.readyAt || order.preparingAt || order.acceptedAt
   return <article className="kitchen-queue-row">
     <div className="kitchen-queue-order"><strong>#{order.id}</strong><span>{formatReservationDateTime(order.sentToKitchenAt, order.timeZone)}</span></div>
-    <div className="kitchen-queue-table"><span>Masa</span><strong>{order.tableName || `Masa-${order.tableId}`}</strong></div>
-    <div className="kitchen-queue-items"><ul>{order.items.map((item) => <li key={item.id}><strong>{item.quantity} × {item.name}</strong>{item.note ? <small>{item.note}</small> : null}</li>)}</ul>{order.note ? <p><strong>Qeyd:</strong> {order.note}</p> : null}</div>
+    <div className="kitchen-queue-table"><span>{i18n.t('ui.pages.staff.kitchen_board_page.masa_058c4c')}</span><strong>{order.tableName || `Masa-${order.tableId}`}</strong></div>
+    <div className="kitchen-queue-items"><ul>{order.items.map((item) => <li key={item.id}><strong>{item.quantity} × {item.name}</strong>{item.note ? <small>{item.note}</small> : null}</li>)}</ul>{order.note ? <p><strong>{i18n.t('ui.pages.staff.kitchen_board_page.qeyd_2d4f8a')}</strong> {order.note}</p> : null}</div>
     <div className={`kitchen-queue-state${order.statusId === orderStatusId.ready ? ' is-ready' : order.statusId === orderStatusId.preparing ? ' is-preparing' : ''}`}>
       <span>{orderKitchenLabel(order.statusId, order.sentToKitchenAt)}</span>
       {stageAt ? <small>{formatReservationDateTime(stageAt, order.timeZone)}</small> : null}
       {action ? <Button type="button" variant="secondary" disabled={actionState?.phase === 'busy'} onClick={() => onAction(action)}>
         {actionState?.phase === 'busy' ? <LoaderCircle className="kitchen-action-spinner" size={16} /> : <ActionIcon size={16} />}
-        {actionState?.phase === 'busy' ? 'İcra olunur...' : actionState?.phase === 'uncertain' ? `Təkrar: ${actionLabel}` : actionLabel}
+        {actionState?.phase === 'busy' ?i18n.t('ui.pages.staff.kitchen_board_page.icra_olunur_e4744c') : actionState?.phase === 'uncertain' ? `Təkrar: ${actionLabel}` : actionLabel}
       </Button> : null}
       {actionState?.phase === 'uncertain' ? <small className="kitchen-action-warning" role="alert">{actionState.message}</small> : null}
       {actionState?.phase === 'error' ? <small className="kitchen-action-error" role="alert">{actionState.message}</small> : null}
@@ -153,15 +154,15 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
     }
   }
 
-  return <section className="kitchen-queue" aria-label="Mətbəx sifarişləri">
-    <div className="kitchen-queue-toolbar"><div><span>NÖVBƏ</span><strong>{queue.data && !queue.error ? `${queue.data.totalCount} sifariş` : 'Sifarişlər'}</strong></div><Button type="button" variant="secondary" aria-label="Növbəni yenilə" title="Növbəni yenilə" onClick={() => { setWarning(''); setRevision((value) => value + 1) }}><RefreshCw size={18} /></Button></div>
-    {queue.isRefreshing ? <span className="kitchen-queue-refreshing" role="status">Yenilənir...</span> : null}
-    {queue.isLoading ? <p className="kitchen-queue-loading" role="status">Növbə yüklənir...</p> : null}
+  return <section className="kitchen-queue" aria-label={i18n.t('ui.pages.staff.kitchen_board_page.metbex_sifarisleri_a9f03c')}>
+    <div className="kitchen-queue-toolbar"><div><span>{i18n.t('ui.pages.staff.kitchen_board_page.novbe_5c1a72')}</span><strong>{queue.data && !queue.error ? `${queue.data.totalCount} sifariş` :i18n.t('ui.pages.staff.kitchen_board_page.sifarisler_0b5f10')}</strong></div><Button type="button" variant="secondary" aria-label={i18n.t('ui.pages.staff.kitchen_board_page.novbeni_yenile_7675cd')} title={i18n.t('ui.pages.staff.kitchen_board_page.novbeni_yenile_7675cd')} onClick={() => { setWarning(''); setRevision((value) => value + 1) }}><RefreshCw size={18} /></Button></div>
+    {queue.isRefreshing ? <span className="kitchen-queue-refreshing" role="status">{i18n.t('ui.pages.staff.kitchen_board_page.yenilenir_283de5')}</span> : null}
+    {queue.isLoading ? <p className="kitchen-queue-loading" role="status">{i18n.t('ui.pages.staff.kitchen_board_page.novbe_yuklenir_aaa679')}</p> : null}
     {warning ? <StatusMessage tone="warning" autoHideMs={false}>{warning}</StatusMessage> : null}
-    {queue.error ? <StatusMessage tone="danger" autoHideMs={false}>Növbə yüklənmədi: {queue.error}</StatusMessage> : null}
-    {queue.data && queue.data.items.length === 0 ? <div className="kitchen-queue-empty"><ClipboardList size={24} aria-hidden="true" /><strong>Hazırda sifariş yoxdur</strong></div> : null}
-    {queue.data && queue.data.items.length > 0 ? <div className="kitchen-queue-list"><div className="kitchen-queue-columns" aria-hidden="true"><span>Sifariş / vaxt</span><span>Masa</span><span>Məhsullar</span><span>Vəziyyət / əməliyyat</span></div>{queue.data.items.map((order) => <KitchenTicket key={order.id} order={order} actionState={actionStates[order.id]} onAction={(action) => void runAction(order.id, action)} />)}</div> : null}
-    {queue.data ? <PaginationControls ariaLabel="Mətbəx növbəsi səhifələri" pageIndex={queue.data.pageIndex} totalPages={queue.data.totalPages} totalCount={queue.data.totalCount} pageSize={20} hasPreviousPage={queue.data.hasPreviousPage} hasNextPage={queue.data.hasNextPage} onPageChange={setPage} /> : null}
+    {queue.error ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.pages.staff.kitchen_board_page.novbe_yuklenmedi_a17c37')} {queue.error}</StatusMessage> : null}
+    {queue.data && queue.data.items.length === 0 ? <div className="kitchen-queue-empty"><ClipboardList size={24} aria-hidden="true" /><strong>{i18n.t('ui.pages.staff.kitchen_board_page.hazirda_sifaris_yoxdur_927267')}</strong></div> : null}
+    {queue.data && queue.data.items.length > 0 ? <div className="kitchen-queue-list"><div className="kitchen-queue-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.kitchen_board_page.sifaris_vaxt_e1170e')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.masa_058c4c')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.mehsullar_dbcc49')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.veziyyet_emeliyyat_12c45b')}</span></div>{queue.data.items.map((order) => <KitchenTicket key={order.id} order={order} actionState={actionStates[order.id]} onAction={(action) => void runAction(order.id, action)} />)}</div> : null}
+    {queue.data ? <PaginationControls ariaLabel={i18n.t('ui.pages.staff.kitchen_board_page.metbex_novbesi_sehifeleri_bf1e48')} pageIndex={queue.data.pageIndex} totalPages={queue.data.totalPages} totalCount={queue.data.totalCount} pageSize={20} hasPreviousPage={queue.data.hasPreviousPage} hasNextPage={queue.data.hasNextPage} onPageChange={setPage} /> : null}
   </section>
 }
 
@@ -187,13 +188,13 @@ export function KitchenBoardPage() {
   }
 
   return <main className="staff-page kitchen-page">
-    <PageHeader eyebrow="MƏTBƏX" title="Sifariş növbəsi" />
+    <PageHeader eyebrow={i18n.t('ui.pages.staff.kitchen_board_page.metbex_f31fd7')} title={i18n.t('ui.pages.staff.kitchen_board_page.sifaris_novbesi_20d0d4')} />
     <div className="kitchen-context">
-      {restaurants.length > 1 ? <label>Restoran<select value={restaurantId} onChange={(event) => changeRestaurant(event.target.value)}>{restaurants.map((profile) => <option key={profile.restaurantId} value={profile.restaurantId}>{profile.restaurantName || `Restoran ${profile.restaurantId}`}</option>)}</select></label>
-        : <div><span>Restoran</span><strong><Store size={17} aria-hidden="true" />{restaurants[0]?.restaurantName || 'Restoran'}</strong></div>}
+      {restaurants.length > 1 ? <label>{i18n.t('ui.pages.staff.kitchen_board_page.restoran_c4df56')}<select value={restaurantId} onChange={(event) => changeRestaurant(event.target.value)}>{restaurants.map((profile) => <option key={profile.restaurantId} value={profile.restaurantId}>{profile.restaurantName || `Restoran ${profile.restaurantId}`}</option>)}</select></label>
+        : <div><span>{i18n.t('ui.pages.staff.kitchen_board_page.restoran_c4df56')}</span><strong><Store size={17} aria-hidden="true" />{restaurants[0]?.restaurantName || 'Restoran'}</strong></div>}
     </div>
-    {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>Aktiv mətbəx restoranı tapılmadı.</StatusMessage> : null}
-    {restaurantId && !contextReady ? <p role="status">Restoran konteksti yüklənir...</p> : null}
+    {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>{i18n.t('ui.pages.staff.kitchen_board_page.aktiv_metbex_restorani_tapilmadi_b0b3f1')}</StatusMessage> : null}
+    {restaurantId && !contextReady ? <p role="status">{i18n.t('ui.pages.staff.kitchen_board_page.restoran_konteksti_yuklenir_4dcead')}</p> : null}
     {contextReady && user ? <KitchenQueue key={`${user.userId}:${restaurantId}`} userId={user.userId} restaurantId={restaurantId} /> : null}
   </main>
 }

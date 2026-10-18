@@ -1,3 +1,5 @@
+import { i18n } from '../i18n/i18n'
+
 // Mirrors StatusIds.Build(PaymentStatus, value) from the backend.
 export const paymentStatusId = {
   pending: 3001,
@@ -11,14 +13,15 @@ export const refundStatusId = {
   processing: 8004,
 } as const
 
-const paymentStatusLabels: Record<number, string> = {
-  [paymentStatusId.pending]: 'Ödəniş gözlənilir',
-  [paymentStatusId.paid]: 'Ödəniş tamamlanıb',
-  [paymentStatusId.failed]: 'Ödəniş uğursuz olub',
-  [paymentStatusId.cancelled]: 'Ödəniş ləğv edilib',
-  [paymentStatusId.refunded]: 'Ödəniş geri qaytarılıb',
+const paymentStatusKeys: Record<number, string> = {
+  [paymentStatusId.pending]: 'ui.payment.pending',
+  [paymentStatusId.paid]: 'ui.payment.paid',
+  [paymentStatusId.failed]: 'ui.payment.failed',
+  [paymentStatusId.cancelled]: 'ui.payment.cancelled',
+  [paymentStatusId.refunded]: 'ui.payment.refunded',
 }
 
 export function paymentStatusLabel(statusId: number, status: string) {
-  return paymentStatusLabels[statusId] || status
+  const key = paymentStatusKeys[statusId]
+  return key ? i18n.t(key) : status
 }

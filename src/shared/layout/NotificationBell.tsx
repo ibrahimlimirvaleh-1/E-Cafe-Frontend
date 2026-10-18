@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import { Bell, CheckCheck, FileText } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -5,6 +6,8 @@ import type { NotificationItem } from '../../entities/types'
 import { ecafeApi } from '../api/ecafeApi'
 import { useAuth } from '../auth/AuthContext'
 import { getNotificationTarget } from '../notifications/notificationTarget'
+import { getIntlLocale } from '../i18n/language'
+import { getCurrentLanguage } from '../i18n/i18n'
 
 function formatNotificationDate(value: string) {
   if (!value) {
@@ -14,7 +17,7 @@ function formatNotificationDate(value: string) {
   const date = new Date(value)
   return Number.isNaN(date.getTime())
     ? value
-    : date.toLocaleString('az-AZ', {
+    : date.toLocaleString(getIntlLocale(getCurrentLanguage()), {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
@@ -152,10 +155,10 @@ export function NotificationBell() {
     <div className="notification-menu" ref={containerRef}>
       <button
         aria-expanded={isOpen}
-        aria-label="Bildirişlər"
+        aria-label={i18n.t('ui.shared.layout.notification_bell.bildirisler_1f9d3f')}
         className={`icon-action notification-trigger${unreadCount > 0 ? ' has-unread' : ''}`}
         onClick={onToggle}
-        title="Bildirişlər"
+        title={i18n.t('ui.shared.layout.notification_bell.bildirisler_1f9d3f')}
         type="button"
       >
         <Bell size={18} />
@@ -166,20 +169,20 @@ export function NotificationBell() {
         <div className="notification-popover">
           <header>
             <div>
-              <strong>Bildirişlər</strong>
-              <small>{unreadCount > 0 ? `${unreadCount} oxunmamış` : 'Hamısı oxunub'}</small>
+              <strong>{i18n.t('ui.shared.layout.notification_bell.bildirisler_1f9d3f')}</strong>
+              <small>{unreadCount > 0 ? `${unreadCount} oxunmamış` :i18n.t('ui.shared.layout.notification_bell.hamisi_oxunub_0d609a')}</small>
             </div>
-            <button disabled={unreadCount === 0} onClick={onMarkAllAsRead} title="Hamısını oxunmuş et" type="button">
+            <button disabled={unreadCount === 0} onClick={onMarkAllAsRead} title={i18n.t('ui.shared.layout.notification_bell.hamisini_oxunmus_et_cacc2d')} type="button">
               <CheckCheck size={17} />
             </button>
           </header>
 
           <div className="notification-list">
-            {isLoading ? <p>Yüklənir...</p> : null}
+            {isLoading ? <p>{i18n.t('ui.shared.layout.notification_bell.yuklenir_e038b0')}</p> : null}
             {!isLoading && notifications.length === 0 ? (
               <div className="notification-empty">
                 <FileText size={20} />
-                <span>Bildiriş yoxdur</span>
+                <span>{i18n.t('ui.shared.layout.notification_bell.bildiris_yoxdur_68216b')}</span>
               </div>
             ) : null}
             {!isLoading
@@ -200,9 +203,7 @@ export function NotificationBell() {
               : null}
           </div>
 
-          <Link className="notification-all-link" onClick={() => setIsOpen(false)} to="/notifications">
-            Hamısına bax
-          </Link>
+          <Link className="notification-all-link" onClick={() => setIsOpen(false)} to="/notifications">{i18n.t('ui.shared.layout.notification_bell.hamisina_bax_8b6594')}</Link>
         </div>
       ) : null}
     </div>

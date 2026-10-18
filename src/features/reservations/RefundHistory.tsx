@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import type { ReservationHistoryItem } from '../../shared/api/ecafeApi'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 
@@ -12,7 +13,7 @@ export function RefundHistory({ items }: { items: ReservationHistoryItem[] }) {
 
   return (
     <details className="reservation-refund-attempts">
-      <summary>Geri ödəniş tarixçəsi</summary>
+      <summary>{i18n.t('ui.features.reservations.refund_history.geri_odenis_tarixcesi_d0f1d1')}</summary>
       <ol className="reservation-refund-history">
         {items.map((item) => (
           <li key={item.id}>

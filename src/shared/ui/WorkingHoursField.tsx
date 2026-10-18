@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import type { RestaurantWorkingHour } from '../../entities/types'
 import { dayLabels, normalizeWorkingHours } from '../lib/workingHours'
 export { createDefaultWorkingHours, formatWorkingHoursSummary } from '../lib/workingHours'
@@ -17,12 +18,12 @@ export function WorkingHoursList({ workingHours }: { workingHours: RestaurantWor
         <div className="working-hours-display-item" key={hour.dayOfWeek}>
           <strong className="working-hours-day">{compactDayLabels[hour.dayOfWeek]}</strong>
           {hour.isClosed ? (
-            <em className="working-hours-closed">Bağlıdır</em>
+            <em className="working-hours-closed">{i18n.t('ui.shared.ui.working_hours_field.baglidir_208993')}</em>
           ) : (
             <time className="working-hours-time">
               {hour.opensAt} - {hour.closesAt}
               {hour.closeDayOffset === 1 ? (
-                <span className="working-hours-next-day" title="Bağlanma növbəti günə keçir">
+                <span className="working-hours-next-day" title={i18n.t('ui.shared.ui.working_hours_field.baglanma_novbeti_gune_kecir_287b0e')}>
                   +1
                 </span>
               ) : null}
@@ -48,7 +49,7 @@ export function WorkingHoursField({ onChange, value }: WorkingHoursFieldProps) {
 
   return (
     <fieldset className="working-hours-field">
-      <legend>İş saatları</legend>
+      <legend>{i18n.t('ui.shared.ui.working_hours_field.is_saatlari_dc618a')}</legend>
       <div className="working-hours-list">
         {normalizedValue.map((hour) => (
           <div className="working-hours-row" key={hour.dayOfWeek}>
@@ -79,7 +80,7 @@ export function WorkingHoursField({ onChange, value }: WorkingHoursFieldProps) {
                 onChange={(event) => updateDay(hour.dayOfWeek, { closeDayOffset: event.target.checked ? 1 : 0 })}
                 type="checkbox"
               />
-              <span>Növbəti gün</span>
+              <span>{i18n.t('ui.shared.ui.working_hours_field.novbeti_gun_7ed91a')}</span>
             </label>
           </div>
         ))}

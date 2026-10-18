@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import { Building2, Check, ChevronDown, LogOut } from 'lucide-react'
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -67,9 +68,7 @@ export function UserMenu() {
 
   if (!isAuthenticated || !user) {
     return (
-      <Link className="ui-button ui-button-primary compact" to="/login">
-        Daxil ol
-      </Link>
+      <Link className="ui-button ui-button-primary compact" to="/login">{i18n.t('ui.shared.layout.user_menu.daxil_ol_2e157a')}</Link>
     )
   }
 
@@ -98,9 +97,9 @@ export function UserMenu() {
     <div className="user-profile-menu" ref={menuPanelRef} style={profileMenuStyle}>
       <header>
         <span>
-          <em>Giriş profilləri</em>
-          <strong>Hansı restoranla işləyirsiniz?</strong>
-          <small>Seçim dəyişəndə panel və məlumatlar həmin restorana bağlanır.</small>
+          <em>{i18n.t('ui.shared.layout.user_menu.giris_profilleri_aa92c1')}</em>
+          <strong>{i18n.t('ui.shared.layout.user_menu.hansi_restoranla_isleyirsiniz_67c63c')}</strong>
+          <small>{i18n.t('ui.shared.layout.user_menu.secim_deyisende_panel_ve_melumatlar_he_48d907')}</small>
         </span>
         <Building2 size={18} />
       </header>
@@ -130,18 +129,16 @@ export function UserMenu() {
               {isCurrent ? (
                 <span className="user-profile-current">
                   <Check size={14} />
-                  Cari
+                  {i18n.t('ui.shared.layout.user_menu.cari_e5ec52')}
                 </span>
               ) : (
-                <span className="user-profile-switch-label">Keç</span>
+                <span className="user-profile-switch-label">{i18n.t('ui.shared.layout.user_menu.kec_7ab1f3')}</span>
               )}
             </button>
           )
         })}
       </div>
-      <Link className="user-profile-account-link" onClick={() => setIsProfileMenuOpen(false)} to="/account">
-        Profil məlumatlarına bax
-      </Link>
+      <Link className="user-profile-account-link" onClick={() => setIsProfileMenuOpen(false)} to="/account">{i18n.t('ui.shared.layout.user_menu.profil_melumatlarina_bax_08ca8f')}</Link>
     </div>
   ) : null
 
@@ -151,7 +148,7 @@ export function UserMenu() {
         <details className="user-profile-switcher" open={isProfileMenuOpen} ref={menuRef}>
           <summary
             className="user-pill"
-            title="Profil və giriş konteksti"
+            title={i18n.t('ui.shared.layout.user_menu.profil_ve_giris_konteksti_9215b1')}
             onClick={(event) => {
               event.preventDefault()
               updateMenuPosition()
@@ -170,7 +167,7 @@ export function UserMenu() {
           {profileMenu ? createPortal(profileMenu, document.body) : null}
         </details>
       ) : (
-        <Link className="user-pill" to="/account" title="Profil">
+        <Link className="user-pill" to="/account" title={i18n.t('ui.shared.layout.user_menu.profil_e267d3')}>
           <div className="user-pill-avatar">{renderUserAvatar()}</div>
           <span>
             <strong>
@@ -180,7 +177,7 @@ export function UserMenu() {
           </span>
         </Link>
       )}
-      <button className="icon-action logout-action" type="button" title="Çıxış" onClick={() => void onLogout()}>
+      <button className="icon-action logout-action" type="button" title={i18n.t('ui.shared.layout.user_menu.cixis_c8abae')} onClick={() => void onLogout()}>
         <LogOut size={18} />
       </button>
     </div>

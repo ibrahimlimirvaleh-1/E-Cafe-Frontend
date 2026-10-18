@@ -1,3 +1,5 @@
+import { i18n } from '../i18n/i18n'
+
 export const orderStatusId = {
   created: 2001,
   accepted: 2002,
@@ -11,13 +13,13 @@ export const orderStatusId = {
 
 // Mətbəxə göndərilmə ayrıca vaxtla işarələnir; Created statusu qəbul demək deyil.
 export function orderKitchenLabel(statusId: number, sentToKitchenAt: string | null) {
-  if (statusId === orderStatusId.created) return sentToKitchenAt ? 'Mətbəxdə gözləyir' : 'Mətbəxə göndərilməyib'
-  if (statusId === orderStatusId.accepted) return 'Qəbul edilib'
-  if (statusId === orderStatusId.preparing) return 'Hazırlanır'
-  if (statusId === orderStatusId.ready) return 'Hazırdır'
-  if (statusId === orderStatusId.served) return 'Təqdim olunub'
-  if (statusId === orderStatusId.closed) return 'Bağlanıb'
-  if (statusId === orderStatusId.cancelled) return 'Ləğv edilib'
-  if (statusId === orderStatusId.scheduled) return 'Planlaşdırılıb'
-  return 'Status yenilənib'
+  if (statusId === orderStatusId.created) return i18n.t(sentToKitchenAt ? 'ui.orderStatus.awaitingKitchen' : 'ui.orderStatus.notSent')
+  if (statusId === orderStatusId.accepted) return i18n.t('ui.orderStatus.accepted')
+  if (statusId === orderStatusId.preparing) return i18n.t('ui.orderStatus.preparing')
+  if (statusId === orderStatusId.ready) return i18n.t('ui.orderStatus.ready')
+  if (statusId === orderStatusId.served) return i18n.t('ui.orderStatus.served')
+  if (statusId === orderStatusId.closed) return i18n.t('ui.orderStatus.closed')
+  if (statusId === orderStatusId.cancelled) return i18n.t('ui.orderStatus.cancelled')
+  if (statusId === orderStatusId.scheduled) return i18n.t('ui.orderStatus.scheduled')
+  return i18n.t('ui.orderStatus.updated')
 }

@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import { CalendarDays } from 'lucide-react'
 import type { InputHTMLAttributes, MouseEvent } from 'react'
 import { formatDateOnlyAz } from '../lib/dateFormatting'
@@ -22,7 +23,7 @@ export function LocalizedDateInput({ className, onClick, value = '', ...props }:
     <span className={`localized-date-input${className ? ` ${className}` : ''}`}>
       <CalendarDays aria-hidden="true" size={18} />
       <span className={`localized-date-input-value${value ? '' : ' localized-date-input-placeholder'}`} aria-hidden="true">
-        {value ? formatDateOnlyAz(value) : 'Tarix seçin'}
+        {value ? formatDateOnlyAz(value) :i18n.t('ui.shared.ui.localized_date_input.tarix_secin_d76a15')}
       </span>
       <input {...props} className="localized-date-input-native" lang="az" onClick={openPicker} type="date" value={value} />
     </span>

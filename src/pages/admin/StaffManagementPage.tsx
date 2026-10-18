@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Ban, CheckCircle2, Info, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
@@ -378,9 +379,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   return (
     <main className="admin-page">
       <PageHeader
-        eyebrow="Admin"
-        title={mode === 'create' ? 'Yeni əməkdaş' : mode === 'edit' ? 'Əməkdaşı redaktə et' : 'Personal'}
-        action={mode === 'list' ? <ButtonLink to={createStaffPath}>Yeni əməkdaş</ButtonLink> : <ButtonLink to={staffListPath} variant="secondary">Siyahıya qayıt</ButtonLink>}
+        eyebrow={i18n.t('ui.pages.admin.staff_management_page.admin_c1c224')}
+        title={mode === 'create' ?i18n.t('ui.pages.admin.staff_management_page.yeni_emekdas_70d695') : mode === 'edit' ?i18n.t('ui.pages.admin.staff_management_page.emekdasi_redakte_et_d722fb') :i18n.t('ui.pages.admin.staff_management_page.personal_845f92')}
+        action={mode === 'list' ? <ButtonLink to={createStaffPath}>{i18n.t('ui.pages.admin.staff_management_page.yeni_emekdas_70d695')}</ButtonLink> : <ButtonLink to={staffListPath} variant="secondary">{i18n.t('ui.pages.admin.staff_management_page.siyahiya_qayit_f779ce')}</ButtonLink>}
       />
 
       <section className={mode === 'create' || mode === 'edit' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
@@ -388,17 +389,17 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
           cannotEditOwnerStaff ? (
           <section className="admin-panel">
             <div>
-              <span className="eyebrow">İcazə</span>
-              <h2>Bu əməkdaşı yalnız platform administratoru idarə edə bilər</h2>
+              <span className="eyebrow">{i18n.t('ui.pages.admin.staff_management_page.icaze_616fbf')}</span>
+              <h2>{i18n.t('ui.pages.admin.staff_management_page.bu_emekdasi_yalniz_platform_administra_f25a64')}</h2>
             </div>
-            <StatusMessage tone="danger">Sahibkar hesabının redaktəsi, deaktiv edilməsi, silinməsi və rol dəyişikliyi yalnız platform administratoruna açıqdır.</StatusMessage>
-            <ButtonLink to={staffListPath} variant="secondary">Siyahıya qayıt</ButtonLink>
+            <StatusMessage tone="danger">{i18n.t('ui.pages.admin.staff_management_page.sahibkar_hesabinin_redaktesi_deaktiv_e_514ab4')}</StatusMessage>
+            <ButtonLink to={staffListPath} variant="secondary">{i18n.t('ui.pages.admin.staff_management_page.siyahiya_qayit_f779ce')}</ButtonLink>
           </section>
           ) : (
           <form className="admin-panel" onSubmit={handleSubmit}>
             <div>
-              <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni əməkdaş'}</span>
-              <h2>Əməkdaş məlumatları</h2>
+              <span className="eyebrow">{mode === 'edit' ?i18n.t('ui.pages.admin.staff_management_page.redakte_af7c03') :i18n.t('ui.pages.admin.staff_management_page.yeni_emekdas_70d695')}</span>
+              <h2>{i18n.t('ui.pages.admin.staff_management_page.emekdas_melumatlari_0cf77c')}</h2>
             </div>
             {mode === 'create' ? (
               <div className="form-guidance" role="note">
@@ -406,7 +407,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                   <Info size={18} />
                 </span>
                 <div>
-                  <strong>Yaratmazdan əvvəl yoxlayın</strong>
+                  <strong>{i18n.t('ui.pages.admin.staff_management_page.yaratmazdan_evvel_yoxlayin_136fa1')}</strong>
                   <ul>
                     {staffFormGuidance.map((item) => (
                       <li key={item}>{item}</li>
@@ -418,7 +419,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <RestaurantSelectField
               emptyOption={null}
               error={fieldError('RestaurantId')}
-              label="Restoran"
+              label={i18n.t('ui.pages.admin.staff_management_page.restoran_c4df56')}
               onChange={setSelectedRestaurantId}
               required
               restaurants={accessibleRestaurants}
@@ -427,16 +428,16 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <div className="form-grid two">
               <TextField
                 error={fieldError('Name')}
-                hint="Ad ən azı 2 simvol olmalıdır."
-                label="Ad"
+                hint={i18n.t('ui.pages.admin.staff_management_page.ad_en_azi_2_simvol_olmalidir_2b925a')}
+                label={i18n.t('ui.pages.admin.staff_management_page.ad_1d97c9')}
                 required
                 value={form.name}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
               />
               <TextField
                 error={fieldError('Surname')}
-                hint="Soyad ən azı 2 simvol olmalıdır."
-                label="Soyad"
+                hint={i18n.t('ui.pages.admin.staff_management_page.soyad_en_azi_2_simvol_olmalidir_c70ac4')}
+                label={i18n.t('ui.pages.admin.staff_management_page.soyad_3d89d4')}
                 required
                 value={form.surname}
                 onChange={(event) => setForm({ ...form, surname: event.target.value })}
@@ -444,8 +445,8 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             </div>
             <TextField
               error={fieldError('Email')}
-              hint="Aktiv əməkdaşlarda təkrar email qəbul edilmir."
-              label="Email"
+              hint={i18n.t('ui.pages.admin.staff_management_page.aktiv_emekdaslarda_tekrar_email_qebul__cf6fe1')}
+              label={i18n.t('ui.pages.admin.staff_management_page.email_969ccb')}
               required
               type="email"
               value={form.email}
@@ -453,8 +454,8 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             />
             <PhoneField
               error={fieldError('Phone')}
-              hint="Nümunə: +994 50 1234567."
-              label="Telefon"
+              hint={i18n.t('ui.pages.admin.staff_management_page.numune_994_50_1234567_0a83b0')}
+              label={i18n.t('ui.pages.admin.staff_management_page.telefon_fa6906')}
               required
               value={form.phone}
               onChange={(phone) => setForm({ ...form, phone })}
@@ -462,13 +463,13 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             {mode === 'create' ? (
               <SelectField
                 error={fieldError('RoleId')}
-                hint="Sahibkar rolunu yalnız platform administratoru yarada bilər."
-                label="Rol"
+                hint={i18n.t('ui.pages.admin.staff_management_page.sahibkar_rolunu_yalniz_platform_admini_74d44b')}
+                label={i18n.t('ui.pages.admin.staff_management_page.rol_fb9f51')}
                 required
                 value={form.roleId}
                 onChange={(event) => setForm({ ...form, roleId: event.target.value })}
               >
-                <option value="">Rol seç</option>
+                <option value="">{i18n.t('ui.pages.admin.staff_management_page.rol_sec_8ee490')}</option>
                 {visibleRoleOptions.map((role) => (
                   <option key={role.id} value={role.id}>
                     {role.name}
@@ -479,17 +480,17 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <div className="form-grid two">
               <SelectField
                 error={fieldError('IsActive')}
-                label="Status"
+                label={i18n.t('ui.pages.admin.staff_management_page.status_920e41')}
                 value={form.isActive}
                 onChange={(event) => setForm({ ...form, isActive: event.target.value })}
               >
-                <option value="true">Aktiv</option>
-                <option value="false">Deaktiv</option>
+                <option value="true">{i18n.t('ui.pages.admin.staff_management_page.aktiv_816345')}</option>
+                <option value="false">{i18n.t('ui.pages.admin.staff_management_page.deaktiv_477e77')}</option>
               </SelectField>
               <TextField
                 error={fieldError('ServiceFeePercent')}
-                hint="Boş qalarsa restoran qaydası tətbiq olunur."
-                label="Servis faizi"
+                hint={i18n.t('ui.pages.admin.staff_management_page.bos_qalarsa_restoran_qaydasi_tetbiq_ol_f5944c')}
+                label={i18n.t('ui.pages.admin.staff_management_page.servis_faizi_176e69')}
                 min={0}
                 step="0.01"
                 type="number"
@@ -497,23 +498,23 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                 onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })}
               />
             </div>
-            <FileUploadField label="Profil şəkli" accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
-            <Button type="submit">{mode === 'edit' ? 'Yadda saxla' : 'Əməkdaş yarat'}</Button>
+            <FileUploadField label={i18n.t('ui.pages.admin.staff_management_page.profil_sekli_dba45b')} accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
+            <Button type="submit">{mode === 'edit' ?i18n.t('ui.pages.admin.staff_management_page.yadda_saxla_78db97') :i18n.t('ui.pages.admin.staff_management_page.emekdas_yarat_8d233e')}</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
           )
         ) : (
           <section className="admin-panel">
             <div>
-              <span className="eyebrow">Siyahı</span>
-              <h2>Restoran personalı</h2>
+              <span className="eyebrow">{i18n.t('ui.pages.admin.staff_management_page.siyahi_3d2d8b')}</span>
+              <h2>{i18n.t('ui.pages.admin.staff_management_page.restoran_personali_da7524')}</h2>
             </div>
-            <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
-            {isLoading ? <p className="online-only">Personal yüklənir...</p> : null}
+            <RestaurantSelectField emptyOption={null} label={i18n.t('ui.pages.admin.staff_management_page.restoran_c4df56')} onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
+            {isLoading ? <p className="online-only">{i18n.t('ui.pages.admin.staff_management_page.personal_yuklenir_383ded')}</p> : null}
             {selectedRestaurant ? (
               <RestaurantContextCard restaurant={selectedRestaurant} />
             ) : (
-              <EmptyState title="Restoran seçilməyib" message="Personal siyahısını görmək üçün əvvəlcə restoran seçin." />
+              <EmptyState title={i18n.t('ui.pages.admin.staff_management_page.restoran_secilmeyib_63199c')} message={i18n.t('ui.pages.admin.staff_management_page.personal_siyahisini_gormek_ucun_evvelc_861069')} />
             )}
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             <div className="compact-list">
@@ -523,11 +524,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                   <div className="staff-member-main">
                     <strong>{member.name || 'Adsız əməkdaş'}</strong>
                     <small>
-                      {member.phone || 'Telefon yoxdur'} - {member.serviceFeePercent == null ? 'Servis faizi yoxdur' : `Servis faizi ${member.serviceFeePercent}%`}
+                      {member.phone || 'Telefon yoxdur'} - {member.serviceFeePercent == null ?i18n.t('ui.pages.admin.staff_management_page.servis_faizi_yoxdur_5ee835') : `Servis faizi ${member.serviceFeePercent}%`}
                     </small>
                   </div>
                   <div className="staff-badges">
-                    <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ? 'Aktiv' : 'Deaktiv'}</Badge>
+                    <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ?i18n.t('ui.pages.admin.staff_management_page.aktiv_816345') :i18n.t('ui.pages.admin.staff_management_page.deaktiv_477e77')}</Badge>
                     <Badge tone="info">{roleLabel(member.role)}</Badge>
                   </div>
                   {canManageStaffMember(member) ? (
@@ -555,7 +556,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                             disabled={updatingRoleUserId === member.id || Number(selectedRoleId(member)) === currentRoleId(member)}
                             label={`${member.name} üçün rolu yenilə`}
                             onClick={() => void handleRoleChange(member)}
-                            title={updatingRoleUserId === member.id ? 'Rol yenilənir' : 'Rolu yenilə'}
+                            title={updatingRoleUserId === member.id ?i18n.t('ui.pages.admin.staff_management_page.rol_yenilenir_be6da6') :i18n.t('ui.pages.admin.staff_management_page.rolu_yenile_4a78a1')}
                           >
                             <RefreshCw size={18} />
                           </ActionIconButton>
@@ -572,7 +573,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           disabled={deactivatingStaffId === member.id}
                           label={`${member.name} əməkdaşını deaktiv et`}
                           onClick={() => void handleDeactivate(member)}
-                          title={deactivatingStaffId === member.id ? 'Deaktiv edilir' : 'Deaktiv et'}
+                          title={deactivatingStaffId === member.id ?i18n.t('ui.pages.admin.staff_management_page.deaktiv_edilir_3b3fc2') :i18n.t('ui.pages.admin.staff_management_page.deaktiv_et_925033')}
                           tone="danger"
                         >
                           <Ban size={18} />
@@ -582,7 +583,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           disabled={deactivatingStaffId === member.id}
                           label={`${member.name} əməkdaşını aktiv et`}
                           onClick={() => void handleActivate(member)}
-                          title={deactivatingStaffId === member.id ? 'Aktiv edilir' : 'Aktiv et'}
+                          title={deactivatingStaffId === member.id ?i18n.t('ui.pages.admin.staff_management_page.aktiv_edilir_3db6b8') :i18n.t('ui.pages.admin.staff_management_page.aktiv_et_3570b7')}
                         >
                           <CheckCircle2 size={18} />
                         </ActionIconButton>
@@ -595,7 +596,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                 </article>
               ))}
               {!selectedRestaurant ? null : !isLoading && staff.length === 0 ? (
-                <EmptyState title="Personal tapılmadı" message="Bu restoran üçün hələ personal yaradılmayıb." />
+                <EmptyState title={i18n.t('ui.pages.admin.staff_management_page.personal_tapilmadi_7f36f8')} message={i18n.t('ui.pages.admin.staff_management_page.bu_restoran_ucun_hele_personal_yaradil_7bd86c')} />
               ) : null}
             </div>
           </section>

@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -39,19 +40,19 @@ export function RestaurantSessionCloseReviewQueue({ restaurantId, userId, reload
 
   if (!restaurantId || (!queue.isLoading && !queue.error && queue.hasData && queue.data.totalCount === 0 && !notice)) return null
 
-  return <section className="session-close-review-queue" id="session-close-review" aria-label="Bağlanması yoxlanmalı masa sessiyaları">
-    <div className="session-close-review-queue-header"><h2>Bağlanması yoxlanmalı masalar</h2>{queue.hasData && !queue.error ? <span>{queue.data.totalCount} sessiya</span> : null}</div>
-    {queue.error ? <StatusMessage tone="danger" autoHideMs={false}>Yoxlama növbəsi yüklənmədi: {queue.error}</StatusMessage> : null}
+  return <section className="session-close-review-queue" id="session-close-review" aria-label={i18n.t('ui.features.reservations.restaurant_session_close_review_queue.baglanmasi_yoxlanmali_masa_sessiyalari_7a954e')}>
+    <div className="session-close-review-queue-header"><h2>{i18n.t('ui.features.reservations.restaurant_session_close_review_queue.baglanmasi_yoxlanmali_masalar_ed13cf')}</h2>{queue.hasData && !queue.error ? <span>{i18n.t('ui.count.sessions', { count: queue.data.totalCount })}</span> : null}</div>
+    {queue.error ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.features.reservations.restaurant_session_close_review_queue.yoxlama_novbesi_yuklenmedi_fffdf4')} {queue.error}</StatusMessage> : null}
     {notice ? <StatusMessage tone="success" autoHideMs={false}>{notice}</StatusMessage> : null}
-    {queue.isLoading ? <p role="status">Yoxlama növbəsi yüklənir...</p> : null}
+    {queue.isLoading ? <p role="status">{i18n.t('ui.features.reservations.restaurant_session_close_review_queue.yoxlama_novbesi_yuklenir_65afd3')}</p> : null}
     {queue.hasData && !queue.error && queue.data.items.length > 0 ? <div className="session-close-review-queue-list">
       {queue.data.items.map((session) => <article className="session-close-review-queue-row" key={session.id}>
         <div className="session-close-review-queue-row-main"><strong>{session.tableName || `Masa-${session.tableNo}`}</strong><span>{session.customerName || 'Qonaq adı qeyd olunmayıb'}{session.reservationId !== null ? ` · Rezervasiya #${session.reservationId}` : ''}</span></div>
-        <span className="session-close-review-queue-row-time">Yoxlama vaxtı: {formatReservationDateTime(session.closeReviewDueAt, session.timeZone)}</span>
-        {session.reservationId !== null ? <ButtonLink variant="secondary" to={`/admin/reservations/${session.reservationId}?restaurantId=${restaurantId}`}>Detal <ArrowRight size={16} /></ButtonLink> : null}
+        <span className="session-close-review-queue-row-time">{i18n.t('ui.features.reservations.restaurant_session_close_review_queue.yoxlama_vaxti_64fbc1')} {formatReservationDateTime(session.closeReviewDueAt, session.timeZone)}</span>
+        {session.reservationId !== null ? <ButtonLink variant="secondary" to={`/admin/reservations/${session.reservationId}?restaurantId=${restaurantId}`}>{i18n.t('ui.features.reservations.restaurant_session_close_review_queue.detal_409b6a')} <ArrowRight size={16} /></ButtonLink> : null}
         <SessionCloseReviewActions restaurantId={restaurantId} reservationId={session.reservationId} sessionId={session.id} canComplete={session.reservationId !== null} completeAs="manager" canContinue={session.requiresCloseReview} requiresReview={session.requiresCloseReview} reviewDueAt={session.closeReviewDueAt} reviewConfirmedAt={session.closeReviewConfirmedAt} timeZone={session.timeZone} deferBill onChanged={(message) => { setNotice(message); setRevision((value) => value + 1) }} />
       </article>)}
     </div> : null}
-    {queue.hasData && !queue.error && queue.data.totalCount > 0 ? <PaginationControls ariaLabel="Yoxlama növbəsi səhifələri" pageIndex={queue.data.pageIndex} totalPages={queue.data.totalPages} totalCount={queue.data.totalCount} pageSize={20} hasPreviousPage={queue.data.hasPreviousPage} hasNextPage={queue.data.hasNextPage} onPageChange={setPage} /> : null}
+    {queue.hasData && !queue.error && queue.data.totalCount > 0 ? <PaginationControls ariaLabel={i18n.t('ui.features.reservations.restaurant_session_close_review_queue.yoxlama_novbesi_sehifeleri_b77ed8')} pageIndex={queue.data.pageIndex} totalPages={queue.data.totalPages} totalCount={queue.data.totalCount} pageSize={20} hasPreviousPage={queue.data.hasPreviousPage} hasNextPage={queue.data.hasNextPage} onPageChange={setPage} /> : null}
   </section>
 }

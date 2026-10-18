@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { Check, Clock3, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
@@ -45,23 +46,23 @@ export function ScheduleOfferPanel({ reservationId, refreshKey, onChanged }: {
 
   if (!offer && !error) return null
   return <section className="schedule-section" aria-labelledby="schedule-offer-title" id="schedule-offer">
-    <h2 id="schedule-offer-title"><Clock3 size={20} /> İş saatı dəyişikliyi</h2>
+    <h2 id="schedule-offer-title"><Clock3 size={20} /> {i18n.t('ui.features.reservations.schedule_offer_panel.is_saati_deyisikliyi_681479')}</h2>
     {offer ? <>
       <p>{offer.reason}</p>
       {offer.proposedVacateAt ? <dl className="schedule-deadline">
-        <dt>Təklif edilən masa təhvil vaxtı</dt>
+        <dt>{i18n.t('ui.features.reservations.schedule_offer_panel.teklif_edilen_masa_tehvil_vaxti_649f02')}</dt>
         <dd>{formatReservationDateTime(offer.proposedVacateAt, offer.timeZone)}</dd>
-      </dl> : <p>Yeni iş saatları gəliş vaxtınıza uyğun deyil. Restoranla əlaqə saxlayın.</p>}
+      </dl> : <p>{i18n.t('ui.features.reservations.schedule_offer_panel.yeni_is_saatlari_gelis_vaxtiniza_uygun_37332c')}</p>}
       {offer.canRespond ? <>
         {offer.canAccept ? <label className="schedule-consent">
           <input type="checkbox" checked={consent} disabled={busy} onChange={(event) => setConsent(event.target.checked)} />
-          <span>Masanı göstərilən vaxtda təhvil verməklə razıyam.</span>
+          <span>{i18n.t('ui.features.reservations.schedule_offer_panel.masani_gosterilen_vaxtda_tehvil_vermek_47edd5')}</span>
         </label> : null}
         <div className="schedule-actions">
-          {offer.canAccept ? <Button type="button" disabled={busy || !consent} onClick={() => respond(true)}><Check size={17} /> Qəbul et</Button> : null}
-          <Button type="button" disabled={busy} variant="secondary" onClick={() => respond(false)}><X size={17} /> Qəbul etmirəm</Button>
+          {offer.canAccept ? <Button type="button" disabled={busy || !consent} onClick={() => respond(true)}><Check size={17} /> {i18n.t('ui.features.reservations.schedule_offer_panel.qebul_et_c0f133')}</Button> : null}
+          <Button type="button" disabled={busy} variant="secondary" onClick={() => respond(false)}><X size={17} /> {i18n.t('ui.features.reservations.schedule_offer_panel.qebul_etmirem_c790a7')}</Button>
         </div>
-        <p className="schedule-muted">Cavab verməmək razılıq sayılmır. Təklifi rədd etmək rezervasiyanızı ləğv etmir.</p>
+        <p className="schedule-muted">{i18n.t('ui.features.reservations.schedule_offer_panel.cavab_vermemek_raziliq_sayilmir_teklif_0c8d17')}</p>
       </> : <p role="status">{{
         Pending: 'Bu təklif hazırda cavablandırıla bilmir. Restoranla əlaqə saxlayın.',
         Accepted: 'Razılığınız qeydə alındı. Restoran dəyişikliyi tətbiq edənədək əvvəlki şərtlər qüvvədədir.',

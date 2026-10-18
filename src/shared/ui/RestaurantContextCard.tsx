@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import type { Restaurant } from '../../entities/types'
 import { Badge } from './Badge'
 import { SafeImage } from './SafeImage'
@@ -25,7 +26,7 @@ export function RestaurantContextCard({ restaurant }: RestaurantContextCardProps
       </div>
       <div className="restaurant-context-meta">
         <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>
-          {restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Müqavilə yoxdur'}
+          {restaurant.hasActiveContract ?i18n.t('ui.shared.ui.restaurant_context_card.aktiv_muqavile_31dcc9') :i18n.t('ui.shared.ui.restaurant_context_card.muqavile_yoxdur_649c6c')}
         </Badge>
       </div>
     </article>

@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -586,10 +587,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {restoreError && !user ? (
         <main className="auth-page">
           <section className="auth-card" role="alert">
-            <h1>Bağlantı problemi</h1>
+            <h1>{i18n.t('ui.shared.auth.auth_context.baglanti_problemi_3b4e1f')}</h1>
             <p>{restoreError}</p>
             <Button disabled={isRestoring} onClick={() => setRestoreRetry((value) => value + 1)} type="button">
-              {isRestoring ? 'Yoxlanılır...' : 'Yenidən yoxla'}
+              {isRestoring ?i18n.t('ui.shared.auth.auth_context.yoxlanilir_b497d3') :i18n.t('ui.shared.auth.auth_context.yeniden_yoxla_9c69a3')}
             </Button>
           </section>
         </main>
@@ -627,11 +628,11 @@ function ProfileSelectionPrompt({
     <div className="modal-backdrop profile-selection-backdrop" role="presentation">
       <section aria-labelledby="profile-selection-title" className="profile-selection-modal" role="dialog" aria-modal="true">
         <div className="section-title">
-          <span>Giriş profili</span>
-          <h2 id="profile-selection-title">Hansı profillə davam edirsiniz?</h2>
+          <span>{i18n.t('ui.shared.auth.auth_context.giris_profili_f77b32')}</span>
+          <h2 id="profile-selection-title">{i18n.t('ui.shared.auth.auth_context.hansi_profille_davam_edirsiniz_75da03')}</h2>
         </div>
         <p className="muted-text">
-          {userName ? `${userName}, ` : ''}seçdiyiniz rol və restorana uyğun menyular açılacaq.
+          {userName ? `${userName}, ` : ''}{i18n.t('ui.shared.auth.auth_context.secdiyiniz_rol_ve_restorana_uygun_meny_2eedf3')}
         </p>
         <div className="profile-selection-list">
           {profiles.map((profile) => (

@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type StatusMessageTone = 'success' | 'warning' | 'danger' | 'info'
 
@@ -51,6 +52,7 @@ function inferTone(children: ReactNode): StatusMessageTone {
 }
 
 export function StatusMessage({ autoHideMs, dismissible = true, children, className = '', details = [], tone }: StatusMessageProps) {
+  const { t } = useTranslation()
   const [isVisible, setIsVisible] = useState(Boolean(children))
   const resolvedTone = tone ?? (details.length > 0 ? 'danger' : inferTone(children))
   const Icon = resolvedTone === 'success' ? CheckCircle2 : resolvedTone === 'danger' ? AlertTriangle : Info
@@ -96,7 +98,7 @@ export function StatusMessage({ autoHideMs, dismissible = true, children, classN
         ) : null}
       </span>
       {dismissible ? (
-        <button aria-label="Mesajı bağla" className="form-message-close" onClick={() => setIsVisible(false)} type="button">
+        <button aria-label={t('ui.message.close')} className="form-message-close" onClick={() => setIsVisible(false)} type="button">
           <X size={18} />
         </button>
       ) : null}

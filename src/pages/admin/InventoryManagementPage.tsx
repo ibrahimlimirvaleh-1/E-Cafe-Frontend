@@ -1,3 +1,5 @@
+import { i18n } from '../../shared/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { History, Pencil, Plus, Power, Trash2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
@@ -18,6 +20,8 @@ import { RestaurantContextCard } from '../../shared/ui/RestaurantContextCard'
 import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { InventoryItem, InventoryMovement, MenuItem, Recipe } from '../../entities/types'
+import { getCurrentLanguage } from '../../shared/i18n/i18n'
+import { getIntlLocale } from '../../shared/i18n/language'
 
 type InventoryPageMode = 'items' | 'create' | 'movements' | 'movement-create' | 'recipes' | 'recipe-create'
 type PendingDelete = { id: string; label: string; type: 'inventory' | 'recipe' } | null
@@ -52,11 +56,11 @@ function emptyPage<T>() {
 
 function unitLabel(unitId: number, fallback?: string) {
   const unit = units.find((entry) => entry.id === unitId)
-  return unit ? `${unit.name} (${unit.code})` : fallback || '-'
+  return unit ? `${i18n.t(`ui.inventory.unit.${unit.id}`, { defaultValue: unit.name })} (${unit.code})` : fallback || '-'
 }
 
 function stockAmount(item: InventoryItem) {
-  return `${item.quantityOnHand.toLocaleString('az-AZ')} ${item.unitCode || item.unitName}`
+  return `${item.quantityOnHand.toLocaleString(getIntlLocale(getCurrentLanguage()))} ${item.unitCode || item.unitName}`
 }
 
 function formatDateTime(value: string) {
@@ -69,7 +73,7 @@ function formatDateTime(value: string) {
     return value
   }
 
-  return date.toLocaleString('az-AZ', {
+  return date.toLocaleString(getIntlLocale(getCurrentLanguage()), {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
@@ -79,13 +83,17 @@ function formatDateTime(value: string) {
 }
 
 export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPageMode }) {
+  useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const canManageInventory = hasPermission(user, 'ManageInventory')
   const canManageRecipes = hasPermission(user, 'ManageRecipes')
-  const copy = pageCopy[mode]
+  const copy = {
+    eyebrow: i18n.t(`ui.inventory.page.${mode}.eyebrow`, { defaultValue: pageCopy[mode].eyebrow }),
+    title: i18n.t(`ui.inventory.page.${mode}.title`, { defaultValue: pageCopy[mode].title }),
+  }
 
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [selectedInventoryId, setSelectedInventoryId] = useState('')
@@ -486,25 +494,25 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         title={copy.title}
         action={
           mode === 'items' && canManageInventory ? (
-            <ButtonLink to={`${inventoryRouteBase}/new`}>Yeni stok elementi</ButtonLink>
+            <ButtonLink to={`${inventoryRouteBase}/new`}>{i18n.t('ui.pages.admin.inventory_management_page.yeni_stok_elementi_7c5bf9')}</ButtonLink>
           ) : mode === 'create' ? (
-            <ButtonLink to={inventoryRouteBase} variant="secondary">Siyahiya qayit</ButtonLink>
+            <ButtonLink to={inventoryRouteBase} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
           ) : mode === 'movements' && canManageInventory ? (
-            <ButtonLink to={`${movementRouteBase}/new${inventoryItem?.id ? `?inventoryItemId=${inventoryItem.id}` : ''}`}>Hərəkət əlavə et</ButtonLink>
+            <ButtonLink to={`${movementRouteBase}/new${inventoryItem?.id ? `?inventoryItemId=${inventoryItem.id}` : ''}`}>{i18n.t('ui.pages.admin.inventory_management_page.hereket_elave_et_2c1882')}</ButtonLink>
           ) : mode === 'movement-create' ? (
-            <ButtonLink to={movementRouteBase} variant="secondary">Siyahiya qayit</ButtonLink>
+            <ButtonLink to={movementRouteBase} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
           ) : mode === 'recipes' && canManageRecipes ? (
-            <ButtonLink to={`${recipeRouteBase}/new${menuItem?.id ? `?menuItemId=${menuItem.id}` : ''}`}>Yeni resept terkibi</ButtonLink>
+            <ButtonLink to={`${recipeRouteBase}/new${menuItem?.id ? `?menuItemId=${menuItem.id}` : ''}`}>{i18n.t('ui.pages.admin.inventory_management_page.yeni_resept_terkibi_44320d')}</ButtonLink>
           ) : mode === 'recipe-create' ? (
-            <ButtonLink to={recipeRouteBase} variant="secondary">Siyahiya qayit</ButtonLink>
+            <ButtonLink to={recipeRouteBase} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
           ) : null
         }
       />
 
       <section className={`inventory-page-grid inventory-page-grid-${mode}`}>
         <section className="admin-panel">
-          <span className="eyebrow">Restoran</span>
-          <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
+          <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.restoran_c4df56')}</span>
+          <RestaurantSelectField emptyOption={null} label={i18n.t('ui.pages.admin.inventory_management_page.restoran_c4df56')} onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
           <RestaurantContextCard restaurant={selectedRestaurant} />
         </section>
 
@@ -512,33 +520,33 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             canManageInventory ? (
               <section className="admin-panel">
                 <form className="stack-form" onSubmit={handleSaveStock}>
-                  <span className="eyebrow">{editingInventoryId ? 'Redakte' : 'Yeni qeyd'}</span>
-                  <h2>{editingInventoryId ? 'Stoku redakte et' : 'Yeni stok elementi'}</h2>
-                  <TextField label="Ad" required value={stockForm.name} onChange={(event) => setStockForm({ ...stockForm, name: event.target.value })} />
-                  <SelectField label="Olcu vahidi" required value={stockForm.unitId} onChange={(event) => setStockForm({ ...stockForm, unitId: event.target.value })}>
+                  <span className="eyebrow">{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.redakte_561713') :i18n.t('ui.pages.admin.inventory_management_page.yeni_qeyd_2af8e9')}</span>
+                  <h2>{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.stoku_redakte_et_b17da9') :i18n.t('ui.pages.admin.inventory_management_page.yeni_stok_elementi_7c5bf9')}</h2>
+                  <TextField label={i18n.t('ui.pages.admin.inventory_management_page.ad_1d97c9')} required value={stockForm.name} onChange={(event) => setStockForm({ ...stockForm, name: event.target.value })} />
+                  <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.olcu_vahidi_47b78c')} required value={stockForm.unitId} onChange={(event) => setStockForm({ ...stockForm, unitId: event.target.value })}>
                     {units.map((unit) => (
                       <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
                     ))}
                   </SelectField>
                   <div className="form-grid two">
-                    <TextField disabled={Boolean(editingInventoryId)} label="Cari miqdar" min={0} required={!editingInventoryId} step="0.001" type="number" value={stockForm.quantityOnHand} onChange={(event) => setStockForm({ ...stockForm, quantityOnHand: event.target.value })} />
-                    <TextField label="Xeberdarliq limiti" min={0} required step="0.001" type="number" value={stockForm.lowStockThreshold} onChange={(event) => setStockForm({ ...stockForm, lowStockThreshold: event.target.value })} />
+                    <TextField disabled={Boolean(editingInventoryId)} label={i18n.t('ui.pages.admin.inventory_management_page.cari_miqdar_4b6468')} min={0} required={!editingInventoryId} step="0.001" type="number" value={stockForm.quantityOnHand} onChange={(event) => setStockForm({ ...stockForm, quantityOnHand: event.target.value })} />
+                    <TextField label={i18n.t('ui.pages.admin.inventory_management_page.xeberdarliq_limiti_05061c')} min={0} required step="0.001" type="number" value={stockForm.lowStockThreshold} onChange={(event) => setStockForm({ ...stockForm, lowStockThreshold: event.target.value })} />
                   </div>
                   {editingInventoryId ? (
                     <label className="toggle-field compact-toggle">
                       <input checked={stockForm.isActive} type="checkbox" onChange={(event) => setStockForm({ ...stockForm, isActive: event.target.checked })} />
-                      <span>Aktivdir</span>
+                      <span>{i18n.t('ui.pages.admin.inventory_management_page.aktivdir_6ff0b2')}</span>
                     </label>
                   ) : null}
                   <div className="inline-actions">
-                    <Button type="submit">{editingInventoryId ? 'Stoku yenile' : 'Stok yarat'}</Button>
-                    {editingInventoryId ? <Button type="button" variant="secondary" onClick={resetStockForm}>Legv et</Button> : null}
+                    <Button type="submit">{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.stoku_yenile_78f8d9') :i18n.t('ui.pages.admin.inventory_management_page.stok_yarat_f443b7')}</Button>
+                    {editingInventoryId ? <Button type="button" variant="secondary" onClick={resetStockForm}>{i18n.t('ui.pages.admin.inventory_management_page.legv_et_d732b8')}</Button> : null}
                   </div>
                 </form>
               </section>
             ) : (
               <section className="admin-panel">
-                <p className="online-only">Stok elementi yaratmaq ucun icazeniz yoxdur.</p>
+                <p className="online-only">{i18n.t('ui.pages.admin.inventory_management_page.stok_elementi_yaratmaq_ucun_icazeniz_y_aa45f6')}</p>
               </section>
             )
 
@@ -548,32 +556,32 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             <section className="admin-panel">
               <div className="inventory-panel-header">
                 <div>
-                  <span className="eyebrow">Siyahi</span>
-                  <h2>Stok elementleri</h2>
+                  <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.siyahi_0c56d0')}</span>
+                  <h2>{i18n.t('ui.pages.admin.inventory_management_page.stok_elementleri_c86a99')}</h2>
                 </div>
                 <label className="toggle-field compact-toggle">
                   <input checked={onlyLowStock} type="checkbox" onChange={(event) => setOnlyLowStock(event.target.checked)} />
-                  <span>Yalniz az qalanlar</span>
+                  <span>{i18n.t('ui.pages.admin.inventory_management_page.yalniz_az_qalanlar_5b9bca')}</span>
                 </label>
               </div>
-              {inventoryLoading ? <p className="online-only">Stok yüklənir...</p> : null}
+              {inventoryLoading ? <p className="online-only">{i18n.t('ui.pages.admin.inventory_management_page.stok_yuklenir_653869')}</p> : null}
               <div className="inventory-list">
                 {inventoryItems.map((item) => (
                   <article className={item.id === inventoryItem?.id ? 'selected inventory-row' : 'inventory-row'} key={item.id}>
                     <button className="inventory-row-main" type="button" onClick={() => setSelectedInventoryId(item.id)}>
                       <span>
-                        <small>Element</small>
+                        <small>{i18n.t('ui.pages.admin.inventory_management_page.element_4e5b54')}</small>
                         <strong>{item.name}</strong>
                       </span>
                       <span>
-                        <small>Miqdar</small>
+                        <small>{i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')}</small>
                         <strong>{stockAmount(item)}</strong>
                       </span>
                       <span>
-                        <small>Limit</small>
+                        <small>{i18n.t('ui.pages.admin.inventory_management_page.limit_674b0e')}</small>
                         <strong>{item.lowStockThreshold} {item.unitCode || item.unitName}</strong>
                       </span>
-                      <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ? 'Az qalir' : item.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                      <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ?i18n.t('ui.pages.admin.inventory_management_page.az_qalir_0cc343') : item.isActive ?i18n.t('ui.pages.admin.inventory_management_page.aktiv_816345') :i18n.t('ui.pages.admin.inventory_management_page.deaktiv_477e77')}</Badge>
                     </button>
                     {canManageInventory ? (
                       <div className="inline-actions">
@@ -591,7 +599,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                   </article>
                 ))}
                 {!inventoryLoading && inventoryItems.length === 0 ? (
-                  <EmptyState title="Stok elementi yoxdur" message="Bu restoran üçün hələ stok elementi yaradılmayıb." />
+                  <EmptyState title={i18n.t('ui.pages.admin.inventory_management_page.stok_elementi_yoxdur_ac947c')} message={i18n.t('ui.pages.admin.inventory_management_page.bu_restoran_ucun_hele_stok_elementi_ya_d860f4')} />
                 ) : null}
               </div>
             </section>
@@ -602,23 +610,23 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             <section className="admin-panel">
               <div className="inventory-panel-header">
                 <div>
-                  <span className="eyebrow">Siyahi</span>
-                  <h2>Stok elementləri</h2>
+                  <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.siyahi_0c56d0')}</span>
+                  <h2>{i18n.t('ui.pages.admin.inventory_management_page.stok_elementleri_506752')}</h2>
                 </div>
                 <label className="toggle-field compact-toggle">
                   <input checked={onlyLowStock} type="checkbox" onChange={(event) => setOnlyLowStock(event.target.checked)} />
-                  <span>Yalniz az qalanlar</span>
+                  <span>{i18n.t('ui.pages.admin.inventory_management_page.yalniz_az_qalanlar_5b9bca')}</span>
                 </label>
               </div>
               <div className="inventory-table-shell">
                 <table className="inventory-table">
                   <thead>
                     <tr>
-                      <th>Element</th>
-                      <th>Miqdar</th>
-                      <th>Limit</th>
-                      <th>Status</th>
-                      <th>Əməliyyat</th>
+                      <th>{i18n.t('ui.pages.admin.inventory_management_page.element_4e5b54')}</th>
+                      <th>{i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')}</th>
+                      <th>{i18n.t('ui.pages.admin.inventory_management_page.limit_674b0e')}</th>
+                      <th>{i18n.t('ui.pages.admin.inventory_management_page.status_920e41')}</th>
+                      <th>{i18n.t('ui.pages.admin.inventory_management_page.emeliyyat_fc71e9')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -631,7 +639,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                         <td>{item.lowStockThreshold} {item.unitCode || item.unitName}</td>
                         <td>
                           <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>
-                            {item.isLowStock ? 'Az qalir' : item.isActive ? 'Normal' : 'Deaktiv'}
+                            {item.isLowStock ?i18n.t('ui.pages.admin.inventory_management_page.az_qalir_0cc343') : item.isActive ?i18n.t('ui.pages.admin.inventory_management_page.normal_a7248e') :i18n.t('ui.pages.admin.inventory_management_page.deaktiv_477e77')}
                           </Badge>
                         </td>
                         <td>
@@ -657,13 +665,13 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     ))}
                   </tbody>
                 </table>
-                {movementInventoryLoading ? <p className="online-only">Stok yüklənir...</p> : null}
+                {movementInventoryLoading ? <p className="online-only">{i18n.t('ui.pages.admin.inventory_management_page.stok_yuklenir_653869')}</p> : null}
                 {!movementInventoryLoading && movementInventoryPage.items.length === 0 ? (
-                  <EmptyState title="Stok elementi yoxdur" message="Bu filterlərə uyğun stok elementi tapılmadı." />
+                  <EmptyState title={i18n.t('ui.pages.admin.inventory_management_page.stok_elementi_yoxdur_ac947c')} message={i18n.t('ui.pages.admin.inventory_management_page.bu_filterlere_uygun_stok_elementi_tapi_a7e8a6')} />
                 ) : null}
               </div>
               <PaginationControls
-                ariaLabel="Stok elementləri səhifələmə"
+                ariaLabel={i18n.t('ui.pages.admin.inventory_management_page.stok_elementleri_sehifeleme_5d96ee')}
                 hasNextPage={movementInventoryPage.hasNextPage}
                 hasPreviousPage={movementInventoryPage.hasPreviousPage}
                 onPageChange={setInventoryPageNumber}
@@ -684,8 +692,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           canManageInventory ? (
             <>
               <section className="admin-panel">
-                <span className="eyebrow">Stok elementi</span>
-                <SelectField label="Stok elementi" required value={inventoryItem?.id || ''} onChange={(event) => setSelectedInventoryId(event.target.value)}>
+                <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.stok_elementi_c35a9b')}</span>
+                <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.stok_elementi_c35a9b')} required value={inventoryItem?.id || ''} onChange={(event) => setSelectedInventoryId(event.target.value)}>
                   {inventoryItems.map((item) => (
                     <option key={item.id} value={item.id}>{item.name}</option>
                   ))}
@@ -694,10 +702,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                   <article className="resource-summary-card">
                     <div>
                       <strong>{inventoryItem.name}</strong>
-                      <span>{stockAmount(inventoryItem)} · limit {inventoryItem.lowStockThreshold} {inventoryItem.unitCode || inventoryItem.unitName}</span>
+                      <span>{stockAmount(inventoryItem)} {i18n.t('ui.pages.admin.inventory_management_page.limit_e214ad')} {inventoryItem.lowStockThreshold} {inventoryItem.unitCode || inventoryItem.unitName}</span>
                     </div>
                     <Badge tone={inventoryItem.isLowStock ? 'warning' : inventoryItem.isActive ? 'success' : 'neutral'}>
-                      {inventoryItem.isLowStock ? 'Az qalir' : inventoryItem.isActive ? 'Normal' : 'Deaktiv'}
+                      {inventoryItem.isLowStock ?i18n.t('ui.pages.admin.inventory_management_page.az_qalir_0cc343') : inventoryItem.isActive ?i18n.t('ui.pages.admin.inventory_management_page.normal_a7248e') :i18n.t('ui.pages.admin.inventory_management_page.deaktiv_477e77')}
                     </Badge>
                   </article>
                 ) : null}
@@ -705,31 +713,31 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
               <section className="admin-panel">
                 <div>
-                  <span className="eyebrow">Yeni hereket</span>
+                  <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.yeni_hereket_16032b')}</span>
                   <h2>{inventoryItem?.name || 'Stok sec'}</h2>
                 </div>
                 <form className="stack-form" onSubmit={handleMovement}>
                   <div className="form-grid two">
-                    <SelectField label="Hereket tipi" required value={movementForm.movementTypeId} onChange={(event) => setMovementForm({ ...movementForm, movementTypeId: event.target.value })}>
+                    <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.hereket_tipi_5ba4fa')} required value={movementForm.movementTypeId} onChange={(event) => setMovementForm({ ...movementForm, movementTypeId: event.target.value })}>
                       {movementTypes.map((type) => (
                         <option key={type.id} value={type.id}>{type.name}</option>
                       ))}
                     </SelectField>
-                    <SelectField label="Olcu vahidi" required value={movementForm.unitId} onChange={(event) => setMovementForm({ ...movementForm, unitId: event.target.value })}>
+                    <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.olcu_vahidi_47b78c')} required value={movementForm.unitId} onChange={(event) => setMovementForm({ ...movementForm, unitId: event.target.value })}>
                       {units.map((unit) => (
                         <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
                       ))}
                     </SelectField>
                   </div>
-                  <TextField label="Miqdar" min={0} required step="0.001" type="number" value={movementForm.quantity} onChange={(event) => setMovementForm({ ...movementForm, quantity: event.target.value })} />
-                  <TextareaField label="Sebeb" value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
-                  <Button disabled={!inventoryItem} type="submit">Hereket elave et</Button>
+                  <TextField label={i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')} min={0} required step="0.001" type="number" value={movementForm.quantity} onChange={(event) => setMovementForm({ ...movementForm, quantity: event.target.value })} />
+                  <TextareaField label={i18n.t('ui.pages.admin.inventory_management_page.sebeb_a661b8')} value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
+                  <Button disabled={!inventoryItem} type="submit">{i18n.t('ui.pages.admin.inventory_management_page.hereket_elave_et_89d71c')}</Button>
                 </form>
               </section>
             </>
           ) : (
             <section className="admin-panel">
-              <p className="online-only">Stok hereketi yaratmaq ucun icazeniz yoxdur.</p>
+              <p className="online-only">{i18n.t('ui.pages.admin.inventory_management_page.stok_hereketi_yaratmaq_ucun_icazeniz_y_b8060e')}</p>
             </section>
           )
         ) : null}
@@ -737,22 +745,22 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         {mode === 'recipes' ? (
           <>
             <section className="admin-panel">
-              <span className="eyebrow">Menyu mehsulu</span>
+              <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.menyu_mehsulu_89fe8f')}</span>
               {menuItems.length > 0 ? (
-                <SelectField label="Menyu mehsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
+                <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.menyu_mehsulu_89fe8f')} required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
                   {menuItems.map((item: MenuItem) => (
                     <option key={item.id} value={item.id}>{item.name}</option>
                   ))}
                 </SelectField>
               ) : (
-                <EmptyState title="Menyu məhsulu yoxdur" message="Resept tərkibi yaratmaq üçün əvvəl bu restoranın menyusunda məhsul yaradın." />
+                <EmptyState title={i18n.t('ui.pages.admin.inventory_management_page.menyu_mehsulu_yoxdur_4b69ac')} message={i18n.t('ui.pages.admin.inventory_management_page.resept_terkibi_yaratmaq_ucun_evvel_bu__3478d3')} />
               )}
             </section>
 
             {menuItems.length > 0 ? (
               <section className="admin-panel recipe-panel">
-                <span className="eyebrow">Terkib</span>
-                <h2>Resept ingredientleri</h2>
+                <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.terkib_9abff0')}</span>
+                <h2>{i18n.t('ui.pages.admin.inventory_management_page.resept_ingredientleri_fa7b99')}</h2>
                 <div className="recipe-list">
                   {recipes.map((recipe: Recipe) => (
                     <article key={recipe.id}>
@@ -760,7 +768,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                         <strong>{recipe.inventoryItemName}</strong>
                         <small>{recipe.quantity} {recipe.unitCode || recipe.unitName}</small>
                       </div>
-                      <Badge tone={recipe.isActive ? 'success' : 'neutral'}>{recipe.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                      <Badge tone={recipe.isActive ? 'success' : 'neutral'}>{recipe.isActive ?i18n.t('ui.pages.admin.inventory_management_page.aktiv_816345') :i18n.t('ui.pages.admin.inventory_management_page.deaktiv_477e77')}</Badge>
                       {canManageRecipes ? (
                         <div className="inline-actions">
                           <ActionIconButton label={`${recipe.inventoryItemName} redaktə et`} onClick={() => startRecipeEdit(recipe)}>
@@ -777,7 +785,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     </article>
                   ))}
                   {menuItem && recipes.length === 0 ? (
-                    <EmptyState title="Resept tərkibi yoxdur" message="Bu məhsul üçün hələ ingredient əlavə edilməyib." />
+                    <EmptyState title={i18n.t('ui.pages.admin.inventory_management_page.resept_terkibi_yoxdur_8efa9f')} message={i18n.t('ui.pages.admin.inventory_management_page.bu_mehsul_ucun_hele_ingredient_elave_e_a90844')} />
                   ) : null}
                 </div>
               </section>
@@ -789,31 +797,31 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           canManageRecipes ? (
             <>
               <section className="admin-panel">
-                <span className="eyebrow">Menyu mehsulu</span>
+                <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.menyu_mehsulu_89fe8f')}</span>
                 {menuItems.length > 0 ? (
-                  <SelectField label="Menyu mehsulu" required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
+                  <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.menyu_mehsulu_89fe8f')} required value={menuItem?.id || ''} onChange={(event) => setSelectedMenuItemId(event.target.value)}>
                     {menuItems.map((item: MenuItem) => (
                       <option key={item.id} value={item.id}>{item.name}</option>
                     ))}
                   </SelectField>
                 ) : (
-                  <EmptyState title="Menyu məhsulu yoxdur" message="Resept yaratmaq üçün əvvəl menyu bölməsində məhsul əlavə edin." />
+                  <EmptyState title={i18n.t('ui.pages.admin.inventory_management_page.menyu_mehsulu_yoxdur_4b69ac')} message={i18n.t('ui.pages.admin.inventory_management_page.resept_yaratmaq_ucun_evvel_menyu_bolme_1cd560')} />
                 )}
               </section>
 
               {menuItems.length > 0 ? (
               <section className="admin-panel recipe-editor-panel">
                 <form className="stack-form" onSubmit={handleSaveRecipe}>
-                  <span className="eyebrow">{editingRecipeId ? 'Redakte' : 'Yeni terkib'}</span>
+                  <span className="eyebrow">{editingRecipeId ?i18n.t('ui.pages.admin.inventory_management_page.redakte_561713') :i18n.t('ui.pages.admin.inventory_management_page.yeni_terkib_299593')}</span>
                   <h2>{menuItem?.name || 'Mehsul sec'}</h2>
-                  <SelectField label="Ingredient" required value={recipeForm.inventoryItemId} onChange={(event) => setRecipeForm({ ...recipeForm, inventoryItemId: event.target.value })}>
+                  <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.ingredient_c4c5ed')} required value={recipeForm.inventoryItemId} onChange={(event) => setRecipeForm({ ...recipeForm, inventoryItemId: event.target.value })}>
                     {inventoryItems.map((item) => (
                       <option key={item.id} value={item.id}>{item.name}</option>
                     ))}
                   </SelectField>
                   <div className="form-grid two">
-                    <TextField label="Miqdar" min={0} required step="0.001" type="number" value={recipeForm.quantity} onChange={(event) => setRecipeForm({ ...recipeForm, quantity: event.target.value })} />
-                    <SelectField label="Olcu" required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
+                    <TextField label={i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')} min={0} required step="0.001" type="number" value={recipeForm.quantity} onChange={(event) => setRecipeForm({ ...recipeForm, quantity: event.target.value })} />
+                    <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.olcu_4f1ec6')} required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
                       {units.map((unit) => (
                         <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
                       ))}
@@ -821,11 +829,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                   </div>
                   <label className="toggle-field compact-toggle">
                     <input checked={recipeForm.isActive} type="checkbox" onChange={(event) => setRecipeForm({ ...recipeForm, isActive: event.target.checked })} />
-                    <span>Aktivdir</span>
+                    <span>{i18n.t('ui.pages.admin.inventory_management_page.aktivdir_6ff0b2')}</span>
                   </label>
                   <div className="inline-actions">
-                    <Button disabled={!menuItem || inventoryItems.length === 0} type="submit">{editingRecipeId ? 'Resepti yenile' : 'Resept terkibi yarat'}</Button>
-                    {editingRecipeId ? <Button type="button" variant="secondary" onClick={resetRecipeForm}>Legv et</Button> : null}
+                    <Button disabled={!menuItem || inventoryItems.length === 0} type="submit">{editingRecipeId ?i18n.t('ui.pages.admin.inventory_management_page.resepti_yenile_6cf33f') :i18n.t('ui.pages.admin.inventory_management_page.resept_terkibi_yarat_fa218b')}</Button>
+                    {editingRecipeId ? <Button type="button" variant="secondary" onClick={resetRecipeForm}>{i18n.t('ui.pages.admin.inventory_management_page.legv_et_d732b8')}</Button> : null}
                   </div>
                 </form>
               </section>
@@ -833,30 +841,30 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
             </>
           ) : (
             <section className="admin-panel">
-              <p className="online-only">Resept yaratmaq ucun icazeniz yoxdur.</p>
+              <p className="online-only">{i18n.t('ui.pages.admin.inventory_management_page.resept_yaratmaq_ucun_icazeniz_yoxdur_0ddb52')}</p>
             </section>
           )
         ) : null}
       </section>
       {feedback.message ? <StatusMessage className="inventory-message" details={feedback.details} tone={feedback.tone}>{feedback.message}</StatusMessage> : null}
       <ConfirmDialog
-        confirmLabel="Sil"
+        confirmLabel={i18n.t('ui.pages.admin.inventory_management_page.sil_f698e9')}
         isOpen={Boolean(pendingDelete)}
         message={`${pendingDelete?.label ?? 'Seçilmiş qeyd'} silinəcək. Bu əməliyyat geri qaytarılmaya bilər.`}
         onCancel={() => setPendingDelete(null)}
         onConfirm={confirmPendingDelete}
-        title="Silməni təsdiqlə"
+        title={i18n.t('ui.pages.admin.inventory_management_page.silmeni_tesdiqle_33a429')}
       />
       {isHistoryModalOpen && inventoryItem ? (
         <div className="modal-backdrop" role="presentation" onClick={() => setIsHistoryModalOpen(false)}>
           <section className="inventory-history-modal" role="dialog" aria-modal="true" aria-label={`${inventoryItem.name} tarixçəsi`} onClick={(event) => event.stopPropagation()}>
             <header className="audit-detail-header">
               <div>
-                <span className="eyebrow">Tarixçə</span>
+                <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.tarixce_ee0b11')}</span>
                 <h2>{inventoryItem.name}</h2>
-                <p className="muted-text">Cari miqdar: {stockAmount(inventoryItem)}</p>
+                <p className="muted-text">{i18n.t('ui.pages.admin.inventory_management_page.cari_miqdar_86e9f6')} {stockAmount(inventoryItem)}</p>
               </div>
-              <button type="button" className="icon-button" aria-label="Bağla" onClick={() => setIsHistoryModalOpen(false)}>
+              <button type="button" className="icon-button" aria-label={i18n.t('ui.pages.admin.inventory_management_page.bagla_c1cf91')} onClick={() => setIsHistoryModalOpen(false)}>
                 <X size={18} />
               </button>
             </header>
@@ -865,11 +873,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
               <table className="inventory-table inventory-history-table">
                 <thead>
                   <tr>
-                    <th>Hərəkət</th>
-                    <th>Dəyişiklik</th>
-                    <th>Son miqdar</th>
-                    <th>Səbəb</th>
-                    <th>Tarix</th>
+                    <th>{i18n.t('ui.pages.admin.inventory_management_page.hereket_5bcb49')}</th>
+                    <th>{i18n.t('ui.pages.admin.inventory_management_page.deyisiklik_ddd7af')}</th>
+                    <th>{i18n.t('ui.pages.admin.inventory_management_page.son_miqdar_592b4e')}</th>
+                    <th>{i18n.t('ui.pages.admin.inventory_management_page.sebeb_33efd0')}</th>
+                    <th>{i18n.t('ui.pages.admin.inventory_management_page.tarix_2dc57a')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -886,11 +894,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                   ))}
                 </tbody>
               </table>
-              {movements.length === 0 ? <EmptyState title="Tarixçə yoxdur" message="Bu stok elementi üzrə hərəkət tapılmadı." /> : null}
+              {movements.length === 0 ? <EmptyState title={i18n.t('ui.pages.admin.inventory_management_page.tarixce_yoxdur_8f8757')} message={i18n.t('ui.pages.admin.inventory_management_page.bu_stok_elementi_uzre_hereket_tapilmad_6c5ff2')} /> : null}
             </div>
 
             <PaginationControls
-              ariaLabel="Stok hərəkətləri tarixçəsi səhifələmə"
+              ariaLabel={i18n.t('ui.pages.admin.inventory_management_page.stok_hereketleri_tarixcesi_sehifeleme_beab1d')}
               hasNextPage={movementPage.hasNextPage}
               hasPreviousPage={movementPage.hasPreviousPage}
               onPageChange={setMovementPageNumber}

@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { Download, RefreshCw, Smartphone } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -117,42 +118,42 @@ export function CustomerMobileDownloadPage() {
 
   return (
     <main className="page customer-mobile-page">
-      <PageHeader eyebrow="Hesab" title="Android tətbiqi" />
-      <section className="customer-mobile-panel" aria-label="ECafe Android tətbiqi">
+      <PageHeader eyebrow={i18n.t('ui.pages.customer.customer_mobile_download_page.hesab_18adfa')} title={i18n.t('ui.pages.customer.customer_mobile_download_page.android_tetbiqi_7a72cf')} />
+      <section className="customer-mobile-panel" aria-label={i18n.t('ui.pages.customer.customer_mobile_download_page.ecafe_android_tetbiqi_3bfba7')}>
         <div className="customer-mobile-heading">
           <span className="customer-mobile-icon"><Smartphone size={24} aria-hidden="true" /></span>
           <div>
-            <h2>ECafe mobil tətbiqi</h2>
-            <p>Android telefonunuz üçün APK faylını hesabınızla yükləyin.</p>
+            <h2>{i18n.t('ui.pages.customer.customer_mobile_download_page.ecafe_mobil_tetbiqi_08e028')}</h2>
+            <p>{i18n.t('ui.pages.customer.customer_mobile_download_page.android_telefonunuz_ucun_apk_faylini_h_b30758')}</p>
           </div>
         </div>
 
-        {!state ? <p className="customer-mobile-status" role="status">Buraxılış yoxlanılır...</p> : null}
+        {!state ? <p className="customer-mobile-status" role="status">{i18n.t('ui.pages.customer.customer_mobile_download_page.buraxilis_yoxlanilir_5cddb4')}</p> : null}
         {state?.status === 'ready' ? (
           <div className="customer-mobile-release">
-            <span>Versiya <strong>{state.release?.version}</strong></span>
+            <span>{i18n.t('ui.pages.customer.customer_mobile_download_page.versiya_81b03c')} <strong>{state.release?.version}</strong></span>
             <span>{((state.release?.sizeBytes ?? 0) / 1024 / 1024).toFixed(1)} MB</span>
           </div>
         ) : null}
-        {state?.status === 'unavailable' ? <p className="customer-mobile-status" role="status">Android tətbiqinin yükləməsi hazırda mümkün deyil.</p> : null}
-        {state?.status === 'invalid' ? <p className="customer-mobile-status customer-mobile-error" role="alert">Buraxılış məlumatı uyğun gəlmir. Bir az sonra yenidən yoxlayın.</p> : null}
-        {state?.status === 'denied' ? <p className="customer-mobile-status customer-mobile-error" role="alert">Bu hesab üçün yükləmə icazəsi yoxdur. Müştəri hesabınızın aktiv olduğunu yoxlayın.</p> : null}
-        {state?.status === 'login' ? <p className="customer-mobile-status" role="alert">Sessiyanız başa çatıb. Yenidən daxil olun.</p> : null}
-        {state?.status === 'error' ? <p className="customer-mobile-status customer-mobile-error" role="alert">Buraxılış yoxlanılmadı. Bağlantınızı yoxlayıb yenidən cəhd edin.</p> : null}
+        {state?.status === 'unavailable' ? <p className="customer-mobile-status" role="status">{i18n.t('ui.pages.customer.customer_mobile_download_page.android_tetbiqinin_yuklemesi_hazirda_m_c68737')}</p> : null}
+        {state?.status === 'invalid' ? <p className="customer-mobile-status customer-mobile-error" role="alert">{i18n.t('ui.pages.customer.customer_mobile_download_page.buraxilis_melumati_uygun_gelmir_bir_az_110dd9')}</p> : null}
+        {state?.status === 'denied' ? <p className="customer-mobile-status customer-mobile-error" role="alert">{i18n.t('ui.pages.customer.customer_mobile_download_page.bu_hesab_ucun_yukleme_icazesi_yoxdur_m_e60899')}</p> : null}
+        {state?.status === 'login' ? <p className="customer-mobile-status" role="alert">{i18n.t('ui.pages.customer.customer_mobile_download_page.sessiyaniz_basa_catib_yeniden_daxil_ol_f2739e')}</p> : null}
+        {state?.status === 'error' ? <p className="customer-mobile-status customer-mobile-error" role="alert">{i18n.t('ui.pages.customer.customer_mobile_download_page.buraxilis_yoxlanilmadi_baglantinizi_yo_e01ac6')}</p> : null}
         {downloadError ? <p className="customer-mobile-status customer-mobile-error" role="alert">{downloadError}</p> : null}
 
         <div className="customer-mobile-actions">
           {state?.status === 'ready' ? (
             <button className="mobile-download-link" disabled={downloading} onClick={() => void download()} type="button">
               <Download size={17} aria-hidden="true" />
-              {downloading ? 'Yüklənir...' : 'APK-ni yüklə'}
+              {downloading ?i18n.t('ui.pages.customer.customer_mobile_download_page.yuklenir_e038b0') :i18n.t('ui.pages.customer.customer_mobile_download_page.apk_ni_yukle_6c5bf4')}
             </button>
           ) : null}
-          {state?.status === 'login' ? <Link className="mobile-download-link" to="/login">Daxil ol</Link> : null}
+          {state?.status === 'login' ? <Link className="mobile-download-link" to="/login">{i18n.t('ui.pages.customer.customer_mobile_download_page.daxil_ol_2e157a')}</Link> : null}
           {state && state.status !== 'login' ? (
-            <button className="customer-mobile-refresh" disabled={downloading} onClick={retry} type="button" title="Yenidən yoxla">
+            <button className="customer-mobile-refresh" disabled={downloading} onClick={retry} type="button" title={i18n.t('ui.pages.customer.customer_mobile_download_page.yeniden_yoxla_9c69a3')}>
               <RefreshCw size={17} aria-hidden="true" />
-              <span>Yenidən yoxla</span>
+              <span>{i18n.t('ui.pages.customer.customer_mobile_download_page.yeniden_yoxla_9c69a3')}</span>
             </button>
           ) : null}
         </div>

@@ -2,6 +2,8 @@ import { clearAuthTokens, getAccessToken, hasManualLogoutMarker, saveAuthTokens 
 import type { AuthTokens } from '../auth/tokenStorage'
 import { getActiveProfileContext } from '../auth/activeProfileStorage'
 import { endpoints } from './endpoints'
+import { getCurrentLanguage } from '../i18n/i18n'
+import { i18n } from '../i18n/i18n'
 
 export type ApiResult<T> = {
   success: boolean
@@ -97,6 +99,7 @@ async function sendApiRequest(url: string, init?: RequestOptions) {
   } = init ?? {}
   const token = getAccessToken()
   const headers = new Headers(requestInit.headers)
+  headers.set('Accept-Language', getCurrentLanguage())
   const isFormData = requestInit.body instanceof FormData
 
   if (!isFormData && !headers.has('Content-Type')) {
@@ -205,11 +208,12 @@ async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept-Language': getCurrentLanguage(),
       },
       credentials: 'include',
     })
   } catch {
-    throw new ApiError('Bağlantı kəsildi. Sessiyanı yoxlamaq mümkün olmadı.', 0)
+    throw new ApiError(i18n.t('ui.http.network'), 0)
   }
 
   if (response.status === 401 || response.status === 403) {
@@ -218,25 +222,25 @@ async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
   }
 
   if (!response.ok) {
-    throw new ApiError('Sessiya müvəqqəti yoxlanıla bilmədi. Yenidən cəhd edin.', response.status)
+    throw new ApiError(i18n.t('ui.http.refreshFailed'), response.status)
   }
 
   const payload = await response.json().catch(() => null)
   const result = normalizeApiResult<{ accessToken: string }>(payload, response.status, response.ok)
 
   if (!result.data?.accessToken) {
-    throw new ApiError('Sessiya cavabı natamamdır. Yenidən cəhd edin.', response.status)
+    throw new ApiError(i18n.t('ui.http.incompleteSession'), response.status)
   }
 
   saveAuthTokens(result.data)
   return result.data
 }
 
-export function normalizeCaughtApiError(error: unknown, fallbackMessage = 'Sorğu icra olunmadı.') {
+export function normalizeCaughtApiError(error: unknown, fallbackMessage = i18n.t('ui.http.requestFailed')) {
   if (error instanceof ApiError) {
     const details =
       error.details.length === 0 && error.statusCode >= 500 && error.traceId
-        ? [{ label: 'İz kodu', message: error.traceId }]
+        ? [{ label: i18n.t('ui.http.traceId'), message: error.traceId }]
         : error.details
 
     return {
@@ -278,7 +282,7 @@ function buildApiError(result: ApiResult<unknown>, statusCode: number, shouldNot
 
 function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, details: ApiErrorDetail[], authErrorMessage?: string) {
   if (details.length > 0) {
-    return 'Form məlumatlarında səhv var. Zəhmət olmasa işarələnmiş sahələri yoxlayın.'
+    return result.message?.trim() || i18n.t('ui.http.validation')
   }
 
   if (statusCode === 401 && authErrorMessage) {
@@ -286,7 +290,7 @@ function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, 
   }
 
   if (result.code) {
-    return translateErrorCode(result.code) || (result.message ? translateMessage(result.message) : statusMessage(statusCode))
+    return result.message?.trim() || translateErrorCode(result.code) || statusMessage(statusCode)
   }
 
   if (result.message) {
@@ -305,7 +309,7 @@ function extractErrorDetails(errors: unknown): ApiErrorDetail[] {
     return errors
       .map<ApiErrorDetail | null>((error) => {
         if (typeof error === 'string') {
-          return { message: translateMessage(error, 400) }
+          return { message: translateMessage(error) }
         }
 
         if (error && typeof error === 'object' && 'message' in error) {
@@ -313,7 +317,7 @@ function extractErrorDetails(errors: unknown): ApiErrorDetail[] {
           return {
             field: rawField || undefined,
             label: rawField ? fieldLabel(rawField) : undefined,
-            message: translateMessage(String((error as { message?: unknown }).message ?? ''), 400),
+            message: translateMessage(String((error as { message?: unknown }).message ?? '')),
           }
         }
 
@@ -331,7 +335,7 @@ function extractErrorDetails(errors: unknown): ApiErrorDetail[] {
         .map((message) => ({
           field,
           label: fieldLabel(field),
-          message: translateMessage(message, 400),
+          message: translateMessage(message),
         }))
     })
   }
@@ -359,6 +363,7 @@ function normalizeApiResult<T>(payload: unknown, statusCode: number, success: bo
 }
 
 function translateErrorCode(code: string) {
+  if (getCurrentLanguage() !== 'az') return undefined
   const normalized = code.trim()
   const messages: Record<string, string> = {
     ActiveStaffAssignmentNotFound: 'Aktiv əməkdaş tapılmadı.',
@@ -460,9 +465,10 @@ function fieldLabel(field: string) {
   return labels[normalized] ?? normalized
 }
 
-function translateMessage(message: string, statusCode?: number) {
+function translateMessage(message: string) {
   const normalized = message.trim()
   const lower = normalized.toLowerCase()
+  if (getCurrentLanguage() !== 'az') return normalized
   const messages: Record<string, string> = {
     'request failed with status 400': 'Məlumatları yoxlayın və yenidən cəhd edin.',
     'request failed with status 401': 'Sessiya bitib. Zəhmət olmasa yenidən daxil olun.',
@@ -506,7 +512,7 @@ function translateMessage(message: string, statusCode?: number) {
 
   const businessMessage = lower.replace(/^business rule violation[:\s-]*/i, '').trim()
   if (businessMessage && businessMessage !== lower) {
-    return translateMessage(businessMessage, statusCode)
+    return translateMessage(businessMessage)
   }
 
   if (lower.includes('email') && lower.includes('already')) {
@@ -529,23 +535,13 @@ function translateMessage(message: string, statusCode?: number) {
     return 'Bu restoran məlumatı artıq mövcuddur.'
   }
 
-  if (statusCode && statusCode >= 400) {
-    return statusMessage(statusCode)
-  }
-
   return normalized
 }
 
 function statusMessage(statusCode: number) {
-  if (statusCode === 400) return 'Məlumatları yoxlayın və yenidən cəhd edin.'
-  if (statusCode === 401) return 'Sessiya bitib. Zəhmət olmasa yenidən daxil olun.'
-  if (statusCode === 403) return 'Bu əməliyyatı icra etmək üçün icazəniz yoxdur.'
-  if (statusCode === 404) return 'Axtarılan məlumat tapılmadı.'
-  if (statusCode === 409) return 'Bu əməliyyat hazırda mümkün deyil. Məlumatları yeniləyib yenidən cəhd edin.'
-  if (statusCode === 413) return 'Fayl çox böyükdür. Maksimum icazə verilən ölçüdə fayl seçin.'
-  if (statusCode === 429) return 'Çox sayda cəhd edildi. Bir az sonra yenidən yoxlayın.'
-  if (statusCode >= 500) return 'Xidmət müvəqqəti əlçatan deyil. Bir az sonra yenidən cəhd edin.'
-  return `Sorğu icra olunmadı. Status: ${statusCode}`
+  const key = [400, 401, 403, 404, 409, 413, 429].includes(statusCode)
+    ? `ui.http.status${statusCode}` : statusCode >= 500 ? 'ui.http.status500' : 'ui.http.other'
+  return i18n.t(key, { statusCode })
 }
 
 function notifyAuthExpired(message?: string) {

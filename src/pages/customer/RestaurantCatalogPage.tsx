@@ -1,5 +1,7 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { CircleDollarSign, Clock, MapPin, Phone, Search, ShieldCheck, ShieldX, Star, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -16,6 +18,7 @@ import { getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 const defaultPageSize = 10
 
 export function RestaurantCatalogPage() {
+  useTranslation()
   const { user } = useAuth()
   const isCustomer = isInRole(user, [RoleIds.Customer])
   const [search, setSearch] = useState('')
@@ -48,14 +51,14 @@ export function RestaurantCatalogPage() {
 
   return (
     <main className="page restaurant-catalog-page">
-      <PageHeader title={isCustomer ? 'Restoran seç və rezervasiyaya başla' : 'Restoranlar'} />
+      <PageHeader title={isCustomer ?i18n.t('ui.pages.customer.restaurant_catalog_page.restoran_sec_ve_rezervasiyaya_basla_e5d257') :i18n.t('ui.pages.customer.restaurant_catalog_page.restoranlar_f1a146')} />
 
       <section className="catalog-toolbar">
         <label className="site-search catalog-search">
           <Search size={18} />
           <input
-            aria-label="Restoran axtar"
-            placeholder="Restoran, filial, məkan və ya menyu üzrə axtar..."
+            aria-label={i18n.t('ui.pages.customer.restaurant_catalog_page.restoran_axtar_d0fa67')}
+            placeholder={i18n.t('ui.pages.customer.restaurant_catalog_page.restoran_filial_mekan_ve_ya_menyu_uzre_fc3ba6')}
             type="search"
             value={search}
             onChange={(event) => {
@@ -67,11 +70,11 @@ export function RestaurantCatalogPage() {
       </section>
 
       <div className="catalog-results-count" aria-live="polite">
-        {isLoading ? 'Yüklənir...' : `${restaurantPage.totalCount} restoran`}
+        {isLoading ? i18n.t('ui.pages.customer.restaurant_catalog_page.yuklenir_e038b0') : i18n.t('ui.count.restaurants', { count: restaurantPage.totalCount })}
       </div>
 
-      {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
-      {!isLoading && restaurantPage.items.length === 0 ? <p className="online-only">Axtarışa uyğun restoran tapılmadı.</p> : null}
+      {isLoading ? <p className="online-only">{i18n.t('ui.pages.customer.restaurant_catalog_page.restoranlar_yuklenir_c633c2')}</p> : null}
+      {!isLoading && restaurantPage.items.length === 0 ? <p className="online-only">{i18n.t('ui.pages.customer.restaurant_catalog_page.axtarisa_uygun_restoran_tapilmadi_25197c')}</p> : null}
 
       <section className="restaurant-grid">
         {!isLoading ? restaurantPage.items.map((restaurant) => {
@@ -80,7 +83,7 @@ export function RestaurantCatalogPage() {
 
           return (
             <article className="restaurant-card" key={restaurant.id}>
-              <Link className="restaurant-card-media" to={profileUrl} aria-label={`${restaurant.name} restoranına bax`}>
+              <Link className="restaurant-card-media" to={profileUrl} aria-label={i18n.t('ui.restaurant.view', { name: restaurant.name })}>
                 <SafeImage src={restaurant.image} alt={restaurant.name} />
                 <div className="restaurant-card-overlay">
                   <div className="restaurant-overlay-badges">
@@ -91,16 +94,16 @@ export function RestaurantCatalogPage() {
                       </span>
                     ) : null}
                     {restaurant.depositAmount !== undefined && restaurant.depositAmount > 0 ? (
-                      <span className="restaurant-deposit-badge" title="Bu gün üçün depozit" aria-label={`Bu gün üçün ${restaurant.depositAmount.toFixed(2)} AZN depozit`}>
+                      <span className="restaurant-deposit-badge" title={i18n.t('ui.pages.customer.restaurant_catalog_page.bu_gun_ucun_depozit_8073c5')} aria-label={i18n.t('ui.restaurant.depositToday', { amount: restaurant.depositAmount.toFixed(2) })}>
                         <CircleDollarSign size={15} />
-                        Bu gün {restaurant.depositAmount.toFixed(2)} ₼
+                        {i18n.t('ui.pages.customer.restaurant_catalog_page.bu_gun_dfb2e7')} {restaurant.depositAmount.toFixed(2)} ₼
                       </span>
                     ) : null}
                   </div>
                   <span
-                    aria-label={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
+                    aria-label={restaurant.hasActiveContract ?i18n.t('ui.pages.customer.restaurant_catalog_page.aktiv_muqavile_31dcc9') :i18n.t('ui.pages.customer.restaurant_catalog_page.rezervasiya_baglidir_1cfb75')}
                     className={restaurant.hasActiveContract ? 'restaurant-availability active' : 'restaurant-availability blocked'}
-                    title={restaurant.hasActiveContract ? 'Aktiv müqavilə' : 'Rezervasiya bağlıdır'}
+                    title={restaurant.hasActiveContract ?i18n.t('ui.pages.customer.restaurant_catalog_page.aktiv_muqavile_31dcc9') :i18n.t('ui.pages.customer.restaurant_catalog_page.rezervasiya_baglidir_1cfb75')}
                   >
                     {restaurant.hasActiveContract ? <ShieldCheck size={16} /> : <ShieldX size={16} />}
                   </span>
@@ -122,7 +125,7 @@ export function RestaurantCatalogPage() {
                 <div className="restaurant-card-footer">
                   <span className={openState.isOpen ? 'restaurant-open-status open' : 'restaurant-open-status closed'}>
                     <Clock size={16} />
-                    <span>{openState.isOpen ? 'Hazırda açıq' : 'Hazırda bağlı'}</span>
+                    <span>{openState.isOpen ?i18n.t('ui.pages.customer.restaurant_catalog_page.hazirda_aciq_4e34ab') :i18n.t('ui.pages.customer.restaurant_catalog_page.hazirda_bagli_eeba8a')}</span>
                   </span>
                   <span className="restaurant-hours">
                     <Clock size={16} />
@@ -140,7 +143,7 @@ export function RestaurantCatalogPage() {
       </section>
 
       {!isLoading ? <PaginationControls
-        ariaLabel="Restoran səhifələmə"
+        ariaLabel={i18n.t('ui.pages.customer.restaurant_catalog_page.restoran_sehifeleme_01a408')}
         hasNextPage={restaurantPage.hasNextPage}
         hasPreviousPage={restaurantPage.hasPreviousPage}
         pageIndex={restaurantPage.pageIndex}
@@ -164,14 +167,14 @@ function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; 
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
-      <section className="map-dialog" role="dialog" aria-modal="true" aria-label={`${restaurant.name} xəritəsi`} onClick={(event) => event.stopPropagation()}>
+      <section className="map-dialog" role="dialog" aria-modal="true" aria-label={i18n.t('ui.restaurant.map', { name: restaurant.name })} onClick={(event) => event.stopPropagation()}>
         <header>
           <div>
-            <span className="eyebrow">Məkan</span>
+            <span className="eyebrow">{i18n.t('ui.pages.customer.restaurant_catalog_page.mekan_a979c9')}</span>
             <h2>{restaurant.name}</h2>
             <p>{restaurant.address}</p>
           </div>
-          <button aria-label="Xəritəni bağla" type="button" onClick={onClose}>
+          <button aria-label={i18n.t('ui.pages.customer.restaurant_catalog_page.xeriteni_bagla_f59478')} type="button" onClick={onClose}>
             <X size={20} />
           </button>
         </header>
@@ -179,7 +182,7 @@ function RestaurantMapDialog({ restaurant, onClose }: { restaurant: Restaurant; 
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           src={mapUrl}
-          title={`${restaurant.name} xəritəsi`}
+          title={i18n.t('ui.restaurant.map', { name: restaurant.name })}
         />
       </section>
     </div>

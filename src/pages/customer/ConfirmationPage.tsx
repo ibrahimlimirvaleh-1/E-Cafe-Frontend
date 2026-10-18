@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { Ban, CalendarDays, CheckCircle2, CircleAlert, Clock3, ReceiptText } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -130,32 +131,32 @@ export function ConfirmationPage() {
         <article className="success-panel reservation-confirmation-panel">
           <div className={`reservation-confirmation-icon is-${statusTone}`}><StatusIcon size={28} /></div>
           <div className="reservation-confirmation-heading">
-            <span className="section-eyebrow">REZERVASİYA DETALI</span>
-            <h1>{reservationId ? `Rezervasiya #${reservationId}` : 'Sifariş qeydə alındı'}</h1>
+            <span className="section-eyebrow">{i18n.t('ui.pages.customer.confirmation_page.rezervasiya_detali_332065')}</span>
+            <h1>{reservationId ? `Rezervasiya #${reservationId}` :i18n.t('ui.pages.customer.confirmation_page.sifaris_qeyde_alindi_dbf3c9')}</h1>
             {reservation ? <p>{reservation.restaurantName || 'Restoran rezervasiyası'}</p> : null}
           </div>
           {reservationPresentation ? <Badge tone={reservationPresentation.tone}>{reservationPresentation.label}</Badge> : null}
           <p>
             {reservationId
               ? reservationPresentation?.tone === 'success'
-                ? 'Rezervasiyanın statusu yeniləndi. Detalları və tarixçəni aşağıda görə bilərsiniz.'
-                : 'Rezervasiyanın statusunu və növbəti addımı aşağıda görə bilərsiniz.'
-              : 'Sifariş məlumatları restorana göndərildi.'}
+                ?i18n.t('ui.pages.customer.confirmation_page.rezervasiyanin_statusu_yenilendi_detal_c99af8')
+                :i18n.t('ui.pages.customer.confirmation_page.rezervasiyanin_statusunu_ve_novbeti_ad_9e40bf')
+              :i18n.t('ui.pages.customer.confirmation_page.sifaris_melumatlari_restorana_gonderil_bf3bf6')}
           </p>
-          {reservationId && isLoading ? <p className="online-only">Rezervasiya detalları yüklənir...</p> : null}
-          {reservationId && error ? <p className="reservation-availability-message danger">{hasData ? 'Son məlumat yenilənmədi. Yenidən yoxlanacaq.' : 'Rezervasiya detalları yüklənmədi.'}</p> : null}
+          {reservationId && isLoading ? <p className="online-only">{i18n.t('ui.pages.customer.confirmation_page.rezervasiya_detallari_yuklenir_7d166f')}</p> : null}
+          {reservationId && error ? <p className="reservation-availability-message danger">{hasData ?i18n.t('ui.pages.customer.confirmation_page.son_melumat_yenilenmedi_yeniden_yoxlan_fec2cf') :i18n.t('ui.pages.customer.confirmation_page.rezervasiya_detallari_yuklenmedi_f02787')}</p> : null}
           {reservation ? (
             <>
               <dl className="reservation-confirmation-details">
-                <div><dt>Tarix və saat</dt><dd>{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</dd></div>
-                <div><dt>Masa</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
-                <div><dt>Qonaq sayı</dt><dd>{reservation.peopleCount} nəfər</dd></div>
-                <div><dt>Status</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
-                {reservation.departureReason ? <div><dt>Ayrılma səbəbi</dt><dd>{getReservationDepartureReasonLabel(reservation.departureReason)}</dd></div> : null}
-                <div><dt>Depozit</dt><dd>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</dd></div>
-                {!reservation.expectedArrivalAt && !reservation.arrivedAt && isReservationConfirmed(reservation.status) ? <div><dt>Gəliş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</dd></div> : null}
-                {reservation.mustVacateAt ? <div><dt>Masanı təhvil vaxtı</dt><dd>{formatReservationDateTime(reservation.mustVacateAt, reservation.timeZone || undefined)}</dd></div> : null}
-                {reservation.holdExpiresAt ? <div><dt>Ödəniş üçün son vaxt</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
+                <div><dt>{i18n.t('ui.pages.customer.confirmation_page.tarix_ve_saat_d1a058')}</dt><dd>{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</dd></div>
+                <div><dt>{i18n.t('ui.pages.customer.confirmation_page.masa_058c4c')}</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
+                <div><dt>{i18n.t('ui.pages.customer.confirmation_page.qonaq_sayi_012aa3')}</dt><dd>{i18n.t('ui.count.guests', { count: reservation.peopleCount })}</dd></div>
+                <div><dt>{i18n.t('ui.pages.customer.confirmation_page.status_920e41')}</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
+                {reservation.departureReason ? <div><dt>{i18n.t('ui.pages.customer.confirmation_page.ayrilma_sebebi_cf5bda')}</dt><dd>{getReservationDepartureReasonLabel(reservation.departureReason)}</dd></div> : null}
+                <div><dt>{i18n.t('ui.pages.customer.confirmation_page.depozit_4a14b8')}</dt><dd>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` :i18n.t('ui.pages.customer.confirmation_page.teleb_olunmur_46f021')}</dd></div>
+                {!reservation.expectedArrivalAt && !reservation.arrivedAt && isReservationConfirmed(reservation.status) ? <div><dt>{i18n.t('ui.pages.customer.confirmation_page.gelis_ucun_son_vaxt_04c872')}</dt><dd>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</dd></div> : null}
+                {reservation.mustVacateAt ? <div><dt>{i18n.t('ui.pages.customer.confirmation_page.masani_tehvil_vaxti_4e00d4')}</dt><dd>{formatReservationDateTime(reservation.mustVacateAt, reservation.timeZone || undefined)}</dd></div> : null}
+                {reservation.holdExpiresAt ? <div><dt>{i18n.t('ui.pages.customer.confirmation_page.odenis_ucun_son_vaxt_81dc6d')}</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
               </dl>
 
               <ReservationWaitingSummary waiting={reservation.waiting} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone} viewer="customer" />
@@ -199,16 +200,16 @@ export function ConfirmationPage() {
 
         <aside className="reservation-confirmation-side">
           {reservation ? <ReservationHistoryTimeline items={history?.items || []} arrivedAt={history?.arrivedAt ?? reservation.arrivedAt} seatedAt={history?.seatedAt ?? reservation.seatedAt} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone || undefined} /> : null}
-          <ButtonLink to={reservation ? `/tracking/${reservation.id}` : '/reservations'}>Rezervasiyanı izlə</ButtonLink>
+          <ButtonLink to={reservation ? `/tracking/${reservation.id}` : '/reservations'}>{i18n.t('ui.pages.customer.confirmation_page.rezervasiyani_izle_829de4')}</ButtonLink>
         </aside>
       </div>
       <ReservationReasonDialog
-        confirmLabel="Rezervasiyanı ləğv et"
+        confirmLabel={i18n.t('ui.pages.customer.confirmation_page.rezervasiyani_legv_et_e4a3cc')}
         description={reservation?.hasConfirmedDeposit
           ? reservation.canCancelWithRefund && new Date(reservation.refundCancellationDeadlineAt || '').getTime() > cancelNow
             ? `İndi ləğv etsəniz depozitin tam geri ödənişini tələb edə bilərsiniz. Geri ödəniş üçün son ləğv vaxtı: ${formatReservationDateTime(reservation.refundCancellationDeadlineAt)}. Pul ayrıca geri ödəniş prosesi ilə qaytarılır.`
-            : 'Rezervasiya ləğv ediləcək və masa azad olacaq. Geri ödəniş üçün müddət bitdiyinə görə depozit qaytarılmayacaq.'
-          : 'Rezervasiya ləğv ediləcək və masa azad olacaq.'}
+            :i18n.t('ui.pages.customer.confirmation_page.rezervasiya_legv_edilecek_ve_masa_azad_902576')
+          :i18n.t('ui.pages.customer.confirmation_page.rezervasiya_legv_edilecek_ve_masa_azad_3d1fef')}
         error={cancelError}
         isOpen={isCancelDialogOpen}
         isSubmitting={isCancelling}
@@ -217,17 +218,17 @@ export function ConfirmationPage() {
           void cancelReservation(reason)
         }}
         showReason
-        title="Rezervasiyanı ləğv edirsiniz?"
+        title={i18n.t('ui.pages.customer.confirmation_page.rezervasiyani_legv_edirsiniz_a91268')}
       />
       {showDepositWaiverNotice ? (
         <div className="modal-backdrop reservation-action-backdrop" role="presentation">
           <section aria-labelledby="deposit-waiver-notice-title" aria-modal="true" className="reservation-action-dialog" role="dialog">
             <div className="reservation-action-dialog-body">
-              <h2 id="deposit-waiver-notice-title">Depozit tələbi ləğv edildi</h2>
-              <p>Restoran bu rezervasiya üçün depozitdən imtina etdi. Rezervasiyanız depozitsiz təsdiqlənib, ödəniş etməyinizə ehtiyac yoxdur.</p>
+              <h2 id="deposit-waiver-notice-title">{i18n.t('ui.pages.customer.confirmation_page.depozit_telebi_legv_edildi_37ba61')}</h2>
+              <p>{i18n.t('ui.pages.customer.confirmation_page.restoran_bu_rezervasiya_ucun_depozitde_424c75')}</p>
             </div>
             <footer className="reservation-action-dialog-actions">
-              <Button onClick={() => setShowDepositWaiverNotice(false)} type="button">Başa düşdüm</Button>
+              <Button onClick={() => setShowDepositWaiverNotice(false)} type="button">{i18n.t('ui.pages.customer.confirmation_page.basa_dusdum_4b99ad')}</Button>
             </footer>
           </section>
         </div>

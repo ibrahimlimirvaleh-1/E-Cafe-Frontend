@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { ArrowRight, CalendarDays, Clock3, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -96,9 +97,9 @@ export function RestaurantReservationsPage() {
   return (
     <main className="admin-page reservations-admin-page">
       <PageHeader
-        eyebrow="Restoran"
-        title="Rezervasiyalar"
-        description="Müştəri rezervasiyalarını statusuna görə idarə edin."
+        eyebrow={i18n.t('ui.pages.admin.restaurant_reservations_page.restoran_c4df56')}
+        title={i18n.t('ui.pages.admin.restaurant_reservations_page.rezervasiyalar_0fbba6')}
+        description={i18n.t('ui.pages.admin.restaurant_reservations_page.musteri_rezervasiyalarini_statusuna_go_d63642')}
       />
 
       {isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) ? <RestaurantSessionCloseReviewQueue restaurantId={restaurantId} userId={user?.userId || ''} reloadKey={reloadKey} /> : null}
@@ -106,22 +107,22 @@ export function RestaurantReservationsPage() {
       <section className="admin-panel reservation-admin-toolbar">
         <RestaurantSelectField
           emptyOption={null}
-          label="Restoran"
+          label={i18n.t('ui.pages.admin.restaurant_reservations_page.restoran_c4df56')}
           onChange={handleRestaurantChange}
           required
           restaurants={accessibleRestaurants}
           value={restaurantId}
         />
         <label className="ui-field reservation-table-filter" htmlFor="reservation-table-filter">
-          <span>Masa</span>
+          <span>{i18n.t('ui.pages.admin.restaurant_reservations_page.masa_058c4c')}</span>
           <select
-            aria-label="Masa"
+            aria-label={i18n.t('ui.pages.admin.restaurant_reservations_page.masa_058c4c')}
             disabled={!restaurantId || tablesLoading || Boolean(tablesError)}
             id="reservation-table-filter"
             onChange={(event) => handleTableChange(event.target.value)}
             value={selectedTableId}
           >
-            <option value="">{tablesLoading ? 'Masalar yüklənir...' : 'Bütün masalar'}</option>
+            <option value="">{tablesLoading ?i18n.t('ui.pages.admin.restaurant_reservations_page.masalar_yuklenir_fa9b85') :i18n.t('ui.pages.admin.restaurant_reservations_page.butun_masalar_2d0a21')}</option>
             {availableTables.map((table) => (
               <option key={table.id} value={table.id}>{table.name || `Masa-${table.number}`}</option>
             ))}
@@ -130,33 +131,33 @@ export function RestaurantReservationsPage() {
         <ReservationDateFilter value={selectedDate} onChange={handleDateChange} />
       </section>
 
-      <div className="reservation-waiting-filter" role="group" aria-label="Rezervasiya görünüşü">
-        <button aria-pressed={!waitingOnly} className={!waitingOnly ? 'is-active' : ''} onClick={() => { setWaitingOnly(false); setPageNumber(1) }} type="button">Hamısı</button>
-        <button aria-pressed={waitingOnly} className={waitingOnly ? 'is-active' : ''} onClick={() => { setWaitingOnly(true); setSelectedDate(''); setPageNumber(1) }} type="button">Gəlişi yoxlanacaq</button>
+      <div className="reservation-waiting-filter" role="group" aria-label={i18n.t('ui.pages.admin.restaurant_reservations_page.rezervasiya_gorunusu_6a9376')}>
+        <button aria-pressed={!waitingOnly} className={!waitingOnly ? 'is-active' : ''} onClick={() => { setWaitingOnly(false); setPageNumber(1) }} type="button">{i18n.t('ui.pages.admin.restaurant_reservations_page.hamisi_fba8f8')}</button>
+        <button aria-pressed={waitingOnly} className={waitingOnly ? 'is-active' : ''} onClick={() => { setWaitingOnly(true); setSelectedDate(''); setPageNumber(1) }} type="button">{i18n.t('ui.pages.admin.restaurant_reservations_page.gelisi_yoxlanacaq_ef025f')}</button>
       </div>
 
-      {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>Rezervasiyaları görmək üçün restoran seçin.</StatusMessage> : null}
-      {tablesError ? <StatusMessage tone="danger" autoHideMs={false}>Masalar yüklənmədi: {tablesError}</StatusMessage> : null}
+      {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>{i18n.t('ui.pages.admin.restaurant_reservations_page.rezervasiyalari_gormek_ucun_restoran_s_29c23a')}</StatusMessage> : null}
+      {tablesError ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.pages.admin.restaurant_reservations_page.masalar_yuklenmedi_38b3f8')} {tablesError}</StatusMessage> : null}
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
-      {isLoading ? <p className="online-only">Rezervasiyalar yüklənir...</p> : null}
+      {isLoading ? <p className="online-only">{i18n.t('ui.pages.admin.restaurant_reservations_page.rezervasiyalar_yuklenir_248f13')}</p> : null}
 
       {!isLoading && (!error || hasData) && data.items.length === 0 ? (
         <section className="reservation-empty-state reservation-empty-state-admin">
           <CalendarDays size={28} />
-          <h2>{waitingOnly ? 'Yoxlanacaq gəliş yoxdur' : selectedDate || selectedTableId ? 'Seçilən filtrə uyğun rezervasiya yoxdur' : 'Rezervasiya yoxdur'}</h2>
-          <p>{waitingOnly ? 'Hazırda gəlib masaya əyləşməmiş qonaq tapılmadı.' : selectedDate || selectedTableId ? 'Tarixi və ya masanı dəyişərək yenidən baxın.' : 'Bu restoran üçün yeni rezervasiya yarandıqda burada görünəcək.'}</p>
+          <h2>{waitingOnly ?i18n.t('ui.pages.admin.restaurant_reservations_page.yoxlanacaq_gelis_yoxdur_12151f') : selectedDate || selectedTableId ?i18n.t('ui.pages.admin.restaurant_reservations_page.secilen_filtre_uygun_rezervasiya_yoxdu_9c04d6') :i18n.t('ui.pages.admin.restaurant_reservations_page.rezervasiya_yoxdur_07264e')}</h2>
+          <p>{waitingOnly ?i18n.t('ui.pages.admin.restaurant_reservations_page.hazirda_gelib_masaya_eylesmemis_qonaq__ecd33d') : selectedDate || selectedTableId ?i18n.t('ui.pages.admin.restaurant_reservations_page.tarixi_ve_ya_masani_deyiserek_yeniden__bbb86c') :i18n.t('ui.pages.admin.restaurant_reservations_page.bu_restoran_ucun_yeni_rezervasiya_yara_18f5db')}</p>
         </section>
       ) : null}
 
       {!isLoading && (!error || hasData) && restaurantId && data.items.length > 0 ? (
         <>
-          <section className="admin-reservation-list" aria-label="Restoran rezervasiyaları">
+          <section className="admin-reservation-list" aria-label={i18n.t('ui.pages.admin.restaurant_reservations_page.restoran_rezervasiyalari_20be39')}>
             <div className="admin-reservation-list-header">
               <div>
-                <span className="section-eyebrow">SİYAHI</span>
-                <strong>{data.totalCount} rezervasiya</strong>
+                <span className="section-eyebrow">{i18n.t('ui.pages.admin.restaurant_reservations_page.siyahi_a471b0')}</span>
+                <strong>{i18n.t('ui.count.reservations', { count: data.totalCount })}</strong>
               </div>
-              <span>Səhifə {data.pageIndex} / {data.totalPages}</span>
+              <span>{i18n.t('ui.pages.admin.restaurant_reservations_page.sehife_6981a2')} {data.pageIndex} / {data.totalPages}</span>
             </div>
             {data.items.map((reservation) => {
               const presentation = getReservationStatusPresentation(reservation.status)
@@ -164,21 +165,21 @@ export function RestaurantReservationsPage() {
               return (
                 <article className="admin-reservation-row" key={reservation.id}>
                   <div className="admin-reservation-row-main">
-                    <span className="reservation-card-kicker">Rezervasiya #{reservation.id}</span>
+                    <span className="reservation-card-kicker">{i18n.t('ui.pages.admin.restaurant_reservations_page.rezervasiya_0a8e06')}{reservation.id}</span>
                     <h2>{reservation.customerName || 'Müştəri'}</h2>
                     <span className="admin-reservation-secondary">{reservation.restaurantName || 'Restoran'} · {reservation.tableName || `Masa ${reservation.tableId}`}</span>
-                    {reservation.requiresSessionCloseReview ? <span className="admin-reservation-waiting is-review">Bağlanması yoxlanmalıdır</span> : null}
-                    {reservation.requiresReceptionReview ? <span className="admin-reservation-waiting is-review">Nəticə yoxlanmalıdır</span> : reservation.waiting ? <span className={`admin-reservation-waiting${reservation.waiting.isOverdue ? ' is-overdue' : ''}`}>Masa gözləyir · {reservation.waiting.waitingMinutes} dəq gözləmə · {reservation.waiting.serviceDelayMinutes} dəq servis gecikməsi</span> : null}
+                    {reservation.requiresSessionCloseReview ? <span className="admin-reservation-waiting is-review">{i18n.t('ui.pages.admin.restaurant_reservations_page.baglanmasi_yoxlanmalidir_87b96f')}</span> : null}
+                    {reservation.requiresReceptionReview ? <span className="admin-reservation-waiting is-review">{i18n.t('ui.pages.admin.restaurant_reservations_page.netice_yoxlanmalidir_af3e9d')}</span> : reservation.waiting ? <span className={`admin-reservation-waiting${reservation.waiting.isOverdue ? ' is-overdue' : ''}`}>{i18n.t('ui.pages.admin.restaurant_reservations_page.masa_gozleyir_3166e1')} {reservation.waiting.waitingMinutes} {i18n.t('ui.pages.admin.restaurant_reservations_page.deq_gozleme_2b0cbd')} {reservation.waiting.serviceDelayMinutes} {i18n.t('ui.pages.admin.restaurant_reservations_page.deq_servis_gecikmesi_48dd32')}</span> : null}
                   </div>
                   <div className="admin-reservation-row-meta">
                     <span><CalendarDays size={16} /><b>{formatReservationDateTime(reservation.reservedAt)}</b></span>
-                    <span><Users size={16} />{reservation.peopleCount} nəfər</span>
-                    <span><Clock3 size={16} />{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN depozit` : 'Depozitsiz'}</span>
+                    <span><Users size={16} />{i18n.t('ui.count.guests', { count: reservation.peopleCount })}</span>
+                    <span><Clock3 size={16} />{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN depozit` :i18n.t('ui.pages.admin.restaurant_reservations_page.depozitsiz_db0e7a')}</span>
                   </div>
                   <div className="admin-reservation-row-action">
                     <Badge tone={presentation.tone}>{presentation.label}</Badge>
                     <ButtonLink variant="secondary" to={`/admin/reservations/${reservation.id}?restaurantId=${restaurantId}`}>
-                      Detal <ArrowRight size={16} />
+                      {i18n.t('ui.pages.admin.restaurant_reservations_page.detal_409b6a')} <ArrowRight size={16} />
                     </ButtonLink>
                   </div>
                 </article>
@@ -186,7 +187,7 @@ export function RestaurantReservationsPage() {
             })}
           </section>
           <PaginationControls
-            ariaLabel="Rezervasiyalar səhifələməsi"
+            ariaLabel={i18n.t('ui.pages.admin.restaurant_reservations_page.rezervasiyalar_sehifelemesi_bf49c2')}
             hasNextPage={data.hasNextPage}
             hasPreviousPage={data.hasPreviousPage}
             pageIndex={data.pageIndex}

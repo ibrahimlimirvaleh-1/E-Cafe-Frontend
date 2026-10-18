@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { CalendarClock, CheckCircle2, Clock, Table2, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
@@ -89,8 +90,8 @@ export function ReservationTimePage() {
     <main className="page reservation-page">
       <ReservationStepper activeStep={1} />
       <PageHeader
-        eyebrow="Rezervasiya"
-        title="Gəliş vaxtını seç"
+        eyebrow={i18n.t('ui.pages.customer.reservation_time_page.rezervasiya_9cf147')}
+        title={i18n.t('ui.pages.customer.reservation_time_page.gelis_vaxtini_sec_60412f')}
       />
 
       <section className="reservation-time-panel">
@@ -99,29 +100,29 @@ export function ReservationTimePage() {
             <CalendarClock size={22} />
           </div>
           <div>
-            <h2>Rezervasiya detallarını daxil edin</h2>
+            <h2>{i18n.t('ui.pages.customer.reservation_time_page.rezervasiya_detallarini_daxil_edin_a55bcd')}</h2>
           </div>
         </div>
 
         <form className="reservation-time-form" onSubmit={handleSubmit}>
           <label className="reservation-field">
-            <span>Tarix</span>
+            <span>{i18n.t('ui.pages.customer.reservation_time_page.tarix_2dc57a')}</span>
             <LocalizedDateInput min={toDateInputValue(new Date())} onChange={(event) => setDate(event.target.value)} value={date} />
           </label>
           <label className="reservation-field">
-            <span>Gəliş saatı</span>
-            <div className="reservation-time-input" role="group" aria-label="Gəliş saatı">
-              <select aria-label="Saat" onChange={(event) => setTime(`${event.target.value}:${minutes}`)} value={hours}>
+            <span>{i18n.t('ui.pages.customer.reservation_time_page.gelis_saati_a2cc3f')}</span>
+            <div className="reservation-time-input" role="group" aria-label={i18n.t('ui.pages.customer.reservation_time_page.gelis_saati_a2cc3f')}>
+              <select aria-label={i18n.t('ui.pages.customer.reservation_time_page.saat_6bc5a9')} onChange={(event) => setTime(`${event.target.value}:${minutes}`)} value={hours}>
                 {hourOptions.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
               </select>
               <b>:</b>
-              <select aria-label="Dəqiqə" onChange={(event) => setTime(`${hours}:${event.target.value}`)} value={minutes}>
+              <select aria-label={i18n.t('ui.pages.customer.reservation_time_page.deqiqe_349901')} onChange={(event) => setTime(`${hours}:${event.target.value}`)} value={minutes}>
                 {minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}
               </select>
             </div>
           </label>
           <label className="reservation-field">
-            <span>Qonaq sayı</span>
+            <span>{i18n.t('ui.pages.customer.reservation_time_page.qonaq_sayi_012aa3')}</span>
             <input
               min="1"
               max="100"
@@ -136,18 +137,18 @@ export function ReservationTimePage() {
             type="submit"
           >
             <Table2 size={18} />
-            {isChecking ? 'Yoxlanılır...' : 'Boş masa yoxla'}
+            {isChecking ?i18n.t('ui.pages.customer.reservation_time_page.yoxlanilir_b497d3') :i18n.t('ui.pages.customer.reservation_time_page.bos_masa_yoxla_d81d5f')}
           </Button>
         </form>
 
         <div className="reservation-time-preview">
           <div className="reservation-preview-label">
-            <span>Seçiminiz</span>
+            <span>{i18n.t('ui.pages.customer.reservation_time_page.seciminiz_776ec5')}</span>
             <CheckCircle2 size={18} />
           </div>
           <div>
             <strong><CalendarClock size={18} /> {formatReservedAt(reservedAt)}</strong>
-            <strong><Users size={18} /> {peopleCount} nəfər</strong>
+            <strong><Users size={18} /> {i18n.t('ui.count.guests', { count: peopleCount })}</strong>
           </div>
         </div>
 
@@ -169,9 +170,7 @@ export function ReservationTimePage() {
           </div>
         ) : null}
 
-        <Link className="reservation-secondary-link" to={`/restaurants/${restaurantId}`}>
-          Restoran profilinə qayıt
-        </Link>
+        <Link className="reservation-secondary-link" to={`/restaurants/${restaurantId}`}>{i18n.t('ui.pages.customer.reservation_time_page.restoran_profiline_qayit_7f2a2c')}</Link>
       </section>
     </main>
   )

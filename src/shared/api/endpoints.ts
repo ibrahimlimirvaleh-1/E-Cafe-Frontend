@@ -1,6 +1,14 @@
 export type KitchenProgressAction = 'accept' | 'start' | 'ready'
 
 export const endpoints = {
+  localization: {
+    dictionary: (language: string) => `/localization/dictionaries/${language}`,
+    preference: '/localization/preference',
+    draft: '/admin/localization/draft',
+    publish: '/admin/localization/publish',
+    releases: '/admin/localization/releases',
+    rollback: (releaseId: number) => `/admin/localization/releases/${releaseId}/rollback`,
+  },
   mobileApp: {
     customerRelease: '/mobile/customer/release',
     customerDownload: '/mobile/customer/download',

@@ -1,4 +1,6 @@
+import { i18n } from '../shared/i18n/i18n'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes, useParams, useSearchParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { RequireAuth } from '../shared/auth/RequireAuth'
@@ -28,6 +30,7 @@ import { RestaurantReservationsPage } from '../pages/admin/RestaurantReservation
 import { RestaurantEditPage } from '../pages/admin/RestaurantEditPage'
 import { RestaurantCreatePage, RestaurantManagementPage } from '../pages/admin/RestaurantManagementPage'
 import { OutboxPage } from '../pages/admin/OutboxPage'
+import { LocalizationPage } from '../pages/admin/LocalizationPage'
 import { StaffCreatePage, StaffManagementPage } from '../pages/admin/StaffManagementPage'
 import { TableCreatePage, TablesManagementPage } from '../pages/admin/TablesManagementPage'
 import { AuthPage } from '../pages/auth/AuthPage'
@@ -108,6 +111,7 @@ function AdminModuleAccessGuard({ moduleKey, children }: { moduleKey: keyof type
 }
 
 export function AppRouter() {
+  useTranslation()
   return (
     <Routes>
       <Route element={<SiteShell />}>
@@ -170,6 +174,7 @@ export function AppRouter() {
         }
       >
         <Route index element={<AdminDashboardEntry />} />
+        <Route path="localization" element={<RequireAuth allowedRoleIds={[RoleIds.PlatformAdmin]}><LocalizationPage /></RequireAuth>} />
         <Route path="contracts">
           <Route index element={<AdminProtected moduleKey="contracts"><ContractListPage /></AdminProtected>} />
           <Route path="new" element={<AdminProtected moduleKey="contracts"><ContractFormPage /></AdminProtected>} />
@@ -244,7 +249,7 @@ export function AppRouter() {
         path="kitchen"
         element={
           <RequireAuth allowedRoleIds={[RoleIds.Kitchen]}>
-            <StaffShell title="Mətbəx paneli" variant="kitchen" />
+            <StaffShell title={i18n.t('ui.app.router.metbex_paneli_164d9c')} variant="kitchen" />
           </RequireAuth>
         }
       >
@@ -263,7 +268,7 @@ export function AppRouter() {
         path="waiter"
         element={
           <RequireAuth allowedRoleIds={[RoleIds.Waiter]}>
-            <StaffShell title="Ofisiant paneli" variant="waiter" />
+            <StaffShell title={i18n.t('ui.app.router.ofisiant_paneli_f22d17')} variant="waiter" />
           </RequireAuth>
         }
       >

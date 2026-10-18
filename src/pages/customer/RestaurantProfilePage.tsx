@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { BookOpen, Clock, MapPin, Phone, Star, Table2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
@@ -43,7 +44,7 @@ export function RestaurantProfilePage() {
   if (!restaurant) {
     return (
       <main className="page">
-        <p className="online-only">Restoran profili yüklənir...</p>
+        <p className="online-only">{i18n.t('ui.pages.customer.restaurant_profile_page.restoran_profili_yuklenir_c50c4e')}</p>
       </main>
     )
   }
@@ -55,13 +56,13 @@ export function RestaurantProfilePage() {
       <section className="profile-layout">
         <SafeImage src={restaurant.image} alt={restaurant.name} />
         <article className="profile-panel">
-          <span className="eyebrow">Restoran profili</span>
+          <span className="eyebrow">{i18n.t('ui.pages.customer.restaurant_profile_page.restoran_profili_76281b')}</span>
           <h1>{restaurant.name}</h1>
           <p>{restaurant.cuisine}</p>
           <div className="profile-facts">
             <span>
               <Star size={18} fill="currentColor" />
-              {restaurant.rating} reytinq
+              {restaurant.rating} {i18n.t('ui.pages.customer.restaurant_profile_page.reytinq_ad3719')}
             </span>
             <span>
               <MapPin size={18} />
@@ -84,17 +85,15 @@ export function RestaurantProfilePage() {
           <ContractGuardNotice active={restaurant.hasActiveContract} />
           <div className="action-row profile-actions">
             {isCustomer ? (
-              <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve${reservationDate ? `?reservationDate=${encodeURIComponent(reservationDate)}` : ''}`}>
-                Rezervasiyaya başla
-              </Link>
+              <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve${reservationDate ? `?reservationDate=${encodeURIComponent(reservationDate)}` : ''}`}>{i18n.t('ui.pages.customer.restaurant_profile_page.rezervasiyaya_basla_64753c')}</Link>
             ) : null}
             <Button variant={activePanel === 'tables' ? 'primary' : 'secondary'} type="button" onClick={() => setActivePanel('tables')}>
               <Table2 size={18} />
-              Stollar
+              {i18n.t('ui.pages.customer.restaurant_profile_page.stollar_7880ee')}
             </Button>
             <Button variant={activePanel === 'menu' ? 'primary' : 'secondary'} type="button" onClick={() => setActivePanel('menu')}>
               <BookOpen size={18} />
-              Menyu
+              {i18n.t('ui.pages.customer.restaurant_profile_page.menyu_da3241')}
             </Button>
           </div>
         </article>
@@ -104,18 +103,18 @@ export function RestaurantProfilePage() {
         {activePanel === 'tables' ? (
           <>
             <div className="section-heading">
-              <span className="eyebrow">Stollar</span>
-              <h2>Stollar</h2>
+              <span className="eyebrow">{i18n.t('ui.pages.customer.restaurant_profile_page.stollar_7880ee')}</span>
+              <h2>{i18n.t('ui.pages.customer.restaurant_profile_page.stollar_7880ee')}</h2>
             </div>
-            {tablesLoading ? <p className="online-only">Stollar yüklənir...</p> : null}
-            {!tablesLoading && tables.length === 0 ? <p className="online-only">Bu restoran üçün stol tapılmadı.</p> : null}
+            {tablesLoading ? <p className="online-only">{i18n.t('ui.pages.customer.restaurant_profile_page.stollar_yuklenir_c52fd0')}</p> : null}
+            {!tablesLoading && tables.length === 0 ? <p className="online-only">{i18n.t('ui.pages.customer.restaurant_profile_page.bu_restoran_ucun_stol_tapilmadi_e9a52d')}</p> : null}
             <div className="choice-grid public-profile-grid">
               {tables.map((table) => (
                 <article className="choice-card" key={table.id}>
                   <Table2 size={26} />
                   <strong>{table.name || `Masa ${table.number}`}</strong>
                   <span>{table.name && table.number ? `Masa ${table.number} · ${table.capacity} nəfərlik` : `${table.capacity} nəfərlik stol`}</span>
-                  <small>{table.status === 'Available' ? 'Boşdur' : table.status}</small>
+                  <small>{table.status === 'Available' ?i18n.t('ui.pages.customer.restaurant_profile_page.bosdur_23162a') : table.status}</small>
                 </article>
               ))}
             </div>
@@ -125,14 +124,14 @@ export function RestaurantProfilePage() {
         {activePanel === 'menu' ? (
           <>
             <div className="section-heading">
-              <span className="eyebrow">Menyu</span>
-              <h2>Menyu</h2>
+              <span className="eyebrow">{i18n.t('ui.pages.customer.restaurant_profile_page.menyu_da3241')}</span>
+              <h2>{i18n.t('ui.pages.customer.restaurant_profile_page.menyu_da3241')}</h2>
             </div>
-            {menuLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
-            {!menuLoading && menuData.items.length === 0 ? <p className="online-only">Bu restoran üçün menyu tapılmadı.</p> : null}
+            {menuLoading ? <p className="online-only">{i18n.t('ui.pages.customer.restaurant_profile_page.menyu_yuklenir_b8bb64')}</p> : null}
+            {!menuLoading && menuData.items.length === 0 ? <p className="online-only">{i18n.t('ui.pages.customer.restaurant_profile_page.bu_restoran_ucun_menyu_tapilmadi_468b62')}</p> : null}
             {menuItemsByCategory.length > 0 ? (
               <div className="public-menu-board">
-                <div className="menu-category-tabs" aria-label="Menyu kateqoriyaları">
+                <div className="menu-category-tabs" aria-label={i18n.t('ui.pages.customer.restaurant_profile_page.menyu_kateqoriyalari_e23076')}>
                   {menuItemsByCategory.map(({ category, items }) => (
                     <button
                       className={category.id === selectedCategory?.category.id ? 'active' : ''}
@@ -141,7 +140,7 @@ export function RestaurantProfilePage() {
                       type="button"
                     >
                       <strong>{category.name}</strong>
-                      <small>{items.length} yemək</small>
+                      <small>{i18n.t('ui.count.dishes', { count: items.length })}</small>
                     </button>
                   ))}
                 </div>
@@ -153,12 +152,12 @@ export function RestaurantProfilePage() {
                         <strong>{item.name}</strong>
                         <small>{item.description || 'Tərkib qeyd edilməyib'}</small>
                       </div>
-                      <span>{item.salesCount ?? 0} satış</span>
+                      <span>{i18n.t('ui.count.sales', { count: item.salesCount ?? 0 })}</span>
                       <b>{item.price.toFixed(2)} ₼</b>
                     </article>
                   ))}
                   {selectedCategory && selectedCategory.items.length === 0 ? (
-                    <p className="online-only">Bu kateqoriyada yemək yoxdur.</p>
+                    <p className="online-only">{i18n.t('ui.pages.customer.restaurant_profile_page.bu_kateqoriyada_yemek_yoxdur_05d38c')}</p>
                   ) : null}
                 </div>
               </div>

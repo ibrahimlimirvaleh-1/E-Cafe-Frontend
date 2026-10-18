@@ -1,0 +1,4 @@
+.language-switcher { display: inline-flex; align-items: center; gap: 4px; min-width: 68px; height: 40px; padding: 0 8px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface); color: var(--on-surface-variant); }
+.language-switcher:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+.language-switcher select { width: 38px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--on-surface); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+@media (max-width: 420px) { .language-switcher { min-width: 56px; padding: 0 5px; } .language-switcher svg { display: none; } }

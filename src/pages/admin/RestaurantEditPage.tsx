@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { AlertTriangle, CheckCircle2, MapPin } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -219,14 +220,14 @@ export function RestaurantEditPage() {
   if (isLoading || !restaurant) {
     return (
       <main className="admin-page narrow">
-        <p className="online-only">Restoran məlumatları yüklənir...</p>
+        <p className="online-only">{i18n.t('ui.pages.admin.restaurant_edit_page.restoran_melumatlari_yuklenir_b08a45')}</p>
       </main>
     )
   }
 
   return (
     <main className="admin-page narrow">
-      <PageHeader eyebrow="Restoran redaktəsi" title={restaurant.name} />
+      <PageHeader eyebrow={i18n.t('ui.pages.admin.restaurant_edit_page.restoran_redaktesi_96b05c')} title={restaurant.name} />
 
       {canEditRestrictedSettings ? <RestaurantMobileModuleSection key={restaurantId} restaurantId={restaurantId} /> : null}
 
@@ -234,17 +235,17 @@ export function RestaurantEditPage() {
         <div className="form-grid two">
           <div className="location-lookup-field">
             <TextField
-              label="Məkan"
+              label={i18n.t('ui.pages.admin.restaurant_edit_page.mekan_a979c9')}
               required
               value={form.location}
               onChange={(event) => handleLocationChange(event.target.value)}
             />
             <Button disabled={isGeocoding || !form.location.trim()} type="button" variant="secondary" onClick={handleGeocode}>
               <MapPin size={17} />
-              {isGeocoding ? 'Axtarılır...' : 'Xəritədə təsdiqlə'}
+              {isGeocoding ?i18n.t('ui.pages.admin.restaurant_edit_page.axtarilir_119f6d') :i18n.t('ui.pages.admin.restaurant_edit_page.xeritede_tesdiqle_faba3c')}
             </Button>
             {locationResults.length > 0 ? (
-              <div className="location-results" role="listbox" aria-label="Xəritə nəticələri">
+              <div className="location-results" role="listbox" aria-label={i18n.t('ui.pages.admin.restaurant_edit_page.xerite_neticeleri_130010')}>
                 {locationResults.map((result) => (
                   <button
                     key={`${result.placeId || result.displayName}-${result.latitude}-${result.longitude}`}
@@ -260,28 +261,28 @@ export function RestaurantEditPage() {
             {form.geocodedAddress ? (
               <small className="field-hint selected-location-hint">
                 <CheckCircle2 size={14} />
-                Seçilmiş məkan: {form.geocodedAddress}
+                {i18n.t('ui.pages.admin.restaurant_edit_page.secilmis_mekan_2497bc')} {form.geocodedAddress}
               </small>
             ) : form.location.trim() ? (
               <small className="field-hint unverified-location-hint">
                 <AlertTriangle size={14} />
-                Ünvan xəritədə təsdiqlənməyib. Restoran saxlanıla bilər, public xəritə ünvanla açılacaq, amma pin dəqiq olmaya bilər.
+                {i18n.t('ui.pages.admin.restaurant_edit_page.unvan_xeritede_tesdiqlenmeyib_restoran_3d258f')}
               </small>
             ) : null}
           </div>
-          <TextField label="Filial adı" required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
+          <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.filial_adi_6e2940')} required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
         </div>
         <div className="form-grid two">
-          <PhoneField label="Telefon" required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
+          <PhoneField label={i18n.t('ui.pages.admin.restaurant_edit_page.telefon_fa6906')} required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
         </div>
         <div>
-          <h2 className="section-title">Hazırkı iş saatları</h2>
+          <h2 className="section-title">{i18n.t('ui.pages.admin.restaurant_edit_page.hazirki_is_saatlari_c10438')}</h2>
           <WorkingHoursList workingHours={restaurant.workingHours} />
         </div>
         {canEditRestrictedSettings ? (
           <>
-            <SelectField label="Restoran qrupu" value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}>
-              <option value="">Yeni qrup yarat</option>
+            <SelectField label={i18n.t('ui.pages.admin.restaurant_edit_page.restoran_qrupu_941ef2')} value={form.restaurantGroupId} onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}>
+              <option value="">{i18n.t('ui.pages.admin.restaurant_edit_page.yeni_qrup_yarat_288d2d')}</option>
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}
@@ -290,10 +291,10 @@ export function RestaurantEditPage() {
             </SelectField>
             {!form.restaurantGroupId ? (
               <div className="form-grid two">
-                <TextField label="Yeni qrup adı" required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
-                <TextField label="Yeni qrup legal adı" value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
+                <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.yeni_qrup_adi_88629a')} required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
+                <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.yeni_qrup_legal_adi_89313d')} value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
                 <TextField
-                  label="Qrup əlaqə emaili"
+                  label={i18n.t('ui.pages.admin.restaurant_edit_page.qrup_elaqe_emaili_dac066')}
                   required
                   type="email"
                   value={form.restaurantGroupEmail}
@@ -305,28 +306,28 @@ export function RestaurantEditPage() {
         ) : null}
         <div className="form-grid two">
           {canEditRestrictedSettings ? (
-            <TextField label="Servis faizi" min={0} required step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.servis_faizi_176e69')} min={0} required step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
           ) : null}
         </div>
         <div className="form-grid two">
-          <TextField label="Ləğv pəncərəsi dəqiqə" min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
+          <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.legv_penceresi_deqiqe_d410e0')} min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
           {canEditRestrictedSettings ? (
-            <TextField label="Personal hesablaşma günü" min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.personal_hesablasma_gunu_372e83')} min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
           ) : null}
         </div>
         <div className="form-grid two">
-          <TextField label="Növbəti rezervasiyadan əvvəl qoruma müddəti (dəqiqə)" min={15} max={180} required type="number" value={form.reservationPreBlockMinutes} onChange={(event) => setForm({ ...form, reservationPreBlockMinutes: event.target.value })} />
-          <TextField label="Masa hazırlıq bufferi dəqiqə" min={0} max={120} required type="number" value={form.tableTurnoverBufferMinutes} onChange={(event) => setForm({ ...form, tableTurnoverBufferMinutes: event.target.value })} />
+          <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.novbeti_rezervasiyadan_evvel_qoruma_mu_82a761')} min={15} max={180} required type="number" value={form.reservationPreBlockMinutes} onChange={(event) => setForm({ ...form, reservationPreBlockMinutes: event.target.value })} />
+          <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.masa_hazirliq_bufferi_deqiqe_be3c13')} min={0} max={120} required type="number" value={form.tableTurnoverBufferMinutes} onChange={(event) => setForm({ ...form, tableTurnoverBufferMinutes: event.target.value })} />
         </div>
         <div className="form-grid two">
-          <TextField label="No-show gözləmə müddəti dəqiqə" min={0} max={120} required type="number" value={form.noShowGraceMinutes} onChange={(event) => setForm({ ...form, noShowGraceMinutes: event.target.value })} />
-          <TextField label="Ödəniş üçün hold müddəti dəqiqə" min={1} max={120} required type="number" value={form.paymentHoldMinutes} onChange={(event) => setForm({ ...form, paymentHoldMinutes: event.target.value })} />
+          <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.no_show_gozleme_muddeti_deqiqe_daeff8')} min={0} max={120} required type="number" value={form.noShowGraceMinutes} onChange={(event) => setForm({ ...form, noShowGraceMinutes: event.target.value })} />
+          <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.odenis_ucun_hold_muddeti_deqiqe_7cd0da')} min={1} max={120} required type="number" value={form.paymentHoldMinutes} onChange={(event) => setForm({ ...form, paymentHoldMinutes: event.target.value })} />
         </div>
         <div className="form-grid two">
-          <TextField label="Restoranın cavab müddəti dəqiqə" min={1} max={120} required type="number" value={form.restaurantResponseMinutes} onChange={(event) => setForm({ ...form, restaurantResponseMinutes: event.target.value })} />
+          <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.restoranin_cavab_muddeti_deqiqe_485504')} min={1} max={120} required type="number" value={form.restaurantResponseMinutes} onChange={(event) => setForm({ ...form, restaurantResponseMinutes: event.target.value })} />
         </div>
         <FileUploadField
-          label="Restoran şəkli"
+          label={i18n.t('ui.pages.admin.restaurant_edit_page.restoran_sekli_cb8de8')}
           accept="image/jpeg,image/png,image/webp,image/avif"
           onUploaded={(fileId) => {
             if (fileId) {
@@ -336,8 +337,8 @@ export function RestaurantEditPage() {
         />
         {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
         <div className="form-actions">
-          <Button disabled={isSubmitting} type="submit">{isSubmitting ? 'Saxlanılır...' : 'Yadda saxla'}</Button>
-          <ButtonLink to={`/admin/restaurants/${restaurantId}`} variant="secondary">Ləğv et</ButtonLink>
+          <Button disabled={isSubmitting} type="submit">{isSubmitting ?i18n.t('ui.pages.admin.restaurant_edit_page.saxlanilir_da0933') :i18n.t('ui.pages.admin.restaurant_edit_page.yadda_saxla_78db97')}</Button>
+          <ButtonLink to={`/admin/restaurants/${restaurantId}`} variant="secondary">{i18n.t('ui.pages.admin.restaurant_edit_page.legv_et_94727e')}</ButtonLink>
         </div>
       </form>
       <RestaurantSchedulePanel restaurantId={restaurantId} workingHours={restaurant.workingHours}

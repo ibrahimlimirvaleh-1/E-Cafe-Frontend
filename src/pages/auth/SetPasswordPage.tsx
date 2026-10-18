@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -48,14 +49,14 @@ export function SetPasswordPage() {
       <form className="auth-card" onSubmit={onSubmit}>
         <Brand />
         <div>
-          <h1>Şifrə təyin et</h1>
-          <p>ECafe hesabınız üçün yeni şifrə yaradın.</p>
+          <h1>{i18n.t('ui.pages.auth.set_password_page.sifre_teyin_et_4f5448')}</h1>
+          <p>{i18n.t('ui.pages.auth.set_password_page.ecafe_hesabiniz_ucun_yeni_sifre_yaradi_a48d0e')}</p>
         </div>
-        <TextField label="Yeni şifrə" placeholder="••••••••" required type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-        <TextField label="Şifrəni təkrar yaz" placeholder="••••••••" required type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
+        <TextField label={i18n.t('ui.pages.auth.set_password_page.yeni_sifre_bdec18')} placeholder="••••••••" required type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+        <TextField label={i18n.t('ui.pages.auth.set_password_page.sifreni_tekrar_yaz_8f00aa')} placeholder="••••••••" required type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
         {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
-        <Button disabled={isSubmitting || !token} type="submit">{isSubmitting ? 'Yadda saxlanılır...' : 'Şifrəni yadda saxla'}</Button>
-        <Link to="/login">Giriş səhifəsinə qayıt</Link>
+        <Button disabled={isSubmitting || !token} type="submit">{isSubmitting ?i18n.t('ui.pages.auth.set_password_page.yadda_saxlanilir_cac6f1') :i18n.t('ui.pages.auth.set_password_page.sifreni_yadda_saxla_fa8aec')}</Button>
+        <Link to="/login">{i18n.t('ui.pages.auth.set_password_page.giris_sehifesine_qayit_82f2cf')}</Link>
       </form>
     </main>
   )

@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import { ArrowRight, LayoutDashboard, Store, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -59,7 +60,7 @@ export function WorkspaceSwitcher({ mode }: WorkspaceSwitcherProps) {
     return (
       <Link className="workspace-switcher-home" to="/">
         <Store size={16} />
-        <span>Əsas səhifə</span>
+        <span>{i18n.t('ui.shared.layout.workspace_switcher.esas_sehife_784c75')}</span>
       </Link>
     )
   }
@@ -72,7 +73,7 @@ export function WorkspaceSwitcher({ mode }: WorkspaceSwitcherProps) {
     return (
       <Link className="workspace-switcher-home" to={currentPath}>
         <LayoutDashboard size={16} />
-        <span>İş paneli</span>
+        <span>{i18n.t('ui.shared.layout.workspace_switcher.is_paneli_84f24b')}</span>
       </Link>
     )
   }
@@ -88,10 +89,10 @@ export function WorkspaceSwitcher({ mode }: WorkspaceSwitcherProps) {
       >
         <header>
           <span>
-            <strong id="workspace-panel-title">İş paneli seç</strong>
-            <small>Rol və restoran kontekstini seç.</small>
+            <strong id="workspace-panel-title">{i18n.t('ui.shared.layout.workspace_switcher.is_paneli_sec_437572')}</strong>
+            <small>{i18n.t('ui.shared.layout.workspace_switcher.rol_ve_restoran_kontekstini_sec_e37e8d')}</small>
           </span>
-          <button className="icon-action" type="button" title="Bağla" onClick={() => setIsPanelModalOpen(false)}>
+          <button className="icon-action" type="button" title={i18n.t('ui.shared.layout.workspace_switcher.bagla_c1cf91')} onClick={() => setIsPanelModalOpen(false)}>
             <X size={18} />
           </button>
         </header>
@@ -120,7 +121,7 @@ export function WorkspaceSwitcher({ mode }: WorkspaceSwitcherProps) {
                   <strong>{profile.restaurantName || `Restoran #${profile.restaurantId}`}</strong>
                   <small>{profileLabel(profile)}</small>
                 </span>
-                {isCurrent ? <em>Cari</em> : <ArrowRight size={16} />}
+                {isCurrent ? <em>{i18n.t('ui.shared.layout.workspace_switcher.cari_e5ec52')}</em> : <ArrowRight size={16} />}
               </button>
             )
           })}
@@ -133,7 +134,7 @@ export function WorkspaceSwitcher({ mode }: WorkspaceSwitcherProps) {
     <div className="workspace-switcher">
       <button className="workspace-switcher-trigger" type="button" onClick={() => setIsPanelModalOpen(true)}>
         <LayoutDashboard size={16} />
-        <span>İş panelinə keç</span>
+        <span>{i18n.t('ui.shared.layout.workspace_switcher.is_paneline_kec_bfee0c')}</span>
       </button>
       {panelModal ? createPortal(panelModal, document.body) : null}
     </div>

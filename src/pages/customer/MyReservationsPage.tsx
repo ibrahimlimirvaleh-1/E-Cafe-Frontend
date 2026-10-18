@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { ArrowRight, CalendarDays, Clock3, MapPin, Search, Users, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
@@ -86,14 +87,14 @@ export function MyReservationsPage() {
   return (
     <main className="page reservations-page">
       <PageHeader
-        eyebrow="Hesab"
-        title="Rezervasiyalarım"
-        description="Rezervasiyalarınızı və ödəniş mərhələlərini izləyin."
+        eyebrow={i18n.t('ui.pages.customer.my_reservations_page.hesab_18adfa')}
+        title={i18n.t('ui.pages.customer.my_reservations_page.rezervasiyalarim_52105e')}
+        description={i18n.t('ui.pages.customer.my_reservations_page.rezervasiyalarinizi_ve_odenis_merhelel_3fca85')}
       />
 
-      <section className="reservation-list-toolbar" aria-label="Rezervasiya filterləri">
+      <section className="reservation-list-toolbar" aria-label={i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_filterleri_4fafc3')}>
         <div className="reservation-name-filter">
-          <label htmlFor="my-reservations-restaurant-name">Restoran adı</label>
+          <label htmlFor="my-reservations-restaurant-name">{i18n.t('ui.pages.customer.my_reservations_page.restoran_adi_f96b27')}</label>
           <div className="reservation-name-filter-control">
             <Search aria-hidden="true" size={18} />
             <input
@@ -104,19 +105,19 @@ export function MyReservationsPage() {
                 setSearchInput(event.target.value)
                 setPageNumber(1)
               }}
-              placeholder="Restoran axtar"
+              placeholder={i18n.t('ui.pages.customer.my_reservations_page.restoran_axtar_d0fa67')}
               type="search"
               value={searchInput}
             />
             {searchInput ? (
               <button
-                aria-label="Restoran axtarışını təmizlə"
+                aria-label={i18n.t('ui.pages.customer.my_reservations_page.restoran_axtarisini_temizle_279685')}
                 onClick={() => {
                   setSearchInput('')
                   setRestaurantName('')
                   setPageNumber(1)
                 }}
-                title="Axtarışı təmizlə"
+                title={i18n.t('ui.pages.customer.my_reservations_page.axtarisi_temizle_73be64')}
                 type="button"
               >
                 <X size={18} />
@@ -131,24 +132,24 @@ export function MyReservationsPage() {
       </section>
 
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
-      {isLoading ? <p className="online-only">Rezervasiyalar yüklənir...</p> : null}
+      {isLoading ? <p className="online-only">{i18n.t('ui.pages.customer.my_reservations_page.rezervasiyalar_yuklenir_248f13')}</p> : null}
 
       {!isLoading && (!error || hasData) && data.items.length > 0 ? (
-        <section className="reservation-overview" aria-label="Rezervasiya xülasəsi">
+        <section className="reservation-overview" aria-label={i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_xulasesi_4567e2')}>
           <div>
-            <span>Bu səhifədə aktiv</span>
+            <span>{i18n.t('ui.pages.customer.my_reservations_page.bu_sehifede_aktiv_85a4e5')}</span>
             <strong>{reservationSummary.activeCount}</strong>
-            <small>rezervasiya</small>
+            <small>{i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_22f559')}</small>
           </div>
           <div>
-            <span>Bu səhifədə ödəniş gözləyir</span>
+            <span>{i18n.t('ui.pages.customer.my_reservations_page.bu_sehifede_odenis_gozleyir_9bd337')}</span>
             <strong>{reservationSummary.awaitingPaymentCount}</strong>
-            <small>növbəti addım</small>
+            <small>{i18n.t('ui.pages.customer.my_reservations_page.novbeti_addim_e43c8c')}</small>
           </div>
           <div>
-            <span>Tapılan</span>
+            <span>{i18n.t('ui.pages.customer.my_reservations_page.tapilan_f1ac75')}</span>
             <strong>{reservationSummary.totalCount}</strong>
-            <small>rezervasiya</small>
+            <small>{i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_22f559')}</small>
           </div>
         </section>
       ) : null}
@@ -156,13 +157,13 @@ export function MyReservationsPage() {
       {!isLoading && (!error || hasData) && data.items.length === 0 ? (
         <section className="reservation-empty-state">
           <CalendarDays size={28} />
-          <h2>{hasFilters ? 'Axtarışa uyğun rezervasiya yoxdur' : 'Hələ rezervasiyanız yoxdur'}</h2>
-          <p>{hasFilters ? 'Restoran adını və ya tarixi dəyişərək yenidən yoxlayın.' : 'Restoran seçərək uyğun masa üçün rezervasiya yarada bilərsiniz.'}</p>
-          {hasFilters ? <Button onClick={clearFilters} variant="secondary">Filtrləri təmizlə</Button> : <ButtonLink to="/">Restoranlara bax</ButtonLink>}
+          <h2>{hasFilters ?i18n.t('ui.pages.customer.my_reservations_page.axtarisa_uygun_rezervasiya_yoxdur_3c617c') :i18n.t('ui.pages.customer.my_reservations_page.hele_rezervasiyaniz_yoxdur_a42fd2')}</h2>
+          <p>{hasFilters ?i18n.t('ui.pages.customer.my_reservations_page.restoran_adini_ve_ya_tarixi_deyiserek__0b9915') :i18n.t('ui.pages.customer.my_reservations_page.restoran_secerek_uygun_masa_ucun_rezer_d11701')}</p>
+          {hasFilters ? <Button onClick={clearFilters} variant="secondary">{i18n.t('ui.pages.customer.my_reservations_page.filtrleri_temizle_dea7b6')}</Button> : <ButtonLink to="/">{i18n.t('ui.pages.customer.my_reservations_page.restoranlara_bax_ecbcc4')}</ButtonLink>}
         </section>
       ) : null}
 
-      <section className="customer-reservation-list" aria-label="Rezervasiya siyahısı">
+      <section className="customer-reservation-list" aria-label={i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_siyahisi_0ae0f1')}>
         {data.items.map((reservation) => {
           const presentation = getReservationStatusPresentation(reservation.status)
 
@@ -170,26 +171,26 @@ export function MyReservationsPage() {
             <article className="customer-reservation-card" key={reservation.id}>
               <div className="customer-reservation-card-header">
                 <div>
-                  <span className="reservation-card-kicker">Rezervasiya #{reservation.id}</span>
+                  <span className="reservation-card-kicker">{i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_0a8e06')}{reservation.id}</span>
                   <h2>{reservation.restaurantName || 'Restoran rezervasiyası'}</h2>
                 </div>
                 <div className="reservation-card-status">
                   <Badge tone={presentation.tone}>{presentation.label}</Badge>
-                  <span>{reservation.expectedArrivalAt ? 'Yeni gəliş: ' : ''}{formatReservationDateTime(reservation.expectedArrivalAt || reservation.reservedAt)}</span>
+                  <span>{reservation.expectedArrivalAt ?i18n.t('ui.pages.customer.my_reservations_page.yeni_gelis_fda112') : ''}{formatReservationDateTime(reservation.expectedArrivalAt || reservation.reservedAt)}</span>
                 </div>
               </div>
 
               <div className="customer-reservation-meta">
-                <span className="reservation-meta-item"><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><b>{formatReservationDateTime(reservation.reservedAt)}</b></span></span>
-                <span className="reservation-meta-item"><MapPin size={17} /><span><small>Masa</small><b>{reservation.tableName || `Masa ${reservation.tableId}`}</b></span></span>
-                <span className="reservation-meta-item"><Users size={17} /><span><small>Qonaq sayı</small><b>{reservation.peopleCount} nəfər</b></span></span>
-                <span className="reservation-meta-item"><Clock3 size={17} /><span><small>Depozit</small><b>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</b></span></span>
+                <span className="reservation-meta-item"><CalendarDays size={17} /><span><small>{i18n.t('ui.pages.customer.my_reservations_page.gelis_vaxti_449387')}</small><b>{formatReservationDateTime(reservation.reservedAt)}</b></span></span>
+                <span className="reservation-meta-item"><MapPin size={17} /><span><small>{i18n.t('ui.pages.customer.my_reservations_page.masa_058c4c')}</small><b>{reservation.tableName || `Masa ${reservation.tableId}`}</b></span></span>
+                <span className="reservation-meta-item"><Users size={17} /><span><small>{i18n.t('ui.pages.customer.my_reservations_page.qonaq_sayi_012aa3')}</small><b>{i18n.t('ui.count.guests', { count: reservation.peopleCount })}</b></span></span>
+                <span className="reservation-meta-item"><Clock3 size={17} /><span><small>{i18n.t('ui.pages.customer.my_reservations_page.depozit_4a14b8')}</small><b>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` :i18n.t('ui.pages.customer.my_reservations_page.teleb_olunmur_46f021')}</b></span></span>
               </div>
 
               {reservation.depositAmount > 0 ? (
                 <div className="reservation-payment-note">
-                  <strong>Depozit: {reservation.depositAmount.toFixed(2)} AZN</strong>
-                  <p>Ödəniş vəziyyətini və növbəti addımı rezervasiya detalında görün.</p>
+                  <strong>{i18n.t('ui.pages.customer.my_reservations_page.depozit_26e67c')} {reservation.depositAmount.toFixed(2)} AZN</strong>
+                  <p>{i18n.t('ui.pages.customer.my_reservations_page.odenis_veziyyetini_ve_novbeti_addimi_r_5bc9bf')}</p>
                 </div>
               ) : null}
 
@@ -199,10 +200,10 @@ export function MyReservationsPage() {
                     ? `Ödəniş üçün son vaxt: ${formatReservationDateTime(reservation.holdExpiresAt)}`
                     : reservation.restaurantResponseExpiresAt
                       ? `Cavab üçün son vaxt: ${formatReservationDateTime(reservation.restaurantResponseExpiresAt)}`
-                      : 'Rezervasiya məlumatları yenilənir'}
+                      :i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_melumatlari_yenilenir_e4d5e6')}
                 </span>
                 <ButtonLink variant="secondary" to={`/confirmation?reservationId=${reservation.id}`}>
-                  Detallara bax <ArrowRight size={16} />
+                  {i18n.t('ui.pages.customer.my_reservations_page.detallara_bax_38343d')} <ArrowRight size={16} />
                 </ButtonLink>
               </div>
             </article>
@@ -211,7 +212,7 @@ export function MyReservationsPage() {
       </section>
       {!isLoading && (!error || hasData) ? (
         <PaginationControls
-          ariaLabel="Rezervasiyalarım səhifələməsi"
+          ariaLabel={i18n.t('ui.pages.customer.my_reservations_page.rezervasiyalarim_sehifelemesi_cffce8')}
           hasNextPage={data.hasNextPage}
           hasPreviousPage={data.hasPreviousPage}
           pageIndex={data.pageIndex}

@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { LogOut, MonitorSmartphone, Save } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -147,7 +148,7 @@ export function ProfilePage() {
   if (isLoading) {
     return (
       <main className="page">
-        <PageHeader title="Profil" />
+        <PageHeader title={i18n.t('ui.pages.customer.profile_page.profil_e267d3')} />
       </main>
     )
   }
@@ -155,7 +156,7 @@ export function ProfilePage() {
   if (!profile) {
     return (
       <main className="page">
-        <PageHeader title="Profil" />
+        <PageHeader title={i18n.t('ui.pages.customer.profile_page.profil_e267d3')} />
         <section className="placeholder-panel">
           <p>{error || 'Profil məlumatları yüklənmədi.'}</p>
         </section>
@@ -176,7 +177,7 @@ export function ProfilePage() {
 
   return (
     <main className="page">
-      <PageHeader eyebrow="Hesab" title="Profil" />
+      <PageHeader eyebrow={i18n.t('ui.pages.customer.profile_page.hesab_18adfa')} title={i18n.t('ui.pages.customer.profile_page.profil_e267d3')} />
 
       <section className="profile-summary-card">
         <div className="profile-summary-avatar" aria-hidden="true">
@@ -190,7 +191,7 @@ export function ProfilePage() {
           <h2>{profile.name} {profile.surname}</h2>
           <p>{profile.email} · {profile.phone || 'Telefon qeyd olunmayıb'}</p>
           <div className="profile-summary-badges">
-            <Badge tone={profile.isActive ? 'success' : 'danger'}>{profile.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+            <Badge tone={profile.isActive ? 'success' : 'danger'}>{profile.isActive ?i18n.t('ui.pages.customer.profile_page.aktiv_816345') :i18n.t('ui.pages.customer.profile_page.deaktiv_477e77')}</Badge>
             <Badge tone="info">{activeProfile?.roleName || user?.roleName || profile.role || `Rol #${profile.roleId}`}</Badge>
           </div>
         </div>
@@ -201,28 +202,28 @@ export function ProfilePage() {
       <div className="admin-grid profile-account-grid">
         <form className="admin-panel profile-account-form" onSubmit={handleProfileSubmit}>
           <div className="section-title">
-            <span>Profil məlumatları</span>
+            <span>{i18n.t('ui.pages.customer.profile_page.profil_melumatlari_24434a')}</span>
             <h2>{profile.name} {profile.surname}</h2>
           </div>
 
           <div className="form-grid two">
-            <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            <TextField label="Soyad" required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.customer.profile_page.ad_1d97c9')} required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.customer.profile_page.soyad_3d89d4')} required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
           </div>
-          <TextField label="Email" required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
-          <PhoneField label="Telefon" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
-          <FileUploadField label="Profil şəkli" accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
+          <TextField label={i18n.t('ui.pages.customer.profile_page.email_969ccb')} required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+          <PhoneField label={i18n.t('ui.pages.customer.profile_page.telefon_fa6906')} value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
+          <FileUploadField label={i18n.t('ui.pages.customer.profile_page.profil_sekli_dba45b')} accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
 
           <Button disabled={isSaving} type="submit">
             <Save size={18} />
-            {isSaving ? 'Saxlanılır...' : 'Profili yenilə'}
+            {isSaving ?i18n.t('ui.pages.customer.profile_page.saxlanilir_da0933') :i18n.t('ui.pages.customer.profile_page.profili_yenile_e2f9d6')}
           </Button>
         </form>
 
         <section className="admin-panel">
           <div className="section-title">
-            <span>Rol və icazə</span>
-            <h2>Cari giriş profili</h2>
+            <span>{i18n.t('ui.pages.customer.profile_page.rol_ve_icaze_c54ba6')}</span>
+            <h2>{i18n.t('ui.pages.customer.profile_page.cari_giris_profili_dbfe16')}</h2>
           </div>
           <div className="access-profile-list">
             {activeProfile ? (
@@ -234,31 +235,29 @@ export function ProfilePage() {
                   <strong>{activeProfile.restaurantName || `Restoran #${activeProfile.restaurantId}`}</strong>
                   <small>{activeProfile.roleName || `Rol #${activeProfile.roleId}`}</small>
                 </div>
-                <Badge tone="success">Cari profil</Badge>
+                <Badge tone="success">{i18n.t('ui.pages.customer.profile_page.cari_profil_609da3')}</Badge>
               </article>
             ) : (
-              <div className="empty-state compact">Bu hesab üçün restoran profili yoxdur.</div>
+              <div className="empty-state compact">{i18n.t('ui.pages.customer.profile_page.bu_hesab_ucun_restoran_profili_yoxdur_a98da3')}</div>
             )}
           </div>
-          <p className="muted-text">Profil dəyişimi header-dəki hesab menyusundan aparılır. Seçilən profilə görə menyular, icazələr və restoran məlumatları dəyişir.</p>
+          <p className="muted-text">{i18n.t('ui.pages.customer.profile_page.profil_deyisimi_header_deki_hesab_meny_7cd42d')}</p>
         </section>
 
         <section className="admin-panel profile-security-panel">
           <div className="section-title">
-            <span>Təhlükəsizlik</span>
-            <h2>Aktiv sessiyalar</h2>
+            <span>{i18n.t('ui.pages.customer.profile_page.tehlukesizlik_696142')}</span>
+            <h2>{i18n.t('ui.pages.customer.profile_page.aktiv_sessiyalar_b6f17c')}</h2>
           </div>
-          <p className="muted-text">
-            Hesabınızın açıq olduğu cihazları yoxlayın və tanımadığınız sessiyaları bağlayın.
-          </p>
+          <p className="muted-text">{i18n.t('ui.pages.customer.profile_page.hesabinizin_aciq_oldugu_cihazlari_yoxl_5652d5')}</p>
 
           <div className="session-list">
             {isSessionsLoading ? (
-              <div className="empty-state compact">Aktiv sessiyalar yüklənir.</div>
+              <div className="empty-state compact">{i18n.t('ui.pages.customer.profile_page.aktiv_sessiyalar_yuklenir_ed3ba3')}</div>
             ) : sessionsError ? (
               <div className="empty-state compact">{sessionsError}</div>
             ) : sessions.length === 0 ? (
-              <div className="empty-state compact">Aktiv sessiya tapılmadı.</div>
+              <div className="empty-state compact">{i18n.t('ui.pages.customer.profile_page.aktiv_sessiya_tapilmadi_75c0a8')}</div>
             ) : (
               sessions.map((session) => (
                 <article className="session-row" key={session.sessionId}>
@@ -268,10 +267,10 @@ export function ProfilePage() {
                   <div>
                     <strong>{session.device}</strong>
                     <span>
-                      {session.ipAddress || 'IP qeyd olunmayıb'} · Son aktivlik: {formatSessionDate(session.lastSeenAt)}
+                      {session.ipAddress || 'IP qeyd olunmayıb'} {i18n.t('ui.pages.customer.profile_page.son_aktivlik_ef6737')} {formatSessionDate(session.lastSeenAt)}
                     </span>
                   </div>
-                  {session.isCurrent ? <Badge tone="success">Cari sessiya</Badge> : null}
+                  {session.isCurrent ? <Badge tone="success">{i18n.t('ui.pages.customer.profile_page.cari_sessiya_9f35d4')}</Badge> : null}
                   <Button
                     disabled={revokingSessionId === session.sessionId}
                     onClick={() => void handleRevokeSession(session)}
@@ -279,7 +278,7 @@ export function ProfilePage() {
                     variant={session.isCurrent ? 'danger' : 'secondary'}
                   >
                     <LogOut size={18} />
-                    {revokingSessionId === session.sessionId ? 'Bağlanır...' : 'Bağla'}
+                    {revokingSessionId === session.sessionId ?i18n.t('ui.pages.customer.profile_page.baglanir_6fd246') :i18n.t('ui.pages.customer.profile_page.bagla_c1cf91')}
                   </Button>
                 </article>
               ))
@@ -288,7 +287,7 @@ export function ProfilePage() {
 
           <Button disabled={isLoggingOutAll} onClick={() => setIsLogoutAllConfirmOpen(true)} type="button" variant="danger">
             <LogOut size={18} />
-            {isLoggingOutAll ? 'Bağlanır...' : 'Bütün cihazlardan çıxış et'}
+            {isLoggingOutAll ?i18n.t('ui.pages.customer.profile_page.baglanir_6fd246') :i18n.t('ui.pages.customer.profile_page.butun_cihazlardan_cixis_et_32d8ca')}
           </Button>
         </section>
       </div>
@@ -297,16 +296,16 @@ export function ProfilePage() {
       {formError ? <StatusMessage details={formErrorDetails} tone="danger">{formError}</StatusMessage> : null}
       <ConfirmDialog
         confirmDisabled={isLoggingOutAll}
-        confirmLabel={isLoggingOutAll ? 'Bağlanır...' : 'Bütün cihazlardan çıxış et'}
+        confirmLabel={isLoggingOutAll ?i18n.t('ui.pages.customer.profile_page.baglanir_6fd246') :i18n.t('ui.pages.customer.profile_page.butun_cihazlardan_cixis_et_32d8ca')}
         isOpen={isLogoutAllConfirmOpen}
-        message="Bu əməliyyat hesabınızın bütün cihazlardakı aktiv sessiyalarını bağlayacaq. Yenidən istifadə etmək üçün təkrar daxil olmaq lazım olacaq."
+        message={i18n.t('ui.pages.customer.profile_page.bu_emeliyyat_hesabinizin_butun_cihazla_567745')}
         onCancel={() => {
           if (!isLoggingOutAll) {
             setIsLogoutAllConfirmOpen(false)
           }
         }}
         onConfirm={() => void handleLogoutAllSessions()}
-        title="Bütün sessiyalar bağlansın?"
+        title={i18n.t('ui.pages.customer.profile_page.butun_sessiyalar_baglansin_b6424f')}
       />
     </main>
   )

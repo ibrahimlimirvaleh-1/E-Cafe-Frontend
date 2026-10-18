@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 type PaginationControlsProps = {
@@ -56,7 +57,7 @@ export function PaginationControls({
       <button
         className="pagination-arrow"
         disabled={!hasPreviousPage}
-        aria-label="Əvvəlki səhifə"
+        aria-label={i18n.t('ui.shared.ui.pagination_controls.evvelki_sehife_f04d3f')}
         onClick={() => onPageChange(Math.max(1, pageIndex - 1))}
         type="button"
       >
@@ -84,7 +85,7 @@ export function PaginationControls({
       <button
         className="pagination-arrow"
         disabled={!hasNextPage}
-        aria-label="Növbəti səhifə"
+        aria-label={i18n.t('ui.shared.ui.pagination_controls.novbeti_sehife_b7c4a2')}
         onClick={() => onPageChange(pageIndex + 1)}
         type="button"
       >
@@ -92,11 +93,11 @@ export function PaginationControls({
       </button>
       {totalCount !== undefined && shownCount !== undefined ? (
         <span className="pagination-summary">
-          {totalCount} qeyddən {shownCount} ədəd göstər
+          {i18n.t('ui.pagination.summary', { shown: shownCount, total: totalCount })}
         </span>
       ) : null}
       {pageSize !== undefined && onPageSizeChange ? (
-        <select className="pagination-size-select" value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))} aria-label="Səhifə ölçüsü">
+        <select className="pagination-size-select" value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))} aria-label={i18n.t('ui.shared.ui.pagination_controls.sehife_olcusu_5e070b')}>
           {pageSizeOptions.map((option) => (
             <option key={option} value={option}>
               {option}

@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import type { ReactNode } from 'react'
 import { AlertTriangle, Building2, CheckCircle2, Clock, MapPin, Phone } from 'lucide-react'
 import { useParams } from 'react-router-dom'
@@ -23,7 +24,7 @@ export function RestaurantDetailPage() {
   if (isLoading || !restaurant) {
     return (
       <main className="admin-page narrow">
-        <p className="online-only">Restoran məlumatları yüklənir...</p>
+        <p className="online-only">{i18n.t('ui.pages.admin.restaurant_detail_page.restoran_melumatlari_yuklenir_b08a45')}</p>
       </main>
     )
   }
@@ -33,7 +34,7 @@ export function RestaurantDetailPage() {
   return (
     <main className="admin-page narrow">
       <PageHeader
-        eyebrow="Restoran"
+        eyebrow={i18n.t('ui.pages.admin.restaurant_detail_page.restoran_c4df56')}
         title={restaurant.name}
         description={restaurant.restaurantGroupName || restaurant.branchName || restaurant.address}
       />
@@ -42,49 +43,45 @@ export function RestaurantDetailPage() {
         <RestaurantStatusBadges restaurant={restaurant} openState={openState} />
 
         <dl>
-          <DetailItem label="Restoran">{restaurant.name}</DetailItem>
-          <DetailItem label="Filial">{restaurant.branchName || '-'}</DetailItem>
-          <DetailItem label="Qrup">{restaurant.restaurantGroupName || '-'}</DetailItem>
-          <DetailItem label="Məkan" className="restaurant-detail-wide">
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.restoran_c4df56')}>{restaurant.name}</DetailItem>
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.filial_86f44f')}>{restaurant.branchName || '-'}</DetailItem>
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.qrup_14bb86')}>{restaurant.restaurantGroupName || '-'}</DetailItem>
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.mekan_a979c9')} className="restaurant-detail-wide">
             <InlineDetail icon={<MapPin size={16} />}>{restaurant.address}</InlineDetail>
           </DetailItem>
-          <DetailItem label="Xəritə statusu">
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.xerite_statusu_bee6bf')}>
             <LocationStatus restaurant={restaurant} />
           </DetailItem>
-          <DetailItem label="Telefon">
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.telefon_fa6906')}>
             <InlineDetail icon={<Phone size={16} />}>{restaurant.phone}</InlineDetail>
           </DetailItem>
-          <DetailItem label="İş saatı">
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.is_saati_9c3651')}>
             <InlineDetail icon={<Clock size={16} />}>
               {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone, restaurant.todayWorkingHours)}
             </InlineDetail>
           </DetailItem>
           {restaurant.restaurantGroupEmail ? (
-            <DetailItem label="Qrup emaili">{restaurant.restaurantGroupEmail}</DetailItem>
+            <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.qrup_emaili_175521')}>{restaurant.restaurantGroupEmail}</DetailItem>
           ) : null}
-          <DetailItem label="Həftəlik qrafik" className="restaurant-detail-schedule">
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.heftelik_qrafik_7f018b')} className="restaurant-detail-schedule">
             <WorkingHoursList workingHours={restaurant.workingHours} />
           </DetailItem>
-          <DetailItem label="Servis faizi">{restaurant.defaultServiceFeePercent}%</DetailItem>
-          <DetailItem label="Ləğv pəncərəsi">{restaurant.cancellationWindowMinutes ?? '-'} dəqiqə</DetailItem>
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.servis_faizi_176e69')}>{restaurant.defaultServiceFeePercent}%</DetailItem>
+          <DetailItem label={i18n.t('ui.pages.admin.restaurant_detail_page.legv_penceresi_216fd1')}>{restaurant.cancellationWindowMinutes ?? '-'} {i18n.t('ui.pages.admin.restaurant_detail_page.deqiqe_2a8106')}</DetailItem>
         </dl>
       </section>
 
       {canCreateContracts ? <RestaurantMobileModuleSection key={restaurantId} restaurantId={restaurantId} /> : null}
 
       <div className="form-actions">
-        <ButtonLink to="/admin/restaurants" variant="secondary">
-          Siyahıya qayıt
-        </ButtonLink>
+        <ButtonLink to="/admin/restaurants" variant="secondary">{i18n.t('ui.pages.admin.restaurant_detail_page.siyahiya_qayit_f779ce')}</ButtonLink>
         {canEditRestaurant ? (
-          <ButtonLink to={`/admin/restaurants/${restaurantId}/edit`} variant="secondary">
-            Redaktə et
-          </ButtonLink>
+          <ButtonLink to={`/admin/restaurants/${restaurantId}/edit`} variant="secondary">{i18n.t('ui.pages.admin.restaurant_detail_page.redakte_et_5b03ba')}</ButtonLink>
         ) : null}
         {canCreateContracts ? (
           <ButtonLink to="/admin/contracts/new">
             <Building2 size={18} />
-            Müqavilə yarat
+            {i18n.t('ui.pages.admin.restaurant_detail_page.muqavile_yarat_8aba1a')}
           </ButtonLink>
         ) : null}
       </div>
@@ -98,7 +95,7 @@ function RestaurantStatusBadges({ restaurant, openState }: { restaurant: Restaur
   return (
     <div className="contract-status-line">
       <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>
-        {restaurant.hasActiveContract ? 'Aktiv müqavilə var' : 'Müqavilə yoxdur'}
+        {restaurant.hasActiveContract ?i18n.t('ui.pages.admin.restaurant_detail_page.aktiv_muqavile_var_cd7e4b') :i18n.t('ui.pages.admin.restaurant_detail_page.muqavile_yoxdur_649c6c')}
       </Badge>
       <Badge tone={openState.tone}>{openState.label}</Badge>
     </div>
@@ -129,7 +126,7 @@ function LocationStatus({ restaurant }: { restaurant: Restaurant }) {
   return (
     <span className={isVerified ? 'location-status verified' : 'location-status unverified'}>
       {isVerified ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-      {isVerified ? 'Ünvan xəritədə təsdiqlənib' : 'Ünvan xəritədə təsdiqlənməyib'}
+      {isVerified ?i18n.t('ui.pages.admin.restaurant_detail_page.unvan_xeritede_tesdiqlenib_2a45a3') :i18n.t('ui.pages.admin.restaurant_detail_page.unvan_xeritede_tesdiqlenmeyib_54f704')}
     </span>
   )
 }

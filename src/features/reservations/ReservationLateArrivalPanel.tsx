@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { Check, Clock3, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { ecafeApi, type ReservationArrivalOffer, type ReservationArrivalOptions, type ReservationResponse } from '../../shared/api/ecafeApi'
@@ -134,41 +135,41 @@ export function ReservationLateArrivalPanel({ reservation, refreshKey, onChanged
       {eligible ? <div className="reservation-arrival-action">
         {options?.canRequest ? <Button variant="secondary" onClick={() => {
           setError(''); setNow(Date.now()); setArrivalAt(''); setIsChoosing(true); setLoadKey((value) => value + 1)
-        }}><Clock3 size={17} />Gecikirəm</Button> : null}
+        }}><Clock3 size={17} />{i18n.t('ui.features.reservations.reservation_late_arrival_panel.gecikirem_1f2c77')}</Button> : null}
         {!isOpen && error ? <p role="alert">{error}</p> : null}
       </div> : null}
       {isOpen ? <div className="modal-backdrop reservation-action-backdrop">
         <section className="reservation-action-dialog reservation-arrival-dialog" role="dialog" aria-modal="true" aria-labelledby="arrival-dialog-title" tabIndex={-1} ref={dialogRef}>
           <header className="reservation-action-dialog-header">
             <Clock3 size={24} aria-hidden="true" />
-            {!offer ? <button type="button" className="reservation-action-dialog-close" aria-label="Pəncərəni bağla" disabled={busy} onClick={() => setIsChoosing(false)}><X size={18} /></button> : null}
+            {!offer ? <button type="button" className="reservation-action-dialog-close" aria-label={i18n.t('ui.features.reservations.reservation_late_arrival_panel.pencereni_bagla_15e818')} disabled={busy} onClick={() => setIsChoosing(false)}><X size={18} /></button> : null}
           </header>
           <div className="reservation-action-dialog-body">
-            <h2 id="arrival-dialog-title">{offer ? 'Yeni gəliş şərtləri' : 'Nə vaxt çatacaqsınız?'}</h2>
-            {!offer ? <div className="reservation-arrival-choice"><label htmlFor={arrivalChoiceId}>Gəliş vaxtı</label>
+            <h2 id="arrival-dialog-title">{offer ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.yeni_gelis_sertleri_8ff778') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.ne_vaxt_catacaqsiniz_2a8dd2')}</h2>
+            {!offer ? <div className="reservation-arrival-choice"><label htmlFor={arrivalChoiceId}>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.gelis_vaxti_449387')}</label>
               <select id={arrivalChoiceId} value={arrivalAt} disabled={busy} onChange={(event) => setArrivalAt(event.target.value)}>
-                <option value="">Vaxt seçin</option>
+                <option value="">{i18n.t('ui.features.reservations.reservation_late_arrival_panel.vaxt_secin_e1e6f0')}</option>
                 {choices.map((value) => <option value={value} key={value}>{formatReservationDateTime(value, options?.timeZone)}</option>)}
               </select>
             </div> : <>
               <dl className="reservation-arrival-terms">
-                <div><dt>Yeni gəliş vaxtı</dt><dd>{formatReservationDateTime(offer.arrivalAt, offer.timeZone)}</dd></div>
-                <div><dt>Gəliş üçün son vaxt</dt><dd>{formatReservationDateTime(offer.noShowDeadlineAt, offer.timeZone)}</dd></div>
-                {offer.mustVacateAt ? <div><dt>Masanı təhvil verməlisiniz</dt><dd>{formatReservationDateTime(offer.mustVacateAt, offer.timeZone)}</dd></div> : null}
+                <div><dt>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.yeni_gelis_vaxti_397ff9')}</dt><dd>{formatReservationDateTime(offer.arrivalAt, offer.timeZone)}</dd></div>
+                <div><dt>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.gelis_ucun_son_vaxt_04c872')}</dt><dd>{formatReservationDateTime(offer.noShowDeadlineAt, offer.timeZone)}</dd></div>
+                {offer.mustVacateAt ? <div><dt>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.masani_tehvil_vermelisiniz_fd4727')}</dt><dd>{formatReservationDateTime(offer.mustVacateAt, offer.timeZone)}</dd></div> : null}
               </dl>
-              <p>{offer.mustVacateAt ? 'Növbəti rezervasiya üçün masanı göstərilən vaxtadək təhvil vermək şərti ilə gözlədiləcəksiniz.' : 'Gəliş üçün son vaxtadək masa sizin üçün saxlanacaq.'} Bu rezervasiya üçün gecikmə vaxtını yalnız bir dəfə dəyişə bilərsiniz.</p>
-              {offer.hasDeposit ? <p className="reservation-arrival-warning">{refundAvailable ? 'Ləğv zamanı hazırda depozitin geri ödənişinə uyğun gəlirsiniz.' : 'Hazırda ləğv etsəniz depozit geri qaytarılmır.'} Gecikmə geri ödəniş üçün ləğv müddətini uzatmır.</p> : null}
-              <p className="reservation-arrival-expiry" role="status">{expired ? 'Təklifin vaxtı bitdi. Gəliş üçün əvvəlki son vaxt qüvvədə qalır.' : `Qərar üçün son vaxt: ${formatReservationDateTime(offer.decisionExpiresAt, offer.timeZone)}`}</p>
+              <p>{offer.mustVacateAt ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.novbeti_rezervasiya_ucun_masani_goster_d54727') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.gelis_ucun_son_vaxtadek_masa_sizin_ucu_829c5d')} {i18n.t('ui.features.reservations.reservation_late_arrival_panel.bu_rezervasiya_ucun_gecikme_vaxtini_ya_5a64e5')}</p>
+              {offer.hasDeposit ? <p className="reservation-arrival-warning">{refundAvailable ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.legv_zamani_hazirda_depozitin_geri_ode_a7193f') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.hazirda_legv_etseniz_depozit_geri_qayt_51d0fa')} {i18n.t('ui.features.reservations.reservation_late_arrival_panel.gecikme_geri_odenis_ucun_legv_muddetin_e6dac5')}</p> : null}
+              <p className="reservation-arrival-expiry" role="status">{expired ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.teklifin_vaxti_bitdi_gelis_ucun_evvelk_d3cc07') : `Qərar üçün son vaxt: ${formatReservationDateTime(offer.decisionExpiresAt, offer.timeZone)}`}</p>
             </>}
             {error ? <p className="reservation-arrival-error" role="alert">{error}</p> : null}
           </div>
           <footer className="reservation-action-dialog-actions reservation-arrival-dialog-actions">
-            {!offer ? <Button disabled={busy || !choices.includes(arrivalAt)} onClick={() => void requestOffer()}><Clock3 size={17} />{busy ? 'Yoxlanılır...' : 'Uyğunluğu yoxla'}</Button> : expired ? <Button disabled={busy} onClick={() => {
+            {!offer ? <Button disabled={busy || !choices.includes(arrivalAt)} onClick={() => void requestOffer()}><Clock3 size={17} />{busy ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.yoxlanilir_b497d3') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.uygunlugu_yoxla_ddb12a')}</Button> : expired ? <Button disabled={busy} onClick={() => {
               setOffer(null); setIsChoosing(false); setLoadKey((value) => value + 1); onChanged()
-            }}>Bağla və yenilə</Button> : <>
-              {error ? <Button disabled={busy} variant="secondary" onClick={() => void refreshOffer()}>Şərtləri yenidən yoxla</Button> : null}
-              <Button disabled={busy} onClick={() => void decide(true)}><Check size={17} />{busy ? 'İcra olunur...' : 'Razıyam, masanı saxla'}</Button>
-              <Button disabled={busy} variant="danger" onClick={() => void decide(false)}>Razı deyiləm, rezervasiyanı ləğv et</Button>
+            }}>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.bagla_ve_yenile_f750f4')}</Button> : <>
+              {error ? <Button disabled={busy} variant="secondary" onClick={() => void refreshOffer()}>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.sertleri_yeniden_yoxla_b5187e')}</Button> : null}
+              <Button disabled={busy} onClick={() => void decide(true)}><Check size={17} />{busy ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.icra_olunur_e4744c') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.raziyam_masani_saxla_5b8a8b')}</Button>
+              <Button disabled={busy} variant="danger" onClick={() => void decide(false)}>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.razi_deyilem_rezervasiyani_legv_et_2a8349')}</Button>
             </>}
           </footer>
         </section>

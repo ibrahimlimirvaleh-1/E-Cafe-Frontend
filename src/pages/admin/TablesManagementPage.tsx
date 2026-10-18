@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { Ban, CheckCircle2, Copy, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
@@ -223,39 +224,39 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   return (
     <main className="admin-page">
       <PageHeader
-        eyebrow="Admin"
-        title={mode === 'create' ? 'Yeni masa' : mode === 'edit' ? 'Masanı redaktə et' : 'Masalar'}
-        action={mode === 'list' ? <ButtonLink to={createTablePath}>Yeni masa</ButtonLink> : <ButtonLink to={tablesListPath} variant="secondary">Siyahıya qayıt</ButtonLink>}
+        eyebrow={i18n.t('ui.pages.admin.tables_management_page.admin_c1c224')}
+        title={mode === 'create' ?i18n.t('ui.pages.admin.tables_management_page.yeni_masa_6573fd') : mode === 'edit' ?i18n.t('ui.pages.admin.tables_management_page.masani_redakte_et_b5092c') :i18n.t('ui.pages.admin.tables_management_page.masalar_05592e')}
+        action={mode === 'list' ? <ButtonLink to={createTablePath}>{i18n.t('ui.pages.admin.tables_management_page.yeni_masa_6573fd')}</ButtonLink> : <ButtonLink to={tablesListPath} variant="secondary">{i18n.t('ui.pages.admin.tables_management_page.siyahiya_qayit_f779ce')}</ButtonLink>}
       />
 
       <section className={mode === 'create' || mode === 'edit' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         {mode === 'create' || mode === 'edit' ? (
           <form className="admin-panel" onSubmit={handleSubmit}>
             <div>
-              <span className="eyebrow">{mode === 'edit' ? 'Redaktə' : 'Yeni masa'}</span>
-              <h2>{mode === 'edit' ? 'Masa məlumatlarını yenilə' : 'Masa məlumatları'}</h2>
+              <span className="eyebrow">{mode === 'edit' ?i18n.t('ui.pages.admin.tables_management_page.redakte_af7c03') :i18n.t('ui.pages.admin.tables_management_page.yeni_masa_6573fd')}</span>
+              <h2>{mode === 'edit' ?i18n.t('ui.pages.admin.tables_management_page.masa_melumatlarini_yenile_37a6c7') :i18n.t('ui.pages.admin.tables_management_page.masa_melumatlari_eef7ab')}</h2>
             </div>
-            <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
+            <RestaurantSelectField emptyOption={null} label={i18n.t('ui.pages.admin.tables_management_page.restoran_c4df56')} onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
             <div className="form-grid two">
-              <TextField label="Masa nömrəsi" required value={form.tableNo} onChange={(event) => setForm({ ...form, tableNo: event.target.value })} />
-              <TextField label="Ad" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+              <TextField label={i18n.t('ui.pages.admin.tables_management_page.masa_nomresi_0ebbb8')} required value={form.tableNo} onChange={(event) => setForm({ ...form, tableNo: event.target.value })} />
+              <TextField label={i18n.t('ui.pages.admin.tables_management_page.ad_1d97c9')} required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </div>
-            <TextField label="Tutum" min={1} required type="number" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
-            <Button type="submit">{mode === 'edit' ? 'Yadda saxla' : 'Masa yarat'}</Button>
+            <TextField label={i18n.t('ui.pages.admin.tables_management_page.tutum_1c836d')} min={1} required type="number" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
+            <Button type="submit">{mode === 'edit' ?i18n.t('ui.pages.admin.tables_management_page.yadda_saxla_78db97') :i18n.t('ui.pages.admin.tables_management_page.masa_yarat_c00ba4')}</Button>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : (
           <section className="admin-panel">
             <div>
-              <span className="eyebrow">Siyahı</span>
-              <h2>Mövcud masalar</h2>
+              <span className="eyebrow">{i18n.t('ui.pages.admin.tables_management_page.siyahi_3d2d8b')}</span>
+              <h2>{i18n.t('ui.pages.admin.tables_management_page.movcud_masalar_72bb91')}</h2>
             </div>
-            <RestaurantSelectField emptyOption={null} label="Restoran" onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
-            {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
+            <RestaurantSelectField emptyOption={null} label={i18n.t('ui.pages.admin.tables_management_page.restoran_c4df56')} onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
+            {isLoading ? <p className="online-only">{i18n.t('ui.pages.admin.tables_management_page.masalar_yuklenir_fa9b85')}</p> : null}
             {selectedRestaurant ? (
               <RestaurantContextCard restaurant={selectedRestaurant} />
             ) : (
-              <EmptyState title="Restoran seçilməyib" message="Masaları görmək üçün əvvəlcə restoran seçin." />
+              <EmptyState title={i18n.t('ui.pages.admin.tables_management_page.restoran_secilmeyib_63199c')} message={i18n.t('ui.pages.admin.tables_management_page.masalari_gormek_ucun_evvelce_restoran__1f3ab6')} />
             )}
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             <div className="compact-list">
@@ -263,16 +264,16 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
                 <article className="table-management-row" key={table.id}>
                   <div className="table-management-info">
                     <span>
-                      <small>Masa nömrəsi</small>
+                      <small>{i18n.t('ui.pages.admin.tables_management_page.masa_nomresi_0ebbb8')}</small>
                       <strong>{table.number}</strong>
                     </span>
                     <span>
-                      <small>Ad</small>
+                      <small>{i18n.t('ui.pages.admin.tables_management_page.ad_1d97c9')}</small>
                       <strong>{table.name || '-'}</strong>
                     </span>
                     <span>
-                      <small>Tutum</small>
-                      <strong>{table.capacity} nəfər</strong>
+                      <small>{i18n.t('ui.pages.admin.tables_management_page.tutum_1c836d')}</small>
+                      <strong>{i18n.t('ui.count.guests', { count: table.capacity })}</strong>
                     </span>
                   </div>
                   <Badge tone={table.status === 'Available' ? 'success' : table.status === 'Occupied' ? 'warning' : 'neutral'}>
@@ -301,7 +302,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
                 </article>
               ))}
               {!selectedRestaurant ? null : !isLoading && tables.length === 0 ? (
-                <EmptyState title="Masa yoxdur" message="Bu restoran üçün hələ masa yaradılmayıb." />
+                <EmptyState title={i18n.t('ui.pages.admin.tables_management_page.masa_yoxdur_a0f049')} message={i18n.t('ui.pages.admin.tables_management_page.bu_restoran_ucun_hele_masa_yaradilmayi_c28719')} />
               ) : null}
             </div>
           </section>
@@ -310,51 +311,49 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
 
       {copyTargetTable ? (
         <div className="modal-backdrop" role="presentation" onClick={closeCopyModal}>
-          <section className="copy-table-modal" role="dialog" aria-modal="true" aria-label="Masanı kopyala" onClick={(event) => event.stopPropagation()}>
+          <section className="copy-table-modal" role="dialog" aria-modal="true" aria-label={i18n.t('ui.pages.admin.tables_management_page.masani_kopyala_f7c44d')} onClick={(event) => event.stopPropagation()}>
             <header>
               <div>
-                <span className="eyebrow">Masa kopyası</span>
-                <h2>{copyTargetTable.number} masasını kopyala</h2>
+                <span className="eyebrow">{i18n.t('ui.pages.admin.tables_management_page.masa_kopyasi_fe56be')}</span>
+                <h2>{copyTargetTable.number} {i18n.t('ui.pages.admin.tables_management_page.masasini_kopyala_fedd8b')}</h2>
               </div>
-              <button aria-label="Bağla" onClick={closeCopyModal} type="button">
+              <button aria-label={i18n.t('ui.pages.admin.tables_management_page.bagla_c1cf91')} onClick={closeCopyModal} type="button">
                 <X size={18} />
               </button>
             </header>
             <p>
-              Yeni masalar <strong>{copyTargetTable.capacity} nəfərlik</strong> tutumla yaradılacaq. Masa nömrəsini boş saxlasan, sistem növbəti boş nömrəni özü verəcək.
+              {i18n.t('ui.pages.admin.tables_management_page.yeni_masalar_cdd866')} <strong>{copyTargetTable.capacity} {i18n.t('ui.pages.admin.tables_management_page.neferlik_2dc0b2')}</strong> {i18n.t('ui.pages.admin.tables_management_page.tutumla_yaradilacaq_masa_nomresini_bos_365e56')}
             </p>
             <form onSubmit={handleCopySubmit}>
               <div className="copy-table-row-list">
                 {copyRows.map((row, index) => (
                   <div className="copy-table-row" key={index}>
                     <TextField
-                      label="Masa nömrəsi"
+                      label={i18n.t('ui.pages.admin.tables_management_page.masa_nomresi_0ebbb8')}
                       min={1}
                       type="number"
                       value={row.tableNo}
                       onChange={(event) => updateCopyRow(index, 'tableNo', event.target.value)}
                     />
                     <TextField
-                      label="Masa adı"
+                      label={i18n.t('ui.pages.admin.tables_management_page.masa_adi_290287')}
                       value={row.name}
                       onChange={(event) => updateCopyRow(index, 'name', event.target.value)}
                     />
-                    <ActionIconButton disabled={copyRows.length === 1} label="Sətri sil" onClick={() => removeCopyRow(index)} type="button">
+                    <ActionIconButton disabled={copyRows.length === 1} label={i18n.t('ui.pages.admin.tables_management_page.setri_sil_31a288')} onClick={() => removeCopyRow(index)} type="button">
                       <Trash2 size={18} />
                     </ActionIconButton>
                   </div>
                 ))}
                 <Button onClick={addCopyRow} type="button" variant="secondary">
                   <Plus size={18} />
-                  Yeni kopya sətri
+                  {i18n.t('ui.pages.admin.tables_management_page.yeni_kopya_setri_2b8941')}
                 </Button>
               </div>
               {copyMessage ? <StatusMessage details={copyMessageDetails}>{copyMessage}</StatusMessage> : null}
               <footer>
-                <Button onClick={closeCopyModal} type="button" variant="secondary">
-                  Ləğv et
-                </Button>
-                <Button type="submit">Əlavə et</Button>
+                <Button onClick={closeCopyModal} type="button" variant="secondary">{i18n.t('ui.pages.admin.tables_management_page.legv_et_94727e')}</Button>
+                <Button type="submit">{i18n.t('ui.pages.admin.tables_management_page.elave_et_fb2449')}</Button>
               </footer>
             </form>
           </section>

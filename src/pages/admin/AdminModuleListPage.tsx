@@ -1,5 +1,7 @@
+import { i18n } from '../../shared/i18n/i18n'
 import type { AdminModuleKey } from '../../entities/types'
 import { getAdminModule } from '../../entities/mockData'
+import { useTranslation } from 'react-i18next'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { ButtonLink } from '../../shared/ui/Button'
@@ -12,6 +14,7 @@ type AdminModuleListPageProps = {
 }
 
 export function AdminModuleListPage({ moduleKey }: AdminModuleListPageProps) {
+  useTranslation()
   const module = getAdminModule(moduleKey)
   const { data: rows, isLoading } = useAsyncData(
     () => moduleKey === 'payments' ? Promise.resolve([]) : ecafeApi.admin.rows(moduleKey),
@@ -22,7 +25,7 @@ export function AdminModuleListPage({ moduleKey }: AdminModuleListPageProps) {
   return (
     <main className="admin-page">
       <PageHeader
-        eyebrow="Admin"
+        eyebrow={i18n.t('ui.pages.admin.admin_module_list_page.admin_c1c224')}
         title={module.title}
         action={
           module.createLabel ? (
@@ -31,9 +34,9 @@ export function AdminModuleListPage({ moduleKey }: AdminModuleListPageProps) {
         }
       />
       {moduleKey === 'payments' ? (
-        <StatusMessage tone="info" autoHideMs={false}>Real ödəniş reyestri hələ aktiv deyil. Demo məlumatları maliyyə hesabatı kimi istifadə etməyin.</StatusMessage>
+        <StatusMessage tone="info" autoHideMs={false}>{i18n.t('ui.pages.admin.admin_module_list_page.real_odenis_reyestri_hele_aktiv_deyil__9ee14c')}</StatusMessage>
       ) : null}
-      {isLoading ? <p className="online-only">Məlumatlar yüklənir...</p> : null}
+      {isLoading ? <p className="online-only">{i18n.t('ui.pages.admin.admin_module_list_page.melumatlar_yuklenir_53bd5f')}</p> : null}
       {moduleKey !== 'payments' ? <DataTable baseRoute={module.route} columns={module.columns} rows={rows} /> : null}
     </main>
   )

@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { Bell, CheckCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +10,8 @@ import { getNotificationTarget } from '../../shared/notifications/notificationTa
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { getCurrentLanguage } from '../../shared/i18n/i18n'
+import { getIntlLocale } from '../../shared/i18n/language'
 
 function formatDate(value: string) {
   if (!value) {
@@ -18,7 +21,7 @@ function formatDate(value: string) {
   const date = new Date(value)
   return Number.isNaN(date.getTime())
     ? value
-    : date.toLocaleString('az-AZ', {
+    : date.toLocaleString(getIntlLocale(getCurrentLanguage()), {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
@@ -77,23 +80,23 @@ export function NotificationsPage() {
   return (
     <main className="page">
       <PageHeader
-        eyebrow="Hesab"
-        title="Bildirişlər"
-        description={unreadCount > 0 ? `${unreadCount} oxunmamış bildiriş var` : 'Yeni bildiriş yoxdur'}
+        eyebrow={i18n.t('ui.pages.customer.notifications_page.hesab_18adfa')}
+        title={i18n.t('ui.pages.customer.notifications_page.bildirisler_1f9d3f')}
+        description={unreadCount > 0 ? `${unreadCount} oxunmamış bildiriş var` :i18n.t('ui.pages.customer.notifications_page.yeni_bildiris_yoxdur_5e0e46')}
         action={
           <Button disabled={unreadCount === 0} onClick={markAllAsRead} variant="secondary">
             <CheckCheck size={18} />
-            Hamısını oxunmuş et
+            {i18n.t('ui.pages.customer.notifications_page.hamisini_oxunmus_et_cacc2d')}
           </Button>
         }
       />
 
       <section className="notification-page-list">
-        {isLoading ? <p className="online-only">Bildirişlər yüklənir...</p> : null}
+        {isLoading ? <p className="online-only">{i18n.t('ui.pages.customer.notifications_page.bildirisler_yuklenir_57fb44')}</p> : null}
         {!isLoading && notifications.length === 0 ? (
           <div className="placeholder-panel">
             <Bell size={28} />
-            <h2>Bildiriş yoxdur</h2>
+            <h2>{i18n.t('ui.pages.customer.notifications_page.bildiris_yoxdur_68216b')}</h2>
           </div>
         ) : null}
         {!isLoading
@@ -104,7 +107,7 @@ export function NotificationsPage() {
                   <small>{notification.message}</small>
                 </span>
                 <span className="notification-page-meta">
-                  <Badge tone={tone(notification)}>{notification.isRead ? 'Oxunub' : 'Yeni'}</Badge>
+                  <Badge tone={tone(notification)}>{notification.isRead ?i18n.t('ui.pages.customer.notifications_page.oxunub_9285c6') :i18n.t('ui.pages.customer.notifications_page.yeni_e17ccb')}</Badge>
                   <time>{formatDate(notification.createdAt)}</time>
                 </span>
               </button>
