@@ -12539,8 +12539,11 @@ body {
 }
 
 .auth-theme-switch {
+  position: absolute;
+  z-index: 2;
+  top: 20px;
+  right: 24px;
   display: flex;
-  width: min(520px, 100%);
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
@@ -12577,6 +12580,11 @@ body {
 @media (max-width: 640px) {
   .auth-shell {
     padding: 16px;
+  }
+
+  .auth-theme-switch {
+    top: 12px;
+    right: 16px;
   }
 
   .auth-shell .auth-card {
