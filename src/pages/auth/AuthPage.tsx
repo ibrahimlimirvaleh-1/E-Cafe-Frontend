@@ -91,8 +91,10 @@ export function AuthPage({ mode }: AuthPageProps) {
         <TextField label={i18n.t('ui.pages.auth.auth_page.sifre_bc0691')} placeholder={i18n.t('ui.pages.auth.auth_page.en_azi_8_simvol_24a804')} type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
         {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
         <Button disabled={isSubmitting} type="submit">{isSubmitting ?i18n.t('ui.pages.auth.auth_page.gonderilir_e1bb27') : isLogin ?i18n.t('ui.pages.auth.auth_page.daxil_ol_2e157a') :i18n.t('ui.pages.auth.auth_page.hesab_yarat_54e62f')}</Button>
-        {isLogin ? <Link to="/forgot-password">{i18n.t('ui.pages.auth.auth_page.sifreni_unutmusunuz_b8c2d0')}</Link> : null}
-        <Link to={isLogin ? '/register' : '/login'}>{isLogin ?i18n.t('ui.pages.auth.auth_page.yeni_hesab_yarat_d8d36c') :i18n.t('ui.pages.auth.auth_page.hesabim_var_1d8182')}</Link>
+        <div className="auth-links">
+          {isLogin ? <Link to="/forgot-password">{i18n.t('ui.pages.auth.auth_page.sifreni_unutmusunuz_b8c2d0')}</Link> : null}
+          <Link to={isLogin ? '/register' : '/login'}>{isLogin ?i18n.t('ui.pages.auth.auth_page.yeni_hesab_yarat_d8d36c') :i18n.t('ui.pages.auth.auth_page.hesabim_var_1d8182')}</Link>
+        </div>
       </form>
     </main>
   )
