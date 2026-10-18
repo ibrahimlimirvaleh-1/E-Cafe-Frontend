@@ -574,6 +574,14 @@ export type ReservationHistoryItem = {
   reason?: string | null
 }
 
+export type ReservationRefundHistoryItem = ReservationHistoryItem & {
+  fromStatusId?: number | null
+  toStatusId?: number
+  fromStatusLabel?: string | null
+  toStatusLabel?: string | null
+  reasonLabel?: string | null
+}
+
 export type ReservationArrivalOffer = {
   consentToken: string
   arrivalAt: string
@@ -605,6 +613,7 @@ export type ReservationRefundResponse = {
   reservationId: number
   statusId: number
   status: string
+  statusLabel?: string | null
   workflowFlowCode: string
   amount: number
   currencyCode: string
@@ -617,7 +626,7 @@ export type ReservationRefundResponse = {
   isTest?: boolean
   requiresManualReview?: boolean
   canSimulate?: boolean
-  history: ReservationHistoryItem[]
+  history: ReservationRefundHistoryItem[]
 }
 
 export type PaymentCapabilities = {
