@@ -6,6 +6,7 @@
 .session-close-review-warning span, .session-close-review-confirmed { color: var(--on-surface-variant); font-size: 12px; }
 .session-close-review-confirmed { margin: 0; }
 .session-close-review-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.session-close-review-buttons .ui-button:disabled { border: 1px solid var(--outline-variant); background: var(--surface-high); color: var(--on-surface-variant); box-shadow: none; cursor: not-allowed; transform: none; }
 .session-continue-dialog .reservation-action-dialog-body { display: grid; gap: 12px; }
 .session-continue-field { display: grid; gap: 6px; min-width: 0; color: var(--on-surface-variant); font-size: 13px; font-weight: 700; }
 .session-continue-field input, .session-continue-field textarea { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--on-surface); font: inherit; font-size: 14px; }

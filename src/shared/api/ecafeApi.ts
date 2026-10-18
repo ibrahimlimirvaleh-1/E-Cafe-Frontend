@@ -640,6 +640,37 @@ export type ReservationPaymentSummary = {
   latestPayment?: CheckoutPaymentResponse | null
 }
 
+export type SessionBillPaymentResponse = {
+  id: number
+  tableSessionId: number
+  amount: number
+  currencyCode: string
+  statusId: number
+  status: string
+  isTest: boolean
+  checkoutUrl?: string | null
+  paidAt?: string | null
+  requiresRefund: boolean
+}
+
+export type SessionBillResponse = {
+  tableSessionId: number
+  restaurantId: number
+  reservationId: number | null
+  currencyCode: string
+  totalAmount: number
+  depositCreditAmount: number
+  paidAmount: number
+  remainingAmount: number
+  hasUnservedOrders: boolean
+  isOpen: boolean
+  enabled: boolean
+  isTest: boolean
+  canPay: boolean
+  canClose: boolean
+  latestPayment: SessionBillPaymentResponse | null
+}
+
 export type ReservationActionResponse = {
   reservationId: number
   statusId: number
@@ -2194,6 +2225,20 @@ export const ecafeApi = {
   },
 
   tableSessions: {
+    getBill: async (sessionId: number, signal?: AbortSignal) =>
+      (await httpClient<SessionBillResponse>(endpoints.tableSessions.bill(sessionId), { signal })).data,
+    checkoutBill: async (sessionId: number, key: string) =>
+      (await httpClient<SessionBillPaymentResponse>(endpoints.tableSessions.billCheckout(sessionId), {
+        method: 'POST', headers: { 'Idempotency-Key': key },
+      })).data,
+    refreshBillPayment: async (sessionId: number, paymentId: number) =>
+      (await httpClient<SessionBillPaymentResponse>(endpoints.tableSessions.billPaymentRefresh(sessionId, paymentId), {
+        method: 'POST',
+      })).data,
+    setBillTestOutcome: async (sessionId: number, paymentId: number, outcome: 'Pending' | 'Succeeded' | 'Failed' | 'Cancelled') =>
+      (await httpClient<SessionBillPaymentResponse>(endpoints.tableSessions.billPaymentTestOutcome(sessionId, paymentId), {
+        method: 'POST', body: JSON.stringify({ outcome }),
+      })).data,
     listCloseReviews: async (restaurantId: string, pageNumber: number, pageSize = 20) => {
       const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
       const result = await httpClient<unknown>(`${endpoints.tableSessions.closeReviews(restaurantId)}?${query}`)

@@ -169,6 +169,12 @@ export const endpoints = {
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/send-to-kitchen`,
     serveOrder: (restaurantId: string, sessionId: number, orderId: number) =>
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/serve`,
+    bill: (sessionId: number) => `/table-sessions/${sessionId}/bill`,
+    billCheckout: (sessionId: number) => `/table-sessions/${sessionId}/bill/checkout`,
+    billPaymentRefresh: (sessionId: number, paymentId: number) =>
+      `/table-sessions/${sessionId}/bill/payments/${paymentId}/refresh`,
+    billPaymentTestOutcome: (sessionId: number, paymentId: number) =>
+      `/table-sessions/${sessionId}/bill/payments/${paymentId}/test-outcome`,
   },
   customerTableSessions: {
     mine: '/public/table-sessions/my',

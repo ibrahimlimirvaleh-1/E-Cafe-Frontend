@@ -54,6 +54,26 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
     return ''
   }
 
+  if (notification.typeName?.toLowerCase() === 'tablesessionpaid' && notification.relatedEntityType?.toLowerCase() === 'tablesession') {
+    if (payloadRestaurantId && notificationRestaurantId && payloadRestaurantId !== notificationRestaurantId) return ''
+    const sessionId = valueAsString(payload.tableSessionId || payload.TableSessionId || notification.relatedEntityId)
+    if (!/^[1-9]\d*$/.test(sessionId)) return ''
+    if (isInRole(user, [RoleIds.Customer])) return `/orders?sessionId=${encodeURIComponent(sessionId)}`
+    if (!restaurantId || !/^[1-9]\d*$/.test(restaurantId)) return ''
+    if (isInRole(user, [RoleIds.Waiter], restaurantId)) {
+      const query = new URLSearchParams({ view: 'tables', restaurantId, tableSessionId: sessionId })
+      return `/waiter?${query.toString()}`
+    }
+    if (isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId)) {
+      const reservationId = valueAsString(payload.reservationId || payload.ReservationId)
+      const query = `?restaurantId=${encodeURIComponent(restaurantId)}`
+      return /^[1-9]\d*$/.test(reservationId)
+        ? `/admin/reservations/${encodeURIComponent(reservationId)}${query}#session-close-review`
+        : `/admin/reservations${query}`
+    }
+    return ''
+  }
+
   if (contractId && canAccessAdminModule(user, 'contracts', restaurantId)) {
     return buildContractTarget(contractId, restaurantId)
   }

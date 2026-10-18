@@ -414,6 +414,9 @@ function translateErrorCode(code: string) {
     PaymentProviderMismatch: 'Ödənişin provayderi uyğun deyil. Dəstək ilə əlaqə saxlayın.',
     PaymentRequestKeyRequired: 'Ödəniş cəhdi təsdiqlənmədi. Yenidən yoxlayın.',
     PaymentRequestKeyConflict: 'Bu ödəniş açarı başqa cəhdə aiddir. Vəziyyəti yeniləyin.',
+    SessionBillUnpaid: 'Masa hesabı tam ödənilməyib. Sessiyanı bağlamazdan əvvəl qalıq məbləği yoxlayın.',
+    SessionBillOrdersUnserved: 'Masa sifarişləri hələ təqdim edilməyib. Hesablaşmadan əvvəl sifarişləri tamamlayın.',
+    SessionBillPaymentPending: 'Bu masa üçün ödəniş hələ gözləmədədir. Vəziyyətini yeniləyin.',
   }
 
   return messages[normalized]
