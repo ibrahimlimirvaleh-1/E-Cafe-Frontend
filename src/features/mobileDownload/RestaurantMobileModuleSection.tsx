@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { useEffect, useState } from 'react'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
 import { Button } from '../../shared/ui/Button'
@@ -48,11 +49,11 @@ export function RestaurantMobileModuleSection({ restaurantId }: { restaurantId: 
     }
   }
 
-  if (isLoading) return <p className="mobile-module-loading" role="status">Mobil modul ayarları yüklənir...</p>
+  if (isLoading) return <p className="mobile-module-loading" role="status">{i18n.t('ui.features.mobile_download.restaurant_mobile_module_section.mobil_modul_ayarlari_yuklenir_09e66a')}</p>
   if (!settings) return (
     <div className="mobile-module-error" role="alert">
       <p>{error || 'Mobil modul ayarları əlçatan deyil.'}</p>
-      <Button onClick={() => setRetryKey((value) => value + 1)} type="button" variant="secondary">Yenidən yoxla</Button>
+      <Button onClick={() => setRetryKey((value) => value + 1)} type="button" variant="secondary">{i18n.t('ui.features.mobile_download.restaurant_mobile_module_section.yeniden_yoxla_9c69a3')}</Button>
     </div>
   )
 

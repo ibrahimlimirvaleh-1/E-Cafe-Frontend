@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -76,22 +77,22 @@ export function AuthPage({ mode }: AuthPageProps) {
       <form className="auth-card" onSubmit={onSubmit}>
         <Brand />
         <div>
-          <h1>{isLogin ? 'Daxil ol' : 'Qeydiyyat'}</h1>
-          <p>{isLogin ? 'ECafe hesabına giriş et.' : 'Müştəri hesabı yarat və rezervasiyalarını izlə.'}</p>
+          <h1>{isLogin ?i18n.t('ui.pages.auth.auth_page.daxil_ol_2e157a') :i18n.t('ui.pages.auth.auth_page.qeydiyyat_5ca601')}</h1>
+          <p>{isLogin ?i18n.t('ui.pages.auth.auth_page.ecafe_hesabina_giris_et_1872e8') :i18n.t('ui.pages.auth.auth_page.musteri_hesabi_yarat_ve_rezervasiyalar_3db029')}</p>
         </div>
         {!isLogin ? (
           <>
-            <TextField label="Ad" placeholder="Adınızı daxil edin" value={name} onChange={(event) => setName(event.target.value)} />
-            <TextField label="Soyad" placeholder="Soyadınızı daxil edin" value={surname} onChange={(event) => setSurname(event.target.value)} />
-            <PhoneField label="Telefon" value={phone} onChange={setPhone} />
+            <TextField label={i18n.t('ui.pages.auth.auth_page.ad_1d97c9')} placeholder={i18n.t('ui.pages.auth.auth_page.adinizi_daxil_edin_b76c99')} value={name} onChange={(event) => setName(event.target.value)} />
+            <TextField label={i18n.t('ui.pages.auth.auth_page.soyad_3d89d4')} placeholder={i18n.t('ui.pages.auth.auth_page.soyadinizi_daxil_edin_4ffd42')} value={surname} onChange={(event) => setSurname(event.target.value)} />
+            <PhoneField label={i18n.t('ui.pages.auth.auth_page.telefon_fa6906')} value={phone} onChange={setPhone} />
           </>
         ) : null}
-        <TextField label="Email" placeholder="name@example.com" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-        <TextField label="Şifrə" placeholder="Ən azı 8 simvol" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+        <TextField label={i18n.t('ui.pages.auth.auth_page.email_969ccb')} placeholder={i18n.t('ui.pages.auth.auth_page.name_example_com_7b17fb')} type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <TextField label={i18n.t('ui.pages.auth.auth_page.sifre_bc0691')} placeholder={i18n.t('ui.pages.auth.auth_page.en_azi_8_simvol_24a804')} type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
         {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
-        <Button disabled={isSubmitting} type="submit">{isSubmitting ? 'Göndərilir...' : isLogin ? 'Daxil ol' : 'Hesab yarat'}</Button>
-        {isLogin ? <Link to="/forgot-password">Şifrəni unutmusunuz?</Link> : null}
-        <Link to={isLogin ? '/register' : '/login'}>{isLogin ? 'Yeni hesab yarat' : 'Hesabım var'}</Link>
+        <Button disabled={isSubmitting} type="submit">{isSubmitting ?i18n.t('ui.pages.auth.auth_page.gonderilir_e1bb27') : isLogin ?i18n.t('ui.pages.auth.auth_page.daxil_ol_2e157a') :i18n.t('ui.pages.auth.auth_page.hesab_yarat_54e62f')}</Button>
+        {isLogin ? <Link to="/forgot-password">{i18n.t('ui.pages.auth.auth_page.sifreni_unutmusunuz_b8c2d0')}</Link> : null}
+        <Link to={isLogin ? '/register' : '/login'}>{isLogin ?i18n.t('ui.pages.auth.auth_page.yeni_hesab_yarat_d8d36c') :i18n.t('ui.pages.auth.auth_page.hesabim_var_1d8182')}</Link>
       </form>
     </main>
   )

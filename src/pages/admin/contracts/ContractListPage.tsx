@@ -1,3 +1,4 @@
+import { i18n } from '../../../shared/i18n/i18n'
 import { Eye, FileText, Filter, Pencil, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { ContractStatus, LookupItem, RestaurantContract, StatusTone } from '../../../entities/types'
@@ -128,13 +129,13 @@ export function ContractListPage() {
   return (
     <main className="admin-page contract-list-page">
       <PageHeader
-        eyebrow="Müqavilələr"
-        title="Müqavilələr"
-        action={canManageContracts ? <ButtonLink to="/admin/contracts/new">Yeni müqavilə</ButtonLink> : undefined}
+        eyebrow={i18n.t('ui.pages.admin.contracts.contract_list_page.muqavileler_7efaa4')}
+        title={i18n.t('ui.pages.admin.contracts.contract_list_page.muqavileler_7efaa4')}
+        action={canManageContracts ? <ButtonLink to="/admin/contracts/new">{i18n.t('ui.pages.admin.contracts.contract_list_page.yeni_muqavile_6fdd79')}</ButtonLink> : undefined}
       />
 
       <section className="contract-workflow-toolbar">
-        <div className="contract-status-tabs" aria-label="Müqavilə statusları">
+        <div className="contract-status-tabs" aria-label={i18n.t('ui.pages.admin.contracts.contract_list_page.muqavile_statuslari_9faec9')}>
           {statusTabs.map((tab) => (
             <button
               className={`contract-status-tab${filters.statusId === tab.value ? ' active' : ''}`}
@@ -153,72 +154,72 @@ export function ContractListPage() {
             <Search size={18} />
             <input
               onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-              placeholder="Müqavilə və ya restoran üzrə axtar..."
+              placeholder={i18n.t('ui.pages.admin.contracts.contract_list_page.muqavile_ve_ya_restoran_uzre_axtar_f86547')}
               value={filters.search}
             />
           </label>
           <button className="ui-button secondary filter-toggle" onClick={() => setIsFilterOpen((value) => !value)} type="button">
             <Filter size={18} />
-            Filter
+            {i18n.t('ui.pages.admin.contracts.contract_list_page.filter_638e24')}
             {hasActiveFilters ? <span className="filter-dot" /> : null}
           </button>
           {hasActiveFilters ? (
             <button className="ui-button ghost" onClick={resetFilters} type="button">
               <X size={18} />
-              Təmizlə
+              {i18n.t('ui.pages.admin.contracts.contract_list_page.temizle_1e4f85')}
             </button>
           ) : null}
         </div>
 
         {isFilterOpen ? (
           <div className="contract-filter-panel">
-            <span>Əlavə filtrlər</span>
+            <span>{i18n.t('ui.pages.admin.contracts.contract_list_page.elave_filtrler_0fafb8')}</span>
             {isPlatformAdmin ? (
               <RestaurantSelectField
                 emptyOption={null}
-                label="Restoran"
+                label={i18n.t('ui.pages.admin.contracts.contract_list_page.restoran_c4df56')}
                 onChange={(restaurantId) => setFilters((current) => ({ ...current, restaurantId }))}
                 options={[{ label: 'Bütün restoranlar', value: 'all' }, ...restaurantOptions]}
                 value={filters.restaurantId}
               />
             ) : null}
             <label>
-              Bitmə tarixi başlanğıc
+              {i18n.t('ui.pages.admin.contracts.contract_list_page.bitme_tarixi_baslangic_85957d')}
               <LocalizedDateInput
                 onChange={(event) => setFilters((current) => ({ ...current, dateFrom: event.target.value }))}
                 value={filters.dateFrom}
               />
             </label>
             <label>
-              Bitmə tarixi son
+              {i18n.t('ui.pages.admin.contracts.contract_list_page.bitme_tarixi_son_e090e3')}
               <LocalizedDateInput
                 onChange={(event) => setFilters((current) => ({ ...current, dateTo: event.target.value }))}
                 value={filters.dateTo}
               />
             </label>
             <label>
-              Müddəti yaxın bitən
+              {i18n.t('ui.pages.admin.contracts.contract_list_page.muddeti_yaxin_biten_2a7e8a')}
               <select
                 onChange={(event) => setFilters((current) => ({ ...current, expiringInDays: event.target.value }))}
                 value={filters.expiringInDays}
               >
-                <option value="">Seçilməyib</option>
-                <option value="7">7 gün ərzində</option>
-                <option value="15">15 gün ərzində</option>
-                <option value="30">30 gün ərzində</option>
+                <option value="">{i18n.t('ui.pages.admin.contracts.contract_list_page.secilmeyib_f0a7d7')}</option>
+                <option value="7">{i18n.t('ui.pages.admin.contracts.contract_list_page.7_gun_erzinde_580b37')}</option>
+                <option value="15">{i18n.t('ui.pages.admin.contracts.contract_list_page.15_gun_erzinde_a39b66')}</option>
+                <option value="30">{i18n.t('ui.pages.admin.contracts.contract_list_page.30_gun_erzinde_812274')}</option>
               </select>
             </label>
           </div>
         ) : null}
       </section>
 
-      {isLoading ? <p className="online-only">Məlumatlar yüklənir...</p> : null}
+      {isLoading ? <p className="online-only">{i18n.t('ui.pages.admin.contracts.contract_list_page.melumatlar_yuklenir_53bd5f')}</p> : null}
       {!isLoading && error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
       {!isLoading && !error && allRecords.length === 0 ? (
         <section className="placeholder-panel">
           <FileText size={28} />
-          <h2>Müqavilə yoxdur</h2>
-          {canManageContracts ? <ButtonLink to="/admin/contracts/new">Müqavilə yarat</ButtonLink> : null}
+          <h2>{i18n.t('ui.pages.admin.contracts.contract_list_page.muqavile_yoxdur_649c6c')}</h2>
+          {canManageContracts ? <ButtonLink to="/admin/contracts/new">{i18n.t('ui.pages.admin.contracts.contract_list_page.muqavile_yarat_8aba1a')}</ButtonLink> : null}
         </section>
       ) : !isLoading && !error ? (
         <ContractWorkflowList canManageContracts={canManageContracts} records={filteredRecords} />
@@ -237,11 +238,11 @@ function ContractWorkflowList({
   return (
     <section className="contract-workflow-list">
       <div className="contract-workflow-head">
-        <span>Müqavilə</span>
-        <span>Status</span>
-        <span>Müddət</span>
-        <span>Mümkün əməliyyatlar</span>
-        <span className="contract-workflow-view-head">Baxış</span>
+        <span>{i18n.t('ui.pages.admin.contracts.contract_list_page.muqavile_e125c2')}</span>
+        <span>{i18n.t('ui.pages.admin.contracts.contract_list_page.status_920e41')}</span>
+        <span>{i18n.t('ui.pages.admin.contracts.contract_list_page.muddet_16633b')}</span>
+        <span>{i18n.t('ui.pages.admin.contracts.contract_list_page.mumkun_emeliyyatlar_fa8734')}</span>
+        <span className="contract-workflow-view-head">{i18n.t('ui.pages.admin.contracts.contract_list_page.baxis_6d7648')}</span>
       </div>
 
       {records.map((record) => {
@@ -254,21 +255,21 @@ function ContractWorkflowList({
               <strong>{contract.contractNumber || `Müqavilə #${contract.id}`}</strong>
               <small>{record.restaurantName || `Restoran #${contract.restaurantId}`}</small>
             </div>
-            <div className="contract-workflow-cell contract-workflow-status" data-label="Status">
+            <div className="contract-workflow-cell contract-workflow-status" data-label={i18n.t('ui.pages.admin.contracts.contract_list_page.status_920e41')}>
               <Badge tone={getContractTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
             </div>
-            <div className="contract-workflow-cell contract-workflow-period" data-label="Müddət">
-              <span><small>Başlanğıc</small><strong>{formatDateInBaku(contract.startDate)}</strong></span>
-              <span><small>Bitmə</small><strong>{contract.endDate ? formatDateInBaku(contract.endDate) : 'Müddətsiz'}</strong></span>
+            <div className="contract-workflow-cell contract-workflow-period" data-label={i18n.t('ui.pages.admin.contracts.contract_list_page.muddet_16633b')}>
+              <span><small>{i18n.t('ui.pages.admin.contracts.contract_list_page.baslangic_cf0f08')}</small><strong>{formatDateInBaku(contract.startDate)}</strong></span>
+              <span><small>{i18n.t('ui.pages.admin.contracts.contract_list_page.bitme_018ac8')}</small><strong>{contract.endDate ? formatDateInBaku(contract.endDate) :i18n.t('ui.pages.admin.contracts.contract_list_page.muddetsiz_cc4e8b')}</strong></span>
             </div>
-            <div className="contract-workflow-cell contract-workflow-next-action" data-label="Mümkün əməliyyatlar">
+            <div className="contract-workflow-cell contract-workflow-next-action" data-label={i18n.t('ui.pages.admin.contracts.contract_list_page.mumkun_emeliyyatlar_fa8734')}>
               <strong>{actionSummary.title}</strong>
               {actionSummary.description ? <small>{actionSummary.description}</small> : null}
             </div>
-            <div className="contract-workflow-actions contract-workflow-view-actions" data-label="Baxış">
+            <div className="contract-workflow-actions contract-workflow-view-actions" data-label={i18n.t('ui.pages.admin.contracts.contract_list_page.baxis_6d7648')}>
               <ButtonLink className="contract-workflow-detail-link" to={`/admin/contracts/${contract.id}`} variant="secondary">
                 <Eye size={16} />
-                Detallar
+                {i18n.t('ui.pages.admin.contracts.contract_list_page.detallar_4907d4')}
               </ButtonLink>
               {canManageContracts && canEditContract(contract) ? (
                 <ActionIconLink label={`${contract.contractNumber || contract.id} müqaviləsini redaktə et`} to={`/admin/contracts/${contract.id}/edit`}>
@@ -280,7 +281,7 @@ function ContractWorkflowList({
         )
       })}
 
-      {records.length === 0 ? <p className="ui-table-empty">Filtrə uyğun müqavilə tapılmadı.</p> : null}
+      {records.length === 0 ? <p className="ui-table-empty">{i18n.t('ui.pages.admin.contracts.contract_list_page.filtre_uygun_muqavile_tapilmadi_02dd90')}</p> : null}
     </section>
   )
 }

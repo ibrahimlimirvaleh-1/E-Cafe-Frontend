@@ -1,3 +1,6 @@
+import { getCurrentLanguage } from '../i18n/i18n'
+import { getIntlLocale } from '../i18n/language'
+
 const reservationDateTimeOptions: Intl.DateTimeFormatOptions = {
   day: 'numeric',
   month: 'numeric',
@@ -6,12 +9,10 @@ const reservationDateTimeOptions: Intl.DateTimeFormatOptions = {
   minute: '2-digit',
   hourCycle: 'h23',
 }
-const reservationDateTimeFormatter = new Intl.DateTimeFormat('az-AZ', reservationDateTimeOptions)
 
-const monthNames = [
-  'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun',
-  'iyul', 'avqust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr',
-]
+function currentLocale() {
+  return getIntlLocale(getCurrentLanguage())
+}
 
 export function formatDateOnlyAz(value: string) {
   const [year, month, day] = value.split('-').map(Number)
@@ -19,7 +20,8 @@ export function formatDateOnlyAz(value: string) {
     return value
   }
 
-  return `${day} ${monthNames[month - 1]} ${year}`
+  return new Intl.DateTimeFormat(currentLocale(), { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(year, month - 1, day)))
 }
 
 export function getTodayDateInputValue(timeZone = 'Asia/Baku') {
@@ -33,25 +35,15 @@ export function getTodayDateInputValue(timeZone = 'Asia/Baku') {
   return `${value('year')}-${value('month')}-${value('day')}`
 }
 
-const bakuDateFormatter = new Intl.DateTimeFormat('en-US', {
-  day: 'numeric',
-  month: 'numeric',
-  year: 'numeric',
-  timeZone: 'Asia/Baku',
-})
-
 export function formatDateInBaku(value?: string | null) {
   if (!value) return '-'
 
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
 
-  const parts = bakuDateFormatter.formatToParts(date)
-  const getPart = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || ''
-  const month = Number(getPart('month'))
-  if (month < 1 || month > 12) return value
-
-  return `${getPart('day')} ${monthNames[month - 1]} ${getPart('year')}`
+  return new Intl.DateTimeFormat(currentLocale(), {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Baku',
+  }).format(date)
 }
 
 export function formatReservationDateTime(value?: string | null, timeZone?: string) {
@@ -64,16 +56,7 @@ export function formatReservationDateTime(value?: string | null, timeZone?: stri
     return value
   }
 
-  const formatter = timeZone
-    ? new Intl.DateTimeFormat('az-AZ', { ...reservationDateTimeOptions, timeZone })
-    : reservationDateTimeFormatter
-  const parts = formatter.formatToParts(date)
-  const getPart = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || ''
-  const month = Number(getPart('month'))
-
-  if (!Number.isInteger(month) || month < 1 || month > 12) {
-    return value
-  }
-
-  return `${getPart('day')} ${monthNames[month - 1]} ${getPart('year')}, ${getPart('hour')}:${getPart('minute')}`
+  return new Intl.DateTimeFormat(currentLocale(), {
+    ...reservationDateTimeOptions, month: 'long', timeZone,
+  }).format(date)
 }

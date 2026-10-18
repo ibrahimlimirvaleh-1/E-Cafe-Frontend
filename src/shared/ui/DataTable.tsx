@@ -1,3 +1,4 @@
+import { i18n } from '../i18n/i18n'
 import { Eye, Pencil } from 'lucide-react'
 import type { AdminRow } from '../../entities/types'
 import { ActionIconLink } from './ActionIconButton'
@@ -17,12 +18,12 @@ type DataTableProps = {
 
 export function DataTable({ baseRoute, canEdit = true, columns, editable = true, emptyMessage = 'Məlumat tapılmadı.', onActionNavigate, rows }: DataTableProps) {
   return (
-    <section className="ui-table" aria-label="Məlumat cədvəli">
+    <section className="ui-table" aria-label={i18n.t('ui.shared.ui.data_table.melumat_cedveli_34b5c6')}>
       <div className="ui-table-head">
         {columns.map((column) => (
           <span key={column}>{column}</span>
         ))}
-        {editable ? <span>Əməliyyat</span> : null}
+        {editable ? <span>{i18n.t('ui.shared.ui.data_table.emeliyyat_fc71e9')}</span> : null}
       </div>
       {rows.map((row) => (
         <article className="ui-table-row" key={row.id}>
@@ -43,7 +44,7 @@ export function DataTable({ baseRoute, canEdit = true, columns, editable = true,
             {row.value}
           </strong>
           {editable ? (
-            <div className="ui-row-actions" data-label="Əməliyyat">
+            <div className="ui-row-actions" data-label={i18n.t('ui.shared.ui.data_table.emeliyyat_fc71e9')}>
               <ActionIconLink label={`${row.title} detalına bax`} onClick={() => onActionNavigate?.(row)} to={`${baseRoute}/${row.id}`}>
                 <Eye size={18} />
               </ActionIconLink>
@@ -56,7 +57,7 @@ export function DataTable({ baseRoute, canEdit = true, columns, editable = true,
           ) : null}
         </article>
       ))}
-      {rows.length === 0 ? <EmptyState title="Məlumat yoxdur" message={emptyMessage} /> : null}
+      {rows.length === 0 ? <EmptyState title={i18n.t('ui.shared.ui.data_table.melumat_yoxdur_54fcb1')} message={emptyMessage} /> : null}
     </section>
   )
 }

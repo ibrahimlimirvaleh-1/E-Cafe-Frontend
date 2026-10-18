@@ -1,9 +1,11 @@
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../theme/ThemeContext'
+import { useTranslation } from 'react-i18next'
 
 export function ThemeToggle() {
+  const { t } = useTranslation()
   const { theme, toggleTheme } = useTheme()
-  const label = theme === 'dark' ? 'Açıq rejimə keç' : 'Tünd rejimə keç'
+  const label = theme === 'dark' ? t('ui.theme.toLight') : t('ui.theme.toDark')
 
   return (
     <button

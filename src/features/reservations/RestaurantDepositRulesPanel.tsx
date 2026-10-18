@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { Save, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Restaurant } from '../../entities/types'
@@ -74,38 +75,38 @@ export function RestaurantDepositRulesPanel({ restaurantId }: { restaurantId: st
   }
 
   return (
-    <section className="deposit-rules-panel" aria-label="Tarix üzrə depozit">
+    <section className="deposit-rules-panel" aria-label={i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.tarix_uzre_depozit_3ef79d')}>
       <div className="deposit-rules-heading">
         <div>
-          <span className="section-eyebrow">REZERVASİYA QAYDASI</span>
-          <h2>Tarix üzrə depozit</h2>
+          <span className="section-eyebrow">{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.rezervasiya_qaydasi_61a6ae')}</span>
+          <h2>{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.tarix_uzre_depozit_3ef79d')}</h2>
         </div>
-        <div className="deposit-rules-default">Qayda olmayan günlər <strong>Depozitsiz</strong></div>
+        <div className="deposit-rules-default">{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.qayda_olmayan_gunler_adbf9f')} <strong>{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.depozitsiz_db0e7a')}</strong></div>
       </div>
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
       {actionError ? <StatusMessage tone="danger" autoHideMs={false}>{actionError}</StatusMessage> : null}
       {feedback ? <StatusMessage tone="success">{feedback}</StatusMessage> : null}
       <form className="deposit-rules-form" onSubmit={handleSave}>
         <label>
-          <span>Rezervasiya tarixi</span>
+          <span>{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.rezervasiya_tarixi_35eb44')}</span>
           <LocalizedDateInput className="deposit-rules-input" min={today} onChange={(event) => setDate(event.target.value)} value={date} />
         </label>
         <label>
-          <span>Depozit (AZN)</span>
+          <span>{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.depozit_azn_3b1bfa')}</span>
           <input min="0.01" max="100000" onChange={(event) => setAmount(event.target.value)} step="0.01" type="number" value={amount} />
         </label>
-        <Button disabled={!restaurantId || isLoading || isSaving} type="submit"><Save size={17} />Saxla</Button>
-        {selectedRule ? <Button disabled={isSaving} onClick={handleRemove} type="button" variant="secondary"><Trash2 size={17} />Depoziti ləğv et</Button> : null}
+        <Button disabled={!restaurantId || isLoading || isSaving} type="submit"><Save size={17} />{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.saxla_33632e')}</Button>
+        {selectedRule ? <Button disabled={isSaving} onClick={handleRemove} type="button" variant="secondary"><Trash2 size={17} />{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.depoziti_legv_et_ce4f13')}</Button> : null}
       </form>
       {rules.length > 0 ? (
-        <div className="deposit-rules-list" aria-label="Təyin edilmiş tarixlər">
+        <div className="deposit-rules-list" aria-label={i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.teyin_edilmis_tarixler_2b46d0')}>
           {rules.map((rule) => (
             <button className={rule.reservationDate === date ? 'active' : ''} key={rule.reservationDate} onClick={() => setDate(rule.reservationDate)} type="button">
               <span>{formatDateOnlyAz(rule.reservationDate)}</span><strong>{rule.amount.toFixed(2)} AZN</strong>
             </button>
           ))}
         </div>
-      ) : !isLoading && !error ? <p className="deposit-rules-empty">Hələ tarix üzrə ayrıca məbləğ təyin edilməyib.</p> : null}
+      ) : !isLoading && !error ? <p className="deposit-rules-empty">{i18n.t('ui.features.reservations.restaurant_deposit_rules_panel.hele_tarix_uzre_ayrica_mebleg_teyin_ed_5992ce')}</p> : null}
     </section>
   )
 }

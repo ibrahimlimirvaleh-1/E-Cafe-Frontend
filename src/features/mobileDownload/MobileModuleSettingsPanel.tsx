@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { Smartphone } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '../../shared/ui/Button'
@@ -33,15 +34,15 @@ export function MobileModuleSettingsPanel({ error, isSaving, onSave, settings, s
       <div className="mobile-module-heading">
         <Smartphone size={20} aria-hidden="true" />
         <div>
-          <h2 id="mobile-module-title">Mobil tətbiq</h2>
-          <p>Bu restoran üçün işçi girişini və telefon bildirişlərini idarə edin.</p>
+          <h2 id="mobile-module-title">{i18n.t('ui.features.mobile_download.mobile_module_settings_panel.mobil_tetbiq_f9673a')}</h2>
+          <p>{i18n.t('ui.features.mobile_download.mobile_module_settings_panel.bu_restoran_ucun_isci_girisini_ve_tele_e898ed')}</p>
         </div>
       </div>
 
       <label className="mobile-module-option">
         <span>
-          <strong>İşçilər üçün mobil giriş</strong>
-          <small>Aktiv müqaviləsi olan bu restoranın işçilərinə tətbiqə giriş və APK yükləmə icazəsi verir.</small>
+          <strong>{i18n.t('ui.features.mobile_download.mobile_module_settings_panel.isciler_ucun_mobil_giris_20ba01')}</strong>
+          <small>{i18n.t('ui.features.mobile_download.mobile_module_settings_panel.aktiv_muqavilesi_olan_bu_restoranin_is_f0c803')}</small>
         </span>
         <input
           checked={showDownloadLink}
@@ -56,8 +57,8 @@ export function MobileModuleSettingsPanel({ error, isSaving, onSave, settings, s
 
       <label className="mobile-module-option">
         <span>
-          <strong>Mobil bildirişlər</strong>
-          <small>İşçi və müştərilər üçün push bildirişləri. Mobil giriş tələb olunur.</small>
+          <strong>{i18n.t('ui.features.mobile_download.mobile_module_settings_panel.mobil_bildirisler_62313e')}</strong>
+          <small>{i18n.t('ui.features.mobile_download.mobile_module_settings_panel.isci_ve_musteriler_ucun_push_bildirisl_7f01be')}</small>
         </span>
         <input
           checked={mobilePushEnabled}
@@ -67,13 +68,13 @@ export function MobileModuleSettingsPanel({ error, isSaving, onSave, settings, s
         />
       </label>
 
-      <p className="mobile-module-release-note">APK yalnız təsdiqlənmiş fayl serverdə hazır olduqda işçi panelində görünür.</p>
+      <p className="mobile-module-release-note">{i18n.t('ui.features.mobile_download.mobile_module_settings_panel.apk_yalniz_tesdiqlenmis_fayl_serverde__88b821')}</p>
       {error ? <StatusMessage autoHideMs={false} tone="danger">{error}</StatusMessage> : null}
       {success ? <StatusMessage tone="success">{success}</StatusMessage> : null}
 
       <div className="mobile-module-actions">
         <Button disabled={!isDirty || isSaving} onClick={() => void onSave({ mobilePushEnabled: mobilePushEnabled && showDownloadLink, showDownloadLink })} type="button">
-          {isSaving ? 'Saxlanılır...' : 'Dəyişiklikləri saxla'}
+          {isSaving ?i18n.t('ui.features.mobile_download.mobile_module_settings_panel.saxlanilir_da0933') :i18n.t('ui.features.mobile_download.mobile_module_settings_panel.deyisiklikleri_saxla_3f2b66')}
         </Button>
       </div>
     </section>

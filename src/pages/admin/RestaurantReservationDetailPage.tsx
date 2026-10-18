@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { ArrowLeft, Ban, CalendarDays, CheckCircle2, CircleDollarSign, Clock3, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
@@ -121,7 +122,7 @@ export function RestaurantReservationDetailPage() {
     void runAction(action)
   }
 
-  if (isLoading) return <main className="admin-page narrow"><p className="online-only">Rezervasiya yüklənir...</p></main>
+  if (isLoading) return <main className="admin-page narrow"><p className="online-only">{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.rezervasiya_yuklenir_7b31d9')}</p></main>
   if (error || !reservation) {
     return <main className="admin-page narrow"><StatusMessage tone="danger" autoHideMs={false}>{error || 'Rezervasiya tapılmadı.'}</StatusMessage></main>
   }
@@ -131,7 +132,7 @@ export function RestaurantReservationDetailPage() {
   return (
     <main className="admin-page narrow reservation-detail-page">
       {error ? <StatusMessage tone="warning" autoHideMs={false}>{error}</StatusMessage> : null}
-      <PageHeader eyebrow="Rezervasiya detalı" title={`Rezervasiya #${reservation.id}`} description={reservation.customerName || 'Müştəri rezervasiyası'} />
+      <PageHeader eyebrow={i18n.t('ui.pages.admin.restaurant_reservation_detail_page.rezervasiya_detali_4dd36f')} title={`Rezervasiya #${reservation.id}`} description={reservation.customerName || 'Müştəri rezervasiyası'} />
       <div className="reservation-detail-layout">
         <div className="reservation-detail-main">
       <section className="reservation-detail-card">
@@ -143,25 +144,25 @@ export function RestaurantReservationDetailPage() {
           <Badge tone={presentation.tone}>{presentation.label}</Badge>
         </div>
         <div className="reservation-detail-grid">
-          <div><CalendarDays size={17} /><span><small>Gəliş vaxtı</small><strong>{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</strong></span></div>
-          <div><Users size={17} /><span><small>Qonaq sayı</small><strong>{reservation.peopleCount} nəfər</strong></span></div>
-          <div><Clock3 size={17} /><span><small>Depozit</small><strong>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong></span></div>
-          {reservation.mustVacateAt ? <div><Clock3 size={17} /><span><small>Masanı təhvil vaxtı</small><strong>{formatReservationDateTime(reservation.mustVacateAt, reservation.timeZone || undefined)}</strong></span></div> : null}
-          {isReservationConfirmed(reservation.status) && !reservation.arrivedAt ? <div><Clock3 size={17} /><span><small>Gəliş üçün son vaxt</small><strong>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</strong></span></div> : null}
+          <div><CalendarDays size={17} /><span><small>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.gelis_vaxti_449387')}</small><strong>{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</strong></span></div>
+          <div><Users size={17} /><span><small>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.qonaq_sayi_012aa3')}</small><strong>{i18n.t('ui.count.guests', { count: reservation.peopleCount })}</strong></span></div>
+          <div><Clock3 size={17} /><span><small>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.depozit_4a14b8')}</small><strong>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` :i18n.t('ui.pages.admin.restaurant_reservation_detail_page.teleb_olunmur_46f021')}</strong></span></div>
+          {reservation.mustVacateAt ? <div><Clock3 size={17} /><span><small>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.masani_tehvil_vaxti_4e00d4')}</small><strong>{formatReservationDateTime(reservation.mustVacateAt, reservation.timeZone || undefined)}</strong></span></div> : null}
+          {isReservationConfirmed(reservation.status) && !reservation.arrivedAt ? <div><Clock3 size={17} /><span><small>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.gelis_ucun_son_vaxt_04c872')}</small><strong>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</strong></span></div> : null}
           {reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt ? (
-            <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ? 'Ödəniş üçün son vaxt' : 'Cavab üçün son vaxt'}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
+            <div><Clock3 size={17} /><span><small>{reservation.holdExpiresAt ?i18n.t('ui.pages.admin.restaurant_reservation_detail_page.odenis_ucun_son_vaxt_81dc6d') :i18n.t('ui.pages.admin.restaurant_reservation_detail_page.cavab_ucun_son_vaxt_730429')}</small><strong>{formatReservationDateTime(reservation.holdExpiresAt || reservation.restaurantResponseExpiresAt)}</strong></span></div>
           ) : null}
-          {reservation.arrivedAt ? <div><CheckCircle2 size={17} /><span><small>Restorana gəlib</small><strong>{formatReservationDateTime(reservation.arrivedAt, reservation.timeZone || undefined)}</strong></span></div> : null}
-          {reservation.seatedAt ? <div><CheckCircle2 size={17} /><span><small>Masaya əyləşib</small><strong>{formatReservationDateTime(reservation.seatedAt, reservation.timeZone || undefined)}</strong></span></div> : null}
-          {reservation.departureReason ? <div><Ban size={17} /><span><small>Ayrılma səbəbi</small><strong>{getReservationDepartureReasonLabel(reservation.departureReason)}</strong></span></div> : null}
+          {reservation.arrivedAt ? <div><CheckCircle2 size={17} /><span><small>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.restorana_gelib_682014')}</small><strong>{formatReservationDateTime(reservation.arrivedAt, reservation.timeZone || undefined)}</strong></span></div> : null}
+          {reservation.seatedAt ? <div><CheckCircle2 size={17} /><span><small>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.masaya_eylesib_949740')}</small><strong>{formatReservationDateTime(reservation.seatedAt, reservation.timeZone || undefined)}</strong></span></div> : null}
+          {reservation.departureReason ? <div><Ban size={17} /><span><small>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.ayrilma_sebebi_cf5bda')}</small><strong>{getReservationDepartureReasonLabel(reservation.departureReason)}</strong></span></div> : null}
         </div>
         <ReservationArrivalSummary reservation={reservation} />
         <ReservationWaitingSummary waiting={reservation.waiting} requiresReceptionReview={reservation.requiresReceptionReview} timeZone={reservation.timeZone} viewer="manager" />
         {(visibleActions.length > 0 || actionError || actionMessage) ? (
           <div className="reservation-detail-actions">
             <div>
-              <span className="section-eyebrow">NÖVBƏTİ ADDIM</span>
-              <strong>Rezervasiya əməliyyatı</strong>
+              <span className="section-eyebrow">{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.novbeti_addim_0c31d9')}</span>
+              <strong>{i18n.t('ui.pages.admin.restaurant_reservation_detail_page.rezervasiya_emeliyyati_80378d')}</strong>
             </div>
             <div className="action-row">
               {visibleActions.map((action) => (
@@ -176,7 +177,7 @@ export function RestaurantReservationDetailPage() {
                     : action.code === 'waiveDeposit'
                         ? <CircleDollarSign size={17} />
                       : <CheckCircle2 size={17} />}
-                  {actionName === action.code ? 'İcra olunur...' : action.label}
+                  {actionName === action.code ?i18n.t('ui.pages.admin.restaurant_reservation_detail_page.icra_olunur_e4744c') : action.label}
                 </Button>
               ))}
             </div>
@@ -202,9 +203,9 @@ export function RestaurantReservationDetailPage() {
           amount={`${reservation.depositAmount.toFixed(2)} AZN`}
         />
       ) : null}
-        <nav className="reservation-detail-footer" aria-label="Rezervasiya naviqasiyası">
+        <nav className="reservation-detail-footer" aria-label={i18n.t('ui.pages.admin.restaurant_reservation_detail_page.rezervasiya_naviqasiyasi_b13067')}>
           <ButtonLink variant="secondary" to={`/admin/reservations?restaurantId=${restaurantId}`}>
-            <ArrowLeft size={17} /> Rezervasiyalara qayıt
+            <ArrowLeft size={17} /> {i18n.t('ui.pages.admin.restaurant_reservation_detail_page.rezervasiyalara_qayit_4f1154')}
           </ButtonLink>
         </nav>
         </div>
@@ -213,8 +214,8 @@ export function RestaurantReservationDetailPage() {
       <ReservationReasonDialog
         confirmLabel={pendingAction?.label || 'Təsdiqlə'}
         description={pendingAction?.code === 'waiveDeposit'
-          ? 'Ödəniş məlumatı göndərilməyibsə depozit tələbi silinəcək və rezervasiya depozitsiz təsdiqlənəcək. Gün üzrə depozit qaydası dəyişməyəcək.'
-          : 'Bu əməliyyat rezervasiyanın backend workflow qaydasına uyğun icra ediləcək.'}
+          ?i18n.t('ui.pages.admin.restaurant_reservation_detail_page.odenis_melumati_gonderilmeyibse_depozi_fb4ab5')
+          :i18n.t('ui.pages.admin.restaurant_reservation_detail_page.bu_emeliyyat_rezervasiyanin_backend_wo_8fe9e8')}
         error={pendingAction ? actionError : ''}
         isOpen={Boolean(pendingAction)}
         isSubmitting={Boolean(pendingAction && actionName === pendingAction.code)}
@@ -226,7 +227,7 @@ export function RestaurantReservationDetailPage() {
         confirmVariant={pendingAction ? getActionVariant(pendingAction) : 'primary'}
         requireReason={pendingAction?.requiresReason || false}
         showReason={pendingAction?.requiresReason || false}
-        title={pendingAction?.code === 'waiveDeposit' ? 'Bu rezervasiya üçün depozitdən imtina edirsiniz?' : 'Əməliyyatı təsdiqləyirsiniz?'}
+        title={pendingAction?.code === 'waiveDeposit' ?i18n.t('ui.pages.admin.restaurant_reservation_detail_page.bu_rezervasiya_ucun_depozitden_imtina__5e9dcb') :i18n.t('ui.pages.admin.restaurant_reservation_detail_page.emeliyyati_tesdiqleyirsiniz_306a81')}
       />
     </main>
   )

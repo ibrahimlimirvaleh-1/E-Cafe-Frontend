@@ -29,6 +29,7 @@ import type {
   StaffSettlement,
   Table,
 } from './types'
+import { i18n } from '../shared/i18n/i18n'
 
 const defaultWorkingHours = [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
   dayOfWeek,
@@ -247,7 +248,21 @@ export function getRestaurant(id = 'saffron-premium') {
 }
 
 export function getAdminModule(key: AdminModuleKey) {
-  return adminModules.find((module) => module.key === key) ?? adminModules[0]
+  const module = adminModules.find((entry) => entry.key === key) ?? adminModules[0]
+  return localizeAdminModule(module)
+}
+
+export function localizeAdminModule(module: AdminModule): AdminModule {
+  const key = `ui.adminModule.${module.key}`
+  return {
+    ...module,
+    title: i18n.t(`${key}.title`, { defaultValue: module.title }),
+    singular: i18n.t(`${key}.singular`, { defaultValue: module.singular }),
+    createLabel: module.createLabel ? i18n.t(`${key}.createLabel`, { defaultValue: module.createLabel }) : undefined,
+    dangerLabel: module.dangerLabel ? i18n.t(`${key}.dangerLabel`, { defaultValue: module.dangerLabel }) : undefined,
+    description: i18n.t(`${key}.description`, { defaultValue: module.description }),
+    columns: module.columns.map((column, index) => i18n.t(`${key}.column${index}`, { defaultValue: column })),
+  }
 }
 
 export function getAdminRows(key: AdminModuleKey): AdminRow[] {

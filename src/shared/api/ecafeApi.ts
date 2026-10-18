@@ -32,6 +32,7 @@ import type {
 } from '../../entities/types'
 import { endpoints, type KitchenProgressAction } from './endpoints'
 import { ApiError, fetchProtectedBlob, getApiOrigin, httpClient } from './httpClient'
+
 import {
   categoryRow,
   contractRow,
@@ -48,6 +49,16 @@ import {
 } from './mappers'
 import type { AnyRecord, PaginatedResponse } from './responseUtils'
 import { asArray, asPaginated, bool, num, str } from './responseUtils'
+
+export type LocalizationEntry = { key: string; az: string; en: string; ru: string }
+export type LocalizationDraftResponse = { revision: number; publishedVersion: string | null; entries: LocalizationEntry[] }
+export type LocalizationReleaseResponse = {
+  id: number
+  revision: number
+  createdAt: string
+  createdByUserId: number
+  sourceReleaseId: number | null
+}
 
 type LoginRequest = {
   email: string
@@ -1400,6 +1411,27 @@ function mapRecipe(record: AnyRecord, restaurantId: string, itemId: string): Rec
 }
 
 export const ecafeApi = {
+  localization: {
+    getPreference: async () => (await httpClient<{ language: string }>(endpoints.localization.preference)).data,
+    setPreference: async (language: 'az' | 'en' | 'ru') =>
+      (await httpClient<{ language: string }>(endpoints.localization.preference, {
+        method: 'PUT', body: JSON.stringify({ language }),
+      })).data,
+    getDraft: async () => (await httpClient<LocalizationDraftResponse>(endpoints.localization.draft)).data,
+    saveDraft: async (expectedRevision: number, entries: LocalizationEntry[]) =>
+      (await httpClient<LocalizationDraftResponse>(endpoints.localization.draft, {
+        method: 'PUT', body: JSON.stringify({ expectedRevision, entries }),
+      })).data,
+    publish: async (expectedRevision: number) =>
+      (await httpClient<LocalizationReleaseResponse>(endpoints.localization.publish, {
+        method: 'POST', body: JSON.stringify({ expectedRevision }),
+      })).data,
+    getReleases: async () => (await httpClient<LocalizationReleaseResponse[]>(endpoints.localization.releases)).data,
+    rollback: async (releaseId: number, expectedRevision: number) =>
+      (await httpClient<LocalizationReleaseResponse>(endpoints.localization.rollback(releaseId), {
+        method: 'POST', body: JSON.stringify({ expectedRevision }),
+      })).data,
+  },
   auth: {
     login: async (request: LoginRequest) => {
       const result = await httpClient<unknown>(endpoints.auth.login, {

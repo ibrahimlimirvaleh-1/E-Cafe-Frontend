@@ -1,4 +1,5 @@
 import type { RestaurantWorkingHour } from '../../entities/types'
+import { i18n } from '../i18n/i18n'
 
 export const dayLabels = ['Bazar', 'Bazar ertəsi', 'Çərşənbə axşamı', 'Çərşənbə', 'Cümə axşamı', 'Cümə', 'Şənbə']
 
@@ -41,11 +42,11 @@ export function formatWorkingHoursSummary(
   const todayHours = openState?.isOpen ? openState.todayHours : todayWorkingHours ?? openState?.todayHours
 
   if (!todayHours) {
-    return 'İş saatı qeyd edilməyib'
+    return i18n.t('ui.workingHours.notSet')
   }
 
   if (todayHours.isClosed) {
-    return 'Bu gün bağlıdır'
+    return i18n.t('ui.workingHours.closedToday')
   }
 
   return `${todayHours.opensAt} - ${todayHours.closesAt}`
@@ -64,7 +65,7 @@ export function getRestaurantOpenState(workingHours: RestaurantWorkingHour[] = [
 
   return {
     isOpen,
-    label: isOpen ? 'Açıqdır' : 'Bağlıdır',
+    label: i18n.t(isOpen ? 'ui.workingHours.open' : 'ui.workingHours.closed'),
     tone: isOpen ? 'success' : 'neutral',
     todayHours: displayHours,
   } as const

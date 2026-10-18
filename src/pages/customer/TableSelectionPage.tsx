@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { ArrowRight, CalendarClock, CheckCircle2, Users } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
@@ -13,6 +14,8 @@ import { ReservationStepper } from '../../features/menu/ReservationStepper'
 import { ecafeApi, type TableAvailabilityResponse } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { getCurrentLanguage } from '../../shared/i18n/i18n'
+import { getIntlLocale } from '../../shared/i18n/language'
 
 function formatReservedAt(value: string) {
   const [date, timeWithOffset] = value.split('T')
@@ -27,14 +30,14 @@ function formatTime(value?: string | null, timeZone?: string) {
   if (Number.isNaN(date.getTime())) return '-'
 
   try {
-    return new Intl.DateTimeFormat('az-AZ', {
+    return new Intl.DateTimeFormat(getIntlLocale(getCurrentLanguage()), {
       timeZone,
       hour: '2-digit',
       minute: '2-digit',
       hourCycle: 'h23',
     }).format(date)
   } catch {
-    return new Intl.DateTimeFormat('az-AZ', {
+    return new Intl.DateTimeFormat(getIntlLocale(getCurrentLanguage()), {
       hour: '2-digit',
       minute: '2-digit',
       hourCycle: 'h23',
@@ -75,12 +78,10 @@ export function TableSelectionPage() {
       <main className="page">
         <ReservationStepper activeStep={1} />
         <PageHeader
-          eyebrow="Rezervasiya"
-          title="Əvvəl gəliş vaxtını seç"
+          eyebrow={i18n.t('ui.pages.customer.table_selection_page.rezervasiya_9cf147')}
+          title={i18n.t('ui.pages.customer.table_selection_page.evvel_gelis_vaxtini_sec_8baee1')}
         />
-        <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurantId}/reserve`}>
-          Vaxt seçiminə keç
-        </Link>
+        <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurantId}/reserve`}>{i18n.t('ui.pages.customer.table_selection_page.vaxt_secimine_kec_573f46')}</Link>
       </main>
     )
   }
@@ -204,8 +205,8 @@ export function TableSelectionPage() {
     <main className="page reservation-page">
       <ReservationStepper activeStep={2} />
       <PageHeader
-        eyebrow="Rezervasiya"
-        title="Uyğun masa seç"
+        eyebrow={i18n.t('ui.pages.customer.table_selection_page.rezervasiya_9cf147')}
+        title={i18n.t('ui.pages.customer.table_selection_page.uygun_masa_sec_5dd583')}
       />
       <div className="reservation-selection-summary reservation-table-selection-summary">
         <div className="reservation-selection-summary-main">
@@ -213,23 +214,23 @@ export function TableSelectionPage() {
             <CalendarClock size={20} />
           </div>
           <div>
-            <span>Seçilmiş vaxt</span>
+            <span>{i18n.t('ui.pages.customer.table_selection_page.secilmis_vaxt_d1a611')}</span>
             <strong>{formatReservedAt(reservedAt)}</strong>
           </div>
         </div>
         <div>
-          <span className="reservation-summary-caption">Qonaq sayı</span>
-          <strong>{peopleCount} nəfər</strong>
+          <span className="reservation-summary-caption">{i18n.t('ui.pages.customer.table_selection_page.qonaq_sayi_012aa3')}</span>
+          <strong>{i18n.t('ui.count.guests', { count: peopleCount })}</strong>
         </div>
         {displayedDepositAmount !== undefined ? (
-          <div><span className="reservation-summary-caption">Depozit</span><strong>{displayedDepositAmount > 0 ? `${displayedDepositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong></div>
+          <div><span className="reservation-summary-caption">{i18n.t('ui.pages.customer.table_selection_page.depozit_4a14b8')}</span><strong>{displayedDepositAmount > 0 ? `${displayedDepositAmount.toFixed(2)} AZN` :i18n.t('ui.pages.customer.table_selection_page.teleb_olunmur_46f021')}</strong></div>
         ) : null}
       </div>
       <div className="reservation-table-toolbar">
         <div>
-          <strong>Uyğun masalar</strong>
+          <strong>{i18n.t('ui.pages.customer.table_selection_page.uygun_masalar_ff19c4')}</strong>
         </div>
-        <div className="reservation-table-legend"><span><i className="available" /> Boşdur</span><span><i className="capacity" /> Tutum</span></div>
+        <div className="reservation-table-legend"><span><i className="available" /> {i18n.t('ui.pages.customer.table_selection_page.bosdur_23162a')}</span><span><i className="capacity" /> {i18n.t('ui.pages.customer.table_selection_page.tutum_1c836d')}</span></div>
       </div>
       {availability?.message ? (
         <p className={`reservation-availability-message ${availability.hasAvailableTable ? 'success' : 'warning'}`}>
@@ -237,8 +238,8 @@ export function TableSelectionPage() {
         </p>
       ) : null}
       {reservationError ? <p className={`reservation-availability-message ${reservationErrorTone}`}>{reservationError}</p> : null}
-      {availabilityError ? <p className="reservation-availability-message danger">Masaların vəziyyəti yüklənmədi. Səhifəni yeniləyib yenidən yoxlayın.</p> : null}
-      {isLoading ? <p className="online-only">Masalar yüklənir...</p> : null}
+      {availabilityError ? <p className="reservation-availability-message danger">{i18n.t('ui.pages.customer.table_selection_page.masalarin_veziyyeti_yuklenmedi_sehifen_924e25')}</p> : null}
+      {isLoading ? <p className="online-only">{i18n.t('ui.pages.customer.table_selection_page.masalar_yuklenir_fa9b85')}</p> : null}
       {!isLoading && !availabilityError && visibleTables.length === 0 ? <p className="online-only">{availability?.message || 'Bu saat üçün uyğun masa yoxdur. Başqa saat seçin.'}</p> : null}
       <section className="choice-grid reservation-table-grid">
         {visibleTables.map((table) => {
@@ -250,14 +251,14 @@ export function TableSelectionPage() {
               type="button"
             >
               <div className="reservation-table-card-top">
-                <div className="reservation-table-number"><span>Masa</span><strong>{table.name || table.number}</strong></div>
+                <div className="reservation-table-number"><span>{i18n.t('ui.pages.customer.table_selection_page.masa_058c4c')}</span><strong>{table.name || table.number}</strong></div>
                 <CheckCircle2 size={21} />
               </div>
               <div className="reservation-table-card-meta">
-                <span><Users size={16} /> {table.capacity} nəfərlik</span>
-                <small>{table.mustVacateAt ? `${formatTime(table.mustVacateAt, availability?.restaurantTimeZone)}-dək` : table.status === 'Available' ? 'Boşdur' : table.status}</small>
+                <span><Users size={16} /> {table.capacity} {i18n.t('ui.pages.customer.table_selection_page.neferlik_2dc0b2')}</span>
+                <small>{table.mustVacateAt ? `${formatTime(table.mustVacateAt, availability?.restaurantTimeZone)}-dək` : table.status === 'Available' ?i18n.t('ui.pages.customer.table_selection_page.bosdur_23162a') : table.status}</small>
               </div>
-              <div className="reservation-table-card-action">Seç <ArrowRight size={17} /></div>
+              <div className="reservation-table-card-action">{i18n.t('ui.pages.customer.table_selection_page.sec_6caa06')} <ArrowRight size={17} /></div>
             </button>
           )
         })}

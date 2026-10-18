@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { AlertTriangle, CheckCircle2, MapPin, Search, UserPlus } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
@@ -333,13 +334,13 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   return (
     <main className="admin-page">
       <PageHeader
-        eyebrow="Admin"
+        eyebrow={i18n.t('ui.pages.admin.restaurant_management_page.admin_c1c224')}
         title={pageTitle}
         action={
           mode === 'create' ? (
-            <ButtonLink to="/admin/restaurants" variant="secondary">Siyahıya qayıt</ButtonLink>
+            <ButtonLink to="/admin/restaurants" variant="secondary">{i18n.t('ui.pages.admin.restaurant_management_page.siyahiya_qayit_f779ce')}</ButtonLink>
           ) : canCreateRestaurants ? (
-            <ButtonLink to="/admin/restaurants/new">Yeni restoran</ButtonLink>
+            <ButtonLink to="/admin/restaurants/new">{i18n.t('ui.pages.admin.restaurant_management_page.yeni_restoran_651205')}</ButtonLink>
           ) : undefined
         }
       />
@@ -351,7 +352,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
               <label className="site-search catalog-search">
                 <Search size={18} />
                 <input
-                  placeholder="Restoran, filial və ya məkan üzrə axtar..."
+                  placeholder={i18n.t('ui.pages.admin.restaurant_management_page.restoran_filial_ve_ya_mekan_uzre_axtar_a3d7ed')}
                   value={search}
                   onChange={(event) => {
                     setSearch(event.target.value)
@@ -359,10 +360,10 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
                   }}
                 />
               </label>
-              <span>{restaurantPage.totalCount} restoran</span>
+              <span>{restaurantPage.totalCount} {i18n.t('ui.pages.admin.restaurant_management_page.restoran_07172a')}</span>
             </section>
           ) : null}
-          {isLoading ? <p className="online-only">Restoranlar yüklənir...</p> : null}
+          {isLoading ? <p className="online-only">{i18n.t('ui.pages.admin.restaurant_management_page.restoranlar_yuklenir_c633c2')}</p> : null}
           <DataTable
             baseRoute="/admin/restaurants"
             canEdit={isInRole(user, [RoleIds.PlatformAdmin, RoleIds.Owner, RoleIds.Manager])}
@@ -372,7 +373,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           />
           {canSearchRestaurants ? (
             <PaginationControls
-              ariaLabel="Admin restoran səhifələmə"
+              ariaLabel={i18n.t('ui.pages.admin.restaurant_management_page.admin_restoran_sehifeleme_450c83')}
               hasNextPage={restaurantPage.hasNextPage}
               hasPreviousPage={restaurantPage.hasPreviousPage}
               pageIndex={restaurantPage.pageIndex}
@@ -390,23 +391,23 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
       ) : (
         <form className="admin-panel admin-single-column" onSubmit={handleSubmit}>
           <div>
-            <span className="eyebrow">Yeni restoran</span>
-            <h2>Profil və filial</h2>
+            <span className="eyebrow">{i18n.t('ui.pages.admin.restaurant_management_page.yeni_restoran_651205')}</span>
+            <h2>{i18n.t('ui.pages.admin.restaurant_management_page.profil_ve_filial_cdf029')}</h2>
           </div>
           <div className="form-grid two">
             <div className="location-lookup-field">
               <TextField
-                label="Məkan"
+                label={i18n.t('ui.pages.admin.restaurant_management_page.mekan_a979c9')}
                 required
                 value={form.location}
                 onChange={(event) => handleLocationChange(event.target.value)}
               />
               <Button disabled={isGeocoding || !form.location.trim()} type="button" variant="secondary" onClick={handleGeocode}>
                 <MapPin size={17} />
-                {isGeocoding ? 'Axtarılır...' : 'Xəritədə təsdiqlə'}
+                {isGeocoding ?i18n.t('ui.pages.admin.restaurant_management_page.axtarilir_119f6d') :i18n.t('ui.pages.admin.restaurant_management_page.xeritede_tesdiqle_faba3c')}
               </Button>
               {locationResults.length > 0 ? (
-                <div className="location-results" role="listbox" aria-label="Xəritə nəticələri">
+                <div className="location-results" role="listbox" aria-label={i18n.t('ui.pages.admin.restaurant_management_page.xerite_neticeleri_130010')}>
                   {locationResults.map((result) => (
                     <button
                       key={`${result.placeId || result.displayName}-${result.latitude}-${result.longitude}`}
@@ -422,28 +423,28 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
               {form.geocodedAddress ? (
                 <small className="field-hint selected-location-hint">
                   <CheckCircle2 size={14} />
-                  Seçilmiş məkan: {form.geocodedAddress}
+                  {i18n.t('ui.pages.admin.restaurant_management_page.secilmis_mekan_2497bc')} {form.geocodedAddress}
                 </small>
               ) : form.location.trim() ? (
                 <small className="field-hint unverified-location-hint">
                   <AlertTriangle size={14} />
-                  Ünvan xəritədə təsdiqlənməyib. Restoran yaradıla bilər, public xəritə ünvanla açılacaq, amma pin dəqiq olmaya bilər.
+                  {i18n.t('ui.pages.admin.restaurant_management_page.unvan_xeritede_tesdiqlenmeyib_restoran_9a2d7a')}
                 </small>
               ) : null}
             </div>
-            <TextField label="Filial adı" required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.filial_adi_6e2940')} required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
           </div>
           <div className="form-grid two">
-            <PhoneField label="Telefon" required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
+            <PhoneField label={i18n.t('ui.pages.admin.restaurant_management_page.telefon_fa6906')} required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </div>
           <WorkingHoursField value={form.workingHours} onChange={(workingHours) => setForm({ ...form, workingHours })} />
           <SelectField
-            label="Mövcud restoran qrupu"
+            label={i18n.t('ui.pages.admin.restaurant_management_page.movcud_restoran_qrupu_70515e')}
             value={form.restaurantGroupId}
             onChange={(event) => setForm({ ...form, restaurantGroupId: event.target.value, restaurantGroupEmail: '' })}
-            hint="Boş qalsa aşağıdakı qrup adı ilə yeni qrup yaradılır."
+            hint={i18n.t('ui.pages.admin.restaurant_management_page.bos_qalsa_asagidaki_qrup_adi_ile_yeni__5626e9')}
           >
-            <option value="">Yeni qrup yarat</option>
+            <option value="">{i18n.t('ui.pages.admin.restaurant_management_page.yeni_qrup_yarat_288d2d')}</option>
             {groups.map((group) => (
               <option key={group.id} value={group.id}>
                 {group.name}
@@ -452,11 +453,11 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           </SelectField>
           {!form.restaurantGroupId ? (
             <div className="form-grid two">
-              <TextField label="Yeni qrup adı" required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
-              <TextField label="Yeni qrup legal adı" value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
+              <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.yeni_qrup_adi_88629a')} required value={form.restaurantGroupName} onChange={(event) => setForm({ ...form, restaurantGroupName: event.target.value })} />
+              <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.yeni_qrup_legal_adi_89313d')} value={form.restaurantGroupLegalName} onChange={(event) => setForm({ ...form, restaurantGroupLegalName: event.target.value })} />
               <div className="form-grid-full">
                 <TextField
-                  label="Qrup əlaqə emaili"
+                  label={i18n.t('ui.pages.admin.restaurant_management_page.qrup_elaqe_emaili_dac066')}
                   required
                   type="email"
                   value={form.restaurantGroupEmail}
@@ -464,10 +465,9 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
                 />
                 {duplicateGroupEmail.length > 0 ? (
                   <div className="soft-warning-panel" role="status">
-                    <strong>Bu email artıq başqa qrupda istifadə olunur.</strong>
+                    <strong>{i18n.t('ui.pages.admin.restaurant_management_page.bu_email_artiq_basqa_qrupda_istifade_o_0d0e24')}</strong>
                     <span>
-                      {duplicateGroupEmail.map((group) => group.name).join(', ')} qrupu ilə eyni əlaqə emaili yazılıb.
-                      Düzgündürsə davam edə bilərsiniz.
+                      {duplicateGroupEmail.map((group) => group.name).join(', ')} {i18n.t('ui.pages.admin.restaurant_management_page.qrupu_ile_eyni_elaqe_emaili_yazilib_du_9dfc15')}
                     </span>
                   </div>
                 ) : null}
@@ -475,34 +475,34 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             </div>
           ) : selectedGroup ? (
             <div className="selected-group-contact">
-              <span>Qrup əlaqə emaili</span>
+              <span>{i18n.t('ui.pages.admin.restaurant_management_page.qrup_elaqe_emaili_dac066')}</span>
               <strong>{selectedGroup.email || 'Email qeyd edilməyib'}</strong>
             </div>
           ) : null}
           <div className="form-grid two">
-            <TextField label="Servis faizi" min={0} required step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.servis_faizi_176e69')} min={0} required step="0.01" type="number" value={form.serviceFeePercent} onChange={(event) => setForm({ ...form, serviceFeePercent: event.target.value })} />
           </div>
           <div className="form-grid two">
-            <TextField label="Ləğv pəncərəsi dəqiqə" min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
-            <TextField label="Personal hesablaşma günü" min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.legv_penceresi_deqiqe_d410e0')} min={0} required type="number" value={form.cancellationWindowMinutes} onChange={(event) => setForm({ ...form, cancellationWindowMinutes: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.personal_hesablasma_gunu_372e83')} min={1} required type="number" value={form.staffSettlementPeriod} onChange={(event) => setForm({ ...form, staffSettlementPeriod: event.target.value })} />
           </div>
           <div className="form-grid two">
-            <TextField label="Növbəti rezervasiyadan əvvəl qoruma müddəti (dəqiqə)" min={15} max={180} required type="number" value={form.reservationPreBlockMinutes} onChange={(event) => setForm({ ...form, reservationPreBlockMinutes: event.target.value })} />
-            <TextField label="Masa hazırlıq bufferi dəqiqə" min={0} max={120} required type="number" value={form.tableTurnoverBufferMinutes} onChange={(event) => setForm({ ...form, tableTurnoverBufferMinutes: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.novbeti_rezervasiyadan_evvel_qoruma_mu_82a761')} min={15} max={180} required type="number" value={form.reservationPreBlockMinutes} onChange={(event) => setForm({ ...form, reservationPreBlockMinutes: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.masa_hazirliq_bufferi_deqiqe_be3c13')} min={0} max={120} required type="number" value={form.tableTurnoverBufferMinutes} onChange={(event) => setForm({ ...form, tableTurnoverBufferMinutes: event.target.value })} />
           </div>
           <div className="form-grid two">
-            <TextField label="No-show gözləmə müddəti dəqiqə" min={0} max={120} required type="number" value={form.noShowGraceMinutes} onChange={(event) => setForm({ ...form, noShowGraceMinutes: event.target.value })} />
-            <TextField label="Ödəniş üçün hold müddəti dəqiqə" min={1} max={120} required type="number" value={form.paymentHoldMinutes} onChange={(event) => setForm({ ...form, paymentHoldMinutes: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.no_show_gozleme_muddeti_deqiqe_daeff8')} min={0} max={120} required type="number" value={form.noShowGraceMinutes} onChange={(event) => setForm({ ...form, noShowGraceMinutes: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.odenis_ucun_hold_muddeti_deqiqe_7cd0da')} min={1} max={120} required type="number" value={form.paymentHoldMinutes} onChange={(event) => setForm({ ...form, paymentHoldMinutes: event.target.value })} />
           </div>
           <div className="form-grid two">
-            <TextField label="Restoranın cavab müddəti dəqiqə" min={1} max={120} required type="number" value={form.restaurantResponseMinutes} onChange={(event) => setForm({ ...form, restaurantResponseMinutes: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.restoranin_cavab_muddeti_deqiqe_485504')} min={1} max={120} required type="number" value={form.restaurantResponseMinutes} onChange={(event) => setForm({ ...form, restaurantResponseMinutes: event.target.value })} />
           </div>
           <div>
-            <span className="eyebrow">Sahibkar</span>
-            <h2>Sahibkarı restorana bağla</h2>
-            <p className="form-helper">Mövcud sahibkarı email və ya telefonla tapın. Tapılmasa, yeni sahibkar məlumatlarını eyni səhifədə yaradın.</p>
+            <span className="eyebrow">{i18n.t('ui.pages.admin.restaurant_management_page.sahibkar_15d31f')}</span>
+            <h2>{i18n.t('ui.pages.admin.restaurant_management_page.sahibkari_restorana_bagla_6cd9ec')}</h2>
+            <p className="form-helper">{i18n.t('ui.pages.admin.restaurant_management_page.movcud_sahibkari_email_ve_ya_telefonla_620231')}</p>
           </div>
-          <div className="owner-mode-switch" role="group" aria-label="Sahibkar seçimi">
+          <div className="owner-mode-switch" role="group" aria-label={i18n.t('ui.pages.admin.restaurant_management_page.sahibkar_secimi_74dfc7')}>
             <button
               className={ownerMode === 'existing' ? 'active' : ''}
               onClick={() => handleOwnerModeChange('existing')}
@@ -510,8 +510,8 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             >
               <CheckCircle2 size={18} />
               <span>
-                <strong>Mövcud sahibkar</strong>
-                <small>Sistemdə olan sahibkarı seç</small>
+                <strong>{i18n.t('ui.pages.admin.restaurant_management_page.movcud_sahibkar_e27333')}</strong>
+                <small>{i18n.t('ui.pages.admin.restaurant_management_page.sistemde_olan_sahibkari_sec_116fc6')}</small>
               </span>
             </button>
             <button
@@ -521,16 +521,16 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             >
               <UserPlus size={18} />
               <span>
-                <strong>Yeni sahibkar</strong>
-                <small>Yeni sahibkar hesabı yarat</small>
+                <strong>{i18n.t('ui.pages.admin.restaurant_management_page.yeni_sahibkar_b8424d')}</strong>
+                <small>{i18n.t('ui.pages.admin.restaurant_management_page.yeni_sahibkar_hesabi_yarat_2aa508')}</small>
               </span>
             </button>
           </div>
           {ownerMode === 'existing' ? (
             <div className="owner-picker">
               <TextField
-                hint="Email, telefon, ad və ya soyad yazın. Tapılan sahibkarı aşağıdan seçin."
-                label="Sahibkar emaili və ya telefonu"
+                hint={i18n.t('ui.pages.admin.restaurant_management_page.email_telefon_ad_ve_ya_soyad_yazin_tap_cc1dc4')}
+                label={i18n.t('ui.pages.admin.restaurant_management_page.sahibkar_emaili_ve_ya_telefonu_398f21')}
                 required
                 value={form.ownerEmail}
                 onChange={(event) => setForm({ ...form, ownerEmail: event.target.value, ownerId: '' })}
@@ -542,10 +542,10 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
                     <strong>{selectedOwner.name} {selectedOwner.surname}</strong>
                     <span>{selectedOwner.email} - {selectedOwner.phone}</span>
                   </div>
-                  <small>Seçildi</small>
+                  <small>{i18n.t('ui.pages.admin.restaurant_management_page.secildi_ba82f3')}</small>
                 </article>
               ) : ownerCandidates.length > 0 ? (
-                <div className="owner-results" aria-label="Sahibkar axtarış nəticələri">
+                <div className="owner-results" aria-label={i18n.t('ui.pages.admin.restaurant_management_page.sahibkar_axtaris_neticeleri_7be8d1')}>
                   {ownerCandidates.map((candidate) => (
                     <button key={candidate.id} onClick={() => handleSelectOwner(candidate)} type="button">
                       <div className="owner-avatar">{ownerInitials(candidate)}</div>
@@ -553,28 +553,28 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
                         <strong>{candidate.name} {candidate.surname}</strong>
                         <small>{candidate.email} - {candidate.phone}</small>
                       </span>
-                      <small>Seç</small>
+                      <small>{i18n.t('ui.pages.admin.restaurant_management_page.sec_6caa06')}</small>
                     </button>
                   ))}
                 </div>
               ) : ownerSearch ? (
-                <p className="owner-empty-message">Bu məlumatla sahibkar tapılmadı. Yeni sahibkar yarat bölməsinə keçə bilərsiniz.</p>
+                <p className="owner-empty-message">{i18n.t('ui.pages.admin.restaurant_management_page.bu_melumatla_sahibkar_tapilmadi_yeni_s_628ca3')}</p>
               ) : null}
             </div>
           ) : (
             <div className="new-owner-fields">
               <div className="form-grid two">
-                <TextField label="Sahibkar emaili" required type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
-                <PhoneField label="Telefon" required value={form.ownerPhone} onChange={(ownerPhone) => setForm({ ...form, ownerPhone })} />
+                <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.sahibkar_emaili_5cb1df')} required type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
+                <PhoneField label={i18n.t('ui.pages.admin.restaurant_management_page.telefon_fa6906')} required value={form.ownerPhone} onChange={(ownerPhone) => setForm({ ...form, ownerPhone })} />
               </div>
               <div className="form-grid two">
-                <TextField label="Ad" required value={form.ownerFirstName} onChange={(event) => setForm({ ...form, ownerFirstName: event.target.value })} />
-                <TextField label="Soyad" required value={form.ownerLastName} onChange={(event) => setForm({ ...form, ownerLastName: event.target.value })} />
+                <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.ad_1d97c9')} required value={form.ownerFirstName} onChange={(event) => setForm({ ...form, ownerFirstName: event.target.value })} />
+                <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.soyad_3d89d4')} required value={form.ownerLastName} onChange={(event) => setForm({ ...form, ownerLastName: event.target.value })} />
               </div>
             </div>
           )}
           <FileUploadField
-            label="Restoran şəkli"
+            label={i18n.t('ui.pages.admin.restaurant_management_page.restoran_sekli_cb8de8')}
             accept="image/jpeg,image/png,image/webp,image/avif"
             onUploaded={(fileId) => {
               if (fileId) {
@@ -582,7 +582,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
               }
             }}
           />
-          <Button type="submit">Restoran yarat</Button>
+          <Button type="submit">{i18n.t('ui.pages.admin.restaurant_management_page.restoran_yarat_c1f7ca')}</Button>
           {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
         </form>
       )}

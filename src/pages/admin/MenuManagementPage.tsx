@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Ban, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -392,31 +393,31 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const title = mode === 'categories' ? 'Kateqoriyalar' : mode === 'create-category' ? 'Yeni kateqoriya' : mode === 'edit-category' ? 'Kateqoriyanı redaktə et' : mode === 'create-item' ? 'Yeni menyu elementi' : mode === 'edit-item' ? 'Menyu elementini redaktə et' : 'Menyu'
   const action =
     mode === 'items' ? (
-      <ButtonLink to={menuCreatePath}>Yeni menyu elementi</ButtonLink>
+      <ButtonLink to={menuCreatePath}>{i18n.t('ui.pages.admin.menu_management_page.yeni_menyu_elementi_a5e7c2')}</ButtonLink>
     ) : mode === 'create-item' || mode === 'edit-item' ? (
-      <ButtonLink to={menuListPath} variant="secondary">Siyahıya qayıt</ButtonLink>
+      <ButtonLink to={menuListPath} variant="secondary">{i18n.t('ui.pages.admin.menu_management_page.siyahiya_qayit_f779ce')}</ButtonLink>
     ) : mode === 'categories' ? (
-      <ButtonLink to={categoryCreatePath}>Yeni kateqoriya</ButtonLink>
+      <ButtonLink to={categoryCreatePath}>{i18n.t('ui.pages.admin.menu_management_page.yeni_kateqoriya_8770c9')}</ButtonLink>
     ) : mode === 'create-category' || mode === 'edit-category' ? (
-      <ButtonLink to={categoriesListPath} variant="secondary">Siyahıya qayıt</ButtonLink>
+      <ButtonLink to={categoriesListPath} variant="secondary">{i18n.t('ui.pages.admin.menu_management_page.siyahiya_qayit_f779ce')}</ButtonLink>
     ) : null
 
   return (
     <main className="admin-page">
-      <PageHeader eyebrow="Admin" title={title} action={action} />
+      <PageHeader eyebrow={i18n.t('ui.pages.admin.menu_management_page.admin_c1c224')} title={title} action={action} />
 
       <section className={mode === 'create-item' || mode === 'edit-item' || mode === 'create-category' || mode === 'edit-category' ? 'admin-single-column' : 'admin-single-column staff-list-layout'}>
         <section className="admin-panel">
-          <span className="eyebrow">Restoran</span>
-          <RestaurantSelectField emptyOption={null} label="Restoran" onChange={handleRestaurantChange} required restaurants={accessibleRestaurants} value={restaurantId} />
+          <span className="eyebrow">{i18n.t('ui.pages.admin.menu_management_page.restoran_c4df56')}</span>
+          <RestaurantSelectField emptyOption={null} label={i18n.t('ui.pages.admin.menu_management_page.restoran_c4df56')} onChange={handleRestaurantChange} required restaurants={accessibleRestaurants} value={restaurantId} />
           {selectedRestaurant ? (
             <RestaurantContextCard restaurant={selectedRestaurant} />
           ) : (
             <EmptyState
-              title="Restoran seçilməyib"
+              title={i18n.t('ui.pages.admin.menu_management_page.restoran_secilmeyib_63199c')}
               message={mode === 'categories' || mode === 'create-category' || mode === 'edit-category'
-                ? 'Kateqoriyaları görmək üçün əvvəlcə restoran seçin.'
-                : 'Menyu elementlərini görmək üçün əvvəlcə restoran seçin.'}
+                ?i18n.t('ui.pages.admin.menu_management_page.kateqoriyalari_gormek_ucun_evvelce_res_8a6cff')
+                :i18n.t('ui.pages.admin.menu_management_page.menyu_elementlerini_gormek_ucun_evvelc_77f660')}
             />
           )}
         </section>
@@ -424,11 +425,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         {mode === 'create-category' ? (
           <section className="admin-panel">
             <form className="stack-form" onSubmit={handleCreateCategory}>
-              <span className="eyebrow">Yeni kateqoriya</span>
-              <h2>Kateqoriya məlumatları</h2>
-              <TextField label="Ad" required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
-              <TextField label="Sıra" min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint="Boş qalsa backend növbəti sıranı özü verir." />
-              <Button type="submit" variant="secondary">Kateqoriya yarat</Button>
+              <span className="eyebrow">{i18n.t('ui.pages.admin.menu_management_page.yeni_kateqoriya_8770c9')}</span>
+              <h2>{i18n.t('ui.pages.admin.menu_management_page.kateqoriya_melumatlari_cb8f97')}</h2>
+              <TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
+              <TextField label={i18n.t('ui.pages.admin.menu_management_page.sira_a6e667')} min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint={i18n.t('ui.pages.admin.menu_management_page.bos_qalsa_backend_novbeti_sirani_ozu_v_d66279')} />
+              <Button type="submit" variant="secondary">{i18n.t('ui.pages.admin.menu_management_page.kateqoriya_yarat_83360c')}</Button>
               {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             </form>
           </section>
@@ -437,11 +438,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         {mode === 'edit-category' ? (
           <section className="admin-panel">
             <form className="stack-form" onSubmit={handleUpdateCategory}>
-              <span className="eyebrow">Redaktə</span>
-              <h2>Kateqoriya məlumatlarını yenilə</h2>
-              <TextField label="Ad" required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
-              <TextField label="Sıra" min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint="Boş qalsa backend növbəti sıranı özü verir." />
-              <Button type="submit">Yadda saxla</Button>
+              <span className="eyebrow">{i18n.t('ui.pages.admin.menu_management_page.redakte_af7c03')}</span>
+              <h2>{i18n.t('ui.pages.admin.menu_management_page.kateqoriya_melumatlarini_yenile_22d987')}</h2>
+              <TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
+              <TextField label={i18n.t('ui.pages.admin.menu_management_page.sira_a6e667')} min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint={i18n.t('ui.pages.admin.menu_management_page.bos_qalsa_backend_novbeti_sirani_ozu_v_d66279')} />
+              <Button type="submit">{i18n.t('ui.pages.admin.menu_management_page.yadda_saxla_78db97')}</Button>
               {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             </form>
           </section>
@@ -450,16 +451,16 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         {mode === 'categories' ? (
           <>
             <section className="admin-panel">
-              <span className="eyebrow">Siyahı</span>
-              <h2>Kateqoriyalar</h2>
+              <span className="eyebrow">{i18n.t('ui.pages.admin.menu_management_page.siyahi_3d2d8b')}</span>
+              <h2>{i18n.t('ui.pages.admin.menu_management_page.kateqoriyalar_cf49c2')}</h2>
               <div className="compact-list">
                 {categories.map((category) => (
                   <article key={category.id}>
                     <div>
                       <strong>{category.name}</strong>
-                      <small>{category.sortOrder ? `Sıra ${category.sortOrder}` : 'Sıra təyin edilməyib'}</small>
+                      <small>{category.sortOrder ? `Sıra ${category.sortOrder}` :i18n.t('ui.pages.admin.menu_management_page.sira_teyin_edilmeyib_a81d12')}</small>
                     </div>
-                    <Badge tone={category.isActive ? 'success' : 'neutral'}>{category.isActive ? 'Aktiv' : 'Deaktiv'}</Badge>
+                    <Badge tone={category.isActive ? 'success' : 'neutral'}>{category.isActive ?i18n.t('ui.pages.admin.menu_management_page.aktiv_816345') :i18n.t('ui.pages.admin.menu_management_page.deaktiv_477e77')}</Badge>
                     <div className="inline-actions">
                       <ActionIconLink label={`${category.name} kateqoriyasını redaktə et`} to={`/admin/categories/${category.id}/edit?restaurantId=${restaurantId}`}>
                         <Pencil size={18} />
@@ -480,7 +481,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                   </article>
                 ))}
                 {!selectedRestaurant ? null : categories.length === 0 ? (
-                  <EmptyState title="Kateqoriya yoxdur" message="Bu restoran üçün hələ kateqoriya yaradılmayıb." />
+                  <EmptyState title={i18n.t('ui.pages.admin.menu_management_page.kateqoriya_yoxdur_c79f83')} message={i18n.t('ui.pages.admin.menu_management_page.bu_restoran_ucun_hele_kateqoriya_yarad_b8f959')} />
                 ) : null}
               </div>
             </section>
@@ -490,61 +491,55 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         {mode === 'create-item' || mode === 'edit-item' ? (
           <form className="admin-panel" onSubmit={handleSaveItem}>
             <div>
-              <span className="eyebrow">{mode === 'edit-item' ? 'Redaktə' : 'Yeni yemək'}</span>
-              <h2>Menyu elementi</h2>
+              <span className="eyebrow">{mode === 'edit-item' ?i18n.t('ui.pages.admin.menu_management_page.redakte_af7c03') :i18n.t('ui.pages.admin.menu_management_page.yeni_yemek_2fd7a9')}</span>
+              <h2>{i18n.t('ui.pages.admin.menu_management_page.menyu_elementi_fc7b92')}</h2>
             </div>
             {mode === 'edit-item' && !editingItem && !isLoading ? (
-              <StatusMessage tone="warning" details={[{ label: 'Menyu', message: 'Bu məhsul silinmiş ola bilər. Siyahıdan yenidən seçin.' }]}>
-                Redaktə ediləcək menyu elementi tapılmadı.
-              </StatusMessage>
+              <StatusMessage tone="warning" details={[{ label: 'Menyu', message: 'Bu məhsul silinmiş ola bilər. Siyahıdan yenidən seçin.' }]}>{i18n.t('ui.pages.admin.menu_management_page.redakte_edilecek_menyu_elementi_tapilm_8b52cb')}</StatusMessage>
             ) : null}
             {selectedRestaurant && !hasActiveContract ? (
-              <StatusMessage tone="warning" details={[{ label: 'Müqavilə', message: 'Əvvəl restoranın müqaviləsini aktivləşdirin, sonra menyu elementi əlavə edin.' }]}>
-                Bu restoranda menyu elementi yaratmaq üçün aktiv müqavilə olmalıdır.
-              </StatusMessage>
+              <StatusMessage tone="warning" details={[{ label: 'Müqavilə', message: 'Əvvəl restoranın müqaviləsini aktivləşdirin, sonra menyu elementi əlavə edin.' }]}>{i18n.t('ui.pages.admin.menu_management_page.bu_restoranda_menyu_elementi_yaratmaq__4a7bbf')}</StatusMessage>
             ) : null}
             {hasActiveContract && activeCategories.length === 0 ? (
-              <StatusMessage tone="warning" details={[{ label: 'Kateqoriya', message: 'Menyu elementi yaratmaq üçün bu restoranda ən azı bir aktiv kateqoriya olmalıdır.' }]}>
-                Bu restoran üçün aktiv kateqoriya yoxdur.
-              </StatusMessage>
+              <StatusMessage tone="warning" details={[{ label: 'Kateqoriya', message: 'Menyu elementi yaratmaq üçün bu restoranda ən azı bir aktiv kateqoriya olmalıdır.' }]}>{i18n.t('ui.pages.admin.menu_management_page.bu_restoran_ucun_aktiv_kateqoriya_yoxd_5a4ab7')}</StatusMessage>
             ) : null}
             <div className="form-grid two">
               <SelectField
                 disabled={activeCategories.length === 0}
-                hint={activeCategories.length === 0 ? 'Əvvəl bu restoran üçün aktiv kateqoriya yaradın.' : undefined}
-                label="Kateqoriya"
+                hint={activeCategories.length === 0 ?i18n.t('ui.pages.admin.menu_management_page.evvel_bu_restoran_ucun_aktiv_kateqoriy_207de3') : undefined}
+                label={i18n.t('ui.pages.admin.menu_management_page.kateqoriya_2812c5')}
                 required
                 value={itemForm.categoryId}
                 onChange={(event) => setItemForm({ ...itemForm, categoryId: event.target.value })}
               >
-                {activeCategories.length === 0 ? <option value="">Aktiv kateqoriya yoxdur</option> : null}
+                {activeCategories.length === 0 ? <option value="">{i18n.t('ui.pages.admin.menu_management_page.aktiv_kateqoriya_yoxdur_286633')}</option> : null}
                 {activeCategories.map((category) => (
                   <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
               </SelectField>
-              <SelectField label="Status" required value={itemForm.statusId} onChange={(event) => setItemForm({ ...itemForm, statusId: event.target.value })}>
+              <SelectField label={i18n.t('ui.pages.admin.menu_management_page.status_920e41')} required value={itemForm.statusId} onChange={(event) => setItemForm({ ...itemForm, statusId: event.target.value })}>
                 {activeStatuses.map((status) => (
                   <option key={status.id} value={status.id}>{status.name}</option>
                 ))}
               </SelectField>
             </div>
-            <TextField label="Ad" required value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} />
-            <TextareaField label="Tərkib" required value={itemForm.description} onChange={(event) => setItemForm({ ...itemForm, description: event.target.value })} />
+            <TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} />
+            <TextareaField label={i18n.t('ui.pages.admin.menu_management_page.terkib_35441a')} required value={itemForm.description} onChange={(event) => setItemForm({ ...itemForm, description: event.target.value })} />
             <div className="form-grid two">
-              <TextField label="Qiymət" min={0} required step="0.01" type="number" value={itemForm.basePrice} onChange={(event) => setItemForm({ ...itemForm, basePrice: event.target.value })} />
+              <TextField label={i18n.t('ui.pages.admin.menu_management_page.qiymet_67850f')} min={0} required step="0.01" type="number" value={itemForm.basePrice} onChange={(event) => setItemForm({ ...itemForm, basePrice: event.target.value })} />
               <label className="toggle-field menu-item-availability">
                 <input checked={itemForm.isAvailable} type="checkbox" onChange={(event) => setItemForm({ ...itemForm, isAvailable: event.target.checked })} />
-                <span>Satışdadır</span>
+                <span>{i18n.t('ui.pages.admin.menu_management_page.satisdadir_20caaf')}</span>
               </label>
             </div>
             {!itemForm.isAvailable ? (
-              <TextField label="Satışda olmama səbəbi" value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
+              <TextField label={i18n.t('ui.pages.admin.menu_management_page.satisda_olmama_sebebi_35155a')} value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
             ) : null}
-            <FileUploadField label="Yemək şəkli" accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
+            <FileUploadField label={i18n.t('ui.pages.admin.menu_management_page.yemek_sekli_ecd247')} accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
             <div className="inline-actions">
-              <Button disabled={itemFormDisabled} type="submit">{mode === 'edit-item' ? 'Menyu elementini yenilə' : 'Menyu elementi yarat'}</Button>
+              <Button disabled={itemFormDisabled} type="submit">{mode === 'edit-item' ?i18n.t('ui.pages.admin.menu_management_page.menyu_elementini_yenile_963b5b') :i18n.t('ui.pages.admin.menu_management_page.menyu_elementi_yarat_2f6ce9')}</Button>
               {mode === 'edit-item' ? (
-                <Button type="button" variant="secondary" onClick={() => navigate(menuListPath)}>Ləğv et</Button>
+                <Button type="button" variant="secondary" onClick={() => navigate(menuListPath)}>{i18n.t('ui.pages.admin.menu_management_page.legv_et_94727e')}</Button>
               ) : null}
             </div>
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
@@ -554,10 +549,10 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         {mode === 'items' ? (
           <section className="admin-panel menu-list-panel">
             <div>
-              <span className="eyebrow">Siyahı</span>
-              <h2>Menyu</h2>
+              <span className="eyebrow">{i18n.t('ui.pages.admin.menu_management_page.siyahi_3d2d8b')}</span>
+              <h2>{i18n.t('ui.pages.admin.menu_management_page.menyu_da3241')}</h2>
             </div>
-            {isLoading ? <p className="online-only">Menyu yüklənir...</p> : null}
+            {isLoading ? <p className="online-only">{i18n.t('ui.pages.admin.menu_management_page.menyu_yuklenir_b8bb64')}</p> : null}
             <div className="admin-menu-list">
               {items.map((item) => (
                 <article key={item.id}>
@@ -567,8 +562,8 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                     <small>{item.description || 'Tərkib qeyd edilməyib'}</small>
                   </div>
                   <span>{item.categoryName || categoryNameById.get(item.categoryId) || 'Kateqoriya yoxdur'}</span>
-                  <Badge tone={item.isActive ? 'success' : 'neutral'}>{item.statusName || (item.isActive ? 'Aktiv' : 'Deaktiv')}</Badge>
-                  <small>{item.salesCount ?? 0} satış</small>
+                  <Badge tone={item.isActive ? 'success' : 'neutral'}>{item.statusName || (item.isActive ?i18n.t('ui.pages.admin.menu_management_page.aktiv_816345') :i18n.t('ui.pages.admin.menu_management_page.deaktiv_477e77'))}</Badge>
+                  <small>{item.salesCount ?? 0} {i18n.t('ui.pages.admin.menu_management_page.satis_072558')}</small>
                   <b>{item.price.toFixed(2)} ₼</b>
                   <div className="inline-actions menu-item-row-actions">
                     <ActionIconLink label={`${item.name} menyu elementini redaktə et`} to={`/admin/menu/${item.id}/edit?restaurantId=${restaurantId}`}>
@@ -584,7 +579,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                 </article>
               ))}
               {!selectedRestaurant ? null : !isLoading && items.length === 0 ? (
-                <EmptyState title="Menyu elementi yoxdur" message="Bu restoran üçün hələ menyu elementi yaradılmayıb." />
+                <EmptyState title={i18n.t('ui.pages.admin.menu_management_page.menyu_elementi_yoxdur_bb6aa7')} message={i18n.t('ui.pages.admin.menu_management_page.bu_restoran_ucun_hele_menyu_elementi_y_dc21ed')} />
               ) : null}
             </div>
           </section>

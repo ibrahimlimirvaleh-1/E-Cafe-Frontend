@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { useEffect, useRef, useState } from 'react'
 import { Download, Smartphone } from 'lucide-react'
 import { endpoints } from '../../shared/api/endpoints'
@@ -84,16 +85,16 @@ export function EmployeeMobileDownload() {
   }
 
   return (
-    <section className="employee-mobile-download" aria-label="Android tətbiqi">
+    <section className="employee-mobile-download" aria-label={i18n.t('ui.features.mobile_download.employee_mobile_download.android_tetbiqi_7a72cf')}>
       <div className="employee-mobile-download-inner">
         <div className="employee-mobile-download-copy">
           <Smartphone size={20} aria-hidden="true" />
-          <span><strong>ECafe Android</strong><small>Versiya {release.version}</small></span>
+          <span><strong>{i18n.t('ui.features.mobile_download.employee_mobile_download.ecafe_android_d8283c')}</strong><small>{i18n.t('ui.features.mobile_download.employee_mobile_download.versiya_81b03c')} {release.version}</small></span>
         </div>
         {error ? <span className="employee-mobile-download-error" role="alert">{error}</span> : null}
         <button className="mobile-download-link" disabled={downloading} onClick={() => void download()} type="button">
           <Download size={17} aria-hidden="true" />
-          {downloading ? 'Yüklənir...' : 'Tətbiqi yüklə'}
+          {downloading ?i18n.t('ui.features.mobile_download.employee_mobile_download.yuklenir_e038b0') :i18n.t('ui.features.mobile_download.employee_mobile_download.tetbiqi_yukle_fd0aef')}
         </button>
       </div>
     </section>

@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -51,11 +52,11 @@ export function ResetPasswordPage() {
       <form className="auth-card" onSubmit={onSubmit}>
         <Brand />
         <div>
-          <h1>Yeni şifrə</h1>
-          <p>Hesabınız üçün əvvəlkindən fərqli və güclü şifrə təyin edin.</p>
+          <h1>{i18n.t('ui.pages.auth.reset_password_page.yeni_sifre_bdec18')}</h1>
+          <p>{i18n.t('ui.pages.auth.reset_password_page.hesabiniz_ucun_evvelkinden_ferqli_ve_g_092136')}</p>
         </div>
         <TextField
-          label="Yeni şifrə"
+          label={i18n.t('ui.pages.auth.reset_password_page.yeni_sifre_bdec18')}
           placeholder="••••••••"
           required
           type="password"
@@ -63,7 +64,7 @@ export function ResetPasswordPage() {
           onChange={(event) => setPassword(event.target.value)}
         />
         <TextField
-          label="Şifrəni təkrar yaz"
+          label={i18n.t('ui.pages.auth.reset_password_page.sifreni_tekrar_yaz_8f00aa')}
           placeholder="••••••••"
           required
           type="password"
@@ -76,9 +77,9 @@ export function ResetPasswordPage() {
           </StatusMessage>
         ) : null}
         <Button disabled={isSubmitting || !token} type="submit">
-          {isSubmitting ? 'Yadda saxlanılır...' : 'Şifrəni yenilə'}
+          {isSubmitting ?i18n.t('ui.pages.auth.reset_password_page.yadda_saxlanilir_cac6f1') :i18n.t('ui.pages.auth.reset_password_page.sifreni_yenile_de20a9')}
         </Button>
-        <Link to="/login">Giriş səhifəsinə qayıt</Link>
+        <Link to="/login">{i18n.t('ui.pages.auth.reset_password_page.giris_sehifesine_qayit_82f2cf')}</Link>
       </form>
     </main>
   )

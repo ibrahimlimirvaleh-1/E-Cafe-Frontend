@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { LogOut, RefreshCw, Table2 } from 'lucide-react'
 import { useState } from 'react'
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
@@ -67,56 +68,56 @@ export function ReservationWaitingManagement({ reservation, restaurantId, onChan
 
   return <section className="reservation-waiting-management" aria-labelledby="waiting-management-title">
     <div className="reservation-waiting-management-header">
-      <div><span className="section-eyebrow">GƏLİŞ</span><h2 id="waiting-management-title">{reservation.requiresReceptionReview ? 'Gəliş nəticəsini yoxlayın' : 'Gözləyən qonaq üçün qərar'}</h2></div>
-      {reservation.waiting?.isOverdue && !reservation.requiresReceptionReview ? <span className="reservation-waiting-alert">Servis gecikir</span> : null}
+      <div><span className="section-eyebrow">{i18n.t('ui.features.reservations.reservation_waiting_management.gelis_c010c0')}</span><h2 id="waiting-management-title">{reservation.requiresReceptionReview ?i18n.t('ui.features.reservations.reservation_waiting_management.gelis_neticesini_yoxlayin_3e785b') :i18n.t('ui.features.reservations.reservation_waiting_management.gozleyen_qonaq_ucun_qerar_648b4d')}</h2></div>
+      {reservation.waiting?.isOverdue && !reservation.requiresReceptionReview ? <span className="reservation-waiting-alert">{i18n.t('ui.features.reservations.reservation_waiting_management.servis_gecikir_be3878')}</span> : null}
     </div>
-    {reservation.requiresReceptionReview ? <p className="reservation-waiting-muted">Xidmət müddəti bitib. Qonağın faktiki ayrıldığını təsdiqlədikdən sonra səbəbi qeyd edin. Rezervasiya avtomatik ləğv edilməyib.</p> : null}
-    <div className={`reservation-waiting-modes${reservation.requiresReceptionReview ? ' is-review' : ''}`} role="group" aria-label="Qərar növü">
-      {!reservation.requiresReceptionReview ? <button aria-pressed={decision === 'table'} className={decision === 'table' ? 'is-active' : ''} onClick={() => { setDecision('table'); setError('') }} type="button"><Table2 size={17} />Başqa masa</button> : null}
-      <button aria-pressed={decision === 'departure'} className={decision === 'departure' ? 'is-active' : ''} onClick={() => { setDecision('departure'); setError('') }} type="button"><LogOut size={17} />Ayrılmanı qeyd et</button>
+    {reservation.requiresReceptionReview ? <p className="reservation-waiting-muted">{i18n.t('ui.features.reservations.reservation_waiting_management.xidmet_muddeti_bitib_qonagin_faktiki_a_5f2725')}</p> : null}
+    <div className={`reservation-waiting-modes${reservation.requiresReceptionReview ? ' is-review' : ''}`} role="group" aria-label={i18n.t('ui.features.reservations.reservation_waiting_management.qerar_novu_950532')}>
+      {!reservation.requiresReceptionReview ? <button aria-pressed={decision === 'table'} className={decision === 'table' ? 'is-active' : ''} onClick={() => { setDecision('table'); setError('') }} type="button"><Table2 size={17} />{i18n.t('ui.features.reservations.reservation_waiting_management.basqa_masa_1dff38')}</button> : null}
+      <button aria-pressed={decision === 'departure'} className={decision === 'departure' ? 'is-active' : ''} onClick={() => { setDecision('departure'); setError('') }} type="button"><LogOut size={17} />{i18n.t('ui.features.reservations.reservation_waiting_management.ayrilmani_qeyd_et_785bfb')}</button>
     </div>
 
     {decision === 'table' && !reservation.requiresReceptionReview ? <div className="reservation-waiting-form">
-      <label className="ui-field"><span>Yeni masa</span>
+      <label className="ui-field"><span>{i18n.t('ui.features.reservations.reservation_waiting_management.yeni_masa_6573fd')}</span>
         <select disabled={busy || tablesLoading || Boolean(tablesError)} onChange={(event) => { setSelectedTableId(event.target.value); setCustomerConsent(false) }} value={selectedTableId}>
-          <option value="">Masa seçin</option>
-          {candidates.map((table) => <option key={table.id} value={table.id}>{table.name || `Masa-${table.number}`} · {table.capacity} nəfərlik</option>)}
+          <option value="">{i18n.t('ui.features.reservations.reservation_waiting_management.masa_secin_9e3905')}</option>
+          {candidates.map((table) => <option key={table.id} value={table.id}>{table.name || `Masa-${table.number}`} · {table.capacity} {i18n.t('ui.features.reservations.reservation_waiting_management.neferlik_2dc0b2')}</option>)}
         </select>
       </label>
-      {tablesLoading ? <p className="reservation-waiting-muted">Masalar yüklənir...</p> : null}
-      {tablesError ? <div className="reservation-waiting-error"><StatusMessage tone="danger" autoHideMs={false}>{tablesError}</StatusMessage><Button aria-label="Masa siyahısını yenilə" onClick={() => setReloadKey((value) => value + 1)} title="Masa siyahısını yenilə" type="button" variant="secondary"><RefreshCw size={17} /></Button></div> : null}
-      {!tablesLoading && !tablesError && candidates.length === 0 ? <p className="reservation-waiting-muted">Uyğun alternativ masa tapılmadı.</p> : null}
-      <label className="reservation-waiting-consent"><input checked={customerConsent} disabled={busy || !selectedTable} onChange={(event) => setCustomerConsent(event.target.checked)} type="checkbox" /><span>Qonağın masa dəyişikliyinə razılığını aldım.</span></label>
-      <Button disabled={busy || tablesLoading || Boolean(tablesError) || !selectedTable || !customerConsent} onClick={() => { setError(''); setPending('table') }} type="button"><Table2 size={17} />Masanı dəyiş</Button>
+      {tablesLoading ? <p className="reservation-waiting-muted">{i18n.t('ui.features.reservations.reservation_waiting_management.masalar_yuklenir_fa9b85')}</p> : null}
+      {tablesError ? <div className="reservation-waiting-error"><StatusMessage tone="danger" autoHideMs={false}>{tablesError}</StatusMessage><Button aria-label={i18n.t('ui.features.reservations.reservation_waiting_management.masa_siyahisini_yenile_501254')} onClick={() => setReloadKey((value) => value + 1)} title={i18n.t('ui.features.reservations.reservation_waiting_management.masa_siyahisini_yenile_501254')} type="button" variant="secondary"><RefreshCw size={17} /></Button></div> : null}
+      {!tablesLoading && !tablesError && candidates.length === 0 ? <p className="reservation-waiting-muted">{i18n.t('ui.features.reservations.reservation_waiting_management.uygun_alternativ_masa_tapilmadi_0f0f6c')}</p> : null}
+      <label className="reservation-waiting-consent"><input checked={customerConsent} disabled={busy || !selectedTable} onChange={(event) => setCustomerConsent(event.target.checked)} type="checkbox" /><span>{i18n.t('ui.features.reservations.reservation_waiting_management.qonagin_masa_deyisikliyine_raziligini__1085de')}</span></label>
+      <Button disabled={busy || tablesLoading || Boolean(tablesError) || !selectedTable || !customerConsent} onClick={() => { setError(''); setPending('table') }} type="button"><Table2 size={17} />{i18n.t('ui.features.reservations.reservation_waiting_management.masani_deyis_4bc182')}</Button>
     </div> : null}
 
     {decision === 'departure' ? <div className="reservation-waiting-form">
-      <label className="ui-field"><span>Ayrılma səbəbi</span>
+      <label className="ui-field"><span>{i18n.t('ui.features.reservations.reservation_waiting_management.ayrilma_sebebi_cf5bda')}</span>
         <select disabled={busy} onChange={(event) => setReasonCode(event.target.value === '1' ? 1 : event.target.value === '2' ? 2 : '')} value={reasonCode}>
-          <option value="">Səbəbi seçin</option>
-          <option value="1">Restoran masa təmin edə bilmədi</option>
-          <option value="2">Qonaq özü ayrıldı</option>
+          <option value="">{i18n.t('ui.features.reservations.reservation_waiting_management.sebebi_secin_7673d1')}</option>
+          <option value="1">{i18n.t('ui.features.reservations.reservation_waiting_management.restoran_masa_temin_ede_bilmedi_7e6a31')}</option>
+          <option value="2">{i18n.t('ui.features.reservations.reservation_waiting_management.qonaq_ozu_ayrildi_d6ad89')}</option>
         </select>
       </label>
-      <TextareaField label="İzah" maxLength={500} onChange={(event) => setReason(event.target.value)} placeholder="Ayrılmanın səbəbini yazın" required rows={3} value={reason} />
-      <Button disabled={busy || !reasonCode || !validReason} onClick={() => { setError(''); setPending('departure') }} type="button" variant="danger"><LogOut size={17} />Ayrılmanı təsdiqlə</Button>
+      <TextareaField label={i18n.t('ui.features.reservations.reservation_waiting_management.izah_3a0632')} maxLength={500} onChange={(event) => setReason(event.target.value)} placeholder={i18n.t('ui.features.reservations.reservation_waiting_management.ayrilmanin_sebebini_yazin_4e41f2')} required rows={3} value={reason} />
+      <Button disabled={busy || !reasonCode || !validReason} onClick={() => { setError(''); setPending('departure') }} type="button" variant="danger"><LogOut size={17} />{i18n.t('ui.features.reservations.reservation_waiting_management.ayrilmani_tesdiqle_3ecf15')}</Button>
     </div> : null}
 
     {error && !pending ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
     <ReservationReasonDialog
-      confirmLabel={pending === 'table' ? 'Masanı dəyiş' : 'Ayrılmanı təsdiqlə'}
+      confirmLabel={pending === 'table' ?i18n.t('ui.features.reservations.reservation_waiting_management.masani_deyis_4bc182') :i18n.t('ui.features.reservations.reservation_waiting_management.ayrilmani_tesdiqle_3ecf15')}
       confirmVariant={pending === 'departure' ? 'danger' : 'primary'}
       description={pending === 'table'
         ? `${selectedTable?.name || `Masa-${selectedTable?.number || ''}`} qonağın razılığı ilə təyin ediləcək. Masa sessiyası açılmayacaq.`
         : reasonCode === 1
-          ? 'Restoran masa təmin edə bilmədiyi üçün rezervasiya ləğv ediləcək. Ödənilmiş depozit varsa, geri ödəniş hüququ mövcud qaydaya əsasən hesablanacaq.'
-          : 'Qonağın özü ayrıldığı qeyd ediləcək. Ödənilmiş depozit varsa, geri ödəniş hüququ mövcud ləğv qaydasına əsasən hesablanacaq.'}
+          ?i18n.t('ui.features.reservations.reservation_waiting_management.restoran_masa_temin_ede_bilmediyi_ucun_be2beb')
+          :i18n.t('ui.features.reservations.reservation_waiting_management.qonagin_ozu_ayrildigi_qeyd_edilecek_od_868408')}
       error={pending ? error : ''}
       isOpen={Boolean(pending)}
       isSubmitting={busy}
       onClose={() => { if (!busy) setPending(null) }}
       onConfirm={() => void confirmDecision()}
-      title={pending === 'table' ? 'Yeni masanı təsdiqləyirsiniz?' : 'Qonağın ayrılmasını təsdiqləyirsiniz?'}
+      title={pending === 'table' ?i18n.t('ui.features.reservations.reservation_waiting_management.yeni_masani_tesdiqleyirsiniz_2ea2cb') :i18n.t('ui.features.reservations.reservation_waiting_management.qonagin_ayrilmasini_tesdiqleyirsiniz_76be2d')}
     />
   </section>
 }

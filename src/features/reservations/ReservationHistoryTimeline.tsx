@@ -1,3 +1,5 @@
+import { i18n } from '../../shared/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { Check, CircleAlert, Clock3, ShieldCheck, Store, UserRound } from 'lucide-react'
 import type { ReservationHistoryItem } from '../../shared/api/ecafeApi'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
@@ -18,9 +20,9 @@ type TimelineEvent =
   | { kind: 'arrival'; changedAt: string }
 
 function actorLabel(actorType: ReservationHistoryItem['actorType'], viewer: 'customer' | 'manager') {
-  if (actorType === 'Customer') return viewer === 'customer' ? 'Siz' : 'Müştəri'
-  if (actorType === 'Restaurant') return 'Restoran'
-  return 'Sistem'
+  if (actorType === 'Customer') return i18n.t(viewer === 'customer' ? 'ui.history.actor.you' : 'ui.history.actor.customer')
+  if (actorType === 'Restaurant') return i18n.t('ui.history.actor.restaurant')
+  return i18n.t('ui.history.actor.system')
 }
 
 function ActorIcon({ actorType }: { actorType: ReservationHistoryItem['actorType'] }) {
@@ -40,44 +42,53 @@ const routineReasons = new Set([
   'Masa sessiyası bağlandı, rezervasiya tamamlandı.',
 ])
 
+const reasonKeys: Record<string, string> = {
+  'Rezervasiya yaradıldı.': 'createdReason',
+  'Mövcud rezervasiyanın ilkin statusu.': 'initialReason',
+  'Restoran ödəniş məlumatlarını göndərməyə başladı.': 'paymentInstructionsReason',
+  'Müştəri ödəniş çekini göndərdi.': 'receiptSentReason',
+  'Ödəniş çeki təsdiqləndi.': 'receiptApprovedReason',
+  'Müştəri check-in etdi və masa sessiyası açıldı.': 'arrivedReason',
+  'Müştəri masaya əyləşdi və masa açıldı.': 'arrivedReason',
+  'Masa sessiyası bağlandı, rezervasiya tamamlandı.': 'sessionClosedReason',
+  'Müştəri no-show müddəti ərzində check-in etmədi.': 'noShowReason',
+  'Müştəri gəliş üçün ayrılan vaxtda masaya əyləşmədi.': 'noShowReason',
+}
+
 function customerReason(reason: string) {
-  if (reason === 'Müştəri check-in etdi və masa sessiyası açıldı.' || reason === 'Müştəri masaya əyləşdi və masa açıldı.') {
-    return 'Restoran gəlişinizi təsdiqlədi və masanız açıldı.'
-  }
-  if (reason === 'Müştəri no-show müddəti ərzində check-in etmədi.' || reason === 'Müştəri gəliş üçün ayrılan vaxtda masaya əyləşmədi.') {
-    return 'Gəliş üçün ayrılan vaxtda masaya əyləşmədiniz.'
-  }
-  return reason
+  const key = reasonKeys[reason]
+  return key ? i18n.t(`ui.history.${key}`) : reason
 }
 
 function eventLabel(item: ReservationHistoryItem) {
   const status = item.toStatus.toLocaleLowerCase('az-AZ')
   const previous = item.fromStatus?.toLocaleLowerCase('az-AZ') || ''
-  if (status === previous && item.reason === 'Müştəri yeni gəliş və masanın təhvil şərtlərini qəbul etdi.') return 'Gəliş vaxtı yeniləndi'
+  if (status === previous && item.reason === 'Müştəri yeni gəliş və masanın təhvil şərtlərini qəbul etdi.') return i18n.t('ui.history.arrivalUpdated')
   if (status === previous &&
     (item.reason?.startsWith('Masa dəyişdirildi:') || item.reason?.startsWith('Rezervasiyanın masası dəyişdirildi:')))
-    return 'Masa dəyişdirildi'
+    return i18n.t('ui.history.tableChanged')
 
-  if (!item.fromStatus && item.reason === 'Mövcud rezervasiyanın ilkin statusu.') return 'İlkin vəziyyət qeydə alındı'
-  if (!item.fromStatus) return 'Rezervasiya yaradıldı'
-  if (status.includes('awaitingpaymentinstruction') || status.includes('restoran cavabı')) return 'Restoran cavabı gözlənilir'
+  if (!item.fromStatus && item.reason === 'Mövcud rezervasiyanın ilkin statusu.') return i18n.t('ui.history.initialEvent')
+  if (!item.fromStatus) return i18n.t('ui.history.createdEvent')
+  if (status.includes('awaitingpaymentinstruction') || status.includes('restoran cavabı')) return i18n.t('ui.history.awaitingRestaurant')
   if (status.includes('pendingpayment') || status.includes('ödəniş gözlənilir')) {
     return previous.includes('paymentsubmitted') || previous.includes('çek göndərilib')
-      ? 'Ödəniş çeki rədd edildi'
-      : 'Depozit ödənişi gözlənilir'
+      ? i18n.t('ui.history.receiptRejected')
+      : i18n.t('ui.history.awaitingDeposit')
   }
-  if (status.includes('paymentsubmitted') || status.includes('çek göndərilib')) return 'Ödəniş çeki göndərildi'
-  if (status.includes('confirmed') || status.includes('təsdiqlənib')) return 'Rezervasiya təsdiqləndi'
-  if (status.includes('seated') || status.includes('əyləşib')) return 'Müştəri masa arxasında əyləşdi'
-  if (status.includes('completed') || status.includes('tamamlanıb')) return 'Rezervasiya tamamlandı'
-  if (status.includes('cancel') || status.includes('ləğv')) return 'Rezervasiya ləğv edildi'
-  if (status.includes('reject') || status.includes('rədd')) return 'Rezervasiya rədd edildi'
-  if (status.includes('noshow') || status.includes('gəlməyib')) return 'Müştəri gəlmədi'
-  if (status.includes('expired') || status.includes('vaxtı bitib')) return 'Rezervasiyanın vaxtı bitdi'
+  if (status.includes('paymentsubmitted') || status.includes('çek göndərilib')) return i18n.t('ui.history.receiptSent')
+  if (status.includes('confirmed') || status.includes('təsdiqlənib')) return i18n.t('ui.history.confirmed')
+  if (status.includes('seated') || status.includes('əyləşib')) return i18n.t('ui.history.seated')
+  if (status.includes('completed') || status.includes('tamamlanıb')) return i18n.t('ui.history.completed')
+  if (status.includes('cancel') || status.includes('ləğv')) return i18n.t('ui.history.cancelled')
+  if (status.includes('reject') || status.includes('rədd')) return i18n.t('ui.history.rejected')
+  if (status.includes('noshow') || status.includes('gəlməyib')) return i18n.t('ui.history.noShow')
+  if (status.includes('expired') || status.includes('vaxtı bitib')) return i18n.t('ui.history.expired')
   return getReservationStatusPresentation(item.toStatus).label
 }
 
 export function ReservationHistoryTimeline({ items, viewer = 'customer', currentStatus, arrivedAt, seatedAt, requiresReceptionReview, timeZone }: ReservationHistoryTimelineProps) {
+  useTranslation()
   const events: TimelineEvent[] = items.map((item) => ({ kind: 'status', item, changedAt: item.changedAt }))
   if (arrivedAt && (!seatedAt || new Date(arrivedAt).getTime() !== new Date(seatedAt).getTime())) {
     events.push({ kind: 'arrival', changedAt: arrivedAt })
@@ -87,30 +98,30 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
   const currentPresentation = getReservationStatusPresentation(currentStatus || items[items.length - 1]?.toStatus || '')
 
   return (
-    <section className="reservation-history-panel" aria-label="Rezervasiya tarixçəsi">
+    <section className="reservation-history-panel" aria-label={i18n.t('ui.features.reservations.reservation_history_timeline.rezervasiya_tarixcesi_9a2c1c')}>
       <div className="reservation-history-heading">
         <Clock3 size={19} aria-hidden="true" />
         <div>
-          <span className="section-eyebrow">Proses</span>
-          <h2>Rezervasiya tarixçəsi</h2>
+          <span className="section-eyebrow">{i18n.t('ui.features.reservations.reservation_history_timeline.proses_329cb5')}</span>
+          <h2>{i18n.t('ui.features.reservations.reservation_history_timeline.rezervasiya_tarixcesi_9a2c1c')}</h2>
         </div>
       </div>
 
       {viewer === 'manager' && lastEvent ? (
         <div className="reservation-history-summary">
           <div>
-            <span className="section-eyebrow">CARİ VƏZİYYƏT</span>
-            <strong>{requiresReceptionReview ? 'Nəticə yoxlanmalıdır' : currentPresentation.label}</strong>
+            <span className="section-eyebrow">{i18n.t('ui.features.reservations.reservation_history_timeline.cari_veziyyet_8ecc48')}</span>
+            <strong>{requiresReceptionReview ?i18n.t('ui.features.reservations.reservation_history_timeline.netice_yoxlanmalidir_af3e9d') : currentPresentation.label}</strong>
           </div>
-          <span>{requiresReceptionReview ? 'Son hadisə' : 'Son yenilənmə'}: <time dateTime={lastEvent.changedAt}>{formatReservationDateTime(lastEvent.changedAt, timeZone)}</time></span>
+          <span>{requiresReceptionReview ?i18n.t('ui.features.reservations.reservation_history_timeline.son_hadise_c5e4dc') :i18n.t('ui.features.reservations.reservation_history_timeline.son_yenilenme_5994c9')}: <time dateTime={lastEvent.changedAt}>{formatReservationDateTime(lastEvent.changedAt, timeZone)}</time></span>
         </div>
       ) : null}
 
       {events.length === 0 ? (
-        <p className="reservation-history-empty">Bu rezervasiya üçün hələ tarixçə yoxdur.</p>
+        <p className="reservation-history-empty">{i18n.t('ui.features.reservations.reservation_history_timeline.bu_rezervasiya_ucun_hele_tarixce_yoxdu_c68b76')}</p>
       ) : (
-        <div className="reservation-history-events" role="region" aria-label="Tarixçə hadisələri" tabIndex={0}>
-          {viewer === 'manager' ? <h3>Hadisələr</h3> : null}
+        <div className="reservation-history-events" role="region" aria-label={i18n.t('ui.features.reservations.reservation_history_timeline.tarixce_hadiseleri_397b21')} tabIndex={0}>
+          {viewer === 'manager' ? <h3>{i18n.t('ui.features.reservations.reservation_history_timeline.hadiseler_a4157c')}</h3> : null}
           <ol className="reservation-history-timeline">
             {events.map((event, index) => {
               const isCurrent = index === events.length - 1
@@ -118,9 +129,9 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                 return <li className={`reservation-history-item reservation-history-item-success${isCurrent ? ' is-current' : ''}`} key={`arrival-${event.changedAt}`}>
                   <span className="reservation-history-marker" aria-hidden="true"><Check size={16} /></span>
                   <div className="reservation-history-content">
-                    <div className="reservation-history-title-row"><strong>Müştəri restorana gəldi</strong>{viewer === 'customer' && isCurrent ? <span className="reservation-history-current">{requiresReceptionReview ? 'Son qeyd' : 'Hazırkı mərhələ'}</span> : null}</div>
-                    <div className="reservation-history-meta"><time dateTime={event.changedAt}>{formatReservationDateTime(event.changedAt, timeZone)}</time><span><Store size={15} aria-hidden="true" />Restoran</span></div>
-                    {viewer === 'customer' ? <p>Gəlişiniz qeydə alındı. Masa hələ açılmayıb.</p> : null}
+                    <div className="reservation-history-title-row"><strong>{i18n.t('ui.features.reservations.reservation_history_timeline.musteri_restorana_geldi_515f7f')}</strong>{viewer === 'customer' && isCurrent ? <span className="reservation-history-current">{requiresReceptionReview ?i18n.t('ui.features.reservations.reservation_history_timeline.son_qeyd_dc58de') :i18n.t('ui.features.reservations.reservation_history_timeline.hazirki_merhele_1977da')}</span> : null}</div>
+                    <div className="reservation-history-meta"><time dateTime={event.changedAt}>{formatReservationDateTime(event.changedAt, timeZone)}</time><span><Store size={15} aria-hidden="true" />{i18n.t('ui.features.reservations.reservation_history_timeline.restoran_c4df56')}</span></div>
+                    {viewer === 'customer' ? <p>{i18n.t('ui.features.reservations.reservation_history_timeline.gelisiniz_qeyde_alindi_masa_hele_acilm_7d968a')}</p> : null}
                   </div>
                 </li>
               }
@@ -139,14 +150,14 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                   <div className="reservation-history-content">
                     <div className="reservation-history-title-row">
                       <strong>{viewer === 'manager' || item.fromStatus === item.toStatus ? eventLabel(item) : presentation.label}</strong>
-                      {viewer === 'customer' && isCurrent ? <span className="reservation-history-current">{requiresReceptionReview ? 'Son qeyd' : 'Hazırkı mərhələ'}</span> : null}
+                      {viewer === 'customer' && isCurrent ? <span className="reservation-history-current">{requiresReceptionReview ?i18n.t('ui.features.reservations.reservation_history_timeline.son_qeyd_dc58de') :i18n.t('ui.features.reservations.reservation_history_timeline.hazirki_merhele_1977da')}</span> : null}
                     </div>
                     <div className="reservation-history-meta">
                       <time dateTime={item.changedAt}>{formatReservationDateTime(item.changedAt, timeZone)}</time>
                       <span><ActorIcon actorType={item.actorType} />{actorLabel(item.actorType, viewer)}</span>
                     </div>
                     {reason && reason !== presentation.label && (viewer === 'customer' || !routineReasons.has(reason))
-                      ? <p>{viewer === 'manager' ? `Qeyd: ${reason}` : customerReason(reason)}</p>
+                      ? <p>{viewer === 'manager' ? i18n.t('ui.history.note', { reason }) : customerReason(reason)}</p>
                       : null}
                   </div>
                 </li>

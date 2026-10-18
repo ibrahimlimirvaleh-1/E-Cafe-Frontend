@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { useParams } from 'react-router-dom'
 import { stitchPages } from './stitchPages'
 
@@ -14,7 +15,7 @@ export function StitchFramePage({ pageId }: StitchFramePageProps) {
     return (
       <main className="center-page">
         <article className="placeholder-panel">
-          <h1>Stitch səhifə tapılmadı</h1>
+          <h1>{i18n.t('ui.pages.stitch.stitch_frame_page.stitch_sehife_tapilmadi_ce7964')}</h1>
         </article>
       </main>
     )

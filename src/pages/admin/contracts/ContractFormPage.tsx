@@ -1,3 +1,4 @@
+import { i18n } from '../../../shared/i18n/i18n'
 import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -134,46 +135,44 @@ export function ContractFormPage() {
   }
   return (
     <main className="admin-page narrow contract-form-page">
-      <PageHeader eyebrow={isEditMode ? 'Müqavilə redaktəsi' : 'Yeni müqavilə'} title={isEditMode ? 'Müqaviləni redaktə et' : 'Müqavilə yarat'} />
+      <PageHeader eyebrow={isEditMode ?i18n.t('ui.pages.admin.contracts.contract_form_page.muqavile_redaktesi_384b7e') :i18n.t('ui.pages.admin.contracts.contract_form_page.yeni_muqavile_6fdd79')} title={isEditMode ?i18n.t('ui.pages.admin.contracts.contract_form_page.muqavileni_redakte_et_36e93f') :i18n.t('ui.pages.admin.contracts.contract_form_page.muqavile_yarat_8aba1a')} />
 
       <form className="form-card" onSubmit={handleSubmit}>
         <RestaurantSelectField
           disabled={isEditMode || isLoading || restaurants.length === 0}
           emptyOption={null}
-          label="Restoran"
+          label={i18n.t('ui.pages.admin.contracts.contract_form_page.restoran_c4df56')}
           onChange={setRestaurantId}
           restaurants={restaurants}
           value={selectedRestaurantId}
         />
 
         <div className="form-row">
-          <TextField label="Başlama tarixi" onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
-          <TextField label="Bitmə tarixi" onChange={(event) => setEndDate(event.target.value)} type="date" value={endDate} />
+          <TextField label={i18n.t('ui.pages.admin.contracts.contract_form_page.baslama_tarixi_0b7c63')} onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
+          <TextField label={i18n.t('ui.pages.admin.contracts.contract_form_page.bitme_tarixi_5ab26f')} onChange={(event) => setEndDate(event.target.value)} type="date" value={endDate} />
         </div>
 
         <div className="form-row">
-          <TextField label="Müqavilə məbləği" min="0.01" onChange={(event) => setAmount(event.target.value)} step="0.01" type="number" value={amount} />
-          <TextField label="Bitmə xatırlatması" min="1" max="365" onChange={(event) => setExpiryReminderDaysBefore(event.target.value)} type="number" value={expiryReminderDaysBefore} />
+          <TextField label={i18n.t('ui.pages.admin.contracts.contract_form_page.muqavile_meblegi_e04723')} min="0.01" onChange={(event) => setAmount(event.target.value)} step="0.01" type="number" value={amount} />
+          <TextField label={i18n.t('ui.pages.admin.contracts.contract_form_page.bitme_xatirlatmasi_e19683')} min="1" max="365" onChange={(event) => setExpiryReminderDaysBefore(event.target.value)} type="number" value={expiryReminderDaysBefore} />
         </div>
 
         <div className="form-row">
-          <TextField label="Komissiya faizi" min="0" onChange={(event) => setCommissionPercent(event.target.value)} step="0.01" type="number" value={commissionPercent} />
-          <TextField label="Hesablaşma dövrü" min="1" onChange={(event) => setStaffSettlementPeriod(event.target.value)} type="number" value={staffSettlementPeriod} />
+          <TextField label={i18n.t('ui.pages.admin.contracts.contract_form_page.komissiya_faizi_b79f66')} min="0" onChange={(event) => setCommissionPercent(event.target.value)} step="0.01" type="number" value={commissionPercent} />
+          <TextField label={i18n.t('ui.pages.admin.contracts.contract_form_page.hesablasma_dovru_346e68')} min="1" onChange={(event) => setStaffSettlementPeriod(event.target.value)} type="number" value={staffSettlementPeriod} />
         </div>
 
         {isEditMode && record?.contract?.status === 'PendingSignature' ? (
-          <StatusMessage tone="warning">Redaktədən sonra müqavilə yenidən qaralama statusuna qayıdacaq və sahibkara təkrar göndərilməlidir.</StatusMessage>
+          <StatusMessage tone="warning">{i18n.t('ui.pages.admin.contracts.contract_form_page.redakteden_sonra_muqavile_yeniden_qara_6277e7')}</StatusMessage>
         ) : null}
-        {!canEditContract ? <StatusMessage tone="warning">Bu statusda olan müqaviləni redaktə etmək olmaz.</StatusMessage> : null}
+        {!canEditContract ? <StatusMessage tone="warning">{i18n.t('ui.pages.admin.contracts.contract_form_page.bu_statusda_olan_muqavileni_redakte_et_684b90')}</StatusMessage> : null}
         {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
 
         <div className="form-actions">
           <Button disabled={!canEditContract || isSubmitting || restaurants.length === 0} type="submit">
-            {isSubmitting ? 'Saxlanılır...' : isEditMode ? 'Yadda saxla' : 'Müqavilə yarat'}
+            {isSubmitting ?i18n.t('ui.pages.admin.contracts.contract_form_page.saxlanilir_da0933') : isEditMode ?i18n.t('ui.pages.admin.contracts.contract_form_page.yadda_saxla_78db97') :i18n.t('ui.pages.admin.contracts.contract_form_page.muqavile_yarat_8aba1a')}
           </Button>
-          <ButtonLink to="/admin/contracts" variant="secondary">
-            Ləğv et
-          </ButtonLink>
+          <ButtonLink to="/admin/contracts" variant="secondary">{i18n.t('ui.pages.admin.contracts.contract_form_page.legv_et_94727e')}</ButtonLink>
         </div>
       </form>
     </main>

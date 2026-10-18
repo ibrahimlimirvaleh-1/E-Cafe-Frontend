@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { CreditCard, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { ecafeApi, type PaymentCapabilities, type ReservationPaymentSummary } from '../../shared/api/ecafeApi'
@@ -48,37 +49,37 @@ export function ManagerDepositPaymentPanel({ restaurantId, reservationId, amount
   }
 
   return (
-    <section className="reservation-payment-panel" aria-label="Depozit ödənişi">
+    <section className="reservation-payment-panel" aria-label={i18n.t('ui.features.reservations.manager_deposit_payment_panel.depozit_odenisi_73ba88')}>
       <div className="reservation-payment-panel-header">
         <div className="reservation-payment-panel-icon"><CreditCard size={20} /></div>
         <div>
-          <span className="section-eyebrow">DEPOZİT</span>
-          <h2>Ödənişə icazə</h2>
-          <p>Müştəri depoziti yalnız sistemdəki ödəniş addımı ilə tamamlayır.</p>
+          <span className="section-eyebrow">{i18n.t('ui.features.reservations.manager_deposit_payment_panel.depozit_1af98c')}</span>
+          <h2>{i18n.t('ui.features.reservations.manager_deposit_payment_panel.odenise_icaze_9af3d5')}</h2>
+          <p>{i18n.t('ui.features.reservations.manager_deposit_payment_panel.musteri_depoziti_yalniz_sistemdeki_ode_fb6052')}</p>
         </div>
       </div>
       <div className="reservation-payment-meta">
-        <span><strong>Rezervasiya</strong><b>#{reservationId}</b></span>
-        <span><strong>Depozit</strong><b>{amount || 'Serverdə yoxlanılır'}</b></span>
-        <span><ShieldCheck size={16} /> Rekvizit mübadiləsi yoxdur</span>
+        <span><strong>{i18n.t('ui.features.reservations.manager_deposit_payment_panel.rezervasiya_9cf147')}</strong><b>#{reservationId}</b></span>
+        <span><strong>{i18n.t('ui.features.reservations.manager_deposit_payment_panel.depozit_4a14b8')}</strong><b>{amount || 'Serverdə yoxlanılır'}</b></span>
+        <span><ShieldCheck size={16} /> {i18n.t('ui.features.reservations.manager_deposit_payment_panel.rekvizit_mubadilesi_yoxdur_21ebc1')}</span>
       </div>
-      {isLoading ? <p role="status">Ödəniş vəziyyəti yoxlanılır...</p> : null}
+      {isLoading ? <p role="status">{i18n.t('ui.features.reservations.manager_deposit_payment_panel.odenis_veziyyeti_yoxlanilir_f721f8')}</p> : null}
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
       {data.capabilities && !data.capabilities.enabled ? (
         <StatusMessage tone="warning" autoHideMs={false}>{data.capabilities.message || 'Ödəniş xidməti hazırda aktiv deyil.'}</StatusMessage>
       ) : null}
       {data.capabilities?.enabled && data.capabilities.isTest ? (
-        <StatusMessage tone="info" autoHideMs={false}>Test rejimi: real pul köçürülmür.</StatusMessage>
+        <StatusMessage tone="info" autoHideMs={false}>{i18n.t('ui.features.reservations.manager_deposit_payment_panel.test_rejimi_real_pul_kocurulmur_63faa1')}</StatusMessage>
       ) : null}
-      {data.summary?.latestPayment ? <p className="reservation-payment-state">Son ödəniş: {paymentStatusLabel(data.summary.latestPayment.statusId, data.summary.latestPayment.status)}</p> : null}
-      {data.summary?.latestPayment?.isTest && !data.capabilities?.isTest ? <StatusMessage tone="info" autoHideMs={false}>Son ödəniş test qeydi idi; real pul tutulmayıb.</StatusMessage> : null}
-      {data.capabilities?.enabled && data.summary && !data.summary.enabled ? <p className="reservation-payment-state">Bu rezervasiya üçün ödəniş addımı aktiv deyil.</p> : null}
+      {data.summary?.latestPayment ? <p className="reservation-payment-state">{i18n.t('ui.features.reservations.manager_deposit_payment_panel.son_odenis_2ea849')} {paymentStatusLabel(data.summary.latestPayment.statusId, data.summary.latestPayment.status)}</p> : null}
+      {data.summary?.latestPayment?.isTest && !data.capabilities?.isTest ? <StatusMessage tone="info" autoHideMs={false}>{i18n.t('ui.features.reservations.manager_deposit_payment_panel.son_odenis_test_qeydi_idi_real_pul_tut_084205')}</StatusMessage> : null}
+      {data.capabilities?.enabled && data.summary && !data.summary.enabled ? <p className="reservation-payment-state">{i18n.t('ui.features.reservations.manager_deposit_payment_panel.bu_rezervasiya_ucun_odenis_addimi_akti_7099cb')}</p> : null}
       {feedback ? <StatusMessage tone="danger" autoHideMs={false}>{feedback}</StatusMessage> : null}
       {data.capabilities?.enabled && data.summary?.canAuthorize ? (
         <div className="reservation-payment-actions">
-          <span>İcazə verildikdən sonra müştəri ödəniş addımını açacaq.</span>
+          <span>{i18n.t('ui.features.reservations.manager_deposit_payment_panel.icaze_verildikden_sonra_musteri_odenis_07b291')}</span>
           <Button disabled={isAuthorizing} onClick={() => void authorize()} type="button">
-            <CreditCard size={17} /> {isAuthorizing ? 'İcazə verilir...' : 'Ödənişə icazə ver'}
+            <CreditCard size={17} /> {isAuthorizing ?i18n.t('ui.features.reservations.manager_deposit_payment_panel.icaze_verilir_175238') :i18n.t('ui.features.reservations.manager_deposit_payment_panel.odenise_icaze_ver_691741')}
           </Button>
         </div>
       ) : null}

@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { CalendarDays, LogOut, MapPin, Users } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
@@ -59,20 +60,20 @@ export function TrackingPage() {
   return (
     <main className="page tracking-page">
       <PageHeader
-        eyebrow="Rezervasiya"
-        title="Rezervasiyanı izlə"
-        description="Statusu, ödənişi və proses tarixçəsini bir yerdə görün."
+        eyebrow={i18n.t('ui.pages.customer.tracking_page.rezervasiya_9cf147')}
+        title={i18n.t('ui.pages.customer.tracking_page.rezervasiyani_izle_829de4')}
+        description={i18n.t('ui.pages.customer.tracking_page.statusu_odenisi_ve_proses_tarixcesini__2f12e1')}
       />
 
-      {isLoading ? <p className="online-only">Rezervasiya məlumatları yüklənir...</p> : null}
+      {isLoading ? <p className="online-only">{i18n.t('ui.pages.customer.tracking_page.rezervasiya_melumatlari_yuklenir_cbd94d')}</p> : null}
       {error ? <StatusMessage autoHideMs={false} tone="danger">{error}</StatusMessage> : null}
 
       {!isLoading && (!error || hasData) && !reservation ? (
         <section className="tracking-panel reservation-empty-state">
           <CalendarDays size={28} />
-          <h2>İzlənəcək rezervasiya yoxdur</h2>
-          <p>Rezervasiya yaratdıqdan sonra onun statusunu burada görə bilərsiniz.</p>
-          <ButtonLink to="/reservations">Rezervasiyalarım</ButtonLink>
+          <h2>{i18n.t('ui.pages.customer.tracking_page.izlenecek_rezervasiya_yoxdur_aafe5d')}</h2>
+          <p>{i18n.t('ui.pages.customer.tracking_page.rezervasiya_yaratdiqdan_sonra_onun_sta_933a6a')}</p>
+          <ButtonLink to="/reservations">{i18n.t('ui.pages.customer.tracking_page.rezervasiyalarim_52105e')}</ButtonLink>
         </section>
       ) : null}
 
@@ -81,7 +82,7 @@ export function TrackingPage() {
           <section className="tracking-panel">
             <header className="tracking-hero">
               <div>
-                <span className="tracking-eyebrow">REZERVASİYA #{reservation.id}</span>
+                <span className="tracking-eyebrow">{i18n.t('ui.pages.customer.tracking_page.rezervasiya_a13388')}{reservation.id}</span>
                 <h2>{reservation.restaurantName || 'Restoran rezervasiyası'}</h2>
                 <p>{reservation.tableName || `Masa ${reservation.tableId}`}</p>
               </div>
@@ -89,27 +90,27 @@ export function TrackingPage() {
             </header>
 
             <div className="tracking-content-grid">
-              <section className="tracking-items" aria-label="Rezervasiya məlumatları">
+              <section className="tracking-items" aria-label={i18n.t('ui.pages.customer.tracking_page.rezervasiya_melumatlari_fba5af')}>
                 <div className="tracking-section-heading">
-                  <span>REZERVASİYA MƏLUMATLARI</span>
-                  <strong>{reservation.peopleCount} nəfər</strong>
+                  <span>{i18n.t('ui.pages.customer.tracking_page.rezervasiya_melumatlari_3da517')}</span>
+                  <strong>{i18n.t('ui.count.guests', { count: reservation.peopleCount })}</strong>
                 </div>
                 <ul>
                   <li><CalendarDays size={17} />{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</li>
                   <li><MapPin size={17} />{reservation.tableName || `Masa ${reservation.tableId}`}</li>
-                  <li><Users size={17} />{reservation.peopleCount} nəfər</li>
-                  {reservation.departureReason ? <li><LogOut size={17} />Ayrılma: {getReservationDepartureReasonLabel(reservation.departureReason)}</li> : null}
+                  <li><Users size={17} />{i18n.t('ui.count.guests', { count: reservation.peopleCount })}</li>
+                  {reservation.departureReason ? <li><LogOut size={17} />{i18n.t('ui.pages.customer.tracking_page.ayrilma_1dc94d')} {getReservationDepartureReasonLabel(reservation.departureReason)}</li> : null}
                 </ul>
               </section>
-              <section className="tracking-total" aria-label="Depozit məlumatı">
-                <span>DEPOZİT</span>
-                <strong>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` : 'Tələb olunmur'}</strong>
+              <section className="tracking-total" aria-label={i18n.t('ui.pages.customer.tracking_page.depozit_melumati_223fe1')}>
+                <span>{i18n.t('ui.pages.customer.tracking_page.depozit_1af98c')}</span>
+                <strong>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` :i18n.t('ui.pages.customer.tracking_page.teleb_olunmur_46f021')}</strong>
                 <small>
                   {reservation.holdExpiresAt
                     ? `Ödəniş üçün son vaxt: ${formatReservationDateTime(reservation.holdExpiresAt)}`
                     : reservation.restaurantResponseExpiresAt
                       ? `Cavab üçün son vaxt: ${formatReservationDateTime(reservation.restaurantResponseExpiresAt)}`
-                      : reservation.depositAmount > 0 ? 'Əlavə ödəniş müddəti yoxdur' : 'Rezervasiya ödənişsiz təsdiqlənib'}
+                      : reservation.depositAmount > 0 ?i18n.t('ui.pages.customer.tracking_page.elave_odenis_muddeti_yoxdur_dbcf1c') :i18n.t('ui.pages.customer.tracking_page.rezervasiya_odenissiz_tesdiqlenib_82467b')}
                 </small>
               </section>
             </div>
@@ -133,7 +134,7 @@ export function TrackingPage() {
             />
 
             <div className="tracking-page-actions">
-              <ButtonLink to={`/confirmation?reservationId=${reservation.id}`}>Rezervasiya detallarına bax</ButtonLink>
+              <ButtonLink to={`/confirmation?reservationId=${reservation.id}`}>{i18n.t('ui.pages.customer.tracking_page.rezervasiya_detallarina_bax_053606')}</ButtonLink>
             </div>
           </section>
 

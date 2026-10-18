@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { AlertTriangle, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button, type ButtonVariant } from '../../shared/ui/Button'
@@ -57,7 +58,7 @@ export function ReservationReasonDialog({
           <div className="reservation-action-dialog-icon" aria-hidden="true">
             <AlertTriangle size={20} />
           </div>
-          <button aria-label="Pəncərəni bağla" className="reservation-action-dialog-close" onClick={onClose} type="button">
+          <button aria-label={i18n.t('ui.features.reservations.reservation_reason_dialog.pencereni_bagla_15e818')} className="reservation-action-dialog-close" onClick={onClose} type="button">
             <X size={18} />
           </button>
         </header>
@@ -66,10 +67,10 @@ export function ReservationReasonDialog({
           <p>{description}</p>
           {showReason || requireReason ? (
             <TextareaField
-              label={requireReason ? 'Səbəb' : 'Səbəb (istəyə görə)'}
+              label={requireReason ?i18n.t('ui.features.reservations.reservation_reason_dialog.sebeb_33efd0') :i18n.t('ui.features.reservations.reservation_reason_dialog.sebeb_isteye_gore_ee545f')}
               maxLength={500}
               onChange={(event) => setReason(event.target.value)}
-              placeholder="Səbəbi yazın"
+              placeholder={i18n.t('ui.features.reservations.reservation_reason_dialog.sebebi_yazin_c1ce48')}
               rows={4}
               value={reason}
             />
@@ -77,11 +78,9 @@ export function ReservationReasonDialog({
           {error ? <StatusMessage tone="danger">{error}</StatusMessage> : null}
         </div>
         <footer className="reservation-action-dialog-actions">
-          <Button disabled={isSubmitting} onClick={onClose} type="button" variant="secondary">
-            Bağla
-          </Button>
+          <Button disabled={isSubmitting} onClick={onClose} type="button" variant="secondary">{i18n.t('ui.features.reservations.reservation_reason_dialog.bagla_c1cf91')}</Button>
           <Button disabled={!canSubmit} onClick={() => onConfirm(reason.trim())} type="button" variant={confirmVariant}>
-            {isSubmitting ? 'Gözləyin...' : confirmLabel}
+            {isSubmitting ?i18n.t('ui.features.reservations.reservation_reason_dialog.gozleyin_1dc931') : confirmLabel}
           </Button>
         </footer>
       </section>

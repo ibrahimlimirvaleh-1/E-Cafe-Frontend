@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -40,12 +41,12 @@ export function ForgotPasswordPage() {
       <form className="auth-card" onSubmit={onSubmit}>
         <Brand />
         <div>
-          <h1>Şifrəni yenilə</h1>
-          <p>Email ünvanınızı yazın, sistem sizə təhlükəsiz yeniləmə linki göndərsin.</p>
+          <h1>{i18n.t('ui.pages.auth.forgot_password_page.sifreni_yenile_de20a9')}</h1>
+          <p>{i18n.t('ui.pages.auth.forgot_password_page.email_unvaninizi_yazin_sistem_size_teh_e2db13')}</p>
         </div>
         <TextField
-          label="Email"
-          placeholder="name@example.com"
+          label={i18n.t('ui.pages.auth.forgot_password_page.email_969ccb')}
+          placeholder={i18n.t('ui.pages.auth.forgot_password_page.name_example_com_7b17fb')}
           required
           type="email"
           value={email}
@@ -57,9 +58,9 @@ export function ForgotPasswordPage() {
           </StatusMessage>
         ) : null}
         <Button disabled={isSubmitting} type="submit">
-          {isSubmitting ? 'Göndərilir...' : 'Link göndər'}
+          {isSubmitting ?i18n.t('ui.pages.auth.forgot_password_page.gonderilir_e1bb27') :i18n.t('ui.pages.auth.forgot_password_page.link_gonder_57e67c')}
         </Button>
-        <Link to="/login">Giriş səhifəsinə qayıt</Link>
+        <Link to="/login">{i18n.t('ui.pages.auth.forgot_password_page.giris_sehifesine_qayit_82f2cf')}</Link>
       </form>
     </main>
   )

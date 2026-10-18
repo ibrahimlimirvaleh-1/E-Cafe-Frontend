@@ -7,8 +7,11 @@ import { NotificationBell } from './NotificationBell'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
+import { LanguageSwitcher } from './LanguageSwitcher'
+import { useTranslation } from 'react-i18next'
 
 export function SiteShell() {
+  const { t } = useTranslation()
   const { isAuthenticated, user } = useAuth()
   const isCustomer = isInRole(user, [RoleIds.Customer])
   const { pathname } = useLocation()
@@ -33,15 +36,16 @@ export function SiteShell() {
         <div className="site-topbar-inner">
           <Brand />
           {isAuthenticated && isCustomer ? (
-            <nav className="site-nav" aria-label="Sayt naviqasiyası" ref={navRef}>
-              <NavLink to="/">Restoranlar</NavLink>
-              <NavLink to="/reservations">Rezervasiyalarım</NavLink>
-              <NavLink to="/orders">Sifarişlərim</NavLink>
-              <NavLink to="/mobile-app">Android tətbiqi</NavLink>
-              <NavLink to="/tracking/demo-token">İzləmə</NavLink>
+            <nav className="site-nav" aria-label={t('ui.nav.site')} ref={navRef}>
+              <NavLink to="/">{t('ui.nav.restaurants')}</NavLink>
+              <NavLink to="/reservations">{t('ui.nav.myReservations')}</NavLink>
+              <NavLink to="/orders">{t('ui.nav.myOrders')}</NavLink>
+              <NavLink to="/mobile-app">{t('ui.nav.androidApp')}</NavLink>
+              <NavLink to="/tracking/demo-token">{t('ui.nav.tracking')}</NavLink>
             </nav>
           ) : null}
           <div className="site-actions">
+            <LanguageSwitcher />
             <ThemeToggle />
             <WorkspaceSwitcher mode="site" />
             <NotificationBell />

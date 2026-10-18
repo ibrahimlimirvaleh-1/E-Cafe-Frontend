@@ -1,3 +1,4 @@
+import { i18n } from '../../shared/i18n/i18n'
 import { CalendarCheck2, ShoppingBag, WalletCards, X } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
 
@@ -41,20 +42,20 @@ export function ReservationPreorderDialog({
           <div className="reservation-preorder-dialog-icon">
             {depositAmount && depositAmount > 0 ? <WalletCards size={23} /> : <CalendarCheck2 size={23} />}
           </div>
-          <button aria-label="Bağla" className="reservation-preorder-close" onClick={onCancel} type="button">
+          <button aria-label={i18n.t('ui.features.menu.reservation_preorder_dialog.bagla_c1cf91')} className="reservation-preorder-close" onClick={onCancel} type="button">
             <X size={20} />
           </button>
         </header>
         <div className="reservation-preorder-dialog-body">
-          <h2 id="reservation-preorder-title">{depositAmount && depositAmount > 0 ? 'Bu tarix üçün depozit tələb olunur' : 'Öncədən sifariş etmək istəyirsiniz?'}</h2>
+          <h2 id="reservation-preorder-title">{depositAmount && depositAmount > 0 ?i18n.t('ui.features.menu.reservation_preorder_dialog.bu_tarix_ucun_depozit_teleb_olunur_7c638b') :i18n.t('ui.features.menu.reservation_preorder_dialog.onceden_sifaris_etmek_isteyirsiniz_067d12')}</h2>
           {depositAmount && depositAmount > 0 ? (
             <div className="reservation-deposit-notice">
-              <span>Rezervasiya depoziti</span>
+              <span>{i18n.t('ui.features.menu.reservation_preorder_dialog.rezervasiya_depoziti_4faaff')}</span>
               <strong>{depositAmount.toFixed(2)} AZN</strong>
-              <p>Restoran ödəniş məlumatlarını göndərdikdən sonra depoziti ödəyib çeki yükləyəcəksiniz. Rezervasiya çek təsdiqləndikdən sonra təsdiqlənəcək.</p>
+              <p>{i18n.t('ui.features.menu.reservation_preorder_dialog.restoran_odenis_melumatlarini_gonderdi_825dd8')}</p>
             </div>
           ) : null}
-          <p>Masanız seçildi. Menyudan öncədən sifariş əlavə edə və ya menyusuz davam edə bilərsiniz.</p>
+          <p>{i18n.t('ui.features.menu.reservation_preorder_dialog.masaniz_secildi_menyudan_onceden_sifar_a8a10a')}</p>
           {limitedSeatingMessage ? (
             <label className="reservation-limited-seating-confirmation">
               <input
@@ -69,10 +70,10 @@ export function ReservationPreorderDialog({
         <footer className="reservation-preorder-dialog-actions">
           <Button className="reservation-preorder-option reservation-preorder-option-primary" disabled={isSubmitting || Boolean(limitedSeatingMessage && !acceptsLimitedSeating)} onClick={onPreorder} type="button">
             <ShoppingBag size={18} />
-            Menyuya keç
+            {i18n.t('ui.features.menu.reservation_preorder_dialog.menyuya_kec_72944c')}
           </Button>
           <Button className="reservation-preorder-option" disabled={isSubmitting || Boolean(limitedSeatingMessage && !acceptsLimitedSeating)} onClick={onSkip} variant="secondary" type="button">
-            {isSubmitting ? 'Rezervasiya yaradılır...' : 'Menyusuz davam et'}
+            {isSubmitting ?i18n.t('ui.features.menu.reservation_preorder_dialog.rezervasiya_yaradilir_b4b84c') :i18n.t('ui.features.menu.reservation_preorder_dialog.menyusuz_davam_et_fba089')}
           </Button>
         </footer>
       </section>
