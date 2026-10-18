@@ -11841,6 +11841,10 @@ body {
   min-width: 0;
 }
 
+.reservation-refund-panel[aria-busy='true'] {
+  min-height: 140px;
+}
+
 .reservation-refund-heading,
 .reservation-refund-transfer,
 .reservation-refund-actions {

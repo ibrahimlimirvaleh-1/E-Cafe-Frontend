@@ -1,14 +1,16 @@
 import { i18n } from '../../shared/i18n/i18n'
-import type { ReservationHistoryItem } from '../../shared/api/ecafeApi'
+import { useTranslation } from 'react-i18next'
+import type { ReservationRefundHistoryItem } from '../../shared/api/ecafeApi'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 
-const actorNames: Record<string, string> = {
-  Customer: 'Müştəri',
-  Restaurant: 'Restoran',
-  System: 'Sistem',
+const actorKeys: Record<string, string> = {
+  Customer: 'ui.history.actor.customer',
+  Restaurant: 'ui.history.actor.restaurant',
+  System: 'ui.history.actor.system',
 }
 
-export function RefundHistory({ items }: { items: ReservationHistoryItem[] }) {
+export function RefundHistory({ items }: { items: ReservationRefundHistoryItem[] }) {
+  useTranslation()
   if (!items.length) return null
 
   return (
@@ -17,9 +19,9 @@ export function RefundHistory({ items }: { items: ReservationHistoryItem[] }) {
       <ol className="reservation-refund-history">
         {items.map((item) => (
           <li key={item.id}>
-            <strong>{item.toStatus}</strong>
-            <small>{formatReservationDateTime(item.changedAt)} · {actorNames[item.actorType] || item.actorType}</small>
-            {item.reason ? <p>{item.reason}</p> : null}
+            <strong>{item.toStatusLabel || item.toStatus}</strong>
+            <small>{formatReservationDateTime(item.changedAt)} · {actorKeys[item.actorType] ? i18n.t(actorKeys[item.actorType]) : item.actorType}</small>
+            {(item.reasonLabel ?? item.reason) ? <p>{item.reasonLabel ?? item.reason}</p> : null}
           </li>
         ))}
       </ol>

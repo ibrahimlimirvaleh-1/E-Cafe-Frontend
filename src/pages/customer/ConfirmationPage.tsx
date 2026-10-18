@@ -1,4 +1,5 @@
 import { i18n } from '../../shared/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { Ban, CalendarDays, CheckCircle2, CircleAlert, Clock3, ReceiptText } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -16,12 +17,14 @@ import { ReservationHistoryTimeline } from '../../features/reservations/Reservat
 import { ReservationRefundPanel } from '../../features/reservations/ReservationRefundPanel'
 import { ReservationLateArrivalPanel } from '../../features/reservations/ReservationLateArrivalPanel'
 import { ReservationWaitingSummary } from '../../features/reservations/ReservationWaitingSummary'
-import type { ReservationHistoryResponse } from '../../shared/api/ecafeApi'
+import type { ReservationHistoryResponse, ReservationResponse } from '../../shared/api/ecafeApi'
 import { getReservationStatusPresentation } from '../../shared/lib/reservationStatus'
 import { Badge } from '../../shared/ui/Badge'
 import { ScheduleOfferPanel } from '../../features/reservations/ScheduleOfferPanel'
 
 export function ConfirmationPage() {
+  const { i18n: translation } = useTranslation()
+  const language = translation.resolvedLanguage || translation.language
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const reservationId = searchParams.get('reservationId')
@@ -44,12 +47,16 @@ export function ConfirmationPage() {
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
   const reservationScope = `${user?.userId || ''}:${reservationId || ''}`
-  const { data: reservation, error, hasData, isLoading } = useKeyedAsyncData(
-    () => reservationId ? ecafeApi.reservations.getById(reservationId) : Promise.resolve(null),
+  const { data: reservationResult, error, hasData, isLoading } = useKeyedAsyncData<{ data: ReservationResponse; language: string } | null>(
+    () => reservationId
+      ? ecafeApi.reservations.getById(reservationId).then((data) => ({ data, language }))
+      : Promise.resolve(null),
     null,
     reservationScope,
-    [user?.userId, reservationId, reloadKey],
+    [user?.userId, reservationId, language, reloadKey],
   )
+  const reservation = reservationResult?.data ?? null
+  const refundRequestIsUpdating = Boolean(reservation?.refundRequest && reservationResult?.language !== language)
   const isWaiting = Boolean(reservation?.waiting || reservation?.requiresReceptionReview)
   useEffect(() => {
     if (!isWaiting) return
@@ -178,7 +185,8 @@ export function ConfirmationPage() {
                 restaurantId={reservation.restaurantId}
                 reservationStatusId={reservation.statusId}
                 reservationFlowCode={reservation.workflowFlowCode}
-                refundRequest={reservation.refundRequest}
+                refundRequest={refundRequestIsUpdating ? null : reservation.refundRequest}
+                refundRequestIsUpdating={refundRequestIsUpdating}
               />
               {cancelAction ? (
                 <div className="reservation-confirmation-actions">
