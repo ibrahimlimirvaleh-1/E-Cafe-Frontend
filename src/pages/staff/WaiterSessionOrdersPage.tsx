@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import type { MenuItem } from '../../entities/types'
 import { clearPendingOrderIntent, pendingOrderStorageKey, readPendingOrderIntent, savePendingOrderIntent, type PendingOrderIntent } from '../../features/orders/pendingOrderIntent'
-import { ecafeApi, type CreateSessionOrderRequest, type SessionOrderResponse, type WaiterTableSessionResponse } from '../../shared/api/ecafeApi'
+import { ecafeApi, type CreateSessionOrderRequest, type SessionBillResponse, type SessionOrderResponse, type WaiterTableSessionResponse } from '../../shared/api/ecafeApi'
 import { ApiError, normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -11,6 +11,8 @@ import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { orderKitchenLabel, orderStatusId } from '../../shared/lib/orderStatus'
+import { paymentStatusId } from '../../shared/lib/paymentStatus'
+import { SessionBillPanel } from '../../features/settlement/SessionBillPanel'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
@@ -127,6 +129,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const [serveNotice, setServeNotice] = useState('')
   const [servedOrders, setServedOrders] = useState<Record<number, SessionOrderResponse>>({})
   const [serveAccessDenied, setServeAccessDenied] = useState(false)
+  const [bill, setBill] = useState<SessionBillResponse | null>(null)
   const inFlightRef = useRef(false)
   const sendInFlightRef = useRef(false)
   const serveInFlightRef = useRef(false)
@@ -192,7 +195,8 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   }, [orders.data, orders.hasData, page])
 
   const sessionUnavailable = closed || serveAccessDenied || (session.hasData && !session.data && !session.error) || (orders.hasData && !orders.data && !orders.error)
-  const canEdit = Boolean(session.hasData && session.data && !session.error && !pendingIntent && !busy && !sessionUnavailable)
+  const billPaymentPending = bill?.latestPayment?.statusId === paymentStatusId.pending
+  const canEdit = Boolean(session.hasData && session.data && !session.error && bill?.isOpen && !billPaymentPending && !pendingIntent && !busy && !sessionUnavailable)
   const visibleItems = useMemo(() => menu.hasData && !menu.error
     ? menu.data.items.filter((item) => item.isActive && (categoryId === 'all' || item.categoryId === categoryId) &&
       item.name.toLocaleLowerCase('az').includes(search.trim().toLocaleLowerCase('az')))
@@ -422,6 +426,8 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     {sessionUnavailable && detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}
     {sessionUnavailable && menu.error ? <StatusMessage tone="danger" autoHideMs={false}>{menu.error}</StatusMessage> : null}
     {session.data && !sessionUnavailable ? <div className="waiter-orders-session"><span><Table2 size={17} aria-hidden="true" /><strong>{session.data.tableName || `Masa-${session.data.tableNo}`}</strong></span><span>{session.data.customerName || 'Ad qeyd olunmayıb'}</span><span><UsersRound size={16} aria-hidden="true" />{session.data.peopleCount == null ? 'Qonaq sayı qeyd olunmayıb' : `${session.data.peopleCount} nəfər`}</span></div> : null}
+    {session.data && !sessionUnavailable ? <SessionBillPanel sessionId={sessionId} revision={ordersRevision} onBillChange={setBill} /> : null}
+    {billPaymentPending ? <StatusMessage tone="warning" autoHideMs={false}>Ödəniş gözləmədədir. Yeni sifariş üçün əvvəl ödənişin nəticəsini yoxlayın.</StatusMessage> : null}
     {createdOrder ? <StatusMessage tone="success" autoHideMs={false}>Sifariş #{createdOrder.id} yaradıldı. Məhsul cəmi {money(createdOrder.subtotal)}. Sifariş mətbəxə göndərilməyib.</StatusMessage> : null}
     {dispatchNotice ? <StatusMessage tone="success" autoHideMs={false}>{dispatchNotice}</StatusMessage> : null}
     {dispatchError ? <StatusMessage tone={uncertainOrderId !== null ? 'warning' : 'danger'} autoHideMs={false}>{dispatchError}</StatusMessage> : null}

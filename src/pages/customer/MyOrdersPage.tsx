@@ -6,6 +6,7 @@ import { ecafeApi, type CustomerSessionOrderResponse, type CustomerTableSessionR
 import { ApiError, normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { SessionBillPanel } from '../../features/settlement/SessionBillPanel'
 import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { orderKitchenLabel, orderStatusId } from '../../shared/lib/orderStatus'
@@ -265,6 +266,7 @@ export function MyOrdersPage() {
         {sessionId !== null && selectedSession.error && !validSession ? <div className="customer-orders-empty"><h2>Sessiya əlçatan deyil</h2><p role="alert">{errorMessage(selectedSession.error, 'Sessiya')}</p><Button variant="secondary" onClick={() => { if (requestedSessionId) { const next = new URLSearchParams(searchParams); next.delete('sessionId'); next.delete('orderId'); setSearchParams(next) } else setRevision((value) => value + 1) }} type="button">{requestedSessionId ? 'Siyahıya qayıt' : 'Yenidən yoxla'}</Button></div> : null}
         {validSession ? <>
           <div className="customer-orders-section-heading customer-order-workspace-heading"><div><span className="customer-orders-kicker">{validSession.restaurantName || 'Restoran'}</span><h2>{validSession.tableName || `Masa #${validSession.tableId}`}</h2><p><Clock3 size={15} /> Açılış: {formatReservationDateTime(validSession.openedAt, validSession.timeZone)}</p></div><Badge tone={sessionStatus(validSession.statusId).tone}>{sessionStatus(validSession.statusId).label}</Badge></div>
+          <SessionBillPanel key={`${userScope}:${validSession.id}`} sessionId={validSession.id} />
           {selectedSession.error ? <p className="customer-orders-error" role="alert">Sessiya yenilənmədi. Son yüklənmiş məlumat göstərilir.</p> : null}
           {requestedOrderId !== null ? <button className="customer-order-detail-back" onClick={() => chooseOrder(null)} type="button"><ArrowLeft size={17} />Sifarişlərə qayıt</button> : null}
           {requestedOrderId !== null && selectedOrder.loading && !selectedOrder.data ? <p className="customer-orders-muted" role="status">Sifariş detalı yüklənir...</p> : null}
