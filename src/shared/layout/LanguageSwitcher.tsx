@@ -7,10 +7,10 @@ import { useAuth } from '../auth/AuthContext'
 import { ecafeApi } from '../api/ecafeApi'
 import './language-switcher.css'
 
-const languageOptions: { value: Language; label: string }[] = [
-  { value: 'az', label: 'Azərbaycanca' },
-  { value: 'en', label: 'English' },
-  { value: 'ru', label: 'Русский' },
+const languageOptions: { value: Language; label: string; name: string }[] = [
+  { value: 'en', label: 'EN', name: 'English' },
+  { value: 'az', label: 'AZ', name: 'Azərbaycanca' },
+  { value: 'ru', label: 'RU', name: 'Русский' },
 ]
 
 export function LanguageSwitcher() {
@@ -21,7 +21,7 @@ export function LanguageSwitcher() {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuId = useId()
   const language = isLanguage(i18n.resolvedLanguage) ? i18n.resolvedLanguage : getCurrentLanguage()
-  const currentLabel = languageOptions.find((option) => option.value === language)?.label
+  const currentName = languageOptions.find((option) => option.value === language)?.name
 
   useEffect(() => {
     if (!isOpen) return
@@ -54,10 +54,10 @@ export function LanguageSwitcher() {
       ref={triggerRef}
       className="language-switcher-trigger"
       type="button"
-      aria-label={`${t('ui.language.label')}: ${currentLabel}`}
+      aria-label={`${t('ui.language.label')}: ${currentName}`}
       aria-expanded={isOpen}
       aria-controls={menuId}
-      title={`${t('ui.language.label')}: ${currentLabel}`}
+      title={`${t('ui.language.label')}: ${currentName}`}
       onClick={() => setIsOpen((open) => !open)}
     >
       <Languages size={19} aria-hidden="true" />
@@ -68,6 +68,7 @@ export function LanguageSwitcher() {
         type="button"
         className="language-switcher-option"
         lang={option.value}
+        aria-label={option.name}
         aria-pressed={language === option.value}
         onClick={() => selectLanguage(option.value)}
       >
