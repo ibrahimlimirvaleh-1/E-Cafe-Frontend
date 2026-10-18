@@ -1,4 +1,4 @@
-import { Languages } from 'lucide-react'
+import { ChevronDown, Languages } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage, getCurrentLanguage } from '../i18n/i18n'
 import { isLanguage } from '../i18n/language'
@@ -24,5 +24,6 @@ export function LanguageSwitcher() {
       <option value="en">EN</option>
       <option value="ru">RU</option>
     </select>
+    <ChevronDown className="language-switcher-chevron" size={14} aria-hidden="true" />
   </label>
 }
