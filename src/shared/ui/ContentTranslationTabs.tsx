@@ -14,8 +14,6 @@ type Props = {
 const labels: Record<ContentField, string> = {
   name: 'ui.content.name',
   description: 'ui.content.description',
-  location: 'ui.content.location',
-  branchName: 'ui.content.branchName',
   unavailableReason: 'ui.content.unavailableReason',
 }
 

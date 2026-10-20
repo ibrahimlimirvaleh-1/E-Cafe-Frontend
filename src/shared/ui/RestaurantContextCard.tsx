@@ -1,4 +1,5 @@
 import { i18n } from '../i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import type { Restaurant } from '../../entities/types'
 import { Badge } from './Badge'
 import { SafeImage } from './SafeImage'
@@ -12,6 +13,7 @@ export function restaurantOptionLabel(restaurant: Restaurant) {
 }
 
 export function RestaurantContextCard({ restaurant }: RestaurantContextCardProps) {
+  useTranslation()
   if (!restaurant) {
     return null
   }
@@ -21,8 +23,8 @@ export function RestaurantContextCard({ restaurant }: RestaurantContextCardProps
       <SafeImage src={restaurant.image} alt={restaurant.name} />
       <div>
         <strong>{restaurant.name}</strong>
-        <span>{restaurant.restaurantGroupName || 'Restoran qrupu yoxdur'} - {restaurant.branchName || restaurant.address}</span>
-        <small>{restaurant.address} - {restaurant.phone}</small>
+        <span>{[restaurant.restaurantGroupName || i18n.t('ui.adminFlow.noRestaurantGroup'), restaurant.branchName || restaurant.address].filter(Boolean).join(' · ')}</span>
+        <small>{[restaurant.address, restaurant.phone].filter(Boolean).join(' · ')}</small>
       </div>
       <div className="restaurant-context-meta">
         <Badge tone={restaurant.hasActiveContract ? 'success' : 'warning'}>

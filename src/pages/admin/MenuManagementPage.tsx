@@ -2,13 +2,14 @@ import { i18n } from '../../shared/i18n/i18n'
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Ban, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import type { MenuItem } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
 import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAdminRestaurantSelection } from '../../shared/hooks/useAdminRestaurantSelection'
 import { azSourceFrom, emptyTranslations, missingTranslationName, translationPayload, translationValuesFrom } from '../../shared/i18n/contentTranslations'
 import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
@@ -30,8 +31,6 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const { user } = useAuth()
   const { categoryId = '', itemId = '' } = useParams()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const [fileId, setFileId] = useState<number | null>(null)
   const [message, setMessage] = useState('')
@@ -51,7 +50,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [activeI18n.resolvedLanguage])
   const { data: itemStatuses } = useAsyncData(() => ecafeApi.lookups.itemStatuses(), [], [activeI18n.resolvedLanguage])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
-  const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
+  const [restaurantId, setSelectedRestaurantId] = useAdminRestaurantSelection(accessibleRestaurants, user?.userId)
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
   const restaurantQuery = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
   const menuListPath = `/admin/menu${restaurantQuery}`
@@ -71,6 +70,14 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     [restaurantId, reloadKey, activeI18n.resolvedLanguage],
   )
   const activeStatuses = useMemo(() => itemStatuses.filter((status) => status.id > 0), [itemStatuses])
+  // Status kodunu sabit saxlayıb ekranda cari dilə uyğun ad göstərir.
+  function itemStatusLabel(item: MenuItem) {
+    if (!item.isActive) return i18n.t('ui.adminNotice.menuStatus.Inactive')
+    const status = activeStatuses.find((entry) => entry.id === item.statusId)
+    return status
+      ? i18n.t(`ui.adminNotice.menuStatus.${status.code}`, { defaultValue: status.name || item.statusName || status.code })
+      : item.statusName || i18n.t('ui.adminNotice.menuStatus.Available')
+  }
   const activeCategories = useMemo(() => categories.filter((category) => category.isActive), [categories])
   const categoryNameById = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories])
   const editingCategory = mode === 'edit-category' ? categories.find((category) => category.id === categoryId) : undefined
@@ -87,18 +94,6 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const hasActiveContract = selectedRestaurant?.hasActiveContract === true
   const hasSelectedCategory = activeCategories.some((category) => category.id === itemForm.categoryId)
   const itemFormDisabled = !selectedRestaurant || !hasActiveContract || activeCategories.length === 0 || activeStatuses.length === 0 || (mode === 'edit-item' && !editingItem)
-
-  useEffect(() => {
-    const restaurantIdFromUrl = searchParams.get('restaurantId')
-    if (!selectedRestaurantId && restaurantIdFromUrl && accessibleRestaurants.some((restaurant) => restaurant.id === restaurantIdFromUrl)) {
-      setSelectedRestaurantId(restaurantIdFromUrl)
-      return
-    }
-
-    if (!selectedRestaurantId && accessibleRestaurants.length === 1) {
-      setSelectedRestaurantId(accessibleRestaurants[0].id)
-    }
-  }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
   useEffect(() => {
     if (mode === 'edit-category' && editingCategory && editMetadata && hydratedMetadata.current !== editMetadata) {
@@ -171,11 +166,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   async function handleCreateCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!categoryForm.name.trim()) {
-      setMessage('AZ bölməsində kateqoriya adını daxil edin.')
+      setMessage(i18n.t('ui.adminNotice.categoryNameRequired'))
       return
     }
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage(i18n.t('ui.adminFlow.restaurantRequired'))
       setMessageDetails([])
       return
     }
@@ -190,11 +185,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       })
       setCategoryForm({ name: '', sortOrder: '' })
       setTranslations(emptyTranslations())
-      setMessage('Kateqoriya yaradıldı.')
+      setMessage(i18n.t('ui.adminNotice.categoryCreated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Kateqoriya yaradılmadı.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.categoryCreateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -204,11 +199,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     event.preventDefault()
     if (!editMetadata || editMetadataLoading || editMetadataError) return
     if (!categoryForm.name.trim()) {
-      setMessage('AZ bölməsində kateqoriya adını daxil edin.')
+      setMessage(i18n.t('ui.adminNotice.categoryNameRequired'))
       return
     }
     if (!restaurantId || !categoryId) {
-      setMessage('Restoran və kateqoriya seçilməlidir.')
+      setMessage(i18n.t('ui.adminNotice.categorySelectionRequired'))
       setMessageDetails([])
       return
     }
@@ -222,11 +217,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         isActive: editingCategory?.isActive ?? true,
         translations: translationPayload(translations, ['name']),
       })
-      setMessage('Kateqoriya məlumatları yeniləndi.')
+      setMessage(i18n.t('ui.adminNotice.categoryUpdated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Kateqoriya yenilənmədi.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.categoryUpdateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -234,7 +229,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   async function handleDeactivateCategory(targetCategoryId: string) {
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage(i18n.t('ui.adminFlow.restaurantRequired'))
       setMessageDetails([])
       return
     }
@@ -243,11 +238,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     setMessageDetails([])
     try {
       await ecafeApi.menu.deactivateCategory(restaurantId, targetCategoryId)
-      setMessage('Kateqoriya deaktiv edildi.')
+      setMessage(i18n.t('ui.adminNotice.categoryDeactivated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Kateqoriya deaktiv edilmədi.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.categoryDeactivateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -255,7 +250,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   async function handleActivateCategory(targetCategoryId: string) {
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage(i18n.t('ui.adminFlow.restaurantRequired'))
       setMessageDetails([])
       return
     }
@@ -264,11 +259,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     setMessageDetails([])
     try {
       await ecafeApi.menu.activateCategory(restaurantId, targetCategoryId)
-      setMessage('Kateqoriya aktiv edildi.')
+      setMessage(i18n.t('ui.adminNotice.categoryActivated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Kateqoriya aktiv edilmədi.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.categoryActivateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -276,7 +271,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   async function handleDeleteCategory(targetCategoryId: string) {
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage(i18n.t('ui.adminFlow.restaurantRequired'))
       setMessageDetails([])
       return
     }
@@ -285,11 +280,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     setMessageDetails([])
     try {
       await ecafeApi.menu.deleteCategory(restaurantId, targetCategoryId)
-      setMessage('Kateqoriya silindi.')
+      setMessage(i18n.t('ui.adminNotice.categoryDeleted'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Kateqoriya silinmədi.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.categoryDeleteFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -313,46 +308,46 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     event.preventDefault()
     if (mode === 'edit-item' && (!editMetadata || editMetadataLoading || editMetadataError)) return
     if (!itemForm.name.trim() || !itemForm.description.trim()) {
-      setMessage('AZ bölməsində menyu adını və təsvirini tamamlayın.')
+      setMessage(i18n.t('ui.adminNotice.menuNameDescriptionRequired'))
       return
     }
     const missingName = missingTranslationName(translations, ['name', 'description', 'unavailableReason'])
     if (missingName) {
-      setMessage(`${missingName.toUpperCase()} üçün ad daxil edin.`)
+      setMessage(i18n.t('ui.adminNotice.translationNameRequired', { language: missingName.toUpperCase() }))
       return
     }
     if (!selectedRestaurant) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage(i18n.t('ui.adminFlow.restaurantRequired'))
       setMessageDetails([])
       return
     }
 
     if (!hasActiveContract) {
-      setMessage('Bu restoranda menyu elementi yaratmaq üçün aktiv müqavilə olmalıdır.')
-      setMessageDetails([{ label: 'Müqavilə', message: 'Əvvəl restoranın müqaviləsini aktivləşdirin, sonra menyu elementi əlavə edin.' }])
+      setMessage(i18n.t('ui.adminNotice.activeContractRequired'))
+      setMessageDetails([{ label: i18n.t('ui.adminNotice.contractLabel'), message: i18n.t('ui.adminNotice.activateContractFirst') }])
       return
     }
 
     if (activeCategories.length === 0) {
-      setMessage('Bu restoran üçün aktiv kateqoriya yoxdur.')
-      setMessageDetails([{ label: 'Kateqoriya', message: 'Menyu elementi yaratmaq üçün əvvəl bu restoranda aktiv kateqoriya yaradın.' }])
+      setMessage(i18n.t('ui.adminNotice.activeCategoryRequired'))
+      setMessageDetails([{ label: i18n.t('ui.adminNotice.categoryLabel'), message: i18n.t('ui.adminNotice.createCategoryFirst') }])
       return
     }
 
     if (!hasSelectedCategory) {
-      setMessage('Seçilmiş kateqoriya bu restorana aid deyil.')
-      setMessageDetails([{ label: 'Kateqoriya', message: 'Restoran dəyişibsə, bu restoranın aktiv kateqoriyasını yenidən seçin.' }])
+      setMessage(i18n.t('ui.adminNotice.categoryNotOwned'))
+      setMessageDetails([{ label: i18n.t('ui.adminNotice.categoryLabel'), message: i18n.t('ui.adminNotice.selectCategoryAgain') }])
       return
     }
 
     if (mode === 'edit-item' && !editingItem) {
-      setMessage('Menyu elementi tapılmadı.')
-      setMessageDetails([{ label: 'Menyu', message: 'Siyahıya qayıdıb məhsulu yenidən seçin.' }])
+      setMessage(i18n.t('ui.adminNotice.itemNotFound'))
+      setMessageDetails([{ label: i18n.t('ui.adminNotice.menuLabel'), message: i18n.t('ui.adminNotice.selectItemAgain') }])
       return
     }
 
     if (!restaurantId || !itemForm.categoryId || !itemForm.statusId) {
-      setMessage('Restoran, kateqoriya və status seçilməlidir.')
+      setMessage(i18n.t('ui.adminNotice.menuFieldsRequired'))
       setMessageDetails([])
       return
     }
@@ -377,17 +372,17 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
           ...request,
           salesCount: editingItem.salesCount ?? 0,
         })
-        setMessage('Menyu elementi yeniləndi.')
+        setMessage(i18n.t('ui.adminNotice.itemUpdated'))
       } else {
         await ecafeApi.menu.createItem(restaurantId, request)
         resetItemForm()
-        setMessage('Menyu elementi yaradıldı.')
+        setMessage(i18n.t('ui.adminNotice.itemCreated'))
       }
 
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, mode === 'edit-item' ? 'Menyu elementi yenilənmədi.' : 'Menyu elementi yaradılmadı.')
+      const feedback = normalizeCaughtApiError(err, mode === 'edit-item' ? i18n.t('ui.adminNotice.itemUpdateFailed') : i18n.t('ui.adminNotice.itemCreateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -395,7 +390,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   async function handleDeactivateItem(item: MenuItem) {
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage(i18n.t('ui.adminFlow.restaurantRequired'))
       setMessageDetails([])
       return
     }
@@ -404,11 +399,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     setMessageDetails([])
     try {
       await ecafeApi.menu.deactivateItem(restaurantId, item.id)
-      setMessage('Menyu elementi deaktiv edildi.')
+      setMessage(i18n.t('ui.adminNotice.itemDeactivated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Menyu elementi deaktiv edilmədi.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.itemDeactivateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -416,7 +411,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   async function handleDeleteItem(item: MenuItem) {
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage(i18n.t('ui.adminFlow.restaurantRequired'))
       setMessageDetails([])
       return
     }
@@ -430,17 +425,17 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     setMessageDetails([])
     try {
       await ecafeApi.menu.deleteItem(restaurantId, item.id)
-      setMessage('Menyu elementi silindi.')
+      setMessage(i18n.t('ui.adminNotice.itemDeleted'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Menyu elementi silinmədi.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.itemDeleteFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
   }
 
-  const title = mode === 'categories' ? 'Kateqoriyalar' : mode === 'create-category' ? 'Yeni kateqoriya' : mode === 'edit-category' ? 'Kateqoriyanı redaktə et' : mode === 'create-item' ? 'Yeni menyu elementi' : mode === 'edit-item' ? 'Menyu elementini redaktə et' : 'Menyu'
+  const title = i18n.t(`ui.adminFlow.menuTitle.${mode}`)
   const action =
     mode === 'items' ? (
       <ButtonLink to={menuCreatePath}>{i18n.t('ui.pages.admin.menu_management_page.yeni_menyu_elementi_a5e7c2')}</ButtonLink>
@@ -547,13 +542,13 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
               <h2>{i18n.t('ui.pages.admin.menu_management_page.menyu_elementi_fc7b92')}</h2>
             </div>
             {mode === 'edit-item' && !editingItem && !isLoading ? (
-              <StatusMessage tone="warning" details={[{ label: 'Menyu', message: 'Bu məhsul silinmiş ola bilər. Siyahıdan yenidən seçin.' }]}>{i18n.t('ui.pages.admin.menu_management_page.redakte_edilecek_menyu_elementi_tapilm_8b52cb')}</StatusMessage>
+              <StatusMessage tone="warning" details={[{ label: i18n.t('ui.adminNotice.menuLabel'), message: 'Bu məhsul silinmiş ola bilər. Siyahıdan yenidən seçin.' }]}>{i18n.t('ui.pages.admin.menu_management_page.redakte_edilecek_menyu_elementi_tapilm_8b52cb')}</StatusMessage>
             ) : null}
             {selectedRestaurant && !hasActiveContract ? (
-              <StatusMessage tone="warning" details={[{ label: 'Müqavilə', message: 'Əvvəl restoranın müqaviləsini aktivləşdirin, sonra menyu elementi əlavə edin.' }]}>{i18n.t('ui.pages.admin.menu_management_page.bu_restoranda_menyu_elementi_yaratmaq__4a7bbf')}</StatusMessage>
+              <StatusMessage tone="warning" details={[{ label: i18n.t('ui.adminNotice.contractLabel'), message: i18n.t('ui.adminNotice.activateContractFirst') }]}>{i18n.t('ui.pages.admin.menu_management_page.bu_restoranda_menyu_elementi_yaratmaq__4a7bbf')}</StatusMessage>
             ) : null}
             {hasActiveContract && activeCategories.length === 0 ? (
-              <StatusMessage tone="warning" details={[{ label: 'Kateqoriya', message: 'Menyu elementi yaratmaq üçün bu restoranda ən azı bir aktiv kateqoriya olmalıdır.' }]}>{i18n.t('ui.pages.admin.menu_management_page.bu_restoran_ucun_aktiv_kateqoriya_yoxd_5a4ab7')}</StatusMessage>
+              <StatusMessage tone="warning" details={[{ label: i18n.t('ui.adminNotice.categoryLabel'), message: 'Menyu elementi yaratmaq üçün bu restoranda ən azı bir aktiv kateqoriya olmalıdır.' }]}>{i18n.t('ui.pages.admin.menu_management_page.bu_restoran_ucun_aktiv_kateqoriya_yoxd_5a4ab7')}</StatusMessage>
             ) : null}
             <div className="form-grid two">
               <SelectField
@@ -613,10 +608,10 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                   <SafeImage src={item.image} alt={item.name} />
                   <div>
                     <strong>{item.name}</strong>
-                    <small>{item.description || 'Tərkib qeyd edilməyib'}</small>
+                    <small>{item.description || i18n.t('ui.adminNotice.noDescription')}</small>
                   </div>
-                  <span>{item.categoryName || categoryNameById.get(item.categoryId) || 'Kateqoriya yoxdur'}</span>
-                  <Badge tone={item.isActive ? 'success' : 'neutral'}>{item.statusName || (item.isActive ?i18n.t('ui.pages.admin.menu_management_page.aktiv_816345') :i18n.t('ui.pages.admin.menu_management_page.deaktiv_477e77'))}</Badge>
+                  <span>{item.categoryName || categoryNameById.get(item.categoryId) || i18n.t('ui.adminNotice.noCategory')}</span>
+                  <Badge tone={item.isActive ? 'success' : 'neutral'}>{itemStatusLabel(item)}</Badge>
                   <small>{item.salesCount ?? 0} {i18n.t('ui.pages.admin.menu_management_page.satis_072558')}</small>
                   <b>{item.price.toFixed(2)} ₼</b>
                   <div className="inline-actions menu-item-row-actions">

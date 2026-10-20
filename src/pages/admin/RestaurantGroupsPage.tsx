@@ -4,9 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
-import { emptyTranslations, translationPayload } from '../../shared/i18n/contentTranslations'
-import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
-import { StandaloneContentTranslationEditor } from '../../shared/ui/StandaloneContentTranslationEditor'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
@@ -23,10 +20,8 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
   const { i18n: activeI18n } = useTranslation()
   const [reloadKey, setReloadKey] = useState(0)
   const [name, setName] = useState('')
-  const [translations, setTranslations] = useState(emptyTranslations)
   const [legalName, setLegalName] = useState('')
   const [email, setEmail] = useState('')
-  const [selectedGroupId, setSelectedGroupId] = useState('')
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const { data: groups, isLoading } = useKeyedAsyncData(() => ecafeApi.restaurantGroups.list(), [], 'groups', [reloadKey, activeI18n.resolvedLanguage])
@@ -35,23 +30,22 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!name.trim()) {
-      setMessage('AZ bölməsində qrup adını daxil edin.')
+      setMessage(i18n.t('ui.adminFlow.groupNameRequired'))
       return
     }
     setMessage('')
     setMessageDetails([])
 
     try {
-      await ecafeApi.restaurantGroups.create({ name, legalName, email, translations: translationPayload(translations, ['name']) })
+      await ecafeApi.restaurantGroups.create({ name, legalName, email })
       setName('')
-      setTranslations(emptyTranslations())
       setLegalName('')
       setEmail('')
-      setMessage('Restoran qrupu yaradıldı.')
+      setMessage(i18n.t('ui.adminFlow.groupCreated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Restoran qrupu yaradılmadı.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminFlow.groupCreateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -72,7 +66,7 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
               <span className="eyebrow">{i18n.t('ui.pages.admin.restaurant_groups_page.yeni_qrup_e99889')}</span>
               <h2>{i18n.t('ui.pages.admin.restaurant_groups_page.qrup_melumatlari_0c22cb')}</h2>
             </div>
-            <ContentTranslationTabs fields={['name']} value={translations} onChange={setTranslations} azContent={<TextField label={i18n.t('ui.pages.admin.restaurant_groups_page.qrup_adi_387ef9')} required value={name} onChange={(event) => setName(event.target.value)} />} />
+            <TextField label={i18n.t('ui.pages.admin.restaurant_groups_page.qrup_adi_387ef9')} required value={name} onChange={(event) => setName(event.target.value)} />
             <TextField label={i18n.t('ui.pages.admin.restaurant_groups_page.legal_ad_08f365')} value={legalName} onChange={(event) => setLegalName(event.target.value)} />
             <TextField label={i18n.t('ui.pages.admin.restaurant_groups_page.qrup_elaqe_emaili_dac066')} required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
             {duplicateGroupEmail.length > 0 ? (
@@ -101,20 +95,11 @@ export function RestaurantGroupsPage({ mode = 'list' }: { mode?: RestaurantGroup
                     <small>{group.legalName || 'Legal ad qeyd edilməyib'}</small>
                     <small>{group.email || 'Email qeyd edilməyib'}</small>
                   </div>
-                  <div className="content-group-actions">
-                    <Badge tone={group.isActive ? 'success' : 'neutral'}>{group.isActive ?i18n.t('ui.pages.admin.restaurant_groups_page.aktiv_816345') :i18n.t('ui.pages.admin.restaurant_groups_page.deaktiv_477e77')}</Badge>
-                    <Button type="button" variant="secondary" aria-expanded={selectedGroupId === group.id}
-                      onClick={() => setSelectedGroupId((current) => current === group.id ? '' : group.id)}>
-                      {i18n.t('ui.content.editTranslation')}
-                    </Button>
-                  </div>
+                  <Badge tone={group.isActive ? 'success' : 'neutral'}>{group.isActive ?i18n.t('ui.pages.admin.restaurant_groups_page.aktiv_816345') :i18n.t('ui.pages.admin.restaurant_groups_page.deaktiv_477e77')}</Badge>
                 </article>
               ))}
               {!isLoading && groups.length === 0 ? <p className="online-only">{i18n.t('ui.pages.admin.restaurant_groups_page.hele_restoran_qrupu_yoxdur_b1557a')}</p> : null}
             </div>
-            {selectedGroupId && groups.some((group) => group.id === selectedGroupId) ?
-              <StandaloneContentTranslationEditor key={selectedGroupId} entityType="restaurant-groups" id={selectedGroupId}
-                onChanged={() => setReloadKey((value) => value + 1)} /> : null}
           </section>
         )}
       </section>

@@ -2,12 +2,13 @@ import { i18n } from '../../shared/i18n/i18n'
 import { Ban, CheckCircle2, Copy, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
 import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAdminRestaurantSelection } from '../../shared/hooks/useAdminRestaurantSelection'
 import { azSourceFrom, emptyTranslations, translationPayload, translationValuesFrom } from '../../shared/i18n/contentTranslations'
 import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
@@ -27,8 +28,6 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const { i18n: activeI18n } = useTranslation()
   const { user } = useAuth()
   const { tableId = '' } = useParams()
-  const [searchParams] = useSearchParams()
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
@@ -41,7 +40,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const [copyMessageDetails, setCopyMessageDetails] = useState<ApiErrorDetail[]>([])
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [activeI18n.resolvedLanguage])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
-  const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
+  const [restaurantId, setSelectedRestaurantId] = useAdminRestaurantSelection(accessibleRestaurants, user?.userId)
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
   const restaurantQuery = restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''
   const createTablePath = `/admin/tables/new${restaurantQuery}`
@@ -63,27 +62,8 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const copyTargetTable = tables.find((table) => table.id === copyTargetTableId)
 
   function tableStatusLabel(status: string) {
-    const labels: Record<string, string> = {
-      Available: 'Boşdur',
-      Occupied: 'Dolu',
-      Reserved: 'Rezervdir',
-      Hidden: 'Gizlidir',
-    }
-
-    return labels[status] || status
+    return i18n.t(`ui.adminFlow.tableStatus.${status}`, { defaultValue: status })
   }
-
-  useEffect(() => {
-    const restaurantIdFromUrl = searchParams.get('restaurantId')
-    if (!selectedRestaurantId && restaurantIdFromUrl && accessibleRestaurants.some((restaurant) => restaurant.id === restaurantIdFromUrl)) {
-      setSelectedRestaurantId(restaurantIdFromUrl)
-      return
-    }
-
-    if (!selectedRestaurantId && accessibleRestaurants.length === 1) {
-      setSelectedRestaurantId(accessibleRestaurants[0].id)
-    }
-  }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
   useEffect(() => {
     if (mode === 'edit' && editingTable && editMetadata && hydratedMetadata.current !== editMetadata) {
@@ -106,11 +86,11 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     event.preventDefault()
     if (mode === 'edit' && (!editMetadata || editMetadataLoading || editMetadataError)) return
     if (!form.name.trim()) {
-      setMessage('AZ bölməsində masa adını daxil edin.')
+      setMessage(i18n.t('ui.adminFlow.tableNameRequired'))
       return
     }
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage(i18n.t('ui.adminFlow.restaurantRequired'))
       setMessageDetails([])
       return
     }
@@ -126,7 +106,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
           isActive: true,
           translations: translationPayload(translations, ['name']),
         })
-        setMessage('Masa məlumatları yeniləndi.')
+        setMessage(i18n.t('ui.adminFlow.tableUpdated'))
       } else {
         await ecafeApi.tables.create(restaurantId, {
           tableNo: form.tableNo,
@@ -136,12 +116,12 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
         })
         setForm({ tableNo: '', name: '', capacity: '2' })
         setTranslations(emptyTranslations())
-        setMessage('Masa yaradıldı.')
+        setMessage(i18n.t('ui.adminFlow.tableCreated'))
       }
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, mode === 'edit' ? 'Masa yenilənmədi.' : 'Masa yaradılmadı.')
+      const feedback = normalizeCaughtApiError(err, i18n.t(mode === 'edit' ? 'ui.adminFlow.tableUpdateFailed' : 'ui.adminFlow.tableCreateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -272,7 +252,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
             <ContentTranslationTabs fields={['name']} value={translations} onChange={setTranslations} azContent={<TextField label={i18n.t('ui.pages.admin.tables_management_page.ad_1d97c9')} required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />} />
             <TextField label={i18n.t('ui.pages.admin.tables_management_page.tutum_1c836d')} min={1} required type="number" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
             <Button disabled={mode === 'edit' && (!editMetadata || editMetadataLoading || Boolean(editMetadataError))} type="submit">{mode === 'edit' ?i18n.t('ui.pages.admin.tables_management_page.yadda_saxla_78db97') :i18n.t('ui.pages.admin.tables_management_page.masa_yarat_c00ba4')}</Button>
-            {mode === 'edit' && editMetadataError ? <Button type="button" variant="secondary" onClick={() => setMetadataRetry((value) => value + 1)}>Yenidən yoxla</Button> : null}
+            {mode === 'edit' && editMetadataError ? <Button type="button" variant="secondary" onClick={() => setMetadataRetry((value) => value + 1)}>{i18n.t('ui.adminFlow.retry')}</Button> : null}
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : (

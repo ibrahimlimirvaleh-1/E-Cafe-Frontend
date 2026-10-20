@@ -1,4 +1,6 @@
 import { i18n } from '../i18n/i18n'
+import { roleLabel } from '../i18n/roleLabel'
+import { useTranslation } from 'react-i18next'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -624,6 +626,7 @@ function ProfileSelectionPrompt({
   profiles: UserAccessProfile[]
   userName: string
 }) {
+  useTranslation()
   return (
     <div className="modal-backdrop profile-selection-backdrop" role="presentation">
       <section aria-labelledby="profile-selection-title" className="profile-selection-modal" role="dialog" aria-modal="true">
@@ -642,7 +645,7 @@ function ProfileSelectionPrompt({
               </span>
               <span>
                 <strong>{profile.restaurantName || `Restoran #${profile.restaurantId}`}</strong>
-                <small>{profile.roleName || roleNamesById[profile.roleId] || `Rol #${profile.roleId}`}</small>
+                <small>{roleLabel(profile.roleId, profile.roleName || roleNamesById[profile.roleId])}</small>
               </span>
             </button>
           ))}

@@ -9,7 +9,7 @@ import { TextField } from './FormField'
 import { StatusMessage } from './StatusMessage'
 import './content-translation-tabs.css'
 
-type Props = { entityType: Extract<ContentEntityType, 'restaurant-groups' | 'units'>; id: string; onChanged?: () => void }
+type Props = { entityType: Extract<ContentEntityType, 'units'>; id: string; onChanged?: () => void }
 
 export function StandaloneContentTranslationEditor({ entityType, id, onChanged }: Props) {
   const { t } = useTranslation()

@@ -1,4 +1,6 @@
 import { i18n } from '../i18n/i18n'
+import { roleLabel } from '../i18n/roleLabel'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, LayoutDashboard, Store, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -11,16 +13,8 @@ type WorkspaceSwitcherProps = {
   mode: 'site' | 'workspace'
 }
 
-const rolePanelLabels: Record<string, string> = {
-  [RoleIds.PlatformAdmin]: 'Admin paneli',
-  [RoleIds.Owner]: 'Sahibkar paneli',
-  [RoleIds.Manager]: 'Menecer paneli',
-  [RoleIds.Waiter]: 'Ofisiant paneli',
-  [RoleIds.Kitchen]: 'Mətbəx paneli',
-}
-
 function profileLabel(profile: UserAccessProfile) {
-  return [profile.roleName || rolePanelLabels[profile.roleId] || `Rol #${profile.roleId}`, profile.restaurantName].filter(Boolean).join(' · ')
+  return [roleLabel(profile.roleId, profile.roleName), profile.restaurantName].filter(Boolean).join(' · ')
 }
 
 function isWorkspaceProfile(profile: UserAccessProfile) {
@@ -28,6 +22,7 @@ function isWorkspaceProfile(profile: UserAccessProfile) {
 }
 
 export function WorkspaceSwitcher({ mode }: WorkspaceSwitcherProps) {
+  useTranslation()
   const { isAuthenticated, selectProfile, user } = useAuth()
   const navigate = useNavigate()
   const [isPanelModalOpen, setIsPanelModalOpen] = useState(false)

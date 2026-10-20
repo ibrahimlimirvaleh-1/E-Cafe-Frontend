@@ -1,8 +1,8 @@
 import { i18n } from '../../../shared/i18n/i18n'
 import { Eye, FileText, Filter, Pencil, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { ContractStatus, LookupItem, RestaurantContract, StatusTone } from '../../../entities/types'
-import { contractStatusLabel } from '../../../shared/api/mappers'
 import { ecafeApi } from '../../../shared/api/ecafeApi'
 import { useAuth } from '../../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../../shared/auth/authz'
@@ -35,6 +35,7 @@ const defaultFilters: ContractFilterState = {
 }
 
 export function ContractListPage() {
+  const { i18n: activeI18n } = useTranslation()
   const { user } = useAuth()
   const { data: allRecords, error, isLoading } = useAsyncData(() => ecafeApi.contracts.records(), [])
   const { data: contractStatuses } = useAsyncData(() => ecafeApi.lookups.contractStatuses(), [], [])
@@ -74,8 +75,8 @@ export function ContractListPage() {
       }))
       : getStatusTabsFromRecords(allRecords, contractStatuses)
 
-    return [{ label: 'Hamısı', value: 'all' }, ...backendTabs]
-  }, [allRecords, contractStatuses])
+    return [{ label: i18n.t('ui.adminFlow.contractAll'), value: 'all' }, ...backendTabs]
+  }, [allRecords, contractStatuses, activeI18n.resolvedLanguage])
 
   const filteredRecords = useMemo(() => {
     const search = normalizeSearch(filters.search)
@@ -85,7 +86,7 @@ export function ContractListPage() {
 
     return allRecords.filter((record) => {
       const contract = record.contract
-      const searchableText = normalizeSearch(`${contract.contractNumber} ${record.restaurantName} ${contractStatusLabel(contract)}`)
+      const searchableText = normalizeSearch(`${contract.contractNumber} ${record.restaurantName} ${localizedContractStatus(contract)}`)
       const endDate = parseDate(contract.endDate)
 
       if (filters.statusId !== 'all' && getContractStatusId(contract, contractStatuses) !== filters.statusId) {
@@ -179,7 +180,7 @@ export function ContractListPage() {
                 emptyOption={null}
                 label={i18n.t('ui.pages.admin.contracts.contract_list_page.restoran_c4df56')}
                 onChange={(restaurantId) => setFilters((current) => ({ ...current, restaurantId }))}
-                options={[{ label: 'Bütün restoranlar', value: 'all' }, ...restaurantOptions]}
+                options={[{ label: i18n.t('ui.adminFlow.allRestaurants'), value: 'all' }, ...restaurantOptions]}
                 value={filters.restaurantId}
               />
             ) : null}
@@ -256,7 +257,7 @@ function ContractWorkflowList({
               <small>{record.restaurantName || `Restoran #${contract.restaurantId}`}</small>
             </div>
             <div className="contract-workflow-cell contract-workflow-status" data-label={i18n.t('ui.pages.admin.contracts.contract_list_page.status_920e41')}>
-              <Badge tone={getContractTone(contract.status)}>{contractStatusLabel(contract)}</Badge>
+              <Badge tone={getContractTone(contract.status)}>{localizedContractStatus(contract)}</Badge>
             </div>
             <div className="contract-workflow-cell contract-workflow-period" data-label={i18n.t('ui.pages.admin.contracts.contract_list_page.muddet_16633b')}>
               <span><small>{i18n.t('ui.pages.admin.contracts.contract_list_page.baslangic_cf0f08')}</small><strong>{formatDateInBaku(contract.startDate)}</strong></span>
@@ -349,17 +350,11 @@ function getContractStatusId(contract: RestaurantContract, statuses: LookupItem[
 }
 
 function normalizeContractStatusName(status: LookupItem) {
-  const labels: Record<string, string> = {
-    Draft: 'Qaralama',
-    PendingSignature: 'Təsdiq gözləyir',
-    OwnerApproved: 'Sahibkar təsdiqlədi',
-    Scheduled: 'Planlaşdırılıb',
-    Active: 'Aktiv',
-    Expired: 'Bitib',
-    Terminated: 'Ləğv edilib',
-  }
+  return i18n.t(`ui.adminFlow.contractStatus.${status.code}`, { defaultValue: status.name })
+}
 
-  return labels[status.code] || status.name
+function localizedContractStatus(contract: RestaurantContract) {
+  return i18n.t(`ui.adminFlow.contractStatus.${contract.status}`, { defaultValue: contract.statusName || contract.status })
 }
 
 function getStatusTabsFromRecords(
@@ -370,7 +365,7 @@ function getStatusTabsFromRecords(
   records.forEach((record) => {
     const value = getContractStatusId(record.contract, statuses)
     if (value) {
-      tabs.set(value, contractStatusLabel(record.contract))
+      tabs.set(value, localizedContractStatus(record.contract))
     }
   })
 
