@@ -1,12 +1,15 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { AlertTriangle, CheckCircle2, MapPin } from 'lucide-react'
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ecafeApi, type GeocodeAddressResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../shared/auth/authz'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
+import { azSourceFrom, emptyTranslations, translationPayload, translationValuesFrom } from '../../shared/i18n/contentTranslations'
+import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
@@ -61,18 +64,27 @@ async function geocodeWithFallback(form: GeocodeFormFields) {
 }
 
 export function RestaurantEditPage() {
+  const { i18n: activeI18n } = useTranslation()
   const navigate = useNavigate()
   const { restaurantId = '' } = useParams()
   const { user } = useAuth()
   const canEditRestrictedSettings = isInRole(user, [RoleIds.PlatformAdmin])
   const canEditRestaurants = canEditRestrictedSettings || isInRole(user, [RoleIds.Owner, RoleIds.Manager], restaurantId)
-  const { data: restaurant, isLoading } = useAsyncData(() => ecafeApi.restaurants.adminDetail(restaurantId), null, [restaurantId])
+  const { data: restaurant, isLoading } = useAsyncData(() => ecafeApi.restaurants.adminDetail(restaurantId), null, [restaurantId, activeI18n.resolvedLanguage])
+  const [metadataRetry, setMetadataRetry] = useState(0)
+  const { data: metadata, error: metadataError, isLoading: metadataLoading } = useKeyedAsyncData(
+    () => ecafeApi.contentTranslations.detail('restaurants', restaurantId),
+    null,
+    restaurantId,
+    [restaurantId, metadataRetry],
+  )
   const { data: groups } = useAsyncData(
     () => canEditRestrictedSettings ? ecafeApi.restaurantGroups.list() : Promise.resolve([]),
     [],
-    [canEditRestrictedSettings],
+    [canEditRestrictedSettings, activeI18n.resolvedLanguage],
   )
   const [fileIds, setFileIds] = useState<number[]>([])
+  const [translations, setTranslations] = useState(emptyTranslations)
   const [error, setError] = useState('')
   const [errorDetails, setErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -101,14 +113,19 @@ export function RestaurantEditPage() {
   })
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [locationResults, setLocationResults] = useState<GeocodeAddressResponse[]>([])
+  const hydratedMetadata = useRef<typeof metadata>(null)
 
   useEffect(() => {
-    if (!restaurant) {
+    if (!restaurant || !metadata || hydratedMetadata.current === metadata) {
       return
     }
+    hydratedMetadata.current = metadata
+
+    const az = azSourceFrom(metadata)
+    setTranslations(translationValuesFrom(metadata))
 
     setForm({
-      location: restaurant.address,
+      location: az.location ?? '',
       latitude: restaurant.latitude == null ? '' : String(restaurant.latitude),
       longitude: restaurant.longitude == null ? '' : String(restaurant.longitude),
       placeId: restaurant.placeId || '',
@@ -116,9 +133,9 @@ export function RestaurantEditPage() {
       phone: restaurant.phone,
       restaurantGroupEmail: '',
       restaurantGroupId: restaurant.restaurantGroupId || '',
-      restaurantGroupName: restaurant.restaurantGroupName || '',
+      restaurantGroupName: restaurant.restaurantGroupId ? restaurant.restaurantGroupName || '' : '',
       restaurantGroupLegalName: '',
-      branchName: restaurant.branchName || '',
+      branchName: az.branchName ?? '',
       cancellationWindowMinutes: String(restaurant.cancellationWindowMinutes ?? 60),
       reservationPreBlockMinutes: String(restaurant.reservationPreBlockMinutes ?? 60),
       tableTurnoverBufferMinutes: String(restaurant.tableTurnoverBufferMinutes ?? 15),
@@ -130,7 +147,7 @@ export function RestaurantEditPage() {
       timeZone: restaurant.timeZone || '',
       workingHours: restaurant.workingHours.length > 0 ? restaurant.workingHours : createDefaultWorkingHours(),
     })
-  }, [restaurant])
+  }, [restaurant, metadata])
 
   if (!canEditRestaurants) {
     return <Navigate to={`/admin/restaurants/${restaurantId || ''}`} replace />
@@ -138,6 +155,11 @@ export function RestaurantEditPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!metadata || metadataLoading || metadataError) return
+    if (!form.location.trim() || !form.branchName.trim()) {
+      setError('AZ bölməsində ünvan və filial adını tamamlayın.')
+      return
+    }
     setError('')
     setErrorDetails([])
     setIsSubmitting(true)
@@ -158,6 +180,7 @@ export function RestaurantEditPage() {
           staffSettlementPeriod: Number(form.staffSettlementPeriod),
         } : {}),
         branchName: form.branchName,
+        translations: translationPayload(translations, ['name', 'branchName', 'location']),
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         reservationPreBlockMinutes: Number(form.reservationPreBlockMinutes),
         tableTurnoverBufferMinutes: Number(form.tableTurnoverBufferMinutes),
@@ -217,7 +240,11 @@ export function RestaurantEditPage() {
     setErrorDetails([])
   }
 
-  if (isLoading || !restaurant) {
+  if (metadataError) {
+    return <main className="admin-page narrow"><StatusMessage tone="danger">{metadataError}</StatusMessage><Button type="button" onClick={() => setMetadataRetry((value) => value + 1)}>Yenidən yoxla</Button></main>
+  }
+
+  if (isLoading || metadataLoading || !restaurant || !metadata) {
     return (
       <main className="admin-page narrow">
         <p className="online-only">{i18n.t('ui.pages.admin.restaurant_edit_page.restoran_melumatlari_yuklenir_b08a45')}</p>
@@ -232,7 +259,7 @@ export function RestaurantEditPage() {
       {canEditRestrictedSettings ? <RestaurantMobileModuleSection key={restaurantId} restaurantId={restaurantId} /> : null}
 
       <form className="admin-panel" onSubmit={handleSubmit}>
-        <div className="form-grid two">
+        <ContentTranslationTabs fields={['name', 'branchName', 'location']} value={translations} onChange={setTranslations} azContent={<div className="form-grid two">
           <div className="location-lookup-field">
             <TextField
               label={i18n.t('ui.pages.admin.restaurant_edit_page.mekan_a979c9')}
@@ -271,7 +298,7 @@ export function RestaurantEditPage() {
             ) : null}
           </div>
           <TextField label={i18n.t('ui.pages.admin.restaurant_edit_page.filial_adi_6e2940')} required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
-        </div>
+        </div>} />
         <div className="form-grid two">
           <PhoneField label={i18n.t('ui.pages.admin.restaurant_edit_page.telefon_fa6906')} required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
         </div>

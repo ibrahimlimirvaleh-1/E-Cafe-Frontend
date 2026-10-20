@@ -1,12 +1,15 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { Ban, CheckCircle2, Copy, Pencil, Plus, Trash2, X } from 'lucide-react'
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
 import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
+import { azSourceFrom, emptyTranslations, translationPayload, translationValuesFrom } from '../../shared/i18n/contentTranslations'
+import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -21,6 +24,7 @@ type TablesPageMode = 'list' | 'create' | 'edit'
 type CopyTableRow = { tableNo: string; name: string }
 
 export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode }) {
+  const { i18n: activeI18n } = useTranslation()
   const { user } = useAuth()
   const { tableId = '' } = useParams()
   const [searchParams] = useSearchParams()
@@ -29,11 +33,13 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [form, setForm] = useState({ tableNo: '', name: '', capacity: '2' })
+  const [translations, setTranslations] = useState(emptyTranslations)
+  const [metadataRetry, setMetadataRetry] = useState(0)
   const [copyTargetTableId, setCopyTargetTableId] = useState('')
   const [copyRows, setCopyRows] = useState<CopyTableRow[]>([{ tableNo: '', name: '' }])
   const [copyMessage, setCopyMessage] = useState('')
   const [copyMessageDetails, setCopyMessageDetails] = useState<ApiErrorDetail[]>([])
-  const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
+  const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [activeI18n.resolvedLanguage])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
@@ -44,9 +50,16 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
     () => (restaurantId ? ecafeApi.tables.list(restaurantId) : Promise.resolve([])),
     [],
     restaurantId,
-    [restaurantId, reloadKey],
+    [restaurantId, reloadKey, activeI18n.resolvedLanguage],
   )
   const editingTable = mode === 'edit' ? tables.find((table) => table.id === tableId) : undefined
+  const { data: editMetadata, error: editMetadataError, isLoading: editMetadataLoading } = useKeyedAsyncData(
+    () => mode === 'edit' && tableId ? ecafeApi.contentTranslations.detail('tables', tableId) : Promise.resolve(null),
+    null,
+    `${mode}:${tableId}`,
+    [mode, tableId, metadataRetry],
+  )
+  const hydratedMetadata = useRef<typeof editMetadata>(null)
   const copyTargetTable = tables.find((table) => table.id === copyTargetTableId)
 
   function tableStatusLabel(status: string) {
@@ -73,17 +86,29 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
   }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
   useEffect(() => {
-    if (mode === 'edit' && editingTable) {
+    if (mode === 'edit' && editingTable && editMetadata && hydratedMetadata.current !== editMetadata) {
+      hydratedMetadata.current = editMetadata
+      const az = azSourceFrom(editMetadata)
       setForm({
         tableNo: editingTable.number,
-        name: editingTable.name || editingTable.number,
+        name: az.name ?? '',
         capacity: String(editingTable.capacity),
       })
+      setTranslations(translationValuesFrom(editMetadata))
     }
-  }, [editingTable, mode])
+  }, [editingTable, editMetadata, mode])
+
+  useEffect(() => {
+    if (mode === 'create') setTranslations(emptyTranslations())
+  }, [mode, restaurantId])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (mode === 'edit' && (!editMetadata || editMetadataLoading || editMetadataError)) return
+    if (!form.name.trim()) {
+      setMessage('AZ bölməsində masa adını daxil edin.')
+      return
+    }
     if (!restaurantId) {
       setMessage('Restoran seçilməlidir.')
       setMessageDetails([])
@@ -99,6 +124,7 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
           name: form.name,
           capacity: Number(form.capacity),
           isActive: true,
+          translations: translationPayload(translations, ['name']),
         })
         setMessage('Masa məlumatları yeniləndi.')
       } else {
@@ -106,8 +132,10 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
           tableNo: form.tableNo,
           name: form.name,
           capacity: Number(form.capacity),
+          translations: translationPayload(translations, ['name']),
         })
         setForm({ tableNo: '', name: '', capacity: '2' })
+        setTranslations(emptyTranslations())
         setMessage('Masa yaradıldı.')
       }
       setMessageDetails([])
@@ -239,10 +267,12 @@ export function TablesManagementPage({ mode = 'list' }: { mode?: TablesPageMode 
             <RestaurantSelectField emptyOption={null} label={i18n.t('ui.pages.admin.tables_management_page.restoran_c4df56')} onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
             <div className="form-grid two">
               <TextField label={i18n.t('ui.pages.admin.tables_management_page.masa_nomresi_0ebbb8')} required value={form.tableNo} onChange={(event) => setForm({ ...form, tableNo: event.target.value })} />
-              <TextField label={i18n.t('ui.pages.admin.tables_management_page.ad_1d97c9')} required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </div>
+            {mode === 'edit' && editMetadataError ? <StatusMessage tone="danger">{editMetadataError}</StatusMessage> : null}
+            <ContentTranslationTabs fields={['name']} value={translations} onChange={setTranslations} azContent={<TextField label={i18n.t('ui.pages.admin.tables_management_page.ad_1d97c9')} required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />} />
             <TextField label={i18n.t('ui.pages.admin.tables_management_page.tutum_1c836d')} min={1} required type="number" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
-            <Button type="submit">{mode === 'edit' ?i18n.t('ui.pages.admin.tables_management_page.yadda_saxla_78db97') :i18n.t('ui.pages.admin.tables_management_page.masa_yarat_c00ba4')}</Button>
+            <Button disabled={mode === 'edit' && (!editMetadata || editMetadataLoading || Boolean(editMetadataError))} type="submit">{mode === 'edit' ?i18n.t('ui.pages.admin.tables_management_page.yadda_saxla_78db97') :i18n.t('ui.pages.admin.tables_management_page.masa_yarat_c00ba4')}</Button>
+            {mode === 'edit' && editMetadataError ? <Button type="button" variant="secondary" onClick={() => setMetadataRetry((value) => value + 1)}>Yenidən yoxla</Button> : null}
             {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
           </form>
         ) : (

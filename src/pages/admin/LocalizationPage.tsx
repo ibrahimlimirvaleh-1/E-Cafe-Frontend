@@ -3,12 +3,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ecafeApi, type LocalizationDraftResponse, type LocalizationEntry, type LocalizationReleaseResponse } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError } from '../../shared/api/httpClient'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { refreshDictionary } from '../../shared/i18n/catalog'
 import { getCurrentLanguage, i18n } from '../../shared/i18n/i18n'
 import { getIntlLocale } from '../../shared/i18n/language'
 import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { SelectField } from '../../shared/ui/FormField'
+import { StandaloneContentTranslationEditor } from '../../shared/ui/StandaloneContentTranslationEditor'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import './localization.css'
 
@@ -16,7 +19,10 @@ type ConfirmAction = { kind: 'publish' } | { kind: 'rollback'; releaseId: number
 const pageSize = 25
 
 export function LocalizationPage() {
-  const { t } = useTranslation()
+  const { t, i18n: activeI18n } = useTranslation()
+  const [unitReloadKey, setUnitReloadKey] = useState(0)
+  const { data: units } = useAsyncData(() => ecafeApi.lookups.units(), [], [activeI18n.resolvedLanguage, unitReloadKey])
+  const [unitId, setUnitId] = useState('')
   const [draft, setDraft] = useState<LocalizationDraftResponse | null>(null)
   const [releases, setReleases] = useState<LocalizationReleaseResponse[]>([])
   const [edits, setEdits] = useState<Record<string, LocalizationEntry>>({})
@@ -169,6 +175,15 @@ export function LocalizationPage() {
       </div>)}
       {releases.length === 0 ? <p className="localization-empty">{t('ui.localization.noReleases')}</p> : null}
     </div> : null}
+    <section className="localization-unit-editor">
+      <h2>{t('ui.content.unitTranslations')}</h2>
+      <SelectField label={t('ui.content.chooseUnit')} value={unitId} onChange={(event) => setUnitId(event.target.value)}>
+        <option value="">{t('ui.content.chooseUnit')}</option>
+        {units.map((unit) => <option key={unit.id} value={unit.id}>{unit.name} ({unit.code})</option>)}
+      </SelectField>
+      {unitId ? <StandaloneContentTranslationEditor key={unitId} entityType="units" id={unitId}
+        onChanged={() => setUnitReloadKey((value) => value + 1)} /> : null}
+    </section>
     <ConfirmDialog isOpen={confirm !== null} isDanger={confirm?.kind === 'rollback'} title={t(confirm?.kind === 'rollback' ? 'ui.localization.rollbackTitle' : 'ui.localization.publishTitle')} message={t(confirm?.kind === 'rollback' ? 'ui.localization.rollbackConfirm' : 'ui.localization.publishConfirm')} confirmLabel={t(confirm?.kind === 'rollback' ? 'ui.localization.rollback' : 'ui.localization.publish')} confirmDisabled={busy || dirtyCount > 0} onCancel={() => { if (!busy) setConfirm(null) }} onConfirm={() => void applyConfirmedAction()} />
   </main>
 }

@@ -1,7 +1,7 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { useTranslation } from 'react-i18next'
 import { History, Pencil, Plus, Power, Trash2, X } from 'lucide-react'
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -22,17 +22,12 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 import type { InventoryItem, InventoryMovement, MenuItem, Recipe } from '../../entities/types'
 import { getCurrentLanguage } from '../../shared/i18n/i18n'
 import { getIntlLocale } from '../../shared/i18n/language'
+import { azSourceFrom, emptyTranslations, translationPayload, translationValuesFrom } from '../../shared/i18n/contentTranslations'
+import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
+import type { LookupItem } from '../../entities/types'
 
 type InventoryPageMode = 'items' | 'create' | 'movements' | 'movement-create' | 'recipes' | 'recipe-create'
 type PendingDelete = { id: string; label: string; type: 'inventory' | 'recipe' } | null
-
-const units = [
-  { id: 1, name: 'Kilogram', code: 'kg' },
-  { id: 2, name: 'Qram', code: 'g' },
-  { id: 3, name: 'Litr', code: 'l' },
-  { id: 4, name: 'Millilitr', code: 'ml' },
-  { id: 5, name: 'Eded', code: 'pcs' },
-]
 
 const pageCopy: Record<InventoryPageMode, { eyebrow: string; title: string }> = {
   items: { eyebrow: 'Stok', title: 'Stok elementleri' },
@@ -54,9 +49,9 @@ function emptyPage<T>() {
   }
 }
 
-function unitLabel(unitId: number, fallback?: string) {
+function unitLabel(units: LookupItem[], unitId: number, fallback?: string) {
   const unit = units.find((entry) => entry.id === unitId)
-  return unit ? `${i18n.t(`ui.inventory.unit.${unit.id}`, { defaultValue: unit.name })} (${unit.code})` : fallback || '-'
+  return unit ? `${unit.name} (${unit.code})` : fallback || '-'
 }
 
 function stockAmount(item: InventoryItem) {
@@ -83,7 +78,7 @@ function formatDateTime(value: string) {
 }
 
 export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPageMode }) {
-  useTranslation()
+  const { i18n: activeI18n } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -106,6 +101,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
   const [editingInventoryId, setEditingInventoryId] = useState('')
+  const [translations, setTranslations] = useState(emptyTranslations)
+  const [metadataRetry, setMetadataRetry] = useState(0)
   const [editingRecipeId, setEditingRecipeId] = useState('')
   const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null)
   const { clearFeedback, feedback, setError, setSuccess, setWarning } = useFormFeedback()
@@ -130,7 +127,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     isActive: true,
   })
 
-  const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
+  const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [activeI18n.resolvedLanguage])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId)
     ? selectedRestaurantId
@@ -141,7 +138,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     () => (restaurantId ? ecafeApi.inventory.list(restaurantId, { onlyLowStock }) : Promise.resolve([])),
     [],
     `${restaurantId}:${onlyLowStock}`,
-    [restaurantId, onlyLowStock, reloadKey],
+    [restaurantId, onlyLowStock, reloadKey, activeI18n.resolvedLanguage],
   )
   const { data: movementInventoryPage, isLoading: movementInventoryLoading } = useKeyedAsyncData(
     () =>
@@ -154,19 +151,27 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         : Promise.resolve(emptyPage<InventoryItem>()),
     emptyPage<InventoryItem>(),
     `${restaurantId}:${mode}:${onlyLowStock}:${inventoryPageNumber}:${inventoryPageSize}`,
-    [restaurantId, mode, onlyLowStock, inventoryPageNumber, inventoryPageSize, reloadKey],
+    [restaurantId, mode, onlyLowStock, inventoryPageNumber, inventoryPageSize, reloadKey, activeI18n.resolvedLanguage],
   )
   const { data: menuItems } = useKeyedAsyncData(
     () => (restaurantId ? ecafeApi.menu.adminItems(restaurantId) : Promise.resolve([])),
     [],
     restaurantId,
-    [restaurantId, reloadKey],
+    [restaurantId, reloadKey, activeI18n.resolvedLanguage],
   )
   const { data: movementTypes } = useAsyncData(() => ecafeApi.lookups.inventoryMovementTypes(), [], [])
+  const { data: units } = useAsyncData(() => ecafeApi.lookups.units(), [], [activeI18n.resolvedLanguage])
   const inventoryRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory' : '/admin/inventory'
   const movementRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory/movements' : '/admin/inventory/movements'
   const recipeRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/recipes' : '/admin/recipes'
   const editingInventoryItemId = mode === 'create' ? searchParams.get('inventoryItemId') ?? '' : ''
+  const { data: editMetadata, error: editMetadataError, isLoading: editMetadataLoading } = useKeyedAsyncData(
+    () => editingInventoryItemId ? ecafeApi.contentTranslations.detail('inventory-items', editingInventoryItemId) : Promise.resolve(null),
+    null,
+    editingInventoryItemId,
+    [editingInventoryItemId, metadataRetry],
+  )
+  const hydratedMetadata = useRef<typeof editMetadata>(null)
   const movementInventoryItemId = mode === 'movement-create' ? searchParams.get('inventoryItemId') ?? '' : ''
   const recipeMenuItemId = mode === 'recipe-create' ? searchParams.get('menuItemId') ?? '' : ''
   const editingRecipeItemId = mode === 'recipe-create' ? searchParams.get('recipeId') ?? '' : ''
@@ -239,7 +244,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   }, [movementForm.movementTypeId, movementTypes])
 
   useEffect(() => {
-    if (mode !== 'create' || !editingInventoryItemId) {
+    if (mode !== 'create' || !editingInventoryItemId || !editMetadata || hydratedMetadata.current === editMetadata) {
       return
     }
 
@@ -247,17 +252,24 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     if (!item) {
       return
     }
+    hydratedMetadata.current = editMetadata
 
     setEditingInventoryId(item.id)
     setSelectedInventoryId(item.id)
+    const az = azSourceFrom(editMetadata)
     setStockForm({
-      name: item.name,
+      name: az.name ?? '',
       unitId: String(item.unitId || 2),
       quantityOnHand: String(item.quantityOnHand),
       lowStockThreshold: String(item.lowStockThreshold),
       isActive: item.isActive,
     })
-  }, [editingInventoryItemId, inventoryItems, mode])
+    setTranslations(translationValuesFrom(editMetadata))
+  }, [editingInventoryItemId, inventoryItems, editMetadata, mode])
+
+  useEffect(() => {
+    if (!editingInventoryItemId) setTranslations(emptyTranslations())
+  }, [editingInventoryItemId])
 
   useEffect(() => {
     if (!recipeForm.inventoryItemId && inventoryItems[0]) {
@@ -295,6 +307,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   function resetStockForm() {
     setEditingInventoryId('')
     setStockForm({ name: '', unitId: '2', quantityOnHand: '', lowStockThreshold: '', isActive: true })
+    setTranslations(emptyTranslations())
   }
 
   function resetRecipeForm() {
@@ -304,6 +317,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
   async function handleSaveStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (editingInventoryItemId && (!editMetadata || editMetadataLoading || editMetadataError || !editingInventoryId)) return
+    if (!stockForm.name.trim()) {
+      setWarning('AZ bölməsində stok elementinin adını daxil edin.')
+      return
+    }
     if (!restaurantId) {
       setWarning('Restoran seçilməlidir.')
       return
@@ -317,6 +335,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           unitId: Number(stockForm.unitId),
           lowStockThreshold: Number(stockForm.lowStockThreshold),
           isActive: stockForm.isActive,
+          translations: translationPayload(translations, ['name']),
         })
         setSuccess('Stok elementi yeniləndi.')
       } else {
@@ -325,6 +344,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           unitId: Number(stockForm.unitId),
           quantityOnHand: Number(stockForm.quantityOnHand),
           lowStockThreshold: Number(stockForm.lowStockThreshold),
+          translations: translationPayload(translations, ['name']),
         })
         setSuccess('Stok elementi yaradıldı.')
       }
@@ -522,10 +542,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                 <form className="stack-form" onSubmit={handleSaveStock}>
                   <span className="eyebrow">{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.redakte_561713') :i18n.t('ui.pages.admin.inventory_management_page.yeni_qeyd_2af8e9')}</span>
                   <h2>{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.stoku_redakte_et_b17da9') :i18n.t('ui.pages.admin.inventory_management_page.yeni_stok_elementi_7c5bf9')}</h2>
-                  <TextField label={i18n.t('ui.pages.admin.inventory_management_page.ad_1d97c9')} required value={stockForm.name} onChange={(event) => setStockForm({ ...stockForm, name: event.target.value })} />
+                  {editingInventoryItemId && editMetadataError ? <StatusMessage tone="danger">{editMetadataError}</StatusMessage> : null}
+                  <ContentTranslationTabs fields={['name']} value={translations} onChange={setTranslations} azContent={<TextField label={i18n.t('ui.pages.admin.inventory_management_page.ad_1d97c9')} required value={stockForm.name} onChange={(event) => setStockForm({ ...stockForm, name: event.target.value })} />} />
                   <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.olcu_vahidi_47b78c')} required value={stockForm.unitId} onChange={(event) => setStockForm({ ...stockForm, unitId: event.target.value })}>
                     {units.map((unit) => (
-                      <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
+                      <option key={unit.id} value={unit.id}>{unitLabel(units, unit.id)}</option>
                     ))}
                   </SelectField>
                   <div className="form-grid two">
@@ -539,7 +560,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     </label>
                   ) : null}
                   <div className="inline-actions">
-                    <Button type="submit">{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.stoku_yenile_78f8d9') :i18n.t('ui.pages.admin.inventory_management_page.stok_yarat_f443b7')}</Button>
+                    <Button disabled={Boolean(editingInventoryItemId) && (!editMetadata || editMetadataLoading || Boolean(editMetadataError) || !editingInventoryId)} type="submit">{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.stoku_yenile_78f8d9') :i18n.t('ui.pages.admin.inventory_management_page.stok_yarat_f443b7')}</Button>
+                    {editingInventoryItemId && editMetadataError ? <Button type="button" variant="secondary" onClick={() => setMetadataRetry((value) => value + 1)}>Yenidən yoxla</Button> : null}
                     {editingInventoryId ? <Button type="button" variant="secondary" onClick={resetStockForm}>{i18n.t('ui.pages.admin.inventory_management_page.legv_et_d732b8')}</Button> : null}
                   </div>
                 </form>
@@ -725,7 +747,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     </SelectField>
                     <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.olcu_vahidi_47b78c')} required value={movementForm.unitId} onChange={(event) => setMovementForm({ ...movementForm, unitId: event.target.value })}>
                       {units.map((unit) => (
-                        <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
+                        <option key={unit.id} value={unit.id}>{unitLabel(units, unit.id)}</option>
                       ))}
                     </SelectField>
                   </div>
@@ -823,7 +845,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     <TextField label={i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')} min={0} required step="0.001" type="number" value={recipeForm.quantity} onChange={(event) => setRecipeForm({ ...recipeForm, quantity: event.target.value })} />
                     <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.olcu_4f1ec6')} required value={recipeForm.unitId} onChange={(event) => setRecipeForm({ ...recipeForm, unitId: event.target.value })}>
                       {units.map((unit) => (
-                        <option key={unit.id} value={unit.id}>{unitLabel(unit.id)}</option>
+                        <option key={unit.id} value={unit.id}>{unitLabel(units, unit.id)}</option>
                       ))}
                     </SelectField>
                   </div>

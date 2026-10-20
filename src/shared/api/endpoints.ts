@@ -9,6 +9,11 @@ export const endpoints = {
     releases: '/admin/localization/releases',
     rollback: (releaseId: number) => `/admin/localization/releases/${releaseId}/rollback`,
   },
+  contentTranslations: {
+    detail: (entityType: string, id: string) => `/content/${entityType}/${id}/translations`,
+    language: (entityType: string, id: string, languageCode: string) =>
+      `/content/${entityType}/${id}/translations/${languageCode}`,
+  },
   mobileApp: {
     customerRelease: '/mobile/customer/release',
     customerDownload: '/mobile/customer/download',

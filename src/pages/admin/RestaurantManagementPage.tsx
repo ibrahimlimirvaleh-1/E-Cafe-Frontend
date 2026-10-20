@@ -1,6 +1,7 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { AlertTriangle, CheckCircle2, MapPin, Search, UserPlus } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 import type { UserProfile } from '../../entities/types'
 import { ecafeApi, type GeocodeAddressResponse } from '../../shared/api/ecafeApi'
@@ -9,6 +10,8 @@ import { restaurantRow } from '../../shared/api/mappers'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, isInRole, isPlatformAdmin } from '../../shared/auth/authz'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
+import { emptyTranslations, translationPayload } from '../../shared/i18n/contentTranslations'
+import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { DataTable } from '../../shared/ui/DataTable'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
@@ -131,6 +134,7 @@ async function geocodeWithFallback(form: GeocodeFormFields) {
 }
 
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
+  const { i18n: activeI18n } = useTranslation()
   const { selectProfileForRestaurant, user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
   const [pageNumber, setPageNumber] = useState(1)
@@ -140,6 +144,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [form, setForm] = useState(initialForm)
+  const [translations, setTranslations] = useState(emptyTranslations)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [locationResults, setLocationResults] = useState<GeocodeAddressResponse[]>([])
   const [ownerMode, setOwnerMode] = useState<OwnerMode>('existing')
@@ -162,8 +167,8 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     totalCount: 0,
     hasPreviousPage: false,
     hasNextPage: false,
-  }, query, [query, reloadKey])
-  const { data: groups } = useKeyedAsyncData(() => ecafeApi.restaurantGroups.list(), [], 'groups', [reloadKey])
+  }, query, [query, reloadKey, activeI18n.resolvedLanguage])
+  const { data: groups } = useKeyedAsyncData(() => ecafeApi.restaurantGroups.list(), [], 'groups', [reloadKey, activeI18n.resolvedLanguage])
   const canCreateRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
   const canSearchRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
   const { data: users } = useKeyedAsyncData(
@@ -217,6 +222,11 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     setMessage('')
     setMessageDetails([])
 
+    if (!form.location.trim() || !form.branchName.trim()) {
+      setMessage('AZ bölməsində ünvan və filial adını tamamlayın.')
+      return
+    }
+
     if (ownerMode === 'existing' && !form.ownerId && !form.ownerEmail.trim()) {
       setMessage('Sahibkar seçilməlidir.')
       setMessageDetails([{ label: 'Sahibkar', message: 'Mövcud sahibkarı axtarıb seçin və ya yeni sahibkar yarat bölməsinə keçin.' }])
@@ -241,6 +251,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
         restaurantGroupEmail: form.restaurantGroupId ? undefined : form.restaurantGroupEmail,
         branchName: form.branchName,
+        translations: translationPayload(translations, ['name', 'branchName', 'location']),
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         reservationPreBlockMinutes: Number(form.reservationPreBlockMinutes),
         tableTurnoverBufferMinutes: Number(form.tableTurnoverBufferMinutes),
@@ -256,6 +267,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         fileIds,
       })
       setForm(initialForm)
+      setTranslations(emptyTranslations())
       setFileIds([])
       setOwnerMode('existing')
       setMessage('Restoran yaradıldı.')
@@ -394,7 +406,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             <span className="eyebrow">{i18n.t('ui.pages.admin.restaurant_management_page.yeni_restoran_651205')}</span>
             <h2>{i18n.t('ui.pages.admin.restaurant_management_page.profil_ve_filial_cdf029')}</h2>
           </div>
-          <div className="form-grid two">
+          <ContentTranslationTabs fields={['name', 'branchName', 'location']} value={translations} onChange={setTranslations} azContent={<div className="form-grid two">
             <div className="location-lookup-field">
               <TextField
                 label={i18n.t('ui.pages.admin.restaurant_management_page.mekan_a979c9')}
@@ -433,7 +445,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
               ) : null}
             </div>
             <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.filial_adi_6e2940')} required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
-          </div>
+          </div>} />
           <div className="form-grid two">
             <PhoneField label={i18n.t('ui.pages.admin.restaurant_management_page.telefon_fa6906')} required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </div>

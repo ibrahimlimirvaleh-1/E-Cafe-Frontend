@@ -21,5 +21,8 @@
 .localization-release { justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--outline-variant); }
 .localization-release > div { display: grid; gap: 4px; }
 .localization-release span { color: var(--on-surface-variant); font-size: 13px; }
+.localization-unit-editor { max-width: 620px; display: grid; gap: 12px; padding-top: 28px; }
+.localization-unit-editor h2 { margin: 0; font-size: 20px; }
+.content-group-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 900px) { .localization-row { grid-template-columns: 1fr; gap: 10px; } }
 @media (max-width: 600px) { .localization-fields { grid-template-columns: 1fr; } .localization-footer, .localization-commands, .localization-pagination { align-items: stretch; width: 100%; } .localization-commands { display: grid; grid-template-columns: 1fr 1fr; } .localization-pagination { justify-content: space-between; } .localization-release { align-items: flex-start; flex-wrap: wrap; } }
