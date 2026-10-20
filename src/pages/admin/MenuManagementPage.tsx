@@ -1,5 +1,6 @@
 import { i18n } from '../../shared/i18n/i18n'
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Ban, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { MenuItem } from '../../entities/types'
@@ -8,6 +9,8 @@ import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/h
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems } from '../../shared/auth/authz'
 import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
+import { azSourceFrom, emptyTranslations, missingTranslationName, translationPayload, translationValuesFrom } from '../../shared/i18n/contentTranslations'
+import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
@@ -23,6 +26,7 @@ import { StatusMessage } from '../../shared/ui/StatusMessage'
 type MenuPageMode = 'categories' | 'create-category' | 'edit-category' | 'items' | 'create-item' | 'edit-item'
 
 export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) {
+  const { i18n: activeI18n } = useTranslation()
   const { user } = useAuth()
   const { categoryId = '', itemId = '' } = useParams()
   const navigate = useNavigate()
@@ -33,6 +37,8 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [categoryForm, setCategoryForm] = useState({ name: '', sortOrder: '' })
+  const [translations, setTranslations] = useState(emptyTranslations)
+  const [metadataRetry, setMetadataRetry] = useState(0)
   const [itemForm, setItemForm] = useState({
     categoryId: '',
     statusId: '',
@@ -42,8 +48,8 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     isAvailable: true,
     unavailableReason: '',
   })
-  const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
-  const { data: itemStatuses } = useAsyncData(() => ecafeApi.lookups.itemStatuses(), [], [])
+  const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [activeI18n.resolvedLanguage])
+  const { data: itemStatuses } = useAsyncData(() => ecafeApi.lookups.itemStatuses(), [], [activeI18n.resolvedLanguage])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
   const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId) ? selectedRestaurantId : ''
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
@@ -56,19 +62,28 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
     () => (restaurantId ? ecafeApi.menu.categories(restaurantId) : Promise.resolve([])),
     [],
     restaurantId,
-    [restaurantId, reloadKey],
+    [restaurantId, reloadKey, activeI18n.resolvedLanguage],
   )
   const { data: items, isLoading } = useKeyedAsyncData(
     () => (restaurantId ? ecafeApi.menu.adminItems(restaurantId) : Promise.resolve([])),
     [],
     restaurantId,
-    [restaurantId, reloadKey],
+    [restaurantId, reloadKey, activeI18n.resolvedLanguage],
   )
   const activeStatuses = useMemo(() => itemStatuses.filter((status) => status.id > 0), [itemStatuses])
   const activeCategories = useMemo(() => categories.filter((category) => category.isActive), [categories])
   const categoryNameById = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories])
   const editingCategory = mode === 'edit-category' ? categories.find((category) => category.id === categoryId) : undefined
   const editingItem = mode === 'edit-item' ? items.find((item) => item.id === itemId) : undefined
+  const editorType = mode === 'edit-category' ? 'categories' : mode === 'edit-item' ? 'items' : null
+  const editorId = mode === 'edit-category' ? categoryId : mode === 'edit-item' ? itemId : ''
+  const { data: editMetadata, error: editMetadataError, isLoading: editMetadataLoading } = useKeyedAsyncData(
+    () => editorType && editorId ? ecafeApi.contentTranslations.detail(editorType, editorId) : Promise.resolve(null),
+    null,
+    `${editorType}:${editorId}`,
+    [editorType, editorId, metadataRetry],
+  )
+  const hydratedMetadata = useRef<typeof editMetadata>(null)
   const hasActiveContract = selectedRestaurant?.hasActiveContract === true
   const hasSelectedCategory = activeCategories.some((category) => category.id === itemForm.categoryId)
   const itemFormDisabled = !selectedRestaurant || !hasActiveContract || activeCategories.length === 0 || activeStatuses.length === 0 || (mode === 'edit-item' && !editingItem)
@@ -86,13 +101,16 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   }, [accessibleRestaurants, searchParams, selectedRestaurantId])
 
   useEffect(() => {
-    if (mode === 'edit-category' && editingCategory) {
+    if (mode === 'edit-category' && editingCategory && editMetadata && hydratedMetadata.current !== editMetadata) {
+      hydratedMetadata.current = editMetadata
+      const az = azSourceFrom(editMetadata)
       setCategoryForm({
-        name: editingCategory.name,
+        name: az.name ?? '',
         sortOrder: editingCategory.sortOrder ? String(editingCategory.sortOrder) : '',
       })
+      setTranslations(translationValuesFrom(editMetadata))
     }
-  }, [editingCategory, mode])
+  }, [editingCategory, editMetadata, mode])
 
   useEffect(() => {
     if (mode === 'edit-item') {
@@ -115,21 +133,29 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
   }, [activeStatuses, itemForm.statusId])
 
   useEffect(() => {
-    if (mode !== 'edit-item' || !editingItem) {
+    if (mode === 'create-category' || mode === 'create-item') setTranslations(emptyTranslations())
+  }, [mode, restaurantId])
+
+  useEffect(() => {
+    if (mode !== 'edit-item' || !editingItem || !editMetadata || hydratedMetadata.current === editMetadata) {
       return
     }
+    hydratedMetadata.current = editMetadata
+
+    const az = azSourceFrom(editMetadata)
 
     setItemForm({
       categoryId: editingItem.categoryId,
       statusId: String(editingItem.statusId ?? activeStatuses[0]?.id ?? ''),
-      name: editingItem.name,
-      description: editingItem.description,
+      name: az.name ?? '',
+      description: az.description ?? '',
       basePrice: String(editingItem.price),
       isAvailable: editingItem.isActive,
-      unavailableReason: '',
+      unavailableReason: az.unavailableReason ?? '',
     })
+    setTranslations(translationValuesFrom(editMetadata))
     setFileId(null)
-  }, [activeStatuses, editingItem, mode])
+  }, [activeStatuses, editingItem, editMetadata, mode])
 
   function handleRestaurantChange(nextRestaurantId: string) {
     setSelectedRestaurantId(nextRestaurantId)
@@ -144,6 +170,10 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   async function handleCreateCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!categoryForm.name.trim()) {
+      setMessage('AZ bölməsində kateqoriya adını daxil edin.')
+      return
+    }
     if (!restaurantId) {
       setMessage('Restoran seçilməlidir.')
       setMessageDetails([])
@@ -156,8 +186,10 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       await ecafeApi.menu.createCategory(restaurantId, {
         name: categoryForm.name,
         sortOrder: categoryForm.sortOrder ? Number(categoryForm.sortOrder) : null,
+        translations: translationPayload(translations, ['name']),
       })
       setCategoryForm({ name: '', sortOrder: '' })
+      setTranslations(emptyTranslations())
       setMessage('Kateqoriya yaradıldı.')
       setMessageDetails([])
       setReloadKey((value) => value + 1)
@@ -170,6 +202,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
 
   async function handleUpdateCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!editMetadata || editMetadataLoading || editMetadataError) return
+    if (!categoryForm.name.trim()) {
+      setMessage('AZ bölməsində kateqoriya adını daxil edin.')
+      return
+    }
     if (!restaurantId || !categoryId) {
       setMessage('Restoran və kateqoriya seçilməlidir.')
       setMessageDetails([])
@@ -183,6 +220,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         name: categoryForm.name,
         sortOrder: categoryForm.sortOrder ? Number(categoryForm.sortOrder) : null,
         isActive: editingCategory?.isActive ?? true,
+        translations: translationPayload(translations, ['name']),
       })
       setMessage('Kateqoriya məlumatları yeniləndi.')
       setMessageDetails([])
@@ -268,10 +306,21 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
       unavailableReason: '',
     })
     setFileId(null)
+    setTranslations(emptyTranslations())
   }
 
   async function handleSaveItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (mode === 'edit-item' && (!editMetadata || editMetadataLoading || editMetadataError)) return
+    if (!itemForm.name.trim() || !itemForm.description.trim()) {
+      setMessage('AZ bölməsində menyu adını və təsvirini tamamlayın.')
+      return
+    }
+    const missingName = missingTranslationName(translations, ['name', 'description', 'unavailableReason'])
+    if (missingName) {
+      setMessage(`${missingName.toUpperCase()} üçün ad daxil edin.`)
+      return
+    }
     if (!selectedRestaurant) {
       setMessage('Restoran seçilməlidir.')
       setMessageDetails([])
@@ -320,6 +369,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
         isAvailable: itemForm.isAvailable,
         unavailableReason: itemForm.unavailableReason,
         fileId,
+        translations: translationPayload(translations, ['name', 'description', 'unavailableReason']),
       }
 
       if (mode === 'edit-item' && editingItem) {
@@ -427,7 +477,7 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             <form className="stack-form" onSubmit={handleCreateCategory}>
               <span className="eyebrow">{i18n.t('ui.pages.admin.menu_management_page.yeni_kateqoriya_8770c9')}</span>
               <h2>{i18n.t('ui.pages.admin.menu_management_page.kateqoriya_melumatlari_cb8f97')}</h2>
-              <TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
+              <ContentTranslationTabs fields={['name']} value={translations} onChange={setTranslations} azContent={<TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />} />
               <TextField label={i18n.t('ui.pages.admin.menu_management_page.sira_a6e667')} min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint={i18n.t('ui.pages.admin.menu_management_page.bos_qalsa_backend_novbeti_sirani_ozu_v_d66279')} />
               <Button type="submit" variant="secondary">{i18n.t('ui.pages.admin.menu_management_page.kateqoriya_yarat_83360c')}</Button>
               {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
@@ -440,9 +490,11 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
             <form className="stack-form" onSubmit={handleUpdateCategory}>
               <span className="eyebrow">{i18n.t('ui.pages.admin.menu_management_page.redakte_af7c03')}</span>
               <h2>{i18n.t('ui.pages.admin.menu_management_page.kateqoriya_melumatlarini_yenile_22d987')}</h2>
-              <TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />
+              {editMetadataError ? <StatusMessage tone="danger">{editMetadataError}</StatusMessage> : null}
+              <ContentTranslationTabs fields={['name']} value={translations} onChange={setTranslations} azContent={<TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={categoryForm.name} onChange={(event) => setCategoryForm({ ...categoryForm, name: event.target.value })} />} />
               <TextField label={i18n.t('ui.pages.admin.menu_management_page.sira_a6e667')} min={0} type="number" value={categoryForm.sortOrder} onChange={(event) => setCategoryForm({ ...categoryForm, sortOrder: event.target.value })} hint={i18n.t('ui.pages.admin.menu_management_page.bos_qalsa_backend_novbeti_sirani_ozu_v_d66279')} />
-              <Button type="submit">{i18n.t('ui.pages.admin.menu_management_page.yadda_saxla_78db97')}</Button>
+              <Button disabled={!editMetadata || editMetadataLoading || Boolean(editMetadataError)} type="submit">{i18n.t('ui.pages.admin.menu_management_page.yadda_saxla_78db97')}</Button>
+              {editMetadataError ? <Button type="button" variant="secondary" onClick={() => setMetadataRetry((value) => value + 1)}>Yenidən yoxla</Button> : null}
               {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
             </form>
           </section>
@@ -523,8 +575,12 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                 ))}
               </SelectField>
             </div>
-            <TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} />
-            <TextareaField label={i18n.t('ui.pages.admin.menu_management_page.terkib_35441a')} required value={itemForm.description} onChange={(event) => setItemForm({ ...itemForm, description: event.target.value })} />
+            {mode === 'edit-item' && editMetadataError ? <StatusMessage tone="danger">{editMetadataError}</StatusMessage> : null}
+            <ContentTranslationTabs fields={['name', 'description', 'unavailableReason']} value={translations} onChange={setTranslations} azContent={<>
+              <TextField label={i18n.t('ui.pages.admin.menu_management_page.ad_1d97c9')} required value={itemForm.name} onChange={(event) => setItemForm({ ...itemForm, name: event.target.value })} />
+              <TextareaField label={i18n.t('ui.pages.admin.menu_management_page.terkib_35441a')} required value={itemForm.description} onChange={(event) => setItemForm({ ...itemForm, description: event.target.value })} />
+              {!itemForm.isAvailable ? <TextField label={i18n.t('ui.pages.admin.menu_management_page.satisda_olmama_sebebi_35155a')} value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} /> : null}
+            </>} />
             <div className="form-grid two">
               <TextField label={i18n.t('ui.pages.admin.menu_management_page.qiymet_67850f')} min={0} required step="0.01" type="number" value={itemForm.basePrice} onChange={(event) => setItemForm({ ...itemForm, basePrice: event.target.value })} />
               <label className="toggle-field menu-item-availability">
@@ -532,12 +588,10 @@ export function MenuManagementPage({ mode = 'items' }: { mode?: MenuPageMode }) 
                 <span>{i18n.t('ui.pages.admin.menu_management_page.satisdadir_20caaf')}</span>
               </label>
             </div>
-            {!itemForm.isAvailable ? (
-              <TextField label={i18n.t('ui.pages.admin.menu_management_page.satisda_olmama_sebebi_35155a')} value={itemForm.unavailableReason} onChange={(event) => setItemForm({ ...itemForm, unavailableReason: event.target.value })} />
-            ) : null}
             <FileUploadField label={i18n.t('ui.pages.admin.menu_management_page.yemek_sekli_ecd247')} accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
             <div className="inline-actions">
-              <Button disabled={itemFormDisabled} type="submit">{mode === 'edit-item' ?i18n.t('ui.pages.admin.menu_management_page.menyu_elementini_yenile_963b5b') :i18n.t('ui.pages.admin.menu_management_page.menyu_elementi_yarat_2f6ce9')}</Button>
+              <Button disabled={itemFormDisabled || (mode === 'edit-item' && (!editMetadata || editMetadataLoading || Boolean(editMetadataError)))} type="submit">{mode === 'edit-item' ?i18n.t('ui.pages.admin.menu_management_page.menyu_elementini_yenile_963b5b') :i18n.t('ui.pages.admin.menu_management_page.menyu_elementi_yarat_2f6ce9')}</Button>
+              {mode === 'edit-item' && editMetadataError ? <Button type="button" variant="secondary" onClick={() => setMetadataRetry((value) => value + 1)}>Yenidən yoxla</Button> : null}
               {mode === 'edit-item' ? (
                 <Button type="button" variant="secondary" onClick={() => navigate(menuListPath)}>{i18n.t('ui.pages.admin.menu_management_page.legv_et_94727e')}</Button>
               ) : null}

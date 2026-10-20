@@ -32,6 +32,7 @@ import type {
 } from '../../entities/types'
 import { endpoints, type KitchenProgressAction } from './endpoints'
 import { ApiError, fetchProtectedBlob, getApiOrigin, httpClient } from './httpClient'
+import type { ContentEntityType, ContentTranslationResponse, TranslationPayload } from '../i18n/contentTranslations'
 
 import {
   categoryRow,
@@ -154,6 +155,7 @@ type CreateRestaurantGroupRequest = {
   name: string
   legalName?: string
   email?: string
+  translations?: TranslationPayload[]
 }
 
 type CreateRestaurantRequest = {
@@ -167,6 +169,7 @@ type CreateRestaurantRequest = {
   restaurantGroupLegalName?: string
   restaurantGroupEmail?: string
   branchName?: string
+  translations?: TranslationPayload[]
   cancellationWindowMinutes: number
   reservationPreBlockMinutes: number
   tableTurnoverBufferMinutes: number
@@ -219,6 +222,7 @@ type CreateTableRequest = {
   tableNo: string
   name: string
   capacity: number
+  translations?: TranslationPayload[]
 }
 
 type UpdateTableRequest = CreateTableRequest & {
@@ -728,6 +732,7 @@ type CopyTableRequest = {
 type CreateCategoryRequest = {
   name: string
   sortOrder?: number | null
+  translations?: TranslationPayload[]
 }
 
 type UpdateCategoryRequest = CreateCategoryRequest & {
@@ -743,6 +748,7 @@ type CreateMenuItemRequest = {
   isAvailable: boolean
   unavailableReason?: string
   fileId?: number | null
+  translations?: TranslationPayload[]
 }
 
 type UpdateMenuItemRequest = CreateMenuItemRequest & {
@@ -751,6 +757,7 @@ type UpdateMenuItemRequest = CreateMenuItemRequest & {
 
 type CreateInventoryItemRequest = {
   name: string
+  translations?: TranslationPayload[]
   unitId: number
   quantityOnHand: number
   lowStockThreshold: number
@@ -758,6 +765,7 @@ type CreateInventoryItemRequest = {
 
 type UpdateInventoryItemRequest = {
   name: string
+  translations?: TranslationPayload[]
   unitId: number
   lowStockThreshold: number
   isActive?: boolean
@@ -935,6 +943,17 @@ function appendIfPresent(formData: FormData, key: string, value: unknown) {
   if (value !== undefined && value !== null && value !== '') {
     formData.set(key, String(value))
   }
+}
+
+function appendTranslations(formData: FormData, translations?: TranslationPayload[]) {
+  translations?.forEach((translation, index) => {
+    formData.set(`Translations[${index}].LanguageCode`, translation.languageCode)
+    for (const [field, value] of Object.entries(translation)) {
+      if (field !== 'languageCode' && value !== undefined) {
+        formData.set(`Translations[${index}].${field[0].toUpperCase()}${field.slice(1)}`, value)
+      }
+    }
+  })
 }
 
 function mapLookup(record: AnyRecord): LookupItem {
@@ -1420,6 +1439,25 @@ function mapRecipe(record: AnyRecord, restaurantId: string, itemId: string): Rec
 }
 
 export const ecafeApi = {
+  contentTranslations: {
+    detail: async (entityType: ContentEntityType, id: string): Promise<ContentTranslationResponse> => {
+      const result = await httpClient<ContentTranslationResponse>(endpoints.contentTranslations.detail(entityType, id))
+      if (!Array.isArray(result.data?.translations) || !result.data.translations.some((row) => row.languageCode === 'az')) {
+        throw new Error('Azərbaycan dilində əsas mətn yüklənmədi.')
+      }
+      return result.data
+    },
+    save: async (entityType: ContentEntityType, id: string, languageCode: 'en' | 'ru',
+      request: { expectedRevision: number; name?: string; description?: string; location?: string; branchName?: string; unavailableReason?: string },
+    ): Promise<ContentTranslationResponse> =>
+      (await httpClient<ContentTranslationResponse>(endpoints.contentTranslations.language(entityType, id, languageCode), {
+        method: 'PUT', body: JSON.stringify(request),
+      })).data,
+    delete: async (entityType: ContentEntityType, id: string, languageCode: 'en' | 'ru', expectedRevision: number) =>
+      httpClient<unknown>(`${endpoints.contentTranslations.language(entityType, id, languageCode)}?expectedRevision=${expectedRevision}`, {
+        method: 'DELETE',
+      }),
+  },
   localization: {
     getPreference: async () => (await httpClient<{ language: string }>(endpoints.localization.preference)).data,
     setPreference: async (language: 'az' | 'en' | 'ru') =>
@@ -1608,6 +1646,7 @@ export const ecafeApi = {
       appendIfPresent(formData, 'Owner.FirstName', request.owner?.firstName)
       appendIfPresent(formData, 'Owner.LastName', request.owner?.lastName)
       request.fileIds?.forEach((fileId) => formData.append('FileIds', String(fileId)))
+      appendTranslations(formData, request.translations)
 
       const result = await httpClient<unknown>(endpoints.restaurants.create, {
         method: 'POST',
@@ -1647,6 +1686,7 @@ export const ecafeApi = {
           workingHours: request.workingHours ?? [],
           defaultWaiterTableLimit: request.defaultWaiterTableLimit,
           fileIds: request.fileIds,
+          translations: request.translations,
         }),
       }),
     setDepositRule: (restaurantId: string, date: string, amount: number) =>
@@ -2045,6 +2085,7 @@ export const ecafeApi = {
       formData.set('TableNo', request.tableNo)
       formData.set('Name', request.name)
       formData.set('Capacity', String(request.capacity))
+      appendTranslations(formData, request.translations)
 
       return httpClient<unknown>(endpoints.tables.create(restaurantId), {
         method: 'POST',
@@ -2059,6 +2100,7 @@ export const ecafeApi = {
           name: request.name,
           capacity: request.capacity,
           isActive: request.isActive,
+          translations: request.translations,
         }),
       }),
     copy: (restaurantId: string, tableId: string, request: CopyTableRequest) =>
@@ -2183,6 +2225,7 @@ export const ecafeApi = {
       const formData = new FormData()
       formData.set('Name', request.name)
       appendIfPresent(formData, 'SortOrder', request.sortOrder)
+      appendTranslations(formData, request.translations)
 
       return httpClient<unknown>(endpoints.menu.createCategory(restaurantId), {
         method: 'POST',
@@ -2196,6 +2239,7 @@ export const ecafeApi = {
           name: request.name,
           sortOrder: request.sortOrder,
           isActive: request.isActive,
+          translations: request.translations,
         }),
       })
 
@@ -2232,6 +2276,7 @@ export const ecafeApi = {
       formData.set('IsAvailable', String(request.isAvailable))
       appendIfPresent(formData, 'UnavailableReason', request.unavailableReason)
       appendIfPresent(formData, 'FileId', request.fileId)
+      appendTranslations(formData, request.translations)
 
       return httpClient<unknown>(endpoints.menu.createItem(restaurantId), {
         method: 'POST',
@@ -2249,6 +2294,8 @@ export const ecafeApi = {
       formData.set('SalesCount', String(request.salesCount ?? 0))
       appendIfPresent(formData, 'UnavailableReason', request.unavailableReason)
       appendIfPresent(formData, 'FileId', request.fileId)
+      if (request.translations?.length === 0) formData.set('ClearTranslations', 'true')
+      appendTranslations(formData, request.translations)
 
       return httpClient<unknown>(endpoints.menu.updateItem(restaurantId, itemId), {
         method: 'PUT',
