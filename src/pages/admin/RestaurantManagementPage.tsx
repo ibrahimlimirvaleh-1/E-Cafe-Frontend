@@ -10,8 +10,6 @@ import { restaurantRow } from '../../shared/api/mappers'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, isInRole, isPlatformAdmin } from '../../shared/auth/authz'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
-import { emptyTranslations, translationPayload } from '../../shared/i18n/contentTranslations'
-import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { DataTable } from '../../shared/ui/DataTable'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
@@ -130,7 +128,7 @@ async function geocodeWithFallback(form: GeocodeFormFields) {
     }
   }
 
-  throw lastError || new Error('Məkan xəritədə tapılmadı.')
+  throw lastError || new Error(i18n.t('ui.adminNotice.geocodeFailed'))
 }
 
 export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantPageMode }) {
@@ -144,7 +142,6 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
   const [message, setMessage] = useState('')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [form, setForm] = useState(initialForm)
-  const [translations, setTranslations] = useState(emptyTranslations)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [locationResults, setLocationResults] = useState<GeocodeAddressResponse[]>([])
   const [ownerMode, setOwnerMode] = useState<OwnerMode>('existing')
@@ -177,7 +174,9 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     `${canCreateRestaurants}:${mode}`,
     [canCreateRestaurants, mode, reloadKey],
   )
-  const pageTitle = mode === 'create' ? 'Yeni restoran' : canSearchRestaurants ? 'Restoranlar' : 'Restoran'
+  const pageTitle = mode === 'create'
+    ? i18n.t('ui.adminFlow.newRestaurant')
+    : canSearchRestaurants ? i18n.t('ui.adminFlow.restaurants') : i18n.t('ui.adminFlow.restaurant')
   const visibleRestaurants = isPlatformAdmin(user)
     ? restaurantPage.items
     : restaurantPage.items.filter((restaurant) => restaurant.id === user?.restaurantId)
@@ -223,19 +222,19 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     setMessageDetails([])
 
     if (!form.location.trim() || !form.branchName.trim()) {
-      setMessage('AZ bölməsində ünvan və filial adını tamamlayın.')
+      setMessage(i18n.t('ui.adminNotice.locationBranchRequired'))
       return
     }
 
     if (ownerMode === 'existing' && !form.ownerId && !form.ownerEmail.trim()) {
-      setMessage('Sahibkar seçilməlidir.')
-      setMessageDetails([{ label: 'Sahibkar', message: 'Mövcud sahibkarı axtarıb seçin və ya yeni sahibkar yarat bölməsinə keçin.' }])
+      setMessage(i18n.t('ui.adminNotice.ownerRequired'))
+      setMessageDetails([{ label: i18n.t('ui.adminNotice.ownerLabel'), message: i18n.t('ui.adminNotice.selectOrCreateOwner') }])
       return
     }
 
     if (ownerMode === 'new' && (!form.ownerEmail.trim() || !form.ownerPhone.trim() || !form.ownerFirstName.trim() || !form.ownerLastName.trim())) {
-      setMessage('Yeni sahibkar məlumatları tamamlanmalıdır.')
-      setMessageDetails([{ label: 'Sahibkar', message: 'Yeni sahibkar yaratmaq üçün ad, soyad, email və telefon sahələrini doldurun.' }])
+      setMessage(i18n.t('ui.adminNotice.newOwnerDetailsRequired'))
+      setMessageDetails([{ label: i18n.t('ui.adminNotice.ownerLabel'), message: i18n.t('ui.adminNotice.fillNewOwner') }])
       return
     }
 
@@ -251,7 +250,6 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         restaurantGroupLegalName: form.restaurantGroupId ? undefined : form.restaurantGroupLegalName,
         restaurantGroupEmail: form.restaurantGroupId ? undefined : form.restaurantGroupEmail,
         branchName: form.branchName,
-        translations: translationPayload(translations, ['name', 'branchName', 'location']),
         cancellationWindowMinutes: Number(form.cancellationWindowMinutes),
         reservationPreBlockMinutes: Number(form.reservationPreBlockMinutes),
         tableTurnoverBufferMinutes: Number(form.tableTurnoverBufferMinutes),
@@ -267,14 +265,13 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
         fileIds,
       })
       setForm(initialForm)
-      setTranslations(emptyTranslations())
       setFileIds([])
       setOwnerMode('existing')
-      setMessage('Restoran yaradıldı.')
+      setMessage(i18n.t('ui.adminNotice.restaurantCreated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Restoran yaradılmadı.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.restaurantCreateFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     }
@@ -289,10 +286,10 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     try {
       const results = await geocodeWithFallback(form)
       setLocationResults(results)
-      setMessage(results.length > 1 ? 'Uyğun məkanı seçin.' : 'Məkan xəritədə tapıldı. Davam etmək üçün nəticəni seçin.')
+      setMessage(results.length > 1 ? i18n.t('ui.adminNotice.chooseMatchingLocation') : i18n.t('ui.adminNotice.geocodeFoundSelect'))
       setMessageDetails([])
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Məkan xəritədə tapılmadı.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.adminNotice.geocodeFailed'))
       setMessage(feedback.message)
       setMessageDetails(feedback.details)
     } finally {
@@ -316,8 +313,8 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
       timeZone: result.timeZone || current.timeZone,
     }))
     setLocationResults([])
-    setMessage('Məkan seçildi.')
-    setMessageDetails([{ label: 'Seçilmiş məkan', message: result.displayName }])
+    setMessage(i18n.t('ui.adminNotice.locationChosen'))
+    setMessageDetails([{ label: i18n.t('ui.adminNotice.locationLabel'), message: result.displayName }])
   }
 
   function handleOwnerModeChange(nextMode: OwnerMode) {
@@ -379,7 +376,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
           <DataTable
             baseRoute="/admin/restaurants"
             canEdit={isInRole(user, [RoleIds.PlatformAdmin, RoleIds.Owner, RoleIds.Manager])}
-            columns={['Restoran', 'Status', 'Müqavilə', 'Telefon']}
+            columns={['Restoran', 'Status', i18n.t('ui.adminNotice.contractLabel'), 'Telefon']}
             onActionNavigate={(row) => selectProfileForRestaurant(row.id)}
             rows={visibleRestaurants.map(restaurantRow)}
           />
@@ -406,7 +403,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
             <span className="eyebrow">{i18n.t('ui.pages.admin.restaurant_management_page.yeni_restoran_651205')}</span>
             <h2>{i18n.t('ui.pages.admin.restaurant_management_page.profil_ve_filial_cdf029')}</h2>
           </div>
-          <ContentTranslationTabs fields={['name', 'branchName', 'location']} value={translations} onChange={setTranslations} azContent={<div className="form-grid two">
+          <div className="form-grid two">
             <div className="location-lookup-field">
               <TextField
                 label={i18n.t('ui.pages.admin.restaurant_management_page.mekan_a979c9')}
@@ -445,7 +442,7 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
               ) : null}
             </div>
             <TextField label={i18n.t('ui.pages.admin.restaurant_management_page.filial_adi_6e2940')} required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} />
-          </div>} />
+          </div>
           <div className="form-grid two">
             <PhoneField label={i18n.t('ui.pages.admin.restaurant_management_page.telefon_fa6906')} required value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </div>

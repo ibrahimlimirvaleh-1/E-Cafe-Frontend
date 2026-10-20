@@ -1,6 +1,4 @@
 export type ContentEntityType =
-  | 'restaurants'
-  | 'restaurant-groups'
   | 'categories'
   | 'items'
   | 'tables'
@@ -8,14 +6,12 @@ export type ContentEntityType =
   | 'units'
 
 export type ContentLanguage = 'en' | 'ru'
-export type ContentField = 'name' | 'description' | 'location' | 'branchName' | 'unavailableReason'
+export type ContentField = 'name' | 'description' | 'unavailableReason'
 
 export type ContentTranslation = {
   languageCode: 'az' | ContentLanguage
   name?: string | null
   description?: string | null
-  location?: string | null
-  branchName?: string | null
   unavailableReason?: string | null
   revision: number
 }
@@ -41,8 +37,6 @@ export function translationValuesFrom(response: ContentTranslationResponse): Tra
     values[row.languageCode] = {
       name: row.name ?? '',
       description: row.description ?? '',
-      location: row.location ?? '',
-      branchName: row.branchName ?? '',
       unavailableReason: row.unavailableReason ?? '',
     }
   }

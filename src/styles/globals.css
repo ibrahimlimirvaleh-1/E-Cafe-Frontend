@@ -7061,13 +7061,33 @@ body,
   }
 
   .table-management-info {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
 
+  .table-management-info span {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .compact-list article.table-management-row > .ui-badge {
+    align-self: start;
+    justify-self: end;
+    height: auto;
+    max-width: 100%;
+  }
+
   .table-management-info small {
-    font-size: 11px;
-    letter-spacing: 0.04em;
+    font-size: 12px;
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+
+  .table-management-info strong {
+    text-align: right;
+    white-space: normal;
   }
 
   .table-management-info strong {
@@ -7311,8 +7331,39 @@ body,
     min-width: 132px;
   }
 
+  .compact-list article.table-management-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
   .table-management-info {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .table-management-info span {
+    display: grid;
+    grid-template-columns: minmax(104px, 38%) minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .table-management-info strong,
+  .table-management-info small {
+    text-align: left;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .compact-list article.table-management-row > .ui-badge {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .table-management-row .inline-actions {
+    grid-column: 1;
+    grid-row: 3;
   }
 
   .contract-detail-panel dl {

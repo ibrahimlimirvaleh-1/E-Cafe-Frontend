@@ -7,6 +7,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getAccessibleItems, hasPermission } from '../../shared/auth/authz'
 import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
+import { useAdminRestaurantSelection } from '../../shared/hooks/useAdminRestaurantSelection'
 import { useFormFeedback } from '../../shared/hooks/useFormFeedback'
 import { ActionIconButton } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
@@ -90,7 +91,6 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     title: i18n.t(`ui.inventory.page.${mode}.title`, { defaultValue: pageCopy[mode].title }),
   }
 
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [selectedInventoryId, setSelectedInventoryId] = useState('')
   const [selectedMenuItemId, setSelectedMenuItemId] = useState('')
   const [onlyLowStock, setOnlyLowStock] = useState(false)
@@ -129,9 +129,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [activeI18n.resolvedLanguage])
   const accessibleRestaurants = useMemo(() => getAccessibleItems(user, restaurants), [restaurants, user])
-  const restaurantId = accessibleRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId)
-    ? selectedRestaurantId
-    : accessibleRestaurants[0]?.id || ''
+  const [restaurantId, setSelectedRestaurantId] = useAdminRestaurantSelection(accessibleRestaurants, user?.userId, true)
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
 
   const { data: inventoryItems, isLoading: inventoryLoading } = useKeyedAsyncData(
@@ -171,6 +169,22 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     editingInventoryItemId,
     [editingInventoryItemId, metadataRetry],
   )
+  const editRestaurantId = String(editMetadata?.restaurantId ?? '')
+  const editRestaurantAccessible = !editRestaurantId || accessibleRestaurants.some((restaurant) => restaurant.id === editRestaurantId)
+  const { data: editItem, error: editItemError, isLoading: editItemLoading } = useKeyedAsyncData(
+    async () => {
+      if (!editingInventoryItemId || !editRestaurantId || !editRestaurantAccessible) return null
+      const item = await ecafeApi.inventory.detail(editRestaurantId, editingInventoryItemId)
+      if (!item) throw new Error(i18n.t('ui.adminFlow.inventoryItemUnavailable'))
+      return item
+    },
+    null as InventoryItem | null,
+    `${editRestaurantId}:${editingInventoryItemId}`,
+    [editRestaurantId, editingInventoryItemId, editRestaurantAccessible, metadataRetry, activeI18n.resolvedLanguage],
+  )
+  const editLoadError = editMetadataError || editItemError
+    || (editMetadata && !editRestaurantId ? i18n.t('ui.adminFlow.inventoryRestaurantUnavailable') : '')
+    || (!editRestaurantAccessible ? i18n.t('ui.adminFlow.inventoryRestaurantUnavailable') : '')
   const hydratedMetadata = useRef<typeof editMetadata>(null)
   const movementInventoryItemId = mode === 'movement-create' ? searchParams.get('inventoryItemId') ?? '' : ''
   const recipeMenuItemId = mode === 'recipe-create' ? searchParams.get('menuItemId') ?? '' : ''
@@ -206,10 +220,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   const movements = movementPage.items
 
   useEffect(() => {
-    if (!selectedRestaurantId && accessibleRestaurants[0]) {
-      setSelectedRestaurantId(accessibleRestaurants[0].id)
+    if (editingInventoryItemId && editRestaurantId && editRestaurantAccessible && restaurantId !== editRestaurantId) {
+      setSelectedRestaurantId(editRestaurantId)
     }
-  }, [accessibleRestaurants, selectedRestaurantId])
+  }, [editingInventoryItemId, editRestaurantId, editRestaurantAccessible, restaurantId, setSelectedRestaurantId])
 
   useEffect(() => {
     if (inventorySelectionItems[0] && !inventorySelectionItems.some((item) => item.id === selectedInventoryId)) {
@@ -244,28 +258,23 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   }, [movementForm.movementTypeId, movementTypes])
 
   useEffect(() => {
-    if (mode !== 'create' || !editingInventoryItemId || !editMetadata || hydratedMetadata.current === editMetadata) {
-      return
-    }
-
-    const item = inventoryItems.find((entry) => entry.id === editingInventoryItemId)
-    if (!item) {
+    if (mode !== 'create' || !editingInventoryItemId || !editMetadata || !editItem || hydratedMetadata.current === editMetadata) {
       return
     }
     hydratedMetadata.current = editMetadata
 
-    setEditingInventoryId(item.id)
-    setSelectedInventoryId(item.id)
+    setEditingInventoryId(editItem.id)
+    setSelectedInventoryId(editItem.id)
     const az = azSourceFrom(editMetadata)
     setStockForm({
       name: az.name ?? '',
-      unitId: String(item.unitId || 2),
-      quantityOnHand: String(item.quantityOnHand),
-      lowStockThreshold: String(item.lowStockThreshold),
-      isActive: item.isActive,
+      unitId: String(editItem.unitId || 2),
+      quantityOnHand: String(editItem.quantityOnHand),
+      lowStockThreshold: String(editItem.lowStockThreshold),
+      isActive: editItem.isActive,
     })
     setTranslations(translationValuesFrom(editMetadata))
-  }, [editingInventoryItemId, inventoryItems, editMetadata, mode])
+  }, [editingInventoryItemId, editItem, editMetadata, mode])
 
   useEffect(() => {
     if (!editingInventoryItemId) setTranslations(emptyTranslations())
@@ -317,13 +326,13 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
 
   async function handleSaveStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (editingInventoryItemId && (!editMetadata || editMetadataLoading || editMetadataError || !editingInventoryId)) return
+    if (editingInventoryItemId && (!editMetadata || editMetadataLoading || editMetadataError || !editItem || editItemLoading || editItemError || !editRestaurantAccessible || !editingInventoryId || restaurantId !== editRestaurantId)) return
     if (!stockForm.name.trim()) {
-      setWarning('AZ bölməsində stok elementinin adını daxil edin.')
+      setWarning(i18n.t('ui.adminNotice.inventoryNameRequired'))
       return
     }
     if (!restaurantId) {
-      setWarning('Restoran seçilməlidir.')
+      setWarning(i18n.t('ui.adminFlow.restaurantRequired'))
       return
     }
 
@@ -337,7 +346,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           isActive: stockForm.isActive,
           translations: translationPayload(translations, ['name']),
         })
-        setSuccess('Stok elementi yeniləndi.')
+        setSuccess(i18n.t('ui.adminNotice.inventoryUpdated'))
       } else {
         await ecafeApi.inventory.create(restaurantId, {
           name: stockForm.name,
@@ -346,20 +355,20 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
           lowStockThreshold: Number(stockForm.lowStockThreshold),
           translations: translationPayload(translations, ['name']),
         })
-        setSuccess('Stok elementi yaradıldı.')
+        setSuccess(i18n.t('ui.adminNotice.inventoryCreated'))
       }
 
-      resetStockForm()
+      if (!editingInventoryId) resetStockForm()
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setError(err, 'Stok əməliyyatı icra olunmadı.')
+      setError(err, i18n.t('ui.adminNotice.inventoryOperationFailed'))
     }
   }
 
   async function handleMovement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !inventoryItem) {
-      setWarning('Stok elementi seçilməlidir.')
+      setWarning(i18n.t('ui.adminNotice.inventoryItemRequired'))
       return
     }
 
@@ -372,15 +381,15 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         reason: movementForm.reason.trim() || null,
       })
       setMovementForm({ movementTypeId: String(movementTypes[0]?.id ?? ''), quantity: '', unitId: inventoryItem.unitId ? String(inventoryItem.unitId) : '2', reason: '' })
-      setSuccess('Stok hərəkəti əlavə edildi.')
+      setSuccess(i18n.t('ui.adminNotice.movementAdded'))
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setError(err, 'Stok hərəkəti əlavə edilmədi.')
+      setError(err, i18n.t('ui.adminNotice.movementFailed'))
     }
   }
 
   function startInventoryEdit(item: InventoryItem) {
-    navigate(`${inventoryRouteBase}/new?inventoryItemId=${item.id}`)
+    navigate(`${inventoryRouteBase}/new?restaurantId=${encodeURIComponent(item.restaurantId)}&inventoryItemId=${item.id}`)
   }
 
   async function toggleInventoryStatus(item: InventoryItem) {
@@ -392,14 +401,14 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     try {
       if (item.isActive) {
         await ecafeApi.inventory.deactivate(restaurantId, item.id)
-        setSuccess('Stok elementi deaktiv edildi.')
+        setSuccess(i18n.t('ui.adminNotice.inventoryDeactivated'))
       } else {
         await ecafeApi.inventory.activate(restaurantId, item.id)
-        setSuccess('Stok elementi aktiv edildi.')
+        setSuccess(i18n.t('ui.adminNotice.inventoryActivated'))
       }
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setError(err, 'Stok statusu dəyişdirilmədi.')
+      setError(err, i18n.t('ui.adminNotice.inventoryStatusFailed'))
     }
   }
 
@@ -411,11 +420,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     clearFeedback()
     try {
       await ecafeApi.inventory.delete(restaurantId, itemId)
-      setSuccess('Stok elementi silindi.')
+      setSuccess(i18n.t('ui.adminNotice.inventoryDeleted'))
       resetStockForm()
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setError(err, 'Stok elementi silinmədi.')
+      setError(err, i18n.t('ui.adminNotice.inventoryDeleteFailed'))
     } finally {
       setPendingDelete(null)
     }
@@ -424,7 +433,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   async function handleSaveRecipe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId || !menuItem) {
-      setWarning('Menyu məhsulu seçilməlidir.')
+      setWarning(i18n.t('ui.adminNotice.menuItemRequired'))
       return
     }
 
@@ -439,21 +448,21 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     try {
       if (editingRecipeId) {
         await ecafeApi.recipes.update(restaurantId, menuItem.id, editingRecipeId, request)
-        setSuccess('Resept ingredienti yeniləndi.')
+        setSuccess(i18n.t('ui.adminNotice.recipeUpdated'))
       } else {
         await ecafeApi.recipes.create(restaurantId, menuItem.id, request)
-        setSuccess('Resept ingredienti əlavə edildi.')
+        setSuccess(i18n.t('ui.adminNotice.recipeAdded'))
       }
 
       resetRecipeForm()
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setError(err, 'Resept əməliyyatı icra olunmadı.')
+      setError(err, i18n.t('ui.adminNotice.recipeOperationFailed'))
     }
   }
 
   function startRecipeEdit(recipe: Recipe) {
-    navigate(`${recipeRouteBase}/new?menuItemId=${menuItem?.id || selectedMenuItemId}&recipeId=${recipe.id}`)
+    navigate(`${recipeRouteBase}/new?restaurantId=${encodeURIComponent(restaurantId)}&menuItemId=${menuItem?.id || selectedMenuItemId}&recipeId=${recipe.id}`)
   }
 
   async function toggleRecipe(recipe: Recipe) {
@@ -465,14 +474,14 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     try {
       if (recipe.isActive) {
         await ecafeApi.recipes.deactivate(restaurantId, menuItem.id, recipe.id)
-        setSuccess('Resept ingredienti deaktiv edildi.')
+        setSuccess(i18n.t('ui.adminNotice.recipeDeactivated'))
       } else {
         await ecafeApi.recipes.activate(restaurantId, menuItem.id, recipe.id)
-        setSuccess('Resept ingredienti aktiv edildi.')
+        setSuccess(i18n.t('ui.adminNotice.recipeActivated'))
       }
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setError(err, 'Resept statusu dəyişdirilmədi.')
+      setError(err, i18n.t('ui.adminNotice.recipeStatusFailed'))
     }
   }
 
@@ -484,11 +493,11 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     clearFeedback()
     try {
       await ecafeApi.recipes.delete(restaurantId, menuItem.id, recipeId)
-      setSuccess('Resept ingredienti silindi.')
+      setSuccess(i18n.t('ui.adminNotice.recipeDeleted'))
       resetRecipeForm()
       setReloadKey((value) => value + 1)
     } catch (err) {
-      setError(err, 'Resept ingredienti silinmədi.')
+      setError(err, i18n.t('ui.adminNotice.recipeDeleteFailed'))
     } finally {
       setPendingDelete(null)
     }
@@ -514,17 +523,17 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         title={copy.title}
         action={
           mode === 'items' && canManageInventory ? (
-            <ButtonLink to={`${inventoryRouteBase}/new`}>{i18n.t('ui.pages.admin.inventory_management_page.yeni_stok_elementi_7c5bf9')}</ButtonLink>
+            <ButtonLink to={`${inventoryRouteBase}/new?restaurantId=${encodeURIComponent(restaurantId)}`}>{i18n.t('ui.pages.admin.inventory_management_page.yeni_stok_elementi_7c5bf9')}</ButtonLink>
           ) : mode === 'create' ? (
-            <ButtonLink to={inventoryRouteBase} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
+            <ButtonLink to={`${inventoryRouteBase}?restaurantId=${encodeURIComponent(restaurantId)}`} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
           ) : mode === 'movements' && canManageInventory ? (
-            <ButtonLink to={`${movementRouteBase}/new${inventoryItem?.id ? `?inventoryItemId=${inventoryItem.id}` : ''}`}>{i18n.t('ui.pages.admin.inventory_management_page.hereket_elave_et_2c1882')}</ButtonLink>
+            <ButtonLink to={`${movementRouteBase}/new?restaurantId=${encodeURIComponent(restaurantId)}${inventoryItem?.id ? `&inventoryItemId=${inventoryItem.id}` : ''}`}>{i18n.t('ui.pages.admin.inventory_management_page.hereket_elave_et_2c1882')}</ButtonLink>
           ) : mode === 'movement-create' ? (
-            <ButtonLink to={movementRouteBase} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
+            <ButtonLink to={`${movementRouteBase}?restaurantId=${encodeURIComponent(restaurantId)}`} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
           ) : mode === 'recipes' && canManageRecipes ? (
-            <ButtonLink to={`${recipeRouteBase}/new${menuItem?.id ? `?menuItemId=${menuItem.id}` : ''}`}>{i18n.t('ui.pages.admin.inventory_management_page.yeni_resept_terkibi_44320d')}</ButtonLink>
+            <ButtonLink to={`${recipeRouteBase}/new?restaurantId=${encodeURIComponent(restaurantId)}${menuItem?.id ? `&menuItemId=${menuItem.id}` : ''}`}>{i18n.t('ui.pages.admin.inventory_management_page.yeni_resept_terkibi_44320d')}</ButtonLink>
           ) : mode === 'recipe-create' ? (
-            <ButtonLink to={recipeRouteBase} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
+            <ButtonLink to={`${recipeRouteBase}?restaurantId=${encodeURIComponent(restaurantId)}`} variant="secondary">{i18n.t('ui.pages.admin.inventory_management_page.siyahiya_qayit_e912e4')}</ButtonLink>
           ) : null
         }
       />
@@ -532,7 +541,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
       <section className={`inventory-page-grid inventory-page-grid-${mode}`}>
         <section className="admin-panel">
           <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.restoran_c4df56')}</span>
-          <RestaurantSelectField emptyOption={null} label={i18n.t('ui.pages.admin.inventory_management_page.restoran_c4df56')} onChange={setSelectedRestaurantId} required restaurants={accessibleRestaurants} value={restaurantId} />
+          <RestaurantSelectField emptyOption={null} label={i18n.t('ui.pages.admin.inventory_management_page.restoran_c4df56')} onChange={(nextId) => {
+            if (editingInventoryItemId && nextId !== editRestaurantId) navigate(`${inventoryRouteBase}?restaurantId=${encodeURIComponent(nextId)}`)
+            else setSelectedRestaurantId(nextId)
+          }} required restaurants={accessibleRestaurants} value={restaurantId} />
           <RestaurantContextCard restaurant={selectedRestaurant} />
         </section>
 
@@ -542,7 +554,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                 <form className="stack-form" onSubmit={handleSaveStock}>
                   <span className="eyebrow">{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.redakte_561713') :i18n.t('ui.pages.admin.inventory_management_page.yeni_qeyd_2af8e9')}</span>
                   <h2>{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.stoku_redakte_et_b17da9') :i18n.t('ui.pages.admin.inventory_management_page.yeni_stok_elementi_7c5bf9')}</h2>
-                  {editingInventoryItemId && editMetadataError ? <StatusMessage tone="danger">{editMetadataError}</StatusMessage> : null}
+                  {editingInventoryItemId && editLoadError ? <StatusMessage tone="danger">{editLoadError}</StatusMessage> : null}
                   <ContentTranslationTabs fields={['name']} value={translations} onChange={setTranslations} azContent={<TextField label={i18n.t('ui.pages.admin.inventory_management_page.ad_1d97c9')} required value={stockForm.name} onChange={(event) => setStockForm({ ...stockForm, name: event.target.value })} />} />
                   <SelectField label={i18n.t('ui.pages.admin.inventory_management_page.olcu_vahidi_47b78c')} required value={stockForm.unitId} onChange={(event) => setStockForm({ ...stockForm, unitId: event.target.value })}>
                     {units.map((unit) => (
@@ -560,9 +572,9 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                     </label>
                   ) : null}
                   <div className="inline-actions">
-                    <Button disabled={Boolean(editingInventoryItemId) && (!editMetadata || editMetadataLoading || Boolean(editMetadataError) || !editingInventoryId)} type="submit">{editingInventoryId ?i18n.t('ui.pages.admin.inventory_management_page.stoku_yenile_78f8d9') :i18n.t('ui.pages.admin.inventory_management_page.stok_yarat_f443b7')}</Button>
-                    {editingInventoryItemId && editMetadataError ? <Button type="button" variant="secondary" onClick={() => setMetadataRetry((value) => value + 1)}>Yenidən yoxla</Button> : null}
-                    {editingInventoryId ? <Button type="button" variant="secondary" onClick={resetStockForm}>{i18n.t('ui.pages.admin.inventory_management_page.legv_et_d732b8')}</Button> : null}
+                    <Button disabled={Boolean(editingInventoryItemId) && (!editMetadata || editMetadataLoading || !editItem || editItemLoading || Boolean(editLoadError) || !editingInventoryId || restaurantId !== editRestaurantId)} type="submit">{editingInventoryItemId ?i18n.t('ui.pages.admin.inventory_management_page.stoku_yenile_78f8d9') :i18n.t('ui.pages.admin.inventory_management_page.stok_yarat_f443b7')}</Button>
+                    {editingInventoryItemId && editLoadError ? <Button type="button" variant="secondary" onClick={() => setMetadataRetry((value) => value + 1)}>{i18n.t('ui.adminFlow.retry')}</Button> : null}
+                    {editingInventoryItemId ? <Button type="button" variant="secondary" onClick={() => navigate(`${inventoryRouteBase}?restaurantId=${encodeURIComponent(restaurantId)}`)}>{i18n.t('ui.pages.admin.inventory_management_page.legv_et_d732b8')}</Button> : null}
                   </div>
                 </form>
               </section>
@@ -677,7 +689,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                               <History size={17} />
                             </ActionIconButton>
                             {canManageInventory ? (
-                              <ActionIconButton label={`${item.name} üçün hərəkət əlavə et`} onClick={() => navigate(`${movementRouteBase}/new?inventoryItemId=${item.id}`)}>
+                              <ActionIconButton label={`${item.name} üçün hərəkət əlavə et`} onClick={() => navigate(`${movementRouteBase}/new?restaurantId=${encodeURIComponent(restaurantId)}&inventoryItemId=${item.id}`)}>
                                 <Plus size={17} />
                               </ActionIconButton>
                             ) : null}

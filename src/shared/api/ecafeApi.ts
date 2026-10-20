@@ -155,7 +155,6 @@ type CreateRestaurantGroupRequest = {
   name: string
   legalName?: string
   email?: string
-  translations?: TranslationPayload[]
 }
 
 type CreateRestaurantRequest = {
@@ -169,7 +168,6 @@ type CreateRestaurantRequest = {
   restaurantGroupLegalName?: string
   restaurantGroupEmail?: string
   branchName?: string
-  translations?: TranslationPayload[]
   cancellationWindowMinutes: number
   reservationPreBlockMinutes: number
   tableTurnoverBufferMinutes: number
@@ -1448,7 +1446,7 @@ export const ecafeApi = {
       return result.data
     },
     save: async (entityType: ContentEntityType, id: string, languageCode: 'en' | 'ru',
-      request: { expectedRevision: number; name?: string; description?: string; location?: string; branchName?: string; unavailableReason?: string },
+      request: { expectedRevision: number; name?: string; description?: string; unavailableReason?: string },
     ): Promise<ContentTranslationResponse> =>
       (await httpClient<ContentTranslationResponse>(endpoints.contentTranslations.language(entityType, id, languageCode), {
         method: 'PUT', body: JSON.stringify(request),
@@ -1646,8 +1644,6 @@ export const ecafeApi = {
       appendIfPresent(formData, 'Owner.FirstName', request.owner?.firstName)
       appendIfPresent(formData, 'Owner.LastName', request.owner?.lastName)
       request.fileIds?.forEach((fileId) => formData.append('FileIds', String(fileId)))
-      appendTranslations(formData, request.translations)
-
       const result = await httpClient<unknown>(endpoints.restaurants.create, {
         method: 'POST',
         body: formData,
@@ -1660,6 +1656,11 @@ export const ecafeApi = {
         const record = result.data as AnyRecord
         return mapRestaurant((record.restaurant && typeof record.restaurant === 'object' ? record.restaurant : record) as AnyRecord)
       }, getRestaurant(id)),
+    adminDetailForEdit: async (id: string) => {
+      const result = await httpClient<unknown>(endpoints.restaurants.adminDetail(id))
+      const record = result.data as AnyRecord
+      return mapRestaurant((record.restaurant && typeof record.restaurant === 'object' ? record.restaurant : record) as AnyRecord)
+    },
     update: (restaurantId: string, request: UpdateRestaurantRequest) =>
       httpClient<unknown>(endpoints.restaurants.update(restaurantId), {
         method: 'PUT',
@@ -1686,7 +1687,6 @@ export const ecafeApi = {
           workingHours: request.workingHours ?? [],
           defaultWaiterTableLimit: request.defaultWaiterTableLimit,
           fileIds: request.fileIds,
-          translations: request.translations,
         }),
       }),
     setDepositRule: (restaurantId: string, date: string, amount: number) =>

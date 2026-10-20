@@ -1,4 +1,6 @@
 import { i18n } from '../i18n/i18n'
+import { roleLabel } from '../i18n/roleLabel'
+import { useTranslation } from 'react-i18next'
 import { Building2, Check, ChevronDown, LogOut } from 'lucide-react'
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -12,6 +14,7 @@ function getUserInitials(name?: string, surname?: string) {
 }
 
 export function UserMenu() {
+  useTranslation()
   const { isAuthenticated, logout, selectProfile, user } = useAuth()
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDetailsElement | null>(null)
@@ -83,7 +86,7 @@ export function UserMenu() {
   }
 
   const activeProfile = user.profiles.find((profile) => profile.restaurantId === user.restaurantId && profile.roleId === user.roleId)
-  const profileLabel = [user.roleName || `Rol #${user.roleId}`, activeProfile?.restaurantName].filter(Boolean).join(' · ')
+  const profileLabel = [roleLabel(user.roleId, user.roleName), activeProfile?.restaurantName].filter(Boolean).join(' · ')
   const canSwitchProfile = user.profiles.length > 1
   const userInitials = getUserInitials(user.name, user.surname)
   const avatarAlt = `${user.name} ${user.surname}`.trim() || 'Profil'
@@ -124,7 +127,7 @@ export function UserMenu() {
               <div className="user-profile-avatar">{renderUserAvatar()}</div>
               <span>
                 <strong>{profile.restaurantName || `Restoran #${profile.restaurantId}`}</strong>
-                <small>{profile.roleName || `Rol #${profile.roleId}`}</small>
+                <small>{roleLabel(profile.roleId, profile.roleName)}</small>
               </span>
               {isCurrent ? (
                 <span className="user-profile-current">
