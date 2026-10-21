@@ -6,7 +6,7 @@ import { useKitchenQueue } from '../../features/orders/useKitchenQueue'
 import type { KitchenOrderResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import type { KitchenProgressAction } from '../../shared/api/endpoints'
-import { ApiError, normalizeCaughtApiError } from '../../shared/api/httpClient'
+import { ApiError, normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds } from '../../shared/auth/authz'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
@@ -17,7 +17,7 @@ import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import './kitchen-board.css'
 
-type OrderActionState = { action: KitchenProgressAction; phase: 'busy' | 'uncertain' | 'error'; message: string }
+type OrderActionState = { action: KitchenProgressAction; phase: 'busy' | 'uncertain' | 'error'; message: string; details?: ApiErrorDetail[] }
 
 const nextStatus: Record<KitchenProgressAction, number> = {
   accept: orderStatusId.accepted,
@@ -51,8 +51,8 @@ function KitchenTicket({ order, actionState, onAction }: { order: KitchenOrderRe
         {actionState?.phase === 'busy' ?i18n.t('ui.pages.staff.kitchen_board_page.icra_olunur_e4744c') : actionState?.phase === 'uncertain' ? `Təkrar: ${actionLabel}` : actionLabel}
       </Button> : null}
       {actionState?.phase === 'uncertain' ? <small className="kitchen-action-warning" role="alert">{actionState.message}</small> : null}
-      {actionState?.phase === 'error' ? <small className="kitchen-action-error" role="alert">{actionState.message}</small> : null}
     </div>
+    {actionState?.phase === 'error' ? <StatusMessage className="kitchen-ticket-error" tone="danger" autoHideMs={false} dismissible={false} details={actionState.details}>{actionState.message}</StatusMessage> : null}
   </article>
 }
 
@@ -82,7 +82,7 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
     setActionStates((current) => {
       let next = current
       for (const [id, state] of Object.entries(current)) {
-        if (state.phase !== 'uncertain') continue
+        if (state.phase !== 'uncertain' && state.phase !== 'error') continue
         const order = queue.data?.items.find((item) => item.id === Number(id))
         if (order && order.statusId >= nextStatus[state.action]) {
           if (next === current) next = { ...current }
@@ -122,12 +122,8 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
     } catch (error) {
       if (!activeRef.current || pageRef.current !== requestPage) return
       if (error instanceof ApiError && error.statusCode === 409) {
-        setWarning('Sifarişin statusu başqa əməkdaş tərəfindən dəyişdirilib. Növbə yenilənir.')
-        setActionStates((current) => {
-          const next = { ...current }
-          delete next[orderId]
-          return next
-        })
+        const feedback = normalizeCaughtApiError(error, 'Əməliyyat icra olunmadı.')
+        setActionStates((current) => ({ ...current, [orderId]: { action, phase: 'error', message: feedback.message, details: feedback.details } }))
       } else if (error instanceof ApiError && [403, 404].includes(error.statusCode)) {
         setWarning('Bu sifariş artıq əlçatan deyil və ya icazəniz dəyişib. Növbə yenilənir.')
         setActionStates((current) => {
@@ -136,7 +132,8 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
           return next
         })
       } else if (error instanceof ApiError && [400, 422].includes(error.statusCode)) {
-        setActionStates((current) => ({ ...current, [orderId]: { action, phase: 'error', message: normalizeCaughtApiError(error, 'Əməliyyat icra olunmadı.').message } }))
+        const feedback = normalizeCaughtApiError(error, 'Əməliyyat icra olunmadı.')
+        setActionStates((current) => ({ ...current, [orderId]: { action, phase: 'error', message: feedback.message, details: feedback.details } }))
       } else {
         setActionStates((current) => ({ ...current, [orderId]: { action, phase: 'uncertain', message: 'Nəticə məlum deyil. Yalnız bu əməliyyatı təkrar yoxlayın.' } }))
       }
