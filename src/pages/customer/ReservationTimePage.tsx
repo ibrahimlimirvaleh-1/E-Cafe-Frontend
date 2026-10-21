@@ -148,7 +148,7 @@ export function ReservationTimePage() {
           </div>
           <div>
             <strong><CalendarClock size={18} /> {formatReservedAt(reservedAt)}</strong>
-            <strong><Users size={18} /> {i18n.t('ui.count.guests', { count: peopleCount })}</strong>
+            <strong><Users size={18} /> {i18n.t('ui.count.guests', { count: Number(peopleCount) })}</strong>
           </div>
         </div>
 

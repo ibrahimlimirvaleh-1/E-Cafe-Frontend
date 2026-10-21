@@ -138,6 +138,7 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
               const { item } = event
               const presentation = getReservationStatusPresentation(item.toStatus)
               const reason = item.reason?.trim()
+              const displayReason = item.reasonLabel?.trim() || (reason && viewer === 'customer' ? customerReason(reason) : reason || '')
 
               return (
                 <li
@@ -156,8 +157,8 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                       <time dateTime={item.changedAt}>{formatReservationDateTime(item.changedAt, timeZone)}</time>
                       <span><ActorIcon actorType={item.actorType} />{actorLabel(item.actorType, viewer)}</span>
                     </div>
-                    {reason && reason !== presentation.label && (viewer === 'customer' || !routineReasons.has(reason))
-                      ? <p>{viewer === 'manager' ? i18n.t('ui.history.note', { reason }) : customerReason(reason)}</p>
+                    {displayReason && displayReason !== presentation.label && (viewer === 'customer' || !routineReasons.has(reason || ''))
+                      ? <p>{viewer === 'manager' ? i18n.t('ui.history.note', { reason: displayReason }) : displayReason}</p>
                       : null}
                   </div>
                 </li>

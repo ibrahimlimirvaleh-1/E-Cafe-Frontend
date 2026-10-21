@@ -1,4 +1,5 @@
 import { i18n } from '../../shared/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { BookOpen, Clock, MapPin, Phone, Star, Table2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
@@ -16,6 +17,8 @@ import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/
 type ProfilePanel = 'tables' | 'menu'
 
 export function RestaurantProfilePage() {
+  const { i18n: translation } = useTranslation()
+  const language = translation.resolvedLanguage || translation.language
   const { restaurantId = 'saffron-premium' } = useParams()
   const [searchParams] = useSearchParams()
   const reservationDate = searchParams.get('reservationDate')
@@ -23,12 +26,12 @@ export function RestaurantProfilePage() {
   const isCustomer = isInRole(user, [RoleIds.Customer])
   const [activePanel, setActivePanel] = useState<ProfilePanel>('tables')
   const [activeCategoryId, setActiveCategoryId] = useState('')
-  const { data: restaurant } = useAsyncData<Restaurant | null>(() => ecafeApi.restaurants.detail(restaurantId), null, [restaurantId])
-  const { data: tables, isLoading: tablesLoading } = useAsyncData(() => ecafeApi.tables.listPublic(restaurantId), [], [restaurantId])
+  const { data: restaurant } = useAsyncData<Restaurant | null>(() => ecafeApi.restaurants.detail(restaurantId), null, [restaurantId, language])
+  const { data: tables, isLoading: tablesLoading } = useAsyncData(() => ecafeApi.tables.listPublic(restaurantId), [], [restaurantId, language])
   const { data: menuData, isLoading: menuLoading } = useAsyncData(
     () => ecafeApi.menu.publicMenu(restaurantId),
     { categories: [], items: [] },
-    [restaurantId],
+    [restaurantId, language],
   )
 
   const menuItemsByCategory = useMemo(
@@ -50,6 +53,7 @@ export function RestaurantProfilePage() {
   }
 
   const openState = getRestaurantOpenState(restaurant.workingHours, restaurant.timeZone, restaurant.isOpen)
+  const tableLabel = i18n.t('ui.pages.customer.table_selection_page.masa_058c4c')
 
   return (
     <main className="page">
@@ -112,9 +116,9 @@ export function RestaurantProfilePage() {
               {tables.map((table) => (
                 <article className="choice-card" key={table.id}>
                   <Table2 size={26} />
-                  <strong>{table.name || `Masa ${table.number}`}</strong>
-                  <span>{table.name && table.number ? `Masa ${table.number} · ${table.capacity} nəfərlik` : `${table.capacity} nəfərlik stol`}</span>
-                  <small>{table.status === 'Available' ?i18n.t('ui.pages.customer.restaurant_profile_page.bosdur_23162a') : table.status}</small>
+                  <strong>{table.name || `${tableLabel} ${table.number}`}</strong>
+                  <span>{table.number ? `${tableLabel} ${table.number} · ` : ''}{i18n.t('ui.count.guests', { count: table.capacity })}</span>
+                  <small>{i18n.t(`ui.adminFlow.tableStatus.${table.status}`, { defaultValue: table.status })}</small>
                 </article>
               ))}
             </div>
