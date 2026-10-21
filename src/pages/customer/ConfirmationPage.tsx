@@ -91,7 +91,7 @@ export function ConfirmationPage() {
     () => reservationId ? ecafeApi.reservations.getHistory(reservationId) : Promise.resolve(null),
     null,
     reservationScope,
-    [user?.userId, reservationId, reloadKey],
+    [user?.userId, reservationId, language, reloadKey],
   )
 
   const cancelAction = workflowActions.find((action) => action.code === 'cancel')

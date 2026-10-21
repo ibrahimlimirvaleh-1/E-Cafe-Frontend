@@ -574,6 +574,7 @@ export type ReservationHistoryItem = {
   changedAt: string
   actorType: 'Customer' | 'Restaurant' | 'System' | string
   reason?: string | null
+  reasonLabel?: string | null
 }
 
 export type ReservationRefundHistoryItem = ReservationHistoryItem & {
@@ -1083,6 +1084,7 @@ function mapReservationHistoryResponse(record: AnyRecord): ReservationHistoryRes
           changedAt: str(history.changedAt),
           actorType: str(history.actorType),
           reason: str(history.reason) || null,
+          reasonLabel: str(history.reasonLabel) || null,
         }
       })
     : []

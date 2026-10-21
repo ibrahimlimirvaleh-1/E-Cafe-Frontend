@@ -1,4 +1,5 @@
 import { i18n } from '../../shared/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { LogOut, MonitorSmartphone, Save } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +9,7 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { roleLabel } from '../../shared/i18n/roleLabel'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
@@ -18,6 +20,7 @@ import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function ProfilePage() {
+  useTranslation()
   const { logout, logoutAll, updateUser, user } = useAuth()
   const navigate = useNavigate()
   const { data: profile, error, isLoading } = useAsyncData(() => ecafeApi.profile.get(), null, [])
@@ -191,8 +194,8 @@ export function ProfilePage() {
           <h2>{profile.name} {profile.surname}</h2>
           <p>{profile.email} · {profile.phone || 'Telefon qeyd olunmayıb'}</p>
           <div className="profile-summary-badges">
-            <Badge tone={profile.isActive ? 'success' : 'danger'}>{profile.isActive ?i18n.t('ui.pages.customer.profile_page.aktiv_816345') :i18n.t('ui.pages.customer.profile_page.deaktiv_477e77')}</Badge>
-            <Badge tone="info">{activeProfile?.roleName || user?.roleName || profile.role || `Rol #${profile.roleId}`}</Badge>
+            <Badge tone={profile.isActive ? 'success' : 'danger'}>{i18n.t(profile.isActive ? 'ui.adminStatus.active' : 'ui.adminStatus.inactive')}</Badge>
+            <Badge tone="info">{roleLabel(activeProfile?.roleId || user?.roleId || profile.roleId, activeProfile?.roleName || user?.roleName || profile.role)}</Badge>
           </div>
         </div>
       </section>
@@ -233,7 +236,7 @@ export function ProfilePage() {
                 </span>
                 <div>
                   <strong>{activeProfile.restaurantName || `Restoran #${activeProfile.restaurantId}`}</strong>
-                  <small>{activeProfile.roleName || `Rol #${activeProfile.roleId}`}</small>
+                  <small>{roleLabel(activeProfile.roleId, activeProfile.roleName)}</small>
                 </div>
                 <Badge tone="success">{i18n.t('ui.pages.customer.profile_page.cari_profil_609da3')}</Badge>
               </article>

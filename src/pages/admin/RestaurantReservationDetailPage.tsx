@@ -1,4 +1,5 @@
 import { i18n } from '../../shared/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Ban, CalendarDays, CheckCircle2, CircleDollarSign, Clock3, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
@@ -25,6 +26,8 @@ import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { getReservationDepartureReasonLabel, getReservationStatusPresentation, isReservationConfirmed } from '../../shared/lib/reservationStatus'
 
 export function RestaurantReservationDetailPage() {
+  const { i18n: translation } = useTranslation()
+  const language = translation.resolvedLanguage || translation.language
   const { user } = useAuth()
   const location = useLocation()
   const { reservationId = '' } = useParams()
@@ -45,7 +48,7 @@ export function RestaurantReservationDetailPage() {
     () => restaurantId && reservationId ? ecafeApi.reservations.getForRestaurant(restaurantId, reservationId) : Promise.resolve(null),
     null,
     reservationScope,
-    [user?.userId, restaurantId, reservationId, reloadKey],
+    [user?.userId, restaurantId, reservationId, language, reloadKey],
   )
   useEffect(() => {
     if (location.hash !== '#session-close-review' || isLoading || !reservation?.requiresSessionCloseReview) return
@@ -79,7 +82,7 @@ export function RestaurantReservationDetailPage() {
       : Promise.resolve(null),
     null,
     reservationScope,
-    [user?.userId, restaurantId, reservationId, reloadKey],
+    [user?.userId, restaurantId, reservationId, language, reloadKey],
   )
   const visibleActions = workflowActions.filter((action) =>
     !['sendPaymentInstruction', 'submitPaymentProof', 'approvePaymentProof', 'rejectPaymentProof', 'checkIn'].includes(action.code))

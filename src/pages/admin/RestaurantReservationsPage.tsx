@@ -1,4 +1,5 @@
 import { i18n } from '../../shared/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, CalendarDays, Clock3, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -29,6 +30,8 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 }
 
 export function RestaurantReservationsPage() {
+  const { i18n: translation } = useTranslation()
+  const language = translation.resolvedLanguage || translation.language
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
@@ -51,7 +54,7 @@ export function RestaurantReservationsPage() {
   const { data: restaurantTables, error: tablesError, isLoading: tablesLoading } = useAsyncData(
     () => restaurantId ? ecafeApi.tables.list(restaurantId) : Promise.resolve([]),
     [],
-    [restaurantId],
+    [restaurantId, language],
   )
   const availableTables = restaurantTables.filter((table) => table.restaurantId === restaurantId)
   const query = useMemo(
@@ -63,7 +66,7 @@ export function RestaurantReservationsPage() {
     () => restaurantId ? ecafeApi.reservations.listForRestaurant(restaurantId, query) : Promise.resolve(emptyPage),
     emptyPage,
     listScope,
-    [user?.userId, restaurantId, query, reloadKey],
+    [user?.userId, restaurantId, query, language, reloadKey],
   )
 
   useEffect(() => {
@@ -124,7 +127,7 @@ export function RestaurantReservationsPage() {
           >
             <option value="">{tablesLoading ?i18n.t('ui.pages.admin.restaurant_reservations_page.masalar_yuklenir_fa9b85') :i18n.t('ui.pages.admin.restaurant_reservations_page.butun_masalar_2d0a21')}</option>
             {availableTables.map((table) => (
-              <option key={table.id} value={table.id}>{table.name || `Masa-${table.number}`}</option>
+              <option key={table.id} value={table.id}>{table.name || `${i18n.t('ui.pages.customer.table_selection_page.masa_058c4c')} ${table.number}`}</option>
             ))}
           </select>
         </label>

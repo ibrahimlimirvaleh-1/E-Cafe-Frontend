@@ -1,4 +1,5 @@
 import { i18n } from '../../shared/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { CalendarDays, LogOut, MapPin, Users } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
@@ -19,6 +20,8 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 
 export function TrackingPage() {
+  const { i18n: translation } = useTranslation()
+  const language = translation.resolvedLanguage || translation.language
   const { user } = useAuth()
   const { token = '' } = useParams()
   const [reloadKey, setReloadKey] = useState(0)
@@ -52,7 +55,7 @@ export function TrackingPage() {
     () => reservation ? ecafeApi.reservations.getHistory(String(reservation.id)) : Promise.resolve(null),
     null,
     `${user?.userId || ''}:${reservation?.id || ''}`,
-    [user?.userId, reservation?.id, reloadKey],
+    [user?.userId, reservation?.id, language, reloadKey],
   )
 
   const presentation = reservation ? getReservationStatusPresentation(reservation.status) : null
