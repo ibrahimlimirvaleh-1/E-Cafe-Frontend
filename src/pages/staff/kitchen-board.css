@@ -36,7 +36,7 @@
 .kitchen-queue-state .ui-button:hover:not(:disabled) { background: var(--surface-high); }
 :root[data-theme='dark'] .kitchen-queue-state .ui-button.ui-button-secondary { background: var(--surface-high); color: var(--on-surface); }
 .kitchen-queue-state .kitchen-action-warning { color: var(--warning); text-align: right; overflow-wrap: anywhere; }
-.kitchen-queue-state .kitchen-action-error { color: var(--danger); text-align: right; overflow-wrap: anywhere; }
+.kitchen-ticket-error { grid-column: 1 / -1; margin: 0; font-size: 12px; }
 .kitchen-action-spinner { animation: kitchen-action-spin .8s linear infinite; }
 @keyframes kitchen-action-spin { to { transform: rotate(360deg); } }
 @media (max-width: 800px) {
@@ -52,7 +52,7 @@
   .kitchen-queue-row { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-inline: 2px; }
   .kitchen-queue-state { grid-column: 1; grid-row: 4; align-items: flex-start; padding-top: 3px; }
   .kitchen-queue-state .ui-button { min-height: 44px; }
-  .kitchen-queue-state .kitchen-action-warning, .kitchen-queue-state .kitchen-action-error { text-align: left; }
+  .kitchen-queue-state .kitchen-action-warning { text-align: left; }
   .kitchen-queue-table { grid-column: 1; grid-row: 2; }
   .kitchen-queue-items { grid-column: 1; grid-row: 3; padding-top: 5px; }
 }
