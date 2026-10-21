@@ -1,4 +1,6 @@
 import { i18n } from '../../shared/i18n/i18n'
+import { roleLabel } from '../../shared/i18n/roleLabel'
+import { useTranslation } from 'react-i18next'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Ban, CheckCircle2, Info, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
@@ -51,6 +53,7 @@ const staffFormGuidance = [
 ]
 
 export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode }) {
+  useTranslation()
   const { setSession, user } = useAuth()
   const { staffId = '' } = useParams()
   const [searchParams] = useSearchParams()
@@ -147,19 +150,6 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
   function isStaffAssignableRole(roleId: string) {
     return visibleRoleOptions.some((role) => String(role.id) === roleId)
-  }
-
-  function roleLabel(role: Role) {
-    const labels: Record<Role, string> = {
-      PlatformAdmin: 'Platforma admini',
-      Owner: 'Sahibkar',
-      Manager: 'Menecer',
-      Waiter: 'Ofisiant',
-      Kitchen: 'Mətbəx',
-      Customer: 'Müştəri',
-    }
-
-    return labels[role] || role
   }
 
   function isOwnerStaffMember(member: StaffMember) {
@@ -472,7 +462,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                 <option value="">{i18n.t('ui.pages.admin.staff_management_page.rol_sec_8ee490')}</option>
                 {visibleRoleOptions.map((role) => (
                   <option key={role.id} value={role.id}>
-                    {role.name}
+                    {roleLabel(role.id, role.name)}
                   </option>
                 ))}
               </SelectField>
@@ -529,7 +519,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                   </div>
                   <div className="staff-badges">
                     <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ?i18n.t('ui.pages.admin.staff_management_page.aktiv_816345') :i18n.t('ui.pages.admin.staff_management_page.deaktiv_477e77')}</Badge>
-                    <Badge tone="info">{roleLabel(member.role)}</Badge>
+                    <Badge tone="info">{roleLabel(currentRoleId(member), member.role)}</Badge>
                   </div>
                   {canManageStaffMember(member) ? (
                     <div className="staff-role-actions">
@@ -548,7 +538,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           >
                             {visibleRoleOptions.map((role) => (
                               <option key={role.id} value={role.id}>
-                                {role.name}
+                                {roleLabel(role.id, role.name)}
                               </option>
                             ))}
                           </select>

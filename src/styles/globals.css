@@ -7023,9 +7023,14 @@ body,
   }
 
   .staff-role-actions select {
-    flex: 1 1 150px;
-    min-width: 132px;
+    flex: 0 0 100%;
+    min-width: 0;
     height: 44px;
+  }
+
+  .staff-role-actions {
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .staff-badges {
@@ -7327,8 +7332,8 @@ body,
   }
 
   .staff-role-actions select {
-    flex: 1 1 132px;
-    min-width: 132px;
+    flex: 0 0 100%;
+    min-width: 0;
   }
 
   .compact-list article.table-management-row {
