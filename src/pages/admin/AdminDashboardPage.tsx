@@ -43,7 +43,7 @@ export function AdminDashboardPage() {
 
       <DashboardFilters state={state} user={user} t={t} />
 
-      {view === 'manager' && !state.canLoad ? (
+      {view === 'manager' && !state.hasManagerScope ? (
         <StatusMessage tone="warning" autoHideMs={false}>{t('dashboard.noRestaurant')}</StatusMessage>
       ) : null}
       {state.error ? <StatusMessage tone="danger" autoHideMs={false}>{state.error}</StatusMessage> : null}

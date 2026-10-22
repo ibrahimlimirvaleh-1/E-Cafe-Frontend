@@ -118,6 +118,7 @@ export function useDashboardData(user: CurrentUser | null, t: DashboardTranslate
     loading,
     canLoad,
     validCustomRange,
+    hasManagerScope,
     managerRestaurantId,
     filters: { period, from, to, paymentMode, restaurantId },
     changeRestaurant,
