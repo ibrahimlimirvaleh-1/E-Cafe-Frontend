@@ -7944,16 +7944,30 @@ body,
 }
 
 .admin-shell .admin-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 35;
+  width: 248px;
   height: 100dvh;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: visible;
+}
+
+.admin-shell.is-collapsed .admin-sidebar {
+  width: 72px;
+}
+
+.admin-shell .admin-workspace {
+  grid-column: 2;
 }
 
 .admin-sidebar-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex: 0 0 auto;
   gap: 8px;
   min-width: 0;
 }
@@ -7962,6 +7976,14 @@ body,
 .admin-sidebar-head .brand strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; }
 .admin-sidebar nav a svg { flex: 0 0 auto; }
 .admin-nav-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-shell .admin-sidebar nav {
+  flex: 1 1 auto;
+  align-content: start;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
 
 .admin-sidebar-control {
   display: grid;
@@ -7980,9 +8002,18 @@ body,
 .admin-sidebar-control:hover { background: var(--surface-low); color: var(--on-surface); }
 .admin-sidebar-control:focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
 .admin-sidebar-menu, .admin-sidebar-close { display: none; }
+.admin-sidebar-collapse {
+  position: absolute;
+  right: -25px;
+  bottom: 76px;
+  width: 24px;
+  height: 56px;
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+  box-shadow: var(--shadow-sm);
+}
 
 .admin-shell.is-collapsed .admin-sidebar { padding-inline: 12px; }
-.admin-shell.is-collapsed .admin-sidebar-head { flex-direction: column; }
 .admin-shell.is-collapsed .admin-sidebar-head .brand strong,
 .admin-shell.is-collapsed .admin-nav-label { display: none; }
 .admin-shell.is-collapsed .admin-sidebar nav a { justify-content: center; padding-inline: 0; }
@@ -7991,8 +8022,10 @@ body,
 @media (max-width: 1080px) {
   .admin-shell,
   .admin-shell.is-collapsed { display: block; }
+  .admin-shell .admin-workspace { grid-column: auto; }
 
-  .admin-shell .admin-sidebar {
+  .admin-shell .admin-sidebar,
+  .admin-shell.is-collapsed .admin-sidebar {
     position: fixed;
     top: 0;
     left: 0;
@@ -8010,11 +8043,11 @@ body,
   }
 
   .admin-shell.is-drawer-open .admin-sidebar { visibility: visible; transform: none; }
-  .admin-shell.is-collapsed .admin-sidebar-head { flex-direction: row; }
   .admin-shell.is-collapsed .admin-sidebar-head .brand strong,
   .admin-shell.is-collapsed .admin-nav-label { display: block; }
   .admin-shell .admin-sidebar nav {
     display: grid;
+    flex: 0 1 auto;
     gap: 4px;
     margin-top: 22px;
     overflow: visible;
@@ -11298,6 +11331,7 @@ body {
 
 .admin-shell {
   grid-template-columns: 248px minmax(0, 1fr);
+  overflow-x: clip;
 }
 
 .admin-sidebar {

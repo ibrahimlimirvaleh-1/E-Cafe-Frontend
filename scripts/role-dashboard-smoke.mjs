@@ -39,6 +39,31 @@ async function assertIntegerChartAxis(page) {
   assert.ok(labels.every((label) => /^\d+$/.test(label)))
 }
 
+async function assertFixedSidebar(page, collapsed) {
+  const layout = await page.evaluate(() => {
+    const sidebar = document.querySelector('.admin-sidebar').getBoundingClientRect()
+    const toggle = document.querySelector('.admin-sidebar-collapse').getBoundingClientRect()
+    const workspace = document.querySelector('.admin-workspace').getBoundingClientRect()
+    return {
+      sidebar: { left: sidebar.left, top: sidebar.top, right: sidebar.right, bottom: sidebar.bottom, width: sidebar.width },
+      toggle: { left: toggle.left, right: toggle.right, bottom: toggle.bottom },
+      workspaceLeft: workspace.left,
+      viewportHeight: innerHeight,
+      viewportWidth: innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+    }
+  })
+  assert.equal(layout.sidebar.left, 0)
+  assert.equal(layout.sidebar.top, 0)
+  assert.equal(layout.sidebar.bottom, layout.viewportHeight)
+  assert.equal(layout.sidebar.width, collapsed ? 72 : 248)
+  assert.equal(layout.workspaceLeft, layout.sidebar.right)
+  assert.equal(layout.toggle.left, layout.sidebar.right)
+  assert.equal(layout.toggle.right, layout.sidebar.right + 24)
+  assert.equal(layout.toggle.bottom, layout.viewportHeight - 76)
+  assert.ok(layout.documentWidth <= layout.viewportWidth)
+}
+
 async function assertDesktopSidebar(page, view) {
   const shell = page.locator('.admin-shell')
   const sidebar = page.locator('.admin-sidebar')
@@ -46,6 +71,32 @@ async function assertDesktopSidebar(page, view) {
   assert.equal(await activeLink.getAttribute('href'), '/admin')
   assert.equal(await activeLink.getAttribute('aria-current'), 'page')
   assert.equal(await sidebar.locator('nav a[href="/admin/localization"]').count(), view === 'platform' ? 1 : 0)
+  assert.equal(await sidebar.locator('nav a').evaluateAll((links) => links.every((link) => link.getBoundingClientRect().height <= 48)), true)
+  if (view === 'platform') {
+    for (const width of [1440, 1280]) {
+      await page.setViewportSize({ width, height: 900 })
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+      await page.waitForFunction(() => window.scrollY > 0)
+      await assertFixedSidebar(page, false)
+      await page.screenshot({ path: path.join(dist, `role-dashboard-platform-sidebar-scrolled-${width}.png`) })
+      if (width === 1440) {
+        await page.locator('.theme-toggle').click()
+        await assertFixedSidebar(page, false)
+        await page.screenshot({ path: path.join(dist, 'role-dashboard-platform-sidebar-scrolled-dark.png') })
+        await page.locator('.theme-toggle').click()
+      }
+    }
+    await page.setViewportSize({ width: 1280, height: 420 })
+    const nav = sidebar.locator('nav')
+    assert.equal(await nav.evaluate((element) => element.scrollHeight > element.clientHeight), true)
+    await nav.evaluate((element) => { element.scrollTop = element.scrollHeight })
+    assert.equal(await nav.evaluate((element) => element.scrollTop > 0), true)
+    await assertFixedSidebar(page, false)
+    await page.screenshot({ path: path.join(dist, 'role-dashboard-platform-sidebar-nav-scrolled.png') })
+    await page.setViewportSize({ width: 1365, height: 900 })
+    await nav.evaluate((element) => { element.scrollTop = 0 })
+    await page.evaluate(() => window.scrollTo(0, 0))
+  }
   const expandedWidth = await sidebar.evaluate((element) => element.getBoundingClientRect().width)
   await page.getByRole('button', { name: 'Yan paneli yığ' }).click()
   assert.match(await shell.getAttribute('class'), /is-collapsed/)
@@ -54,6 +105,14 @@ async function assertDesktopSidebar(page, view) {
   assert.equal(await sidebar.locator('nav a[href="/admin"]').getAttribute('aria-label'), 'Dashboard')
   assert.equal(await sidebar.locator('nav a[href="/admin"] svg').count(), 1)
   assert.ok(await sidebar.evaluate((element) => element.getBoundingClientRect().width) < expandedWidth)
+  await assertFixedSidebar(page, true)
+  if (view === 'platform') {
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    await page.waitForFunction(() => window.scrollY > 0)
+    await assertFixedSidebar(page, true)
+    await page.screenshot({ path: path.join(dist, 'role-dashboard-platform-sidebar-collapsed-scrolled.png') })
+    await page.evaluate(() => window.scrollTo(0, 0))
+  }
   await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-sidebar-collapsed.png`), fullPage: true })
   if (view === 'platform') {
     await page.locator('.theme-toggle').click()
@@ -63,6 +122,7 @@ async function assertDesktopSidebar(page, view) {
   await page.reload()
   await page.locator('.role-dashboard-metric').first().waitFor()
   assert.match(await shell.getAttribute('class'), /is-collapsed/)
+  await assertFixedSidebar(page, true)
   if (view === 'platform') {
     await page.locator('.language-switcher-trigger').click()
     await page.locator('.language-switcher-option[lang="ru"]').click()
@@ -75,6 +135,7 @@ async function assertDesktopSidebar(page, view) {
   }
   await page.getByRole('button', { name: 'Yan paneli genişləndir' }).click()
   assert.doesNotMatch(await shell.getAttribute('class'), /is-collapsed/)
+  await assertFixedSidebar(page, false)
   assert.equal(await activeLink.getAttribute('aria-current'), 'page')
 }
 
@@ -96,6 +157,11 @@ async function assertMobileSidebar(page, view) {
   assert.equal(await sidebar.locator('nav a.active').getAttribute('aria-current'), 'page')
   await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-drawer-mobile.png`) })
   await page.keyboard.press('Shift+Tab')
+  await page.keyboard.press('Shift+Tab')
+  assert.equal(await sidebar.locator('nav a').last().evaluate((element) => document.activeElement === element), true)
+  await page.keyboard.press('Tab')
+  assert.equal(await sidebar.locator('.brand').evaluate((element) => document.activeElement === element), true)
+  assert.equal(await page.locator('.admin-workspace').evaluate((element) => element.inert), true)
   await page.keyboard.press('Shift+Tab')
   assert.equal(await sidebar.locator('nav a').last().evaluate((element) => document.activeElement === element), true)
   await page.keyboard.press('Escape')
@@ -124,6 +190,10 @@ async function assertMobileSidebar(page, view) {
     await page.locator('.theme-toggle').click()
   }
   await menu.click()
+  await page.setViewportSize({ width: 768, height: 900 })
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+  assert.equal(await sidebar.isVisible(), true)
+  await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-tablet-drawer.png`) })
   await page.setViewportSize({ width: 800, height: 900 })
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
   assert.equal(await sidebar.isVisible(), true)
@@ -140,6 +210,7 @@ async function assertMobileSidebar(page, view) {
   await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-narrow-mobile.png`) })
   await page.getByRole('button', { name: 'Menyunu aç' }).click()
   assert.equal(await sidebar.isVisible(), true)
+  await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-narrow-drawer.png`) })
   await page.keyboard.press('Escape')
 }
 
