@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Languages, LayoutDashboard, MailWarning, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Languages, LayoutDashboard, MailWarning, Menu, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminModules, localizeAdminModule } from '../../entities/mockData'
 import { useAuth } from '../auth/AuthContext'
@@ -77,7 +77,8 @@ export function AdminShell() {
         closeDrawer()
       }
       if (event.key !== 'Tab') return
-      const focusable = sidebarRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+      const focusable = [...(sidebarRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [])]
+        .filter((element) => element.getClientRects().length > 0)
       if (!focusable?.length) return
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
@@ -133,17 +134,6 @@ export function AdminShell() {
         <div className="admin-sidebar-head">
           <Brand admin />
           <button
-            type="button"
-            className="admin-sidebar-control admin-sidebar-collapse"
-            onClick={toggleCollapsed}
-            aria-label={t(collapsed ? 'ui.nav.expandSidebar' : 'ui.nav.collapseSidebar')}
-            title={t(collapsed ? 'ui.nav.expandSidebar' : 'ui.nav.collapseSidebar')}
-            aria-expanded={!collapsed}
-            aria-controls="admin-sidebar"
-          >
-            {collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
-          </button>
-          <button
             ref={closeButtonRef}
             type="button"
             className="admin-sidebar-control admin-sidebar-close"
@@ -165,6 +155,17 @@ export function AdminShell() {
           })}
           {isPlatformAdmin ? <NavLink to="/admin/localization" {...navLabel(t('ui.localization.title'))}><Languages size={18} aria-hidden="true" /><span className="admin-nav-label">{t('ui.localization.title')}</span></NavLink> : null}
         </nav>
+        <button
+          type="button"
+          className="admin-sidebar-control admin-sidebar-collapse"
+          onClick={toggleCollapsed}
+          aria-label={t(collapsed ? 'ui.nav.expandSidebar' : 'ui.nav.collapseSidebar')}
+          title={t(collapsed ? 'ui.nav.expandSidebar' : 'ui.nav.collapseSidebar')}
+          aria-expanded={!collapsed}
+          aria-controls="admin-sidebar"
+        >
+          {collapsed ? <ChevronRight size={18} aria-hidden="true" /> : <ChevronLeft size={18} aria-hidden="true" />}
+        </button>
       </aside>
       <div className="admin-workspace" inert={mobile && drawerOpen} aria-hidden={mobile && drawerOpen}>
         <header className="admin-topbar compact">
