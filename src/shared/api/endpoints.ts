@@ -1,6 +1,11 @@
 export type KitchenProgressAction = 'accept' | 'start' | 'ready'
 
 export const endpoints = {
+  dashboard: {
+    platform: '/dashboard/platform',
+    owner: '/dashboard/owner',
+    manager: '/dashboard/manager',
+  },
   localization: {
     dictionary: (language: string) => `/localization/dictionaries/${language}`,
     preference: '/localization/preference',
