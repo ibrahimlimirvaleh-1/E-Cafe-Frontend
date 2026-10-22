@@ -88,6 +88,16 @@
   background: var(--surface-high);
 }
 
+:root[data-theme='dark'] .inventory-row.selected {
+  border-color: var(--secondary);
+  background: var(--surface-lowest);
+}
+
+:root[data-theme='dark'] .inventory-row .inline-actions .action-icon-button-danger,
+:root[data-theme='dark'] .inventory-row .inline-actions .action-icon-button-danger:hover {
+  color: var(--danger);
+}
+
 :root[data-theme='dark'] :is(.site-search, .catalog-search, .reservation-payment-meta, .reservation-payment-field textarea, .reservation-proof-file-field strong, .table-shell, .data-table-shell, .inventory-table-shell, .inventory-history-table-shell) {
   border-color: var(--outline-variant);
   color: var(--on-surface);
