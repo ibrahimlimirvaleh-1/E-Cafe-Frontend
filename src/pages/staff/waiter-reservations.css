@@ -1,9 +1,5 @@
 .waiter-reservations-page { max-width: 1120px; }
 .waiter-reservations-page .page-header { margin-bottom: 20px; }
-.waiter-main-modes { display: inline-flex; flex-wrap: wrap; gap: 4px; max-width: 100%; padding: 4px; margin-bottom: 22px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-low); }
-.waiter-main-modes button { min-height: 40px; padding: 8px 14px; border: 0; border-radius: 4px; background: transparent; color: var(--on-surface-variant); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
-.waiter-main-modes button.is-active { background: var(--surface-lowest); color: var(--on-surface); box-shadow: var(--shadow-sm); }
-.waiter-main-modes button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .waiter-reservations-filters { display: grid; grid-template-columns: minmax(0, 1fr) 210px 46px; align-items: end; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--outline-variant); padding-bottom: 20px; }
 .waiter-reservations-filters label { display: grid; gap: 7px; color: var(--on-surface-variant); font-size: 13px; font-weight: 700; }
 .waiter-date-filter { display: grid; gap: 7px; min-width: 0; color: var(--on-surface-variant); font-size: 13px; font-weight: 700; }
@@ -55,8 +51,6 @@
 @media (max-width: 600px) {
   .waiter-reservations-page { width: min(100% - 24px, 1120px); }
   .waiter-reservations-page .page-header { margin-bottom: 16px; }
-  .waiter-main-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .waiter-main-modes button { min-width: 0; padding-inline: 8px; }
   .waiter-reservations-filters { gap: 12px 10px; padding-bottom: 16px; }
   .waiter-reservations-empty { align-items: flex-start; padding: 18px; }
   .waiter-reservation { padding: 16px; }

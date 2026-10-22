@@ -145,7 +145,7 @@ export function getHomePathForUser(user: CurrentUser | null | undefined) {
   }
 
   if (isInRole(user, [RoleIds.Waiter])) {
-    return '/waiter'
+    return '/waiter?view=tables'
   }
 
   if (isInRole(user, [RoleIds.Kitchen])) {
@@ -165,7 +165,7 @@ export function getHomePathForRoleId(roleId: string | null | undefined) {
   }
 
   if (roleId === RoleIds.Waiter) {
-    return '/waiter'
+    return '/waiter?view=tables'
   }
 
   if (roleId === RoleIds.Kitchen) {

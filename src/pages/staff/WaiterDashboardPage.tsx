@@ -12,7 +12,7 @@ import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
-import { Button } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
 import { LocalizedDateInput } from '../../shared/ui/LocalizedDateInput'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
@@ -27,7 +27,7 @@ const emptyPage: PaginatedResponse<ReservationServiceItemResponse> = {
 export function WaiterDashboardPage() {
   const { user, selectProfile } = useAuth()
   const location = useLocation()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const showTables = searchParams.get('view') === 'tables'
   const waitingQuery = searchParams.get('waitingOnly') === 'true'
   const targetReservationId = Number(searchParams.get('reservationId'))
@@ -120,20 +120,8 @@ export function WaiterDashboardPage() {
     }
   }
 
-  // Seçilmiş görünüşü URL-də saxlayır ki, səhifə yenilənəndə eyni bölmə açılsın.
-  function changeView(view: 'arrivals' | 'tables') {
-    const next = new URLSearchParams(searchParams)
-    if (view === 'tables') next.set('view', 'tables')
-    else next.delete('view')
-    setSearchParams(next)
-  }
-
   return <main className="staff-page waiter-reservations-page">
     <PageHeader eyebrow={i18n.t('ui.pages.staff.waiter_dashboard_page.ofisiant_paneli_319b18')} title={showTables ?i18n.t('ui.pages.staff.waiter_dashboard_page.xidmet_etdiyim_masalar_bcd05b') :i18n.t('ui.pages.staff.waiter_dashboard_page.musteri_gelisi_59cf27')} description={showTables ?i18n.t('ui.pages.staff.waiter_dashboard_page.size_teyin_edilmis_aciq_masa_sessiyala_2d3d83') :i18n.t('ui.pages.staff.waiter_dashboard_page.rezervasiyalarin_gelis_ve_masa_veziyye_3cb3a0')} />
-    <div className="waiter-main-modes" role="group" aria-label={i18n.t('ui.pages.staff.waiter_dashboard_page.ofisiant_paneli_gorunusu_a7fa7e')}>
-      <button type="button" className={!showTables ? 'is-active' : ''} aria-pressed={!showTables} onClick={() => changeView('arrivals')}>{i18n.t('ui.pages.staff.waiter_dashboard_page.musteri_gelisi_59cf27')}</button>
-      <button type="button" className={showTables ? 'is-active' : ''} aria-pressed={showTables} onClick={() => changeView('tables')}>{i18n.t('ui.pages.staff.waiter_dashboard_page.xidmet_etdiyim_masalar_bcd05b')}</button>
-    </div>
     {showTables ? <WaiterTableSessionsView key={restaurantId} restaurantId={restaurantId} restaurantName={profiles.find((profile) => profile.restaurantId === restaurantId)?.restaurantName || 'Restoran'} restaurantOptions={restaurantIds.map((id) => ({ id, name: profiles.find((profile) => profile.restaurantId === id)?.restaurantName || `Restoran ${id}` }))} onRestaurantChange={(id) => selectProfile({ restaurantId: id, roleId: RoleIds.Waiter })} reloadKey={reloadKey} targetSessionId={targetSessionId} selectionKey={location.key} /> : <>
     <div className="waiter-reservations-filters">
       {restaurantIds.length > 1 ? <label className="waiter-restaurant-filter">{i18n.t('ui.pages.staff.waiter_dashboard_page.restoran_c4df56')}<select value={restaurantId} onChange={(event) => { selectProfile({ restaurantId: event.target.value, roleId: RoleIds.Waiter }); setPage(1); setSelectedId(null) }}>
@@ -169,6 +157,7 @@ export function WaiterDashboardPage() {
             {item.arrivedAt ? <p>{i18n.t('ui.pages.staff.waiter_dashboard_page.gelis_qeyd_edildi_a35de2')} {formatReservationDateTime(item.arrivedAt, item.timeZone || 'Asia/Baku')}</p> : null}
             {item.requiresReceptionReview ? <p className="waiter-reservation-review-note">{i18n.t('ui.pages.staff.waiter_dashboard_page.xidmet_muddeti_bitib_neticeni_restoran_696207')}</p> : null}
             {item.tableSessionId !== null ? <SessionCloseReviewActions restaurantId={restaurantId} reservationId={item.id} sessionId={item.tableSessionId} canComplete={item.canCompleteSession} completeAs="waiter" canContinue={false} requiresReview={item.requiresSessionCloseReview} reviewDueAt={item.sessionCloseReviewDueAt} reviewConfirmedAt={item.sessionCloseReviewConfirmedAt} timeZone={item.timeZone} deferBill onChanged={(message) => { setActionMessage(message); setReloadKey((value) => value + 1) }} /> : null}
+            {item.tableSessionId !== null && item.seatedAt ? <ButtonLink to={`/waiter/restaurants/${restaurantId}/sessions/${item.tableSessionId}/orders`} variant="secondary"><Table2 size={17} />{i18n.t('ui.waiter.openTable')}</ButtonLink> : null}
             {actionsLoading ? <span className="waiter-reservations-muted">{i18n.t('ui.pages.staff.waiter_dashboard_page.emeliyyatlar_yoxlanilir_6e7e8e')}</span> : null}
             {actionsError ? <StatusMessage tone="danger" autoHideMs={false}>{actionsError}</StatusMessage> : null}
             {!actionsLoading && !actionsError && !item.seatedAt && !item.requiresReceptionReview && checkIn ? <Button type="button" disabled={busy} onClick={() => setPendingAction(checkIn)}><Table2 size={17} />{i18n.t('ui.pages.staff.waiter_dashboard_page.masaya_eylesdir_41b5ea')}</Button> : null}

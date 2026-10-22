@@ -27,14 +27,20 @@ type Props = {
   timeZone?: string | null
   onChanged: (message: string) => void
   deferBill?: boolean
+  onBillChange?: (bill: SessionBillResponse | null) => void
+  billRevision?: number
 }
 
-export function SessionCloseReviewActions({ id, restaurantId, reservationId, sessionId, canComplete, completeAs, canContinue, requiresReview, reviewDueAt, reviewConfirmedAt, timeZone, onChanged, deferBill = false }: Props) {
+export function SessionCloseReviewActions({ id, restaurantId, reservationId, sessionId, canComplete, completeAs, canContinue, requiresReview, reviewDueAt, reviewConfirmedAt, timeZone, onChanged, deferBill = false, onBillChange, billRevision }: Props) {
   const [dialog, setDialog] = useState<'complete' | 'continue' | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [showBill, setShowBill] = useState(!deferBill)
   const [bill, setBill] = useState<SessionBillResponse | null>(null)
+  function updateBill(next: SessionBillResponse | null) {
+    setBill(next)
+    onBillChange?.(next)
+  }
 
   // Bağlama və davam qərarları yalnız açıq istifadəçi təsdiqindən sonra göndərilir.
   async function complete() {
@@ -43,7 +49,7 @@ export function SessionCloseReviewActions({ id, restaurantId, reservationId, ses
     setError('')
     try {
       const latestBill = await ecafeApi.tableSessions.getBill(sessionId)
-      setBill(latestBill)
+      updateBill(latestBill)
       if (!latestBill.canClose) {
         setDialog(null)
         setShowBill(true)
@@ -61,7 +67,7 @@ export function SessionCloseReviewActions({ id, restaurantId, reservationId, ses
       onChanged('Masa xidməti bitirildi.')
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
     } catch (caught) {
-      setBill(null)
+      updateBill(null)
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       setError(normalizeCaughtApiError(caught, 'Masa xidməti bitirilə bilmədi.').message)
     } finally {
@@ -95,7 +101,7 @@ export function SessionCloseReviewActions({ id, restaurantId, reservationId, ses
       </div>
     </div> : null}
     {reviewConfirmedAt ? <p className="session-close-review-confirmed">{i18n.t('ui.features.reservations.session_close_review_actions.xidmetin_davami_qeyd_edilib_44287b')} {formatReservationDateTime(reviewConfirmedAt, timeZone || undefined)}</p> : null}
-    {sessionId !== null && showBill ? <SessionBillPanel sessionId={sessionId} onBillChange={setBill} /> : null}
+    {sessionId !== null && showBill ? <SessionBillPanel sessionId={sessionId} revision={billRevision} onBillChange={updateBill} /> : null}
     {canComplete || canContinue ? <div className="session-close-review-buttons">
       {canComplete && !showBill ? <Button type="button" variant="secondary" onClick={() => setShowBill(true)}><CheckCircle2 size={17} />{i18n.t('ui.features.reservations.session_close_review_actions.hesabi_yoxla_f100b8')}</Button> : null}
       {canComplete && showBill ? <Button type="button" disabled={busy || !bill?.canClose} onClick={() => { setError(''); setDialog('complete') }} title={!bill?.canClose ?i18n.t('ui.features.reservations.session_close_review_actions.yalniz_hesablasma_tamamlandiqdan_sonra_26733c') : undefined}><CheckCircle2 size={17} />{i18n.t('ui.features.reservations.session_close_review_actions.xidmeti_bitir_4c724c')}</Button> : null}

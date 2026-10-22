@@ -176,6 +176,7 @@ export const endpoints = {
   },
   tableSessions: {
     mine: (restaurantId: string) => `/restaurants/${restaurantId}/table-sessions/mine`,
+    readyOrders: (restaurantId: string) => `/restaurants/${restaurantId}/table-sessions/mine/ready-orders`,
     mineDetail: (restaurantId: string, sessionId: number) => `/restaurants/${restaurantId}/table-sessions/mine/${sessionId}`,
     closeReviews: (restaurantId: string) => `/restaurants/${restaurantId}/table-sessions/close-reviews`,
     continueService: (restaurantId: string, sessionId: number) =>
