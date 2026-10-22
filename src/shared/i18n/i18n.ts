@@ -3,6 +3,9 @@ import { initReactI18next } from 'react-i18next'
 import az from './catalog/az.json'
 import en from './catalog/en.json'
 import ru from './catalog/ru.json'
+import dashboardAz from '../../../public/dashboard.az.json'
+import dashboardEn from '../../../public/dashboard.en.json'
+import dashboardRu from '../../../public/dashboard.ru.json'
 import { getStoredLanguage, isLanguage, saveLanguage, type Language } from './language'
 
 export const i18n = i18next.createInstance()
@@ -11,7 +14,7 @@ void i18n.use(initReactI18next).init({
   lng: getStoredLanguage(),
   fallbackLng: 'az',
   supportedLngs: ['az', 'en', 'ru'],
-  resources: { az: { translation: az }, en: { translation: en }, ru: { translation: ru } },
+  resources: { az: { translation: { ...az, ...dashboardAz } }, en: { translation: { ...en, ...dashboardEn } }, ru: { translation: { ...ru, ...dashboardRu } } },
   keySeparator: false,
   interpolation: { escapeValue: false },
   react: { useSuspense: false, bindI18nStore: 'added' },
