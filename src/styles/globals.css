@@ -7939,6 +7939,120 @@ body,
   }
 }
 
+.admin-shell.is-collapsed {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
+
+.admin-shell .admin-sidebar {
+  height: 100dvh;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.admin-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-sidebar-head .brand { min-width: 0; }
+.admin-sidebar-head .brand strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; }
+.admin-sidebar nav a svg { flex: 0 0 auto; }
+.admin-nav-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.admin-sidebar-control {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--outline-variant);
+  border-radius: 6px;
+  background: var(--surface-lowest);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+
+.admin-sidebar-control:hover { background: var(--surface-low); color: var(--on-surface); }
+.admin-sidebar-control:focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
+.admin-sidebar-menu, .admin-sidebar-close { display: none; }
+
+.admin-shell.is-collapsed .admin-sidebar { padding-inline: 12px; }
+.admin-shell.is-collapsed .admin-sidebar-head { flex-direction: column; }
+.admin-shell.is-collapsed .admin-sidebar-head .brand strong,
+.admin-shell.is-collapsed .admin-nav-label { display: none; }
+.admin-shell.is-collapsed .admin-sidebar nav a { justify-content: center; padding-inline: 0; }
+.admin-shell.is-collapsed .admin-sidebar nav { width: 100%; }
+
+@media (max-width: 1080px) {
+  .admin-shell,
+  .admin-shell.is-collapsed { display: block; }
+
+  .admin-shell .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 62;
+    width: min(320px, calc(100vw - 48px));
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 18px 14px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-right: 1px solid var(--outline-variant);
+    border-bottom: 0;
+    visibility: hidden;
+    transform: translateX(-100%);
+  }
+
+  .admin-shell.is-drawer-open .admin-sidebar { visibility: visible; transform: none; }
+  .admin-shell.is-collapsed .admin-sidebar-head { flex-direction: row; }
+  .admin-shell.is-collapsed .admin-sidebar-head .brand strong,
+  .admin-shell.is-collapsed .admin-nav-label { display: block; }
+  .admin-shell .admin-sidebar nav {
+    display: grid;
+    gap: 4px;
+    margin-top: 22px;
+    overflow: visible;
+    padding-bottom: 16px;
+  }
+  .admin-shell .admin-sidebar nav a,
+  .admin-shell.is-collapsed .admin-sidebar nav a {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 44px;
+    padding-inline: 12px;
+    border-radius: 8px;
+  }
+  .admin-sidebar-collapse { display: none; }
+  .admin-sidebar-close, .admin-sidebar-menu { display: grid; }
+  .admin-sidebar-backdrop { position: fixed; inset: 0; z-index: 61; background: rgba(0, 0, 0, 0.48); }
+  .admin-shell .admin-topbar.compact { flex-direction: row; align-items: center; justify-content: space-between; }
+  .admin-shell .admin-topbar .site-actions { width: auto; flex: 0 1 auto; justify-content: flex-end; }
+}
+
+@media (max-width: 420px) {
+  .admin-shell .admin-topbar.compact { gap: 4px; padding-inline: 8px; }
+  .admin-shell .admin-topbar .site-actions,
+  .admin-shell .admin-topbar .user-menu { gap: 3px; }
+  .admin-shell .admin-topbar :is(.admin-sidebar-menu, .language-switcher-trigger, .icon-action, .workspace-switcher-home, .workspace-switcher-trigger, .user-pill) {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+  }
+  .admin-shell .admin-topbar .user-pill { justify-content: center; }
+  .admin-shell .admin-topbar .user-pill > span:not(.user-pill-avatar),
+  .admin-shell .admin-topbar .user-pill > svg:last-child,
+  .admin-shell .admin-topbar :is(.workspace-switcher-home, .workspace-switcher-trigger) > span { display: none; }
+}
+
 /* Reservation details use the available desktop width while stacking cleanly on phones. */
 .reservation-confirmation-page {
   width: min(1180px, calc(100% - 48px));

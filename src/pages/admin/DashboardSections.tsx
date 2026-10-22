@@ -1,5 +1,10 @@
-import { AlertTriangle } from 'lucide-react'
+import {
+  AlertCircle, BellRing, CalendarDays, ChefHat, CircleCheck, ClipboardList,
+  CreditCard, FileClock, FileText, ListFilter, ReceiptText, ShoppingBag,
+  Store, Table2, Users, Wallet, type LucideIcon,
+} from 'lucide-react'
 import type { DashboardResponse, DashboardView } from '../../shared/api/dashboardApi'
+import { mapContractStatus } from '../../shared/api/mappers'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { formatDashboardMoment, type DashboardFormatters, type DashboardTranslate } from './dashboardFormatting'
 
@@ -9,14 +14,43 @@ type CommonProps = {
   formatters: DashboardFormatters
 }
 
-const contractStatusCodes: Record<number, string> = {
-  1: 'Draft',
-  2: 'PendingSignature',
-  3: 'Active',
-  4: 'Expired',
-  5: 'Terminated',
-  6: 'OwnerApproved',
-  7: 'Scheduled',
+const metricAppearance: Record<string, { icon: LucideIcon; tone: string }> = {
+  orderAmount: { icon: ShoppingBag, tone: 'teal' },
+  collectedAmount: { icon: Wallet, tone: 'green' },
+  orderCount: { icon: ClipboardList, tone: 'blue' },
+  averageOrder: { icon: ReceiptText, tone: 'teal' },
+  activeRestaurants: { icon: Store, tone: 'teal' },
+  activeUsers: { icon: Users, tone: 'blue' },
+  reservationCount: { icon: CalendarDays, tone: 'teal' },
+  activeContracts: { icon: FileText, tone: 'green' },
+  todayReservations: { icon: CalendarDays, tone: 'teal' },
+  openSessions: { icon: Table2, tone: 'blue' },
+  kitchenOrders: { icon: ChefHat, tone: 'teal' },
+  readyOrders: { icon: BellRing, tone: 'red' },
+}
+
+const alertIcons: Record<string, LucideIcon> = {
+  lowStock: ClipboardList,
+  readyOrders: BellRing,
+  delayedKitchen: ChefHat,
+  waitingGuests: Users,
+  expiringContracts: FileClock,
+  failedPayments: CreditCard,
+  pendingRefunds: Wallet,
+  paymentReview: ReceiptText,
+  closeReview: Table2,
+}
+
+function chartScale(values: number[], unit: string) {
+  const maximum = Math.max(0, ...values)
+  const magnitude = 10 ** Math.floor(Math.log10(maximum / 4))
+  const step = [1, 2, 2.5, 5, 10]
+    .map((factor) => unit === 'count'
+      ? Math.max(1, Math.ceil(factor * magnitude))
+      : Math.max(0.01, Math.ceil(factor * magnitude * 100) / 100))
+    .find((candidate) => Math.ceil(maximum / candidate) <= 5) ?? 10 * magnitude
+  const segments = Math.ceil(maximum / step)
+  return { maximum: segments * step, ticks: Array.from({ length: segments + 1 }, (_, index) => (segments - index) * step) }
 }
 
 export function DashboardMetrics({ data, view, t, formatters }: CommonProps & { data: DashboardResponse; view: DashboardView }) {
@@ -34,20 +68,27 @@ export function DashboardMetrics({ data, view, t, formatters }: CommonProps & { 
 
   return (
     <section className="role-dashboard-metrics" aria-label={t('dashboard.metrics')}>
-      {data.metrics.map((metric) => (
-        <div className="role-dashboard-metric" key={metric.key}>
-          <span>{t(`dashboard.metric.${metric.key}`, { defaultValue: metric.key })}</span>
+      {data.metrics.map((metric) => {
+        const Icon = metricAppearance[metric.key]?.icon ?? ClipboardList
+        return (
+        <div className={`role-dashboard-metric is-${metricAppearance[metric.key]?.tone ?? 'blue'}`} key={metric.key}>
+          <div className="role-dashboard-metric-head">
+            <span>{t(`dashboard.metric.${metric.key}`, { defaultValue: metric.key })}</span>
+            <span className="role-dashboard-metric-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.8} /></span>
+          </div>
           <strong>{formatters.value(metric.value, metric.unit)}</strong>
           <small>{context(metric)}</small>
         </div>
-      ))}
+        )
+      })}
     </section>
   )
 }
 
 export function DashboardChart({ data, t, locale, formatters }: CommonProps & { data: DashboardResponse }) {
   const { chart, timeZone } = data
-  const max = Math.max(1, ...chart.points.map((point) => point.value))
+  const hasActivity = chart.points.some((point) => point.value > 0)
+  const scale = hasActivity ? chartScale(chart.points.map((point) => point.value), chart.unit) : null
 
   return (
     <section className="role-dashboard-chart" aria-labelledby="role-dashboard-chart-title">
@@ -61,26 +102,36 @@ export function DashboardChart({ data, t, locale, formatters }: CommonProps & { 
         <span className="role-dashboard-chart-key"><i />{t('dashboard.currentPeriod')}</span>
       </div>
 
-      {chart.points.length ? (
+      {scale ? (
         <div className="role-dashboard-chart-scroll">
-          <div className="role-dashboard-chart-plot" style={{ minWidth: `${Math.max(300, chart.points.length * 40)}px` }}>
-            {chart.points.map((point) => (
-              <div
-                className="role-dashboard-chart-column"
-                key={point.bucketStartUtc}
-                title={`${formatDashboardMoment(point.bucketStartUtc, locale, timeZone)} · ${formatters.value(point.value, chart.unit)}`}
-              >
-                <span className="role-dashboard-chart-value">{formatters.number.format(point.value)}</span>
-                <div className="role-dashboard-chart-track">
-                  <div style={{ height: `${Math.max(point.value > 0 ? 3 : 0, point.value / max * 100)}%` }} />
-                </div>
-                <time>{formatDashboardMoment(point.bucketStartUtc, locale, timeZone, chart.granularity)}</time>
+          <div className="role-dashboard-chart-plot" style={{ minWidth: `${Math.max(320, chart.points.length * 52)}px` }}>
+            <div className="role-dashboard-chart-y-axis" aria-hidden="true">
+              {scale.ticks.map((tick) => <span key={tick}>{formatters.number.format(tick)}</span>)}
+            </div>
+            <div className="role-dashboard-chart-body">
+              <div className="role-dashboard-chart-grid" aria-hidden="true">
+                {scale.ticks.map((tick) => <span key={tick} />)}
               </div>
-            ))}
+              <div className="role-dashboard-chart-bars" style={{ gridTemplateColumns: `repeat(${chart.points.length}, minmax(0, 1fr))` }}>
+                {chart.points.map((point) => {
+                  const detail = `${formatDashboardMoment(point.bucketStartUtc, locale, timeZone)} · ${formatters.value(point.value, chart.unit)}`
+                  return (
+                    <div className="role-dashboard-chart-column" key={point.bucketStartUtc} role="img" tabIndex={0} aria-label={detail} data-tooltip={detail}>
+                      <div className="role-dashboard-chart-bar" style={{ height: `${point.value > 0 ? Math.max(1.5, point.value / scale.maximum * 100) : 0}%` }} />
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="role-dashboard-chart-labels" style={{ gridTemplateColumns: `repeat(${chart.points.length}, minmax(0, 1fr))` }}>
+                {chart.points.map((point) => (
+                  <time key={point.bucketStartUtc} dateTime={point.bucketStartUtc}>{formatDashboardMoment(point.bucketStartUtc, locale, timeZone, chart.granularity)}</time>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       ) : (
-        <p className="role-dashboard-empty">{t('dashboard.noChartData')}</p>
+        <p className="role-dashboard-empty role-dashboard-chart-empty" role="status"><ListFilter size={18} aria-hidden="true" />{t('dashboard.noChartData')}</p>
       )}
 
       <div className="role-dashboard-chart-foot">
@@ -105,20 +156,23 @@ export function DashboardAlerts({ data, t }: { data: DashboardResponse; t: Dashb
       </div>
       {alerts.length ? (
         <ul>
-          {alerts.map((alert) => (
+          {alerts.map((alert) => {
+            const Icon = alertIcons[alert.key] ?? AlertCircle
+            return (
             <li key={`${alert.key}-${alert.restaurantId ?? 'all'}`}>
               <div>
-                <span className={`role-dashboard-alert-icon is-${alert.tone}`}><AlertTriangle size={17} /></span>
+                <span className={`role-dashboard-alert-icon is-${alert.tone}`} aria-hidden="true"><Icon size={18} strokeWidth={1.8} /></span>
                 <span>
                   <strong>{t(`dashboard.alert.${alert.key}`, { count: alert.count, defaultValue: alert.key })}</strong>
-                  <small>{t('dashboard.alertCount', { count: alert.count })}</small>
                 </span>
+                <span className="role-dashboard-alert-quantity">{alert.count}</span>
               </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       ) : (
-        <p className="role-dashboard-empty">{t('dashboard.noAlerts')}</p>
+        <p className="role-dashboard-empty role-dashboard-alert-empty"><CircleCheck size={20} aria-hidden="true" />{t('dashboard.noAlerts')}</p>
       )}
     </section>
   )
@@ -180,7 +234,10 @@ function SessionRows({ data, t, locale, formatters }: CommonProps & { data: Dash
 
 function BranchRows({ data, t, locale, formatters }: CommonProps & { data: DashboardResponse }) {
   return data.branchRows.map((row) => {
-    const status = row.contractStatusId != null ? contractStatusCodes[row.contractStatusId] : undefined
+    const statusId = row.contractStatusId
+    const status = statusId != null && Number.isInteger(statusId) && statusId >= 6001 && statusId <= 6007
+      ? mapContractStatus(statusId)
+      : undefined
     const tone = status === 'Expired' || status === 'Terminated'
       ? ' is-danger'
       : status === 'Active' ? '' : ' is-warning'
