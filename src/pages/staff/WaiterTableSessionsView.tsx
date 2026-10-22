@@ -1,22 +1,25 @@
 import { i18n } from '../../shared/i18n/i18n'
-import { CalendarClock, Clock3, RefreshCw, Store, Table2, Users, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { SessionCloseReviewActions } from '../../features/reservations/SessionCloseReviewActions'
-import { ecafeApi, type WaiterTableSessionResponse } from '../../shared/api/ecafeApi'
-import { ApiError } from '../../shared/api/httpClient'
+import { CircleCheck, Clock3, RefreshCw, Store, Table2, Users, ArrowRight } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { serveWaiterOrder } from '../../features/orders/serveWaiterOrder'
+import { ecafeApi, type WaiterReadyOrderResponse, type WaiterTableSessionResponse } from '../../shared/api/ecafeApi'
+import { ApiError, normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { Button, ButtonLink } from '../../shared/ui/Button'
+import { orderStatusId } from '../../shared/lib/orderStatus'
+import { Button } from '../../shared/ui/Button'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import './waiter-sessions.css'
 
-const emptyPage: PaginatedResponse<WaiterTableSessionResponse> = {
+const emptySessions: PaginatedResponse<WaiterTableSessionResponse> = {
   items: [], pageIndex: 1, totalPages: 1, totalCount: 0, hasPreviousPage: false, hasNextPage: false,
 }
-
-type SessionDetail = { kind: 'found'; session: WaiterTableSessionResponse } | { kind: 'missing' }
+const emptyReadyOrders: PaginatedResponse<WaiterReadyOrderResponse> = {
+  items: [], pageIndex: 1, totalPages: 1, totalCount: 0, hasPreviousPage: false, hasNextPage: false,
+}
 
 type Props = {
   restaurantId: string
@@ -28,115 +31,152 @@ type Props = {
   selectionKey: string
 }
 
-// Masa adı verilməyəndə nömrə ilə oxunaqlı ad göstərir.
-function tableLabel(session: WaiterTableSessionResponse) {
+function tableLabel(session: Pick<WaiterTableSessionResponse, 'tableName' | 'tableNo'>) {
   return session.tableName?.trim() || `Masa-${session.tableNo}`
 }
 
-// UTC vaxtını restoranın saat qurşağına görə göstərir.
 function sessionTime(value: string, timeZone: string) {
   return formatReservationDateTime(value, timeZone || 'Asia/Baku')
 }
 
 export function WaiterTableSessionsView({ restaurantId, restaurantName, restaurantOptions, onRestaurantChange, reloadKey, targetSessionId, selectionKey }: Props) {
+  const navigate = useNavigate()
   const [page, setPage] = useState(1)
-  const [selectedId, setSelectedId] = useState<number | null>(targetSessionId)
-  const [listRevision, setListRevision] = useState(0)
-  const [detailRevision, setDetailRevision] = useState(0)
+  const [readyPage, setReadyPage] = useState(1)
+  const [activeSection, setActiveSection] = useState<'tables' | 'ready'>('tables')
+  const [revision, setRevision] = useState(0)
+  const [servingId, setServingId] = useState<number | null>(null)
+  const [uncertain, setUncertain] = useState<WaiterReadyOrderResponse | null>(null)
+  const [hiddenOrderIds, setHiddenOrderIds] = useState<Set<number>>(() => new Set())
+  const [confirmedOrderIds, setConfirmedOrderIds] = useState<Set<number>>(() => new Set())
   const [notice, setNotice] = useState('')
-  const [noticeTone, setNoticeTone] = useState<'warning' | 'success'>('warning')
+  const [error, setError] = useState('')
+  const inFlight = useRef(false)
+
   useEffect(() => {
-    if (targetSessionId !== null) setSelectedId(targetSessionId)
-  }, [targetSessionId, selectionKey])
-  const listKey = `${restaurantId}:${page}`
-  const list = useKeyedAsyncData(
-    () => restaurantId ? ecafeApi.tableSessions.listMine(restaurantId, page) : Promise.resolve(emptyPage),
-    emptyPage,
-    listKey,
-    [reloadKey, listRevision],
+    if (restaurantId && targetSessionId !== null) navigate(`/waiter/restaurants/${restaurantId}/sessions/${targetSessionId}/orders`, { replace: true })
+  }, [targetSessionId, selectionKey, navigate, restaurantId])
+
+  const sessions = useKeyedAsyncData(
+    () => restaurantId ? ecafeApi.tableSessions.listMine(restaurantId, page) : Promise.resolve(emptySessions),
+    emptySessions, `${restaurantId}:${page}`, [reloadKey, revision],
   )
-  const detailKey = selectedId === null ? '' : `${restaurantId}:${selectedId}`
-  const detail = useKeyedAsyncData<SessionDetail | null>(
-    async () => {
-      if (!restaurantId || selectedId === null) return null
-      try {
-        return { kind: 'found', session: await ecafeApi.tableSessions.getMineById(restaurantId, selectedId) }
-      } catch (error) {
-        if (error instanceof ApiError && error.statusCode === 404) return { kind: 'missing' }
-        throw error
-      }
-    },
-    null,
-    detailKey,
-    [reloadKey, detailRevision],
+  const ready = useKeyedAsyncData(
+    () => restaurantId ? ecafeApi.tableSessions.listReadyOrders(restaurantId, readyPage) : Promise.resolve(emptyReadyOrders),
+    emptyReadyOrders, `${restaurantId}:${readyPage}`, [reloadKey, revision],
   )
 
   useEffect(() => {
-    if (!detail.hasData || detail.data?.kind !== 'missing') return
-    setSelectedId(null)
-    setNotice('Bu masa sessiyası artıq açıq deyil. Siyahı yeniləndi.')
-    setNoticeTone('warning')
-    setListRevision((value) => value + 1)
-  }, [detail.data, detail.hasData])
-
+    if (sessions.hasData && page > sessions.data.totalPages) setPage(Math.max(1, sessions.data.totalPages))
+  }, [sessions.hasData, sessions.data.totalPages, page])
   useEffect(() => {
-    if (!list.hasData || page <= list.data.totalPages) return
-    setPage(Math.max(1, list.data.totalPages))
-    setSelectedId(null)
-  }, [list.data.totalPages, list.hasData, page])
+    if (ready.hasData && readyPage > ready.data.totalPages) setReadyPage(Math.max(1, ready.data.totalPages))
+  }, [ready.hasData, ready.data.totalPages, readyPage])
 
-  const sessions = list.error ? [] : list.data.items
-  const selected = !detail.error && detail.hasData && detail.data?.kind === 'found' ? detail.data.session : null
+  const readyItems = ready.error ? [] : ready.data.items.filter((entry) => !hiddenOrderIds.has(entry.order.id) && !confirmedOrderIds.has(entry.order.id))
+  const pendingEntry = uncertain && !readyItems.some((item) => item.order.id === uncertain.order.id) ? uncertain : null
 
-  // Siyahı və açıq detal birlikdə yenilənir; bağlanmış sessiya 404 qaytararsa detal silinir.
-  function refreshSessions() {
+  function refresh() {
     setNotice('')
-    setListRevision((value) => value + 1)
-    setDetailRevision((value) => value + 1)
+    setError('')
+    setHiddenOrderIds(new Set())
+    setRevision((value) => value + 1)
+  }
+
+  async function serve(entry: WaiterReadyOrderResponse) {
+    const order = entry.order
+    const sessionId = order.tableSessionId
+    if (inFlight.current || (uncertain && uncertain.order.id !== order.id) || !restaurantId || !sessionId || !order.canMarkServed) return
+    inFlight.current = true
+    setServingId(order.id)
+    setError('')
+    setNotice('')
+    try {
+      if (uncertain?.order.id === order.id) {
+        const current = await ecafeApi.tableSessions.getOrder(restaurantId, sessionId, order.id)
+        if (current.statusId === orderStatusId.served && current.servedAt) {
+          setUncertain(null)
+          setConfirmedOrderIds((known) => new Set(known).add(order.id))
+          setNotice(i18n.t('ui.waiter.orderServed', { id: order.id }))
+          setRevision((value) => value + 1)
+          return
+        }
+        if (!current.canMarkServed) {
+          setUncertain(null)
+          setError(i18n.t('ui.waiter.orderChanged'))
+          setRevision((value) => value + 1)
+          return
+        }
+      }
+      await serveWaiterOrder(restaurantId, sessionId, order.id)
+      setUncertain(null)
+      setConfirmedOrderIds((known) => new Set(known).add(order.id))
+      setNotice(i18n.t('ui.waiter.orderServed', { id: order.id }))
+      setRevision((value) => value + 1)
+      window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+    } catch (caught) {
+      if (caught instanceof ApiError && [403, 404].includes(caught.statusCode)) {
+        setUncertain(null)
+        setHiddenOrderIds((current) => new Set(current).add(order.id))
+        setError(i18n.t('ui.waiter.orderUnavailable'))
+        setRevision((value) => value + 1)
+      } else if (caught instanceof ApiError && [400, 409, 422].includes(caught.statusCode)) {
+        setUncertain(null)
+        setError(normalizeCaughtApiError(caught, i18n.t('ui.waiter.orderChanged')).message)
+        setRevision((value) => value + 1)
+      } else {
+        setUncertain(entry)
+        setError(i18n.t('ui.waiter.serveUnknown', { id: order.id }))
+      }
+    } finally {
+      inFlight.current = false
+      setServingId(null)
+    }
   }
 
   return <section className="waiter-sessions-view" aria-label={i18n.t('ui.pages.staff.waiter_table_sessions_view.xidmet_etdiyim_masalar_bcd05b')}>
     <div className="waiter-sessions-toolbar">
       {restaurantOptions.length > 1 ? <label className="waiter-sessions-restaurant">{i18n.t('ui.pages.staff.waiter_table_sessions_view.restoran_c4df56')}
-        <select value={restaurantId} onChange={(event) => onRestaurantChange(event.target.value)}>
+        <select value={restaurantId} onChange={(event) => { setPage(1); setReadyPage(1); setActiveSection('tables'); setUncertain(null); setHiddenOrderIds(new Set()); setConfirmedOrderIds(new Set()); onRestaurantChange(event.target.value) }}>
           {restaurantOptions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
         </select>
       </label> : <div className="waiter-sessions-restaurant-name"><span>{i18n.t('ui.pages.staff.waiter_table_sessions_view.restoran_c4df56')}</span><strong><Store size={18} aria-hidden="true" />{restaurantName}</strong></div>}
-      <Button type="button" variant="secondary" onClick={refreshSessions} title={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalarini_yenile_305fb7')} aria-label={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalarini_yenile_305fb7')}><RefreshCw size={18} /></Button>
+      <Button type="button" variant="secondary" onClick={refresh} title={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalarini_yenile_305fb7')} aria-label={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalarini_yenile_305fb7')}><RefreshCw size={18} /></Button>
     </div>
     {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>{i18n.t('ui.pages.staff.waiter_table_sessions_view.size_aid_restoran_tapilmadi_3fdf18')}</StatusMessage> : null}
-    {list.error ? <StatusMessage tone="danger" autoHideMs={false}>{list.error}</StatusMessage> : null}
-    {notice ? <StatusMessage tone={noticeTone} autoHideMs={false}>{notice}</StatusMessage> : null}
-    <div className="waiter-sessions-summary"><strong>{list.hasData && !list.error ? `${list.data.totalCount} açıq masa` :i18n.t('ui.pages.staff.waiter_table_sessions_view.aciq_masalar_94a704')}</strong>{list.isRefreshing ? <span role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.yenilenir_283de5')}</span> : null}</div>
-    {list.isLoading ? <p className="waiter-reservations-muted" role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalari_yuklenir_e3e0bd')}</p> : null}
-    {!list.isLoading && !list.error && list.hasData && sessions.length === 0 ? <div className="waiter-reservations-empty" role="status">
+    {notice ? <StatusMessage tone="success" autoHideMs={false}>{notice}</StatusMessage> : null}
+    {error ? <StatusMessage tone={uncertain ? 'warning' : 'danger'} autoHideMs={false}>{error}</StatusMessage> : null}
+    <div className="waiter-sessions-sections" role="group" aria-label={i18n.t('ui.pages.staff.waiter_dashboard_page.ofisiant_paneli_gorunusu_a7fa7e')}>
+      <button type="button" aria-pressed={activeSection === 'tables'} className={activeSection === 'tables' ? 'is-active' : ''} onClick={() => setActiveSection('tables')}>{i18n.t('ui.waiter.tables')}<span>{sessions.hasData && !sessions.error ? sessions.data.totalCount : '—'}</span></button>
+      <button type="button" aria-pressed={activeSection === 'ready'} className={activeSection === 'ready' ? 'is-active' : ''} onClick={() => setActiveSection('ready')}>{i18n.t('ui.waiter.readyOrders')}<span>{ready.hasData && !ready.error ? ready.data.totalCount : '—'}</span></button>
+    </div>
+    {activeSection === 'ready' ? <section className="waiter-ready-section" aria-label={i18n.t('ui.waiter.readyOrders')}>
+      <div className="waiter-sessions-summary"><strong>{i18n.t('ui.waiter.readyOrders')} · {ready.hasData && !ready.error ? ready.data.totalCount : '—'}</strong>{ready.isRefreshing ? <span role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.yenilenir_283de5')}</span> : null}</div>
+      {ready.isLoading ? <p className="waiter-reservations-muted" role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_yuklenir_917624')}</p> : null}
+      {ready.error ? <StatusMessage tone="danger" autoHideMs={false}>{ready.error}</StatusMessage> : null}
+      {ready.hasData && !ready.error && readyItems.length === 0 && !pendingEntry ? <p className="waiter-ready-empty">{i18n.t('ui.waiter.noReadyOrders')}</p> : null}
+      <div className="waiter-ready-list">{[...(pendingEntry ? [pendingEntry] : []), ...readyItems].map((entry) => <article className={`waiter-ready-row${uncertain?.order.id === entry.order.id ? ' is-uncertain' : ''}`} key={entry.order.id}>
+        <div className="waiter-ready-info"><strong>{tableLabel(entry)} · {i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_96cfd8')}{entry.order.id}</strong><span>{sessionTime(entry.readyAt, entry.timeZone)} · {entry.order.items.map((item) => `${item.quantity} × ${item.name}`).join(', ')}</span></div>
+        <div className="waiter-ready-actions"><Link to={`/waiter/restaurants/${restaurantId}/sessions/${entry.order.tableSessionId}/orders?orderId=${entry.order.id}`} aria-label={`${i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_96cfd8')}${entry.order.id} · ${i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}`} title={i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}><ArrowRight size={17} /><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}</span></Link><Button type="button" disabled={servingId !== null || Boolean(uncertain && uncertain.order.id !== entry.order.id) || !entry.order.canMarkServed} onClick={() => void serve(entry)}><CircleCheck size={17} />{servingId === entry.order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_edilir_b735f7') : uncertain?.order.id === entry.order.id ? i18n.t('ui.waiter.checkServeResult') : i18n.t('ui.waiter.serve')}</Button></div>
+      </article>)}</div>
+      {ready.hasData && !ready.error ? <PaginationControls ariaLabel={i18n.t('ui.waiter.readyOrders')} pageIndex={ready.data.pageIndex} totalPages={ready.data.totalPages} hasNextPage={ready.data.hasNextPage} hasPreviousPage={ready.data.hasPreviousPage} totalCount={ready.data.totalCount} pageSize={20} onPageChange={setReadyPage} /> : null}
+    </section> : <>
+    {sessions.error ? <StatusMessage tone="danger" autoHideMs={false}>{sessions.error}</StatusMessage> : null}
+    <div className="waiter-sessions-summary"><strong>{sessions.hasData && !sessions.error ? `${sessions.data.totalCount} açıq masa` : i18n.t('ui.pages.staff.waiter_table_sessions_view.aciq_masalar_94a704')}</strong>{sessions.isRefreshing ? <span role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.yenilenir_283de5')}</span> : null}</div>
+    {sessions.isLoading ? <p className="waiter-reservations-muted" role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalari_yuklenir_e3e0bd')}</p> : null}
+    {!sessions.isLoading && !sessions.error && sessions.hasData && sessions.data.items.length === 0 ? <div className="waiter-reservations-empty" role="status">
       <span className="waiter-reservations-empty-icon"><Table2 size={22} aria-hidden="true" /></span>
       <div><strong>{i18n.t('ui.pages.staff.waiter_table_sessions_view.aciq_masa_sessiyasi_yoxdur_2d0a73')}</strong><p>{i18n.t('ui.pages.staff.waiter_table_sessions_view.hazirda_size_teyin_edilmis_aciq_masa_t_18df8e')}</p></div>
     </div> : null}
-    {list.hasData && (sessions.length > 0 || selectedId !== null) ? <div className="waiter-sessions-layout">
-      <div className="waiter-sessions-list" aria-label={i18n.t('ui.pages.staff.waiter_table_sessions_view.aciq_masa_sessiyalari_8304f2')}>
-        {sessions.map((session) => <button className={`waiter-session-row${selectedId === session.id ? ' is-selected' : ''}`} type="button" key={session.id} aria-expanded={selectedId === session.id} onClick={() => { setNotice(''); setSelectedId(session.id) }}>
-          <span className="waiter-session-row-heading"><span className="waiter-session-table"><Table2 size={18} aria-hidden="true" />{tableLabel(session)}</span><span className={`waiter-session-state${session.requiresCloseReview ? ' is-review' : ''}`}>{session.requiresCloseReview ?i18n.t('ui.pages.staff.waiter_table_sessions_view.baglanmasi_yoxlanmalidir_87b96f') :i18n.t('ui.pages.staff.waiter_table_sessions_view.xidmetde_3015e9')}</span></span>
-          <span className="waiter-session-row-meta"><span><Clock3 size={15} aria-hidden="true" />{sessionTime(session.openedAt, session.timeZone)}</span><span><Users size={15} aria-hidden="true" />{session.peopleCount == null ?i18n.t('ui.pages.staff.waiter_table_sessions_view.qonaq_sayi_qeyd_olunmayib_98c6e4') : `${session.peopleCount} nəfər`}</span></span>
-          {session.customerName ? <span className="waiter-session-customer">{session.customerName}</span> : null}
-        </button>)}
-      </div>
-      {selectedId !== null ? <aside className="waiter-session-detail" aria-label={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyasi_detallari_f440fb')}>
-        <div className="waiter-session-detail-heading"><div><span>{i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyasi_dc7521')}</span><h2>{selected ? tableLabel(selected) : `Sessiya #${selectedId}`}</h2></div><button type="button" onClick={() => setSelectedId(null)} aria-label={i18n.t('ui.pages.staff.waiter_table_sessions_view.detali_bagla_1b404b')} title={i18n.t('ui.pages.staff.waiter_table_sessions_view.detali_bagla_1b404b')}><X size={18} /></button></div>
-        {detail.isLoading ? <p className="waiter-reservations-muted" role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.detal_yuklenir_788fbc')}</p> : null}
-        {detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}
-        {detail.error ? <Button type="button" variant="secondary" onClick={refreshSessions}>{i18n.t('ui.pages.staff.waiter_table_sessions_view.yeniden_yoxla_9c69a3')}</Button> : null}
-        {selected ? <dl className="waiter-session-facts">
-          <div><dt><Table2 size={16} aria-hidden="true" />{i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_058c4c')}</dt><dd>{tableLabel(selected)} · {selected.tableCapacity} {i18n.t('ui.pages.staff.waiter_table_sessions_view.neferlik_2dc0b2')}</dd></div>
-          <div><dt><Clock3 size={16} aria-hidden="true" />{i18n.t('ui.pages.staff.waiter_table_sessions_view.acilma_vaxti_97fc61')}</dt><dd>{sessionTime(selected.openedAt, selected.timeZone)}</dd></div>
-          <div><dt><Users size={16} aria-hidden="true" />{i18n.t('ui.pages.staff.waiter_table_sessions_view.qonaq_5d6bb8')}</dt><dd>{selected.customerName || 'Ad qeyd olunmayıb'}{selected.peopleCount == null ? '' : ` · ${selected.peopleCount} nəfər`}</dd></div>
-          {selected.reservationId !== null ? <div><dt>{i18n.t('ui.pages.staff.waiter_table_sessions_view.rezervasiya_9cf147')}</dt><dd>#{selected.reservationId}</dd></div> : null}
-          {selected.mustVacateAt ? <div><dt><CalendarClock size={16} aria-hidden="true" />{i18n.t('ui.pages.staff.waiter_table_sessions_view.masani_tehvil_vaxti_4e00d4')}</dt><dd>{sessionTime(selected.mustVacateAt, selected.timeZone)}</dd></div> : null}
-        </dl> : null}
-        {selected ? <SessionCloseReviewActions restaurantId={restaurantId} reservationId={selected.reservationId} sessionId={selected.id} canComplete={selected.reservationId !== null} completeAs="waiter" canContinue={false} requiresReview={selected.requiresCloseReview} reviewDueAt={selected.closeReviewDueAt} reviewConfirmedAt={selected.closeReviewConfirmedAt} timeZone={selected.timeZone} onChanged={(message) => { setSelectedId(null); setNotice(message); setNoticeTone('success'); setListRevision((value) => value + 1) }} /> : null}
-        {selected ? <ButtonLink to={`/waiter/restaurants/${restaurantId}/sessions/${selected.id}/orders`}>{i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sifarisleri_a21dba')}</ButtonLink> : null}
-      </aside> : null}
+    {sessions.hasData && !sessions.error && sessions.data.items.length > 0 ? <div className="waiter-sessions-list" aria-label={i18n.t('ui.pages.staff.waiter_table_sessions_view.aciq_masa_sessiyalari_8304f2')}>
+      {sessions.data.items.map((session) => <button className="waiter-session-row" type="button" key={session.id} onClick={() => navigate(`/waiter/restaurants/${restaurantId}/sessions/${session.id}/orders`)}>
+        <span className="waiter-session-row-heading"><span className="waiter-session-table"><Table2 size={18} aria-hidden="true" />{tableLabel(session)}</span><span className={`waiter-session-state${session.requiresCloseReview ? ' is-review' : ''}`}>{session.requiresCloseReview ? i18n.t('ui.pages.staff.waiter_table_sessions_view.baglanmasi_yoxlanmalidir_87b96f') : i18n.t('ui.pages.staff.waiter_table_sessions_view.xidmetde_3015e9')}</span></span>
+        <span className="waiter-session-row-meta"><span><Clock3 size={15} aria-hidden="true" />{sessionTime(session.openedAt, session.timeZone)}</span><span><Users size={15} aria-hidden="true" />{session.peopleCount == null ? i18n.t('ui.pages.staff.waiter_table_sessions_view.qonaq_sayi_qeyd_olunmayib_98c6e4') : `${session.peopleCount} nəfər`}</span></span>
+        {session.customerName ? <span className="waiter-session-customer">{session.customerName}</span> : null}
+        {session.readyOrderCount > 0 || session.unsentOrderCount > 0 ? <span className="waiter-session-counts">{session.readyOrderCount > 0 ? <span className="is-ready">{i18n.t('ui.waiter.readyCount', { count: session.readyOrderCount })}</span> : null}{session.unsentOrderCount > 0 ? <span>{i18n.t('ui.waiter.unsentCount', { count: session.unsentOrderCount })}</span> : null}</span> : null}
+      </button>)}
     </div> : null}
-    {list.hasData && !list.error ? <PaginationControls ariaLabel={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyasi_sehifeleri_a19e6e')} pageIndex={list.data.pageIndex} totalPages={list.data.totalPages} hasNextPage={list.data.hasNextPage} hasPreviousPage={list.data.hasPreviousPage} totalCount={list.data.totalCount} pageSize={20} onPageChange={(next) => { setPage(next); setSelectedId(null); setNotice('') }} /> : null}
+    {sessions.hasData && !sessions.error ? <PaginationControls ariaLabel={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyasi_sehifeleri_a19e6e')} pageIndex={sessions.data.pageIndex} totalPages={sessions.data.totalPages} hasNextPage={sessions.data.hasNextPage} hasPreviousPage={sessions.data.hasPreviousPage} totalCount={sessions.data.totalCount} pageSize={20} onPageChange={setPage} /> : null}
+    </>}
   </section>
 }

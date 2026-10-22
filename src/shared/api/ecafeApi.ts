@@ -337,6 +337,16 @@ export type WaiterTableSessionResponse = {
   closeReviewDueAt: string | null
   closeReviewConfirmedAt: string | null
   timeZone: string
+  readyOrderCount: number
+  unsentOrderCount: number
+}
+
+export type WaiterReadyOrderResponse = {
+  order: SessionOrderResponse
+  tableName: string | null
+  tableNo: number
+  timeZone: string
+  readyAt: string
 }
 
 export type CreateSessionOrderRequest = {
@@ -451,6 +461,18 @@ function mapWaiterTableSession(record: AnyRecord): WaiterTableSessionResponse {
     closeReviewDueAt: str(record.closeReviewDueAt) || null,
     closeReviewConfirmedAt: str(record.closeReviewConfirmedAt) || null,
     timeZone: str(record.timeZone, 'Asia/Baku'),
+    readyOrderCount: Math.max(0, num(record.readyOrderCount)),
+    unsentOrderCount: Math.max(0, num(record.unsentOrderCount)),
+  }
+}
+
+function mapWaiterReadyOrder(record: AnyRecord): WaiterReadyOrderResponse {
+  return {
+    order: mapSessionOrder(record.order as AnyRecord),
+    tableName: record.tableName == null ? null : str(record.tableName),
+    tableNo: num(record.tableNo),
+    timeZone: str(record.timeZone, 'Asia/Baku'),
+    readyAt: str(record.readyAt),
   }
 }
 
@@ -2345,6 +2367,11 @@ export const ecafeApi = {
       const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
       const result = await httpClient<unknown>(`${endpoints.tableSessions.mine(restaurantId)}?${query}`)
       return asPaginated(result.data, mapWaiterTableSession)
+    },
+    listReadyOrders: async (restaurantId: string, pageNumber: number, pageSize = 20) => {
+      const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      const result = await httpClient<unknown>(`${endpoints.tableSessions.readyOrders(restaurantId)}?${query}`)
+      return asPaginated(result.data, mapWaiterReadyOrder)
     },
     getMineById: async (restaurantId: string, sessionId: number) => {
       const result = await httpClient<unknown>(endpoints.tableSessions.mineDetail(restaurantId, sessionId))

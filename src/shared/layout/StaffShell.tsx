@@ -34,8 +34,8 @@ export function StaffShell({ title, variant }: StaffShellProps) {
       ) : null}
       {isWaiterShell && isWaiter ? (
         <>
-          <NavLink end to="/waiter">{t('ui.nav.panel')}</NavLink>
-          <NavLink to="/waiter/orders" className={({ isActive }) => isActive || /^\/waiter\/restaurants\/\d+\/sessions\/\d+\/orders$/.test(location.pathname) ? 'active' : ''}>{t('ui.nav.orders')}</NavLink>
+          <NavLink end to="/waiter" className={() => location.pathname === '/waiter' && !new URLSearchParams(location.search).has('view') ? 'active' : ''}>{t('ui.waiter.arrivals')}</NavLink>
+          <NavLink to="/waiter?view=tables" className={() => new URLSearchParams(location.search).get('view') === 'tables' || /^\/waiter\/restaurants\/\d+\/sessions\/\d+\/orders$/.test(location.pathname) ? 'active' : ''}>{t('ui.waiter.tables')}</NavLink>
         </>
       ) : null}
     </nav>
