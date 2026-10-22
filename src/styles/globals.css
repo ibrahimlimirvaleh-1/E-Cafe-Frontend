@@ -5033,7 +5033,6 @@ img {
 }
 
 .inventory-row,
-.inventory-list button,
 .recipe-list article,
 .movement-list article {
   width: 100%;
@@ -5154,6 +5153,18 @@ img {
 
 .inventory-row-main {
   min-width: 0;
+  border: 0;
+  border-radius: 4px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inventory-row-main:focus-visible {
+  outline: 2px solid var(--secondary);
+  outline-offset: 3px;
 }
 
 .inventory-row-main {
@@ -5173,14 +5184,41 @@ img {
   flex: 0 0 auto;
 }
 
-.inventory-list button {
-  cursor: pointer;
+.inventory-row .inline-actions {
+  gap: 4px;
 }
 
-.inventory-row.selected,
-.inventory-list button.selected {
-  border-color: var(--primary);
-  background: var(--primary-container);
+.inventory-row .inline-actions .action-icon-button {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border-color: transparent;
+  border-radius: 6px;
+  padding: 0;
+  background: transparent;
+  color: var(--on-surface-variant);
+}
+
+.inventory-row .inline-actions .action-icon-button:hover {
+  border-color: var(--outline-variant);
+  background: var(--surface-low);
+  color: var(--on-surface);
+}
+
+.inventory-row .inline-actions .action-icon-button-danger,
+.inventory-row .inline-actions .action-icon-button-danger:hover {
+  color: var(--danger);
+}
+
+.inventory-row .inline-actions .action-icon-button:focus-visible {
+  outline: 2px solid var(--secondary);
+  outline-offset: 2px;
+}
+
+.inventory-row.selected {
+  border-color: var(--secondary);
+  background: var(--surface-lowest);
 }
 
 .inventory-list span,
@@ -5772,7 +5810,6 @@ img {
   }
 
   .inventory-panel-header,
-  .inventory-list button,
   .recipe-list article,
   .movement-list article {
     align-items: flex-start;
@@ -8018,6 +8055,17 @@ body,
 .admin-shell.is-collapsed .admin-nav-label { display: none; }
 .admin-shell.is-collapsed .admin-sidebar nav a { justify-content: center; padding-inline: 0; }
 .admin-shell.is-collapsed .admin-sidebar nav { width: 100%; }
+
+@media (min-width: 1081px) {
+  .admin-shell.is-collapsed .admin-sidebar-head {
+    justify-content: center;
+  }
+
+  .admin-shell.is-collapsed .admin-sidebar-head .brand {
+    width: 100%;
+    justify-content: center;
+  }
+}
 
 @media (max-width: 1080px) {
   .admin-shell,

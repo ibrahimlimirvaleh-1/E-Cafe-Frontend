@@ -622,7 +622,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                         <ActionIconButton label={`${item.name} redaktə et`} onClick={() => startInventoryEdit(item)}>
                           <Pencil size={17} />
                         </ActionIconButton>
-                        <ActionIconButton label={`${item.name} aktiv/deaktiv et`} onClick={() => toggleInventoryStatus(item)}>
+                        <ActionIconButton aria-pressed={item.isActive} label={`${item.name} aktiv/deaktiv et`} onClick={() => toggleInventoryStatus(item)}>
                           <Power size={17} />
                         </ActionIconButton>
                         <ActionIconButton label={`${item.name} sil`} tone="danger" onClick={() => setPendingDelete({ id: item.id, label: item.name, type: 'inventory' })}>

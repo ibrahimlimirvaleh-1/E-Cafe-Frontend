@@ -68,7 +68,10 @@ try {
       if (pathname === '/api/v1/items/getAll') return json(route, { items: [{ id: 9, restaurantId: 2, categoryId: 3, categoryName: 'Drinks', name: 'Tea', description: 'Hot tea', basePrice: 4, statusId: 1, statusName: 'Mövcuddur', isActive: true }], pageIndex: 1, totalPages: 1, totalCount: 1 })
       if (/^\/api\/v1\/restaurants\/\d+\/inventory$/.test(pathname)) {
         const restaurantId = pathname.split('/')[4]
-        return json(route, restaurantId === '2' ? [{ id: 22, restaurantId: 2, name: 'Second stock', unitId: 2, quantityOnHand: 15, lowStockThreshold: 3, isActive: true }] : [])
+        return json(route, restaurantId === '2' ? [
+          { id: 22, restaurantId: 2, name: 'Second stock', unitId: 2, quantityOnHand: 15, lowStockThreshold: 3, isActive: true },
+          { id: 23, restaurantId: 2, name: 'Buz', unitId: 2, quantityOnHand: 5, lowStockThreshold: 3, isActive: true },
+        ] : [])
       }
       if (pathname === '/api/v1/restaurants/2/inventory/22') {
         if (request.method() === 'PUT') {
@@ -113,6 +116,64 @@ try {
   assert.match(page.url(), /\/admin\/menu\?restaurantId=2/)
   await page.goBack()
   assert.match(page.url(), /restaurantId=2/)
+  await page.goto(`${origin}/admin/inventory?restaurantId=2`)
+  await page.locator('.inventory-row').first().waitFor()
+  await page.locator('.admin-sidebar-collapse').click()
+  const collapsedSidebarCenters = await page.locator('.admin-sidebar').evaluate((sidebar) => {
+    const logo = sidebar.querySelector('.brand img').getBoundingClientRect()
+    const navIcon = sidebar.querySelector('nav a svg').getBoundingClientRect()
+    return { logo: logo.left + logo.width / 2, navIcon: navIcon.left + navIcon.width / 2 }
+  })
+  assert.ok(Math.abs(collapsedSidebarCenters.logo - collapsedSidebarCenters.navIcon) < 1, JSON.stringify(collapsedSidebarCenters))
+  await page.screenshot({ path: path.join(dist, 'sidebar-collapsed-desktop.png'), fullPage: true })
+  await page.locator('.admin-sidebar-collapse').click()
+  if (await page.locator('html').getAttribute('data-theme') === 'dark') await page.locator('.theme-toggle').click()
+  assert.equal(await page.locator('.inventory-row').count(), 2)
+  assert.equal(await page.locator('.inventory-row .inline-actions button').first().getAttribute('title'), 'Second stock redaktə et')
+  await page.screenshot({ path: path.join(dist, 'inventory-actions-desktop.png'), fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  const inventoryActionLayout = await page.locator('.inventory-row').first().evaluate((row) => {
+    const main = row.querySelector('.inventory-row-main')
+    const actions = row.querySelector('.inline-actions')
+    const buttons = [...actions.querySelectorAll('button')]
+    return {
+      mainBorder: getComputedStyle(main).borderTopWidth,
+      mainPadding: getComputedStyle(main).paddingTop,
+      mainBottom: main.getBoundingClientRect().bottom,
+      actionsTop: actions.getBoundingClientRect().top,
+      buttons: buttons.map((button) => ({ width: button.getBoundingClientRect().width, height: button.getBoundingClientRect().height, color: getComputedStyle(button).color })),
+    }
+  })
+  assert.equal(inventoryActionLayout.mainBorder, '0px')
+  assert.equal(inventoryActionLayout.mainPadding, '0px')
+  assert.ok(inventoryActionLayout.mainBottom <= inventoryActionLayout.actionsTop)
+  assert.ok(inventoryActionLayout.buttons.every(({ width, height }) => width >= 44 && height >= 44))
+  assert.notEqual(inventoryActionLayout.buttons[0].color, inventoryActionLayout.buttons[2].color)
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+  await page.screenshot({ path: path.join(dist, 'inventory-actions-mobile.png'), fullPage: true })
+  await page.locator('.theme-toggle').click()
+  assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark')
+  await page.waitForFunction(() => [...document.querySelectorAll('.inventory-row')].every((row) => {
+    const background = getComputedStyle(row).backgroundColor
+    return background !== 'rgba(0, 0, 0, 0)' && !background.includes('248, 249, 251') && background !== 'rgb(255, 255, 255)'
+  }))
+  const darkInventoryStyles = await page.locator('.inventory-row').evaluateAll((rows) => rows.map((row) => ({
+    background: getComputedStyle(row).backgroundColor,
+    text: getComputedStyle(row.querySelector('.inventory-row-main')).color,
+    edit: getComputedStyle(row.querySelector('.action-icon-button')).color,
+    delete: getComputedStyle(row.querySelector('.action-icon-button-danger')).color,
+  })))
+  assert.ok(darkInventoryStyles.every(({ background }) => background !== 'rgba(0, 0, 0, 0)' && !background.includes('248, 249, 251')), JSON.stringify(darkInventoryStyles))
+  assert.ok(darkInventoryStyles.every(({ edit, delete: danger }) => edit !== danger))
+  await page.waitForTimeout(250)
+  assert.equal(await page.locator('.inventory-row .action-icon-button-danger').first().evaluate((button) => getComputedStyle(button).color), 'rgb(255, 135, 129)')
+  await page.screenshot({ path: path.join(dist, 'inventory-actions-mobile-dark.png'), fullPage: true })
+  await page.locator('.theme-toggle').click()
+  await page.waitForTimeout(250)
+  await page.setViewportSize({ width: 320, height: 720 })
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+  await page.screenshot({ path: path.join(dist, 'inventory-actions-narrow-mobile.png'), fullPage: true })
+  await page.setViewportSize({ width: 1280, height: 850 })
 
   await page.getByRole('button', { name: /Dil: Azərbaycanca/ }).click()
   await page.getByRole('button', { name: 'English' }).click()
