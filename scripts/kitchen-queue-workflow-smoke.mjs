@@ -17,12 +17,13 @@ let postDelay = false
 let finishPost = null
 let staleReplica = false
 let language = 'az'
+let futureReadyTimestamp = false
 
 function order(id, statusId = statuses.get(id)) {
   return {
     id, restaurantId: 1, tableId: id, tableName: `Masa-${id}`, timeZone: 'Asia/Baku', statusId,
     sentToKitchenAt: id === 23 ? 'invalid-date' : sentAt, acceptedAt: statusId >= 2002 ? sentAt : null,
-    preparingAt: statusId >= 2003 ? sentAt : null, readyAt: id === 24 ? new Date(Date.now() + 60_000).toISOString() : null,
+    preparingAt: statusId >= 2003 ? sentAt : null, readyAt: id === 24 ? futureReadyTimestamp ? new Date(Date.now() + 60_000).toISOString() : sentAt : null,
     canAccept: statusId === 2001, canStartPreparing: statusId === 2002, canMarkReady: statusId === 2003,
     items: [{ id, itemId: id, name: `Məhsul ${id}`, quantity: 1 }],
   }
@@ -99,6 +100,7 @@ try {
   await page.getByText('1 sifariş').waitFor()
   assert.deepEqual(requests.at(-1), { statusId: 2002, pageNumber: 1, pageSize: 20 })
   assert.equal(await rows.count(), 1)
+  assert.match(await row(22).locator('.kitchen-queue-state .kitchen-queue-elapsed').innerText(), /Qəbuldan keçən vaxt/)
   getDelayStatus = 2003
   await page.getByRole('button', { name: 'Hazırlanır' }).click()
   await page.getByRole('button', { name: 'Hazırdır' }).click()
@@ -106,9 +108,17 @@ try {
   await page.waitForTimeout(400)
   assert.equal(await rows.count(), 1)
   assert.equal(await rows.first().locator('.kitchen-queue-order strong').innerText(), '#24')
+  assert.match(await row(24).locator('.kitchen-queue-state .kitchen-queue-elapsed').innerText(), /Hazır gözləyir/)
+  futureReadyTimestamp = true
+  await refresh.click()
+  await row(24).locator('.kitchen-queue-state .kitchen-queue-elapsed').waitFor({ state: 'hidden' })
   assert.equal(await rows.first().locator('.kitchen-queue-state .kitchen-queue-elapsed').count(), 0)
+  futureReadyTimestamp = false
+  await refresh.click()
+  await row(24).locator('.kitchen-queue-state .kitchen-queue-elapsed').waitFor()
   await page.getByRole('button', { name: 'Hazırlanır' }).click()
   await page.getByText('1 sifariş').waitFor()
+  assert.match(await row(23).locator('.kitchen-queue-state .kitchen-queue-elapsed').innerText(), /Hazırlanma müddəti/)
   assert.equal(await rows.first().locator('.kitchen-queue-order .kitchen-queue-elapsed').count(), 0)
   await page.getByRole('button', { name: 'Qəbul edilib' }).click()
   await page.getByText('1 sifariş').waitFor()
@@ -178,6 +188,14 @@ try {
     await page.reload()
     await rows.first().waitFor()
     await page.getByRole('button', { name: nextLanguage === 'en' ? 'All' : 'Все' }).waitFor()
+    const labels = nextLanguage === 'en'
+      ? [{ filter: 'Accepted', id: 22, elapsed: 'Time since acceptance' }, { filter: 'Preparing', id: 23, elapsed: 'Preparation time' }, { filter: 'Ready', id: 24, elapsed: 'Waiting to be served' }]
+      : [{ filter: 'Принят', id: 22, elapsed: 'Время после принятия' }, { filter: 'Готовится', id: 23, elapsed: 'Время приготовления' }, { filter: 'Готов', id: 24, elapsed: 'Ожидает подачи' }]
+    for (const item of labels) {
+      await page.getByRole('button', { name: item.filter, exact: true }).click()
+      await row(item.id).waitFor()
+      assert.match(await row(item.id).locator('.kitchen-queue-state .kitchen-queue-elapsed').innerText(), new RegExp(item.elapsed))
+    }
     for (const width of [320, 390]) {
       await page.setViewportSize({ width, height: 844 })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)

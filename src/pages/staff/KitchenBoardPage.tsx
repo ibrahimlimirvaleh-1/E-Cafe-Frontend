@@ -47,6 +47,9 @@ function KitchenTicket({ order, actionState, actionsDisabled, now, onAction }: {
   const stageAt = order.readyAt || order.preparingAt || order.acceptedAt
   const queueMinutes = elapsedMinutes(order.sentToKitchenAt, now)
   const stageMinutes = elapsedMinutes(stageAt, now)
+  const stageElapsedKey = order.statusId === orderStatusId.accepted ? 'ui.kitchenQueue.acceptedElapsed'
+    : order.statusId === orderStatusId.preparing ? 'ui.kitchenQueue.preparationElapsed'
+      : order.statusId === orderStatusId.ready ? 'ui.kitchenQueue.readyWaiting' : 'ui.kitchenQueue.inStage'
   return <article className="kitchen-queue-row">
     <div className="kitchen-queue-order"><strong>#{order.id}</strong><span>{formatReservationDateTime(order.sentToKitchenAt, order.timeZone)}</span>{queueMinutes !== null ? <small className="kitchen-queue-elapsed">{i18n.t(stageAt ? 'ui.kitchenQueue.inQueue' : 'ui.kitchenQueue.waiting')}: {queueMinutes ? `${queueMinutes} ${i18n.t('ui.kitchenQueue.minuteShort')}` : i18n.t('ui.kitchenQueue.lessThanMinute')}</small> : null}</div>
     <div className="kitchen-queue-table"><span>{i18n.t('ui.pages.staff.kitchen_board_page.masa_058c4c')}</span><strong>{order.tableName || `Masa-${order.tableId}`}</strong></div>
@@ -54,7 +57,7 @@ function KitchenTicket({ order, actionState, actionsDisabled, now, onAction }: {
     <div className={`kitchen-queue-state${order.statusId === orderStatusId.ready ? ' is-ready' : order.statusId === orderStatusId.preparing ? ' is-preparing' : ''}`}>
       <span>{orderKitchenLabel(order.statusId, order.sentToKitchenAt)}</span>
       {stageAt ? <small>{formatReservationDateTime(stageAt, order.timeZone)}</small> : null}
-      {stageMinutes !== null ? <small className="kitchen-queue-elapsed">{i18n.t('ui.kitchenQueue.inStage')}: {stageMinutes ? `${stageMinutes} ${i18n.t('ui.kitchenQueue.minuteShort')}` : i18n.t('ui.kitchenQueue.lessThanMinute')}</small> : null}
+      {stageMinutes !== null ? <small className="kitchen-queue-elapsed">{i18n.t(stageElapsedKey)}: {stageMinutes ? `${stageMinutes} ${i18n.t('ui.kitchenQueue.minuteShort')}` : i18n.t('ui.kitchenQueue.lessThanMinute')}</small> : null}
       {action ? <Button type="button" variant="secondary" disabled={actionsDisabled || actionState?.phase === 'busy'} onClick={() => onAction(action)}>
         {actionState?.phase === 'busy' ? <LoaderCircle className="kitchen-action-spinner" size={16} /> : <ActionIcon size={16} />}
         {actionState?.phase === 'busy' ? i18n.t('ui.pages.staff.kitchen_board_page.icra_olunur_e4744c') : actionState?.phase === 'uncertain' ? `${i18n.t('ui.kitchenQueue.retry')}: ${actionLabel}` : actionLabel}
