@@ -2431,8 +2431,9 @@ export const ecafeApi = {
   },
 
   kitchen: {
-    listOrders: async (restaurantId: string, pageNumber: number, pageSize = 20, signal?: AbortSignal) => {
+    listOrders: async (restaurantId: string, pageNumber: number, pageSize = 20, statusId: number | null = null, signal?: AbortSignal) => {
       const query = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      if (statusId !== null) query.set('statusId', String(statusId))
       const result = await httpClient<unknown>(`${endpoints.kitchen.orders(restaurantId)}?${query}`, { signal })
       return asPaginated(result.data, mapKitchenOrder)
     },
