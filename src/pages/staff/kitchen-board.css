@@ -10,7 +10,13 @@
 .kitchen-queue-toolbar > div span { color: var(--secondary); font-size: 11px; font-weight: 800; }
 .kitchen-queue-toolbar > div strong { color: var(--on-surface); font-size: 19px; }
 .kitchen-queue-toolbar .ui-button { width: 42px; min-width: 42px; height: 42px; min-height: 42px; padding: 0; }
+.kitchen-queue-filters { display: flex; flex-wrap: wrap; gap: 4px; width: fit-content; max-width: 100%; padding: 4px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-low); }
+.kitchen-queue-filters button { min-height: 36px; border: 0; border-radius: 4px; padding: 6px 12px; background: transparent; color: var(--on-surface-variant); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.kitchen-queue-filters button:hover { color: var(--on-surface); background: var(--surface-high); }
+.kitchen-queue-filters button[aria-pressed='true'] { color: var(--on-surface); background: var(--surface-lowest); box-shadow: 0 1px 3px rgb(0 0 0 / 10%); }
+.kitchen-queue-filters button:focus-visible { outline: 2px solid var(--secondary); outline-offset: 1px; }
 .kitchen-queue-refreshing, .kitchen-queue-loading { margin: 0; color: var(--on-surface-variant); font-size: 12px; }
+.kitchen-queue-last-updated { margin-top: -8px; color: var(--on-surface-variant); font-size: 11px; }
 .kitchen-queue-empty { display: flex; align-items: center; gap: 12px; min-height: 100px; padding: 18px; border-block: 1px solid var(--outline-variant); color: var(--on-surface-variant); }
 .kitchen-queue-empty strong { color: var(--on-surface); font-size: 14px; }
 .kitchen-queue-list { min-width: 0; border-top: 1px solid var(--outline-variant); }
@@ -20,6 +26,7 @@
 .kitchen-queue-order, .kitchen-queue-table { display: grid; gap: 5px; min-width: 0; }
 .kitchen-queue-order strong { color: var(--on-surface); font-size: 16px; }
 .kitchen-queue-order span, .kitchen-queue-table span { color: var(--on-surface-variant); font-size: 12px; }
+.kitchen-queue-order .kitchen-queue-elapsed { color: var(--on-surface); font-size: 11px; font-weight: 700; }
 .kitchen-queue-table strong { color: var(--on-surface); font-size: 14px; overflow-wrap: anywhere; }
 .kitchen-queue-items { min-width: 0; }
 .kitchen-queue-items ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
@@ -32,6 +39,7 @@
 .kitchen-queue-state.is-preparing span { background: var(--info-bg); color: var(--info); }
 .kitchen-queue-state.is-ready span { background: var(--success-bg); color: var(--success); }
 .kitchen-queue-state > small { color: var(--on-surface-variant); font-size: 11px; }
+.kitchen-queue-state > .kitchen-queue-elapsed { color: var(--on-surface); font-weight: 700; }
 .kitchen-queue-state .ui-button { min-height: 40px; max-width: 100%; padding: 8px 10px; border-color: var(--outline-variant); background: var(--surface-lowest); color: var(--on-surface); font-size: 12px; }
 .kitchen-queue-state .ui-button:hover:not(:disabled) { background: var(--surface-high); }
 :root[data-theme='dark'] .kitchen-queue-state .ui-button.ui-button-secondary { background: var(--surface-high); color: var(--on-surface); }
@@ -49,6 +57,8 @@
 @media (max-width: 480px) {
   .kitchen-page { width: min(100% - 24px, 1240px); padding-top: 22px; }
   .kitchen-context label, .kitchen-context select { width: 100%; min-width: 0; }
+  .kitchen-queue-filters { width: 100%; }
+  .kitchen-queue-filters button { flex: 1 1 auto; }
   .kitchen-queue-row { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-inline: 2px; }
   .kitchen-queue-state { grid-column: 1; grid-row: 4; align-items: flex-start; padding-top: 3px; }
   .kitchen-queue-state .ui-button { min-height: 44px; }

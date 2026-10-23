@@ -48,8 +48,7 @@ function buildOrderBody(cart: CartLine[], note: string): CreateSessionOrderReque
 }
 
 // Seçilmiş sifarişin dəyişməz məzmununu göstərir; onClose yalnız detalı bağlayır.
-function OrderSummary({ order, timeZone, onClose, onSend, onServe, sending, serving, canSend, canServe, retrying, retryingServe }: { order: SessionOrderResponse; timeZone?: string; onClose: () => void; onSend: () => void; onServe: () => void; sending: boolean; serving: boolean; canSend: boolean; canServe: boolean; retrying: boolean; retryingServe: boolean }) {
-  const canDispatch = order.statusId === orderStatusId.created && !order.sentToKitchenAt
+function OrderSummary({ order, timeZone, onClose }: { order: SessionOrderResponse; timeZone?: string; onClose: () => void }) {
   return <div className="waiter-order-summary">
     <div className="waiter-order-summary-heading"><div><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_cccd19')}{order.id}</span><h3>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}</h3></div><div><strong>{money(order.subtotal)}</strong><button type="button" aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detalini_bagla_06f965')} title={i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detalini_bagla_06f965')} onClick={onClose}><X size={16} /></button></div></div>
     <p>{formatReservationDateTime(order.openedAt, timeZone)} · <strong>{orderKitchenLabel(order.statusId, order.sentToKitchenAt)}</strong></p>
@@ -57,14 +56,6 @@ function OrderSummary({ order, timeZone, onClose, onSend, onServe, sending, serv
     {order.servedAt ? <p>{i18n.t('ui.pages.staff.waiter_session_orders_page.teqdim_edilib_00b1bf')} {formatReservationDateTime(order.servedAt, timeZone)}</p> : null}
     <ul>{order.items.map((line) => <li key={line.id}><span><strong>{line.quantity} × {line.name}</strong>{line.note ? <small>{line.note}</small> : null}</span><strong>{money(line.lineTotal)}</strong></li>)}</ul>
     {order.note ? <p className="waiter-order-note">{i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_2d4f8a')} {order.note}</p> : null}
-    {canDispatch ? <Button type="button" className="waiter-order-dispatch" disabled={!canSend || sending} onClick={onSend}>
-      {sending ? <LoaderCircle className="waiter-order-dispatch-spinner" size={17} /> : <SendHorizontal size={17} />}
-      {sending ?i18n.t('ui.pages.staff.waiter_session_orders_page.gonderilir_e1bb27') : retrying ?i18n.t('ui.pages.staff.waiter_session_orders_page.eyni_sifarisi_tekrar_gonder_a76b51') :i18n.t('ui.pages.staff.waiter_session_orders_page.metbexe_gonder_784c49')}
-    </Button> : null}
-    {order.canMarkServed ? <Button type="button" className="waiter-order-serve" disabled={!canServe || serving} onClick={onServe}>
-      {serving ? <LoaderCircle className="waiter-order-dispatch-spinner" size={17} /> : <CircleCheck size={17} />}
-      {serving ?i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_edilir_b735f7') : retryingServe ?i18n.t('ui.pages.staff.waiter_session_orders_page.eyni_sifarisin_neticesini_yoxla_770efa') :i18n.t('ui.pages.staff.waiter_session_orders_page.teqdim_edildi_kimi_qeyd_et_9c9318')}
-    </Button> : null}
   </div>
 }
 
@@ -223,12 +214,13 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       ? { ...selectedOrderRecord, sentToKitchenAt: sentOrderTimes[selectedOrderRecord.id] }
       : selectedOrderRecord
   const orderPage = orders.hasData && !orders.error ? orders.data : null
-  const visibleOrders = orderPage ? [...orderPage.items].sort((left, right) => {
+  const selectedOutsidePage = selectedOrder && !orderPage?.items.some((order) => order.id === selectedOrder.id) ? [selectedOrder] : []
+  const visibleOrders = [...selectedOutsidePage, ...(orderPage?.items || [])].sort((left, right) => {
     const priority = (order: SessionOrderResponse) => order.statusId === orderStatusId.ready ? 0
       : order.statusId === orderStatusId.created && !order.sentToKitchenAt ? 1
         : order.statusId === orderStatusId.served || order.statusId === orderStatusId.closed || order.statusId === orderStatusId.cancelled ? 3 : 2
     return priority(left) - priority(right)
-  }) : []
+  })
   const pendingBody = pendingIntent ? JSON.parse(pendingIntent.payload) as CreateSessionOrderRequest : null
   const uncertainOrderConfirmed = uncertainOrderId !== null && Boolean(
     (selectedOrderRecord?.id === uncertainOrderId && selectedOrderRecord.sentToKitchenAt) ||
@@ -491,19 +483,19 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       <div className="waiter-orders-section-heading"><div><h2>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_0b5f10')}</h2><span>{orderPage ? `${orderPage.totalCount} sifariş` : ''}</span></div><Button type="button" variant="secondary" title={i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisleri_yenile_870c48')} aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisleri_yenile_870c48')} onClick={() => setOrdersRevision((value) => value + 1)}><RefreshCw size={17} /></Button></div>
       {orders.isLoading ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_yuklenir_917624')}</p> : null}
       {orders.error ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_siyahisi_yenilenmedi_085ed1')} {orders.error}</StatusMessage> : null}
-      {orderPage && orderPage.items.length === 0 ? <p className="waiter-orders-muted">{i18n.t('ui.pages.staff.waiter_session_orders_page.bu_masa_ucun_sifaris_yoxdur_67bbfa')}</p> : null}
-      {orderPage && orderPage.items.length > 0 ? <div className="waiter-orders-history-list"><div className="waiter-orders-history-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_23da3b')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.yaradilib_526f2e')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.miqdar_77c299')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.mebleg_3d95ed')}</span></div>{visibleOrders.map((record) => {
+      {orderPage && visibleOrders.length === 0 ? <p className="waiter-orders-muted">{i18n.t('ui.pages.staff.waiter_session_orders_page.bu_masa_ucun_sifaris_yoxdur_67bbfa')}</p> : null}
+      {visibleOrders.length > 0 ? <div className="waiter-orders-history-list"><div className="waiter-orders-history-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_23da3b')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.yaradilib_526f2e')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.miqdar_77c299')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.mebleg_3d95ed')}</span></div>{visibleOrders.map((record) => {
         const order = servedOrders[record.id] && !record.servedAt && record.statusId === orderStatusId.ready ? servedOrders[record.id] : record
         return <div className={`waiter-order-row${selectedOrderId === order.id ? ' is-selected' : ''}`} key={order.id}>
           <button type="button" className="waiter-order-row-main" onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}><span className="waiter-order-history-id"><strong>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_96cfd8')}{order.id}</strong><small>{orderKitchenLabel(order.statusId, sentOrderTimes[order.id] || order.sentToKitchenAt)}</small></span><span>{formatReservationDateTime(order.openedAt, session.data?.timeZone)}</span><span>{i18n.t('ui.count.items', { count: order.items.reduce((sum, line) => sum + line.quantity, 0) })}</span><strong>{money(order.subtotal)}</strong></button>
           {order.statusId === orderStatusId.created && !order.sentToKitchenAt || order.canMarkServed ? <div className="waiter-order-row-actions">
-            {order.statusId === orderStatusId.created && !order.sentToKitchenAt ? <Button type="button" variant="secondary" disabled={busy || sessionUnavailable || sendingOrderId !== null} onClick={() => void sendToKitchen(order.id)}><SendHorizontal size={16} />{sendingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.gonderilir_e1bb27') : i18n.t('ui.pages.staff.waiter_session_orders_page.metbexe_gonder_784c49')}</Button> : null}
-            {order.canMarkServed ? <Button type="button" disabled={busy || sessionUnavailable || servingOrderId !== null} onClick={() => void markServed(order.id)}><CircleCheck size={16} />{servingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_edilir_b735f7') : uncertainServedId === order.id ? i18n.t('ui.waiter.checkServeResult') : i18n.t('ui.waiter.serve')}</Button> : null}
+            {order.statusId === orderStatusId.created && !order.sentToKitchenAt ? <Button type="button" variant="secondary" disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || sendingOrderId !== null} onClick={() => void sendToKitchen(order.id)}>{sendingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <SendHorizontal size={16} />}{sendingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.gonderilir_e1bb27') : uncertainOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.eyni_sifarisi_tekrar_gonder_a76b51') : i18n.t('ui.pages.staff.waiter_session_orders_page.metbexe_gonder_784c49')}</Button> : null}
+            {order.canMarkServed ? <Button type="button" disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || servingOrderId !== null} onClick={() => void markServed(order.id)}>{servingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <CircleCheck size={16} />}{servingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_edilir_b735f7') : uncertainServedId === order.id ? i18n.t('ui.waiter.checkServeResult') : i18n.t('ui.waiter.serve')}</Button> : null}
           </div> : null}
         </div>
       })}</div> : null}
       {orderPage ? <PaginationControls ariaLabel={i18n.t('ui.pages.staff.waiter_session_orders_page.masa_sifarisi_sehifeleri_5776fb')} pageIndex={orderPage.pageIndex} totalPages={orderPage.totalPages} totalCount={orderPage.totalCount} pageSize={20} hasPreviousPage={orderPage.hasPreviousPage} hasNextPage={orderPage.hasNextPage} onPageChange={(next) => { setPage(next); setSelectedOrderId(null) }} /> : null}
-      {selectedOrderId !== null ? <div className="waiter-orders-detail" aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}>{detail.isLoading ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_yuklenir_d98e58')}</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} timeZone={session.data?.timeZone} onClose={() => setSelectedOrderId(null)} onSend={() => void sendToKitchen(selectedOrder.id)} onServe={() => void markServed(selectedOrder.id)} sending={sendingOrderId === selectedOrder.id} serving={servingOrderId === selectedOrder.id} canSend={!busy && !sessionUnavailable && Boolean(session.data) && !session.error} canServe={!busy && !sessionUnavailable && Boolean(session.data) && !session.error} retrying={uncertainOrderId === selectedOrder.id} retryingServe={uncertainServedId === selectedOrder.id} /> : null}</div> : null}
+      {selectedOrderId !== null ? <div className="waiter-orders-detail" aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}>{detail.isLoading ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_yuklenir_d98e58')}</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} timeZone={session.data?.timeZone} onClose={() => setSelectedOrderId(null)} /> : null}</div> : null}
     </section> : null}
   </main>
 }

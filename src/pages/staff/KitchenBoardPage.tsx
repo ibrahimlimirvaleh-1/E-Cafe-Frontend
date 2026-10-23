@@ -34,21 +34,30 @@ function availableAction(order: KitchenOrderResponse): KitchenProgressAction | n
 }
 
 // Mətbəx bileti yalnız hazırlıq üçün lazım olan məlumatı və restoranın yerli vaxtını göstərir.
-function KitchenTicket({ order, actionState, onAction }: { order: KitchenOrderResponse; actionState?: OrderActionState; onAction: (action: KitchenProgressAction) => void }) {
+function elapsedMinutes(since: string | null | undefined, now: number) {
+  const startedAt = since ? Date.parse(since) : NaN
+  if (!Number.isFinite(startedAt) || startedAt > now) return null
+  return Math.floor((now - startedAt) / 60_000)
+}
+
+function KitchenTicket({ order, actionState, actionsDisabled, now, onAction }: { order: KitchenOrderResponse; actionState?: OrderActionState; actionsDisabled: boolean; now: number; onAction: (action: KitchenProgressAction) => void }) {
   const action = actionState?.phase === 'uncertain' ? actionState.action : availableAction(order)
-  const actionLabel = action === 'accept' ? 'Qəbul et' : action === 'start' ? 'Hazırlamağa başla' : 'Hazırdır'
+  const actionLabel = i18n.t(action === 'accept' ? 'ui.kitchenQueue.accept' : action === 'start' ? 'ui.kitchenQueue.start' : 'ui.kitchenQueue.ready')
   const ActionIcon = action === 'accept' ? Check : action === 'start' ? CookingPot : BadgeCheck
   const stageAt = order.readyAt || order.preparingAt || order.acceptedAt
+  const queueMinutes = elapsedMinutes(order.sentToKitchenAt, now)
+  const stageMinutes = elapsedMinutes(stageAt, now)
   return <article className="kitchen-queue-row">
-    <div className="kitchen-queue-order"><strong>#{order.id}</strong><span>{formatReservationDateTime(order.sentToKitchenAt, order.timeZone)}</span></div>
+    <div className="kitchen-queue-order"><strong>#{order.id}</strong><span>{formatReservationDateTime(order.sentToKitchenAt, order.timeZone)}</span>{queueMinutes !== null ? <small className="kitchen-queue-elapsed">{i18n.t(stageAt ? 'ui.kitchenQueue.inQueue' : 'ui.kitchenQueue.waiting')}: {queueMinutes ? `${queueMinutes} ${i18n.t('ui.kitchenQueue.minuteShort')}` : i18n.t('ui.kitchenQueue.lessThanMinute')}</small> : null}</div>
     <div className="kitchen-queue-table"><span>{i18n.t('ui.pages.staff.kitchen_board_page.masa_058c4c')}</span><strong>{order.tableName || `Masa-${order.tableId}`}</strong></div>
     <div className="kitchen-queue-items"><ul>{order.items.map((item) => <li key={item.id}><strong>{item.quantity} × {item.name}</strong>{item.note ? <small>{item.note}</small> : null}</li>)}</ul>{order.note ? <p><strong>{i18n.t('ui.pages.staff.kitchen_board_page.qeyd_2d4f8a')}</strong> {order.note}</p> : null}</div>
     <div className={`kitchen-queue-state${order.statusId === orderStatusId.ready ? ' is-ready' : order.statusId === orderStatusId.preparing ? ' is-preparing' : ''}`}>
       <span>{orderKitchenLabel(order.statusId, order.sentToKitchenAt)}</span>
       {stageAt ? <small>{formatReservationDateTime(stageAt, order.timeZone)}</small> : null}
-      {action ? <Button type="button" variant="secondary" disabled={actionState?.phase === 'busy'} onClick={() => onAction(action)}>
+      {stageMinutes !== null ? <small className="kitchen-queue-elapsed">{i18n.t('ui.kitchenQueue.inStage')}: {stageMinutes ? `${stageMinutes} ${i18n.t('ui.kitchenQueue.minuteShort')}` : i18n.t('ui.kitchenQueue.lessThanMinute')}</small> : null}
+      {action ? <Button type="button" variant="secondary" disabled={actionsDisabled || actionState?.phase === 'busy'} onClick={() => onAction(action)}>
         {actionState?.phase === 'busy' ? <LoaderCircle className="kitchen-action-spinner" size={16} /> : <ActionIcon size={16} />}
-        {actionState?.phase === 'busy' ?i18n.t('ui.pages.staff.kitchen_board_page.icra_olunur_e4744c') : actionState?.phase === 'uncertain' ? `Təkrar: ${actionLabel}` : actionLabel}
+        {actionState?.phase === 'busy' ? i18n.t('ui.pages.staff.kitchen_board_page.icra_olunur_e4744c') : actionState?.phase === 'uncertain' ? `${i18n.t('ui.kitchenQueue.retry')}: ${actionLabel}` : actionLabel}
       </Button> : null}
       {actionState?.phase === 'uncertain' ? <small className="kitchen-action-warning" role="alert">{actionState.message}</small> : null}
     </div>
@@ -59,14 +68,30 @@ function KitchenTicket({ order, actionState, onAction }: { order: KitchenOrderRe
 // Eyni səhifədə yalnız seçilmiş restoranın növbəsi saxlanır və səhifələnir.
 function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: string }) {
   const [page, setPage] = useState(1)
+  const [statusId, setStatusId] = useState<number | null>(null)
   const [revision, setRevision] = useState(0)
+  const [now, setNow] = useState(Date.now)
   const [actionStates, setActionStates] = useState<Record<number, OrderActionState>>({})
   const [warning, setWarning] = useState('')
   const busyOrdersRef = useRef(new Set<number>())
   const activeRef = useRef(true)
   const pageRef = useRef(page)
+  const statusRef = useRef(statusId)
+  const scopeGenerationRef = useRef(0)
+  const renderedScopeRef = useRef(`${statusId ?? 'all'}:${page}`)
+  const renderedScope = `${statusId ?? 'all'}:${page}`
+  if (renderedScopeRef.current !== renderedScope) {
+    renderedScopeRef.current = renderedScope
+    scopeGenerationRef.current += 1
+  }
   pageRef.current = page
-  const queue = useKitchenQueue(userId, restaurantId, page, revision)
+  statusRef.current = statusId
+  const queue = useKitchenQueue(userId, restaurantId, page, statusId, revision)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 15_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     activeRef.current = true
@@ -74,7 +99,10 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
   }, [])
 
   useEffect(() => {
-    if (queue.data && page > queue.data.totalPages) setPage(Math.max(1, queue.data.totalPages))
+    if (queue.data && page > queue.data.totalPages) {
+      scopeGenerationRef.current += 1
+      setPage(Math.max(1, queue.data.totalPages))
+    }
   }, [queue.data, page])
 
   useEffect(() => {
@@ -95,6 +123,7 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
 
   // Kilid sifariş üzrədir: başqa masaların əməliyyatları paralel gedə bilir.
   async function runAction(orderId: number, action: KitchenProgressAction) {
+    if (queue.isStale || queue.error) return
     const order = queue.data?.items.find((item) => item.id === orderId)
     const retrying = actionStates[orderId]?.phase === 'uncertain' && actionStates[orderId].action === action
     if (!order || busyOrdersRef.current.has(orderId) || (!retrying && availableAction(order) !== action)) return
@@ -104,6 +133,8 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
     }
     busyOrdersRef.current.add(orderId)
     const requestPage = page
+    const requestStatus = statusId
+    const requestGeneration = scopeGenerationRef.current
     setWarning('')
     setActionStates((current) => ({ ...current, [orderId]: { action, phase: 'busy', message: '' } }))
     try {
@@ -111,8 +142,12 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
       if (updated.id !== orderId || String(updated.restaurantId) !== restaurantId || updated.statusId < nextStatus[action]) {
         throw new Error('Əməliyyatın cavabı təsdiqlənmədi.')
       }
-      if (!activeRef.current || pageRef.current !== requestPage) return
+      if (!activeRef.current) return
       queue.applyOrder(updated)
+      if (pageRef.current !== requestPage || statusRef.current !== requestStatus || scopeGenerationRef.current !== requestGeneration) {
+        setRevision((value) => value + 1)
+        return
+      }
       setActionStates((current) => {
         const next = { ...current }
         delete next[orderId]
@@ -120,7 +155,11 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
       })
       setRevision((value) => value + 1)
     } catch (error) {
-      if (!activeRef.current || pageRef.current !== requestPage) return
+      if (!activeRef.current) return
+      if (pageRef.current !== requestPage || statusRef.current !== requestStatus || scopeGenerationRef.current !== requestGeneration) {
+        setRevision((value) => value + 1)
+        return
+      }
       if (error instanceof ApiError && error.statusCode === 409) {
         const feedback = normalizeCaughtApiError(error, 'Əməliyyat icra olunmadı.')
         setActionStates((current) => ({ ...current, [orderId]: { action, phase: 'error', message: feedback.message, details: feedback.details } }))
@@ -152,14 +191,18 @@ function KitchenQueue({ userId, restaurantId }: { userId: string; restaurantId: 
   }
 
   return <section className="kitchen-queue" aria-label={i18n.t('ui.pages.staff.kitchen_board_page.metbex_sifarisleri_a9f03c')}>
-    <div className="kitchen-queue-toolbar"><div><span>{i18n.t('ui.pages.staff.kitchen_board_page.novbe_5c1a72')}</span><strong>{queue.data && !queue.error ? `${queue.data.totalCount} sifariş` :i18n.t('ui.pages.staff.kitchen_board_page.sifarisler_0b5f10')}</strong></div><Button type="button" variant="secondary" aria-label={i18n.t('ui.pages.staff.kitchen_board_page.novbeni_yenile_7675cd')} title={i18n.t('ui.pages.staff.kitchen_board_page.novbeni_yenile_7675cd')} onClick={() => { setWarning(''); setRevision((value) => value + 1) }}><RefreshCw size={18} /></Button></div>
+    <div className="kitchen-queue-toolbar"><div><span>{i18n.t('ui.pages.staff.kitchen_board_page.novbe_5c1a72')}</span><strong>{queue.data ? i18n.t('ui.count.orders', { count: queue.data.totalCount }) : i18n.t('ui.pages.staff.kitchen_board_page.sifarisler_0b5f10')}</strong></div><Button type="button" variant="secondary" aria-label={i18n.t('ui.pages.staff.kitchen_board_page.novbeni_yenile_7675cd')} title={i18n.t('ui.pages.staff.kitchen_board_page.novbeni_yenile_7675cd')} onClick={() => { setWarning(''); setRevision((value) => value + 1) }}><RefreshCw size={18} /></Button></div>
+    {queue.lastSuccessAt ? <span className="kitchen-queue-last-updated">{i18n.t('ui.kitchenQueue.lastUpdated')}: {new Intl.DateTimeFormat(i18n.language, { hour: '2-digit', minute: '2-digit' }).format(queue.lastSuccessAt)}</span> : null}
+    <div className="kitchen-queue-filters" role="group" aria-label={i18n.t('ui.kitchenQueue.stageFilter')}>
+      {([null, orderStatusId.created, orderStatusId.accepted, orderStatusId.preparing, orderStatusId.ready] as const).map((stage) => <button key={stage ?? 'all'} type="button" aria-pressed={statusId === stage} onClick={() => { if (statusId === stage) return; scopeGenerationRef.current += 1; setPage(1); setStatusId(stage); setWarning('') }}>{stage === null ? i18n.t('ui.kitchenQueue.allStages') : orderKitchenLabel(stage, stage === orderStatusId.created ? 'sent' : null)}</button>)}
+    </div>
     {queue.isRefreshing ? <span className="kitchen-queue-refreshing" role="status">{i18n.t('ui.pages.staff.kitchen_board_page.yenilenir_283de5')}</span> : null}
     {queue.isLoading ? <p className="kitchen-queue-loading" role="status">{i18n.t('ui.pages.staff.kitchen_board_page.novbe_yuklenir_aaa679')}</p> : null}
     {warning ? <StatusMessage tone="warning" autoHideMs={false}>{warning}</StatusMessage> : null}
-    {queue.error ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.pages.staff.kitchen_board_page.novbe_yuklenmedi_a17c37')} {queue.error}</StatusMessage> : null}
+    {queue.error ? <StatusMessage tone={queue.isStale ? 'warning' : 'danger'} autoHideMs={false}>{queue.isStale ? `${i18n.t('ui.kitchenQueue.staleQueue')} ${queue.error}` : `${i18n.t('ui.pages.staff.kitchen_board_page.novbe_yuklenmedi_a17c37')} ${queue.error}`}</StatusMessage> : null}
     {queue.data && queue.data.items.length === 0 ? <div className="kitchen-queue-empty"><ClipboardList size={24} aria-hidden="true" /><strong>{i18n.t('ui.pages.staff.kitchen_board_page.hazirda_sifaris_yoxdur_927267')}</strong></div> : null}
-    {queue.data && queue.data.items.length > 0 ? <div className="kitchen-queue-list"><div className="kitchen-queue-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.kitchen_board_page.sifaris_vaxt_e1170e')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.masa_058c4c')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.mehsullar_dbcc49')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.veziyyet_emeliyyat_12c45b')}</span></div>{queue.data.items.map((order) => <KitchenTicket key={order.id} order={order} actionState={actionStates[order.id]} onAction={(action) => void runAction(order.id, action)} />)}</div> : null}
-    {queue.data ? <PaginationControls ariaLabel={i18n.t('ui.pages.staff.kitchen_board_page.metbex_novbesi_sehifeleri_bf1e48')} pageIndex={queue.data.pageIndex} totalPages={queue.data.totalPages} totalCount={queue.data.totalCount} pageSize={20} hasPreviousPage={queue.data.hasPreviousPage} hasNextPage={queue.data.hasNextPage} onPageChange={setPage} /> : null}
+    {queue.data && queue.data.items.length > 0 ? <div className="kitchen-queue-list"><div className="kitchen-queue-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.kitchen_board_page.sifaris_vaxt_e1170e')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.masa_058c4c')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.mehsullar_dbcc49')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.veziyyet_emeliyyat_12c45b')}</span></div>{queue.data.items.map((order) => <KitchenTicket key={order.id} order={order} actionState={actionStates[order.id]} actionsDisabled={queue.isStale || Boolean(queue.error)} now={now} onAction={(action) => void runAction(order.id, action)} />)}</div> : null}
+    {queue.data ? <PaginationControls ariaLabel={i18n.t('ui.pages.staff.kitchen_board_page.metbex_novbesi_sehifeleri_bf1e48')} pageIndex={queue.data.pageIndex} totalPages={queue.data.totalPages} totalCount={queue.data.totalCount} pageSize={20} hasPreviousPage={queue.data.hasPreviousPage} hasNextPage={queue.data.hasNextPage} onPageChange={(nextPage) => { scopeGenerationRef.current += 1; setPage(nextPage) }} /> : null}
   </section>
 }
 

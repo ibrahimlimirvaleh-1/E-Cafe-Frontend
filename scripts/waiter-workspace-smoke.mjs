@@ -11,6 +11,10 @@ const token = `header.${Buffer.from(JSON.stringify({ userId: '42', name: 'QA', s
 const time = '2026-10-23T10:00:00Z'
 let readyServed = false
 let servePosts = 0
+let rowServePosts = 0
+let rowSendPosts = 0
+let rowServed = false
+let rowSent = false
 let createPosts = 0
 let delayedCreate = false
 let pendingPayment = false
@@ -30,12 +34,12 @@ function session(id) {
 }
 
 function order(id) {
-  const statusId = id === 501 ? readyServed ? 2005 : 2004 : [505, 506, 507].includes(id) ? 2004 : id === 502 ? 2001 : 2005
+  const statusId = id === 501 ? readyServed ? 2005 : 2004 : id === 505 ? rowServed ? 2005 : 2004 : [506, 507].includes(id) ? 2004 : id === 502 ? rowSent ? 2002 : 2001 : 2005
   return { id, restaurantId: 1, tableId: 11, tableSessionId: 11, reservationId: 31,
     waiterUserId: 42, sourceId: 1, statusId, openedAt: time,
-    sentToKitchenAt: id === 502 ? null : time, servedAt: statusId === 2005 ? time : null,
-    canMarkServed: statusId === 2004, subtotal: 5, note: null,
-    items: [{ id, itemId: 1, name: 'Tea', quantity: 1, unitPrice: 5, lineTotal: 5, note: null }] }
+    sentToKitchenAt: id === 502 && !rowSent ? null : time, servedAt: statusId === 2005 ? time : null,
+    canMarkServed: statusId === 2004, subtotal: 5, note: id === 502 ? 'Pəncərə yanında' : null,
+    items: [{ id, itemId: 1, name: 'Tea', quantity: 1, unitPrice: 5, lineTotal: 5, note: id === 502 ? 'Şəkərsiz' : null }] }
 }
 
 const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) })
@@ -57,7 +61,7 @@ try {
       if (pathname === '/api/v1/restaurants/1/table-sessions/mine/ready-orders') return json(route, { items: [501, 505, 506, 507].map((id) => ({ order: id === 501 && readyServed ? { ...order(501), statusId: 2004, servedAt: null, canMarkServed: true } : order(id), tableName: 'Masa-11', tableNo: 11, timeZone: 'Asia/Baku', readyAt: time })), pageIndex: 1, totalPages: 1, totalCount: 4 })
       if (pathname === '/api/v1/restaurants/1/table-sessions/mine/11') return json(route, session(11))
       if (pathname === '/api/v1/restaurants/1/table-sessions/mine/12') return json(route, session(12))
-      if (pathname === '/api/v1/restaurants/1/table-sessions/11/orders' && request.method() === 'GET') return json(route, { items: [order(503), order(502), order(501)], pageIndex: 1, totalPages: 1, totalCount: 3 })
+      if (pathname === '/api/v1/restaurants/1/table-sessions/11/orders' && request.method() === 'GET') return json(route, { items: [order(503), order(502), order(505)], pageIndex: 1, totalPages: 2, totalCount: 21 })
       if (pathname === '/api/v1/restaurants/1/table-sessions/12/orders' && request.method() === 'GET') return json(route, { items: [], pageIndex: 1, totalPages: 1, totalCount: 0 })
       if (/^\/api\/v1\/restaurants\/1\/table-sessions\/11\/orders\/\d+$/.test(pathname)) return json(route, order(Number(pathname.split('/').at(-1))))
       if (pathname === '/api/v1/restaurants/1/table-sessions/11/orders/501/serve' && request.method() === 'POST') {
@@ -65,6 +69,18 @@ try {
         if (servePosts === 1) { await new Promise((resolve) => setTimeout(resolve, 250)); readyServed = true; return route.abort('failed') }
         readyServed = true
         return json(route, order(501))
+      }
+      if (pathname === '/api/v1/restaurants/1/table-sessions/11/orders/502/send-to-kitchen' && request.method() === 'POST') {
+        rowSendPosts++
+        if (rowSendPosts === 1) { await new Promise((resolve) => setTimeout(resolve, 250)); return route.abort('failed') }
+        rowSent = true
+        return json(route, order(502))
+      }
+      if (pathname === '/api/v1/restaurants/1/table-sessions/11/orders/505/serve' && request.method() === 'POST') {
+        rowServePosts++
+        if (rowServePosts === 1) { await new Promise((resolve) => setTimeout(resolve, 250)); return route.abort('failed') }
+        rowServed = true
+        return json(route, order(505))
       }
       if (pathname === '/api/v1/restaurants/1/table-sessions/11/orders' && request.method() === 'POST') {
         createPosts++
@@ -110,6 +126,14 @@ try {
   await page.locator('.waiter-ready-row').first().getByRole('link').click()
   await page.waitForURL(/orderId=501/)
   await page.locator('.waiter-orders-detail').waitFor()
+  const offPageRow = page.locator('.waiter-order-row').filter({ hasText: 'Sifariş #501' })
+  assert.equal(await offPageRow.count(), 1)
+  assert.equal(await offPageRow.getByRole('button', { name: 'Təqdim et', exact: true }).count(), 1)
+  assert.equal(await page.locator('.waiter-orders-detail button').count(), 1)
+  await page.setViewportSize({ width: 320, height: 700 })
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+  await page.screenshot({ path: path.join(dist, 'waiter-order-offpage-mobile.png'), fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('link', { name: 'Açıq masalar' }).click()
   await page.getByRole('button', { name: /Hazır sifarişlər/ }).click()
   const serveButton = page.locator('.waiter-ready-row').getByRole('button', { name: 'Təqdim et' })
@@ -139,6 +163,46 @@ try {
   await page.locator('.waiter-session-row').first().click()
   await page.waitForURL(/\/waiter\/restaurants\/1\/sessions\/11\/orders/)
   await page.getByRole('group', { name: 'Masa bölmələri' }).waitFor()
+  const unsentRow = page.locator('.waiter-order-row').filter({ hasText: 'Sifariş #502' })
+  await unsentRow.locator('.waiter-order-row-main').click()
+  await page.locator('.waiter-orders-detail').getByText('Şəkərsiz').waitFor()
+  await page.locator('.waiter-orders-detail').getByText('Pəncərə yanında').waitFor()
+  assert.equal(await page.getByRole('button', { name: 'Mətbəxə göndər', exact: true }).count(), 1)
+  assert.equal(await page.locator('.waiter-orders-detail button').count(), 1)
+  await page.setViewportSize({ width: 1280, height: 850 })
+  await page.screenshot({ path: path.join(dist, 'waiter-order-detail-desktop.png'), fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.screenshot({ path: path.join(dist, 'waiter-order-detail-mobile.png'), fullPage: true })
+  await page.getByRole('button', { name: 'Sifariş detalını bağla' }).click()
+  assert.equal(await page.locator('.waiter-orders-detail').count(), 0)
+  await unsentRow.locator('.waiter-order-row-main').click()
+  assert.equal(await page.getByRole('button', { name: 'Mətbəxə göndər', exact: true }).count(), 1)
+  await unsentRow.getByRole('button', { name: 'Mətbəxə göndər', exact: true }).click()
+  await page.waitForTimeout(40)
+  assert.equal(await unsentRow.getByRole('button', { name: 'Göndərilir' }).isDisabled(), true)
+  await unsentRow.getByRole('button', { name: 'Göndərilir' }).evaluate((button) => button.click())
+  await unsentRow.getByRole('button', { name: 'Eyni sifarişi təkrar göndər' }).waitFor()
+  assert.equal(rowSendPosts, 1)
+  await unsentRow.getByRole('button', { name: 'Eyni sifarişi təkrar göndər' }).click()
+  await page.getByText('Sifariş #502 mətbəxə göndərildi.').waitFor()
+  assert.equal(rowSendPosts, 2)
+  assert.equal(await unsentRow.getByRole('button', { name: 'Mətbəxə göndər', exact: true }).count(), 0)
+  const readyRow = page.locator('.waiter-order-row').filter({ hasText: 'Sifariş #505' })
+  await readyRow.locator('.waiter-order-row-main').click()
+  await page.locator('.waiter-orders-detail .waiter-order-summary-heading span').waitFor()
+  assert.match(await page.locator('.waiter-orders-detail .waiter-order-summary-heading span').innerText(), /505/)
+  assert.equal(await page.getByRole('button', { name: 'Təqdim et' }).count(), 1)
+  assert.equal(await page.locator('.waiter-orders-detail button').count(), 1)
+  await readyRow.getByRole('button', { name: 'Təqdim et' }).click()
+  await page.waitForTimeout(40)
+  assert.equal(await readyRow.getByRole('button', { name: 'Qeyd edilir' }).isDisabled(), true)
+  await readyRow.getByRole('button', { name: 'Qeyd edilir' }).evaluate((button) => button.click())
+  await readyRow.getByRole('button', { name: 'Nəticəni yoxla' }).waitFor()
+  assert.equal(rowServePosts, 1)
+  await readyRow.getByRole('button', { name: 'Nəticəni yoxla' }).click()
+  await page.getByText('Sifariş #505 təqdim edildi.').waitFor()
+  assert.equal(rowServePosts, 2)
+  assert.equal(await readyRow.getByRole('button', { name: 'Təqdim et' }).count(), 0)
   await page.screenshot({ path: path.join(dist, 'waiter-workspace-mobile.png'), fullPage: true })
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
   await page.getByRole('button', { name: /^Yeni sifariş/ }).click()
