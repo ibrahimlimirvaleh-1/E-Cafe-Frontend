@@ -1,0 +1,12 @@
+.order-cancel-dialog { max-height: min(90dvh, 720px); overflow-y: auto; border-radius: 8px; }
+.order-cancel-dialog .reservation-action-dialog-close, .order-cancel-dialog .reservation-action-dialog-actions .ui-button { min-height: 44px; }
+.order-cancel-dialog .reservation-action-dialog-close { min-width: 44px; border-radius: 6px; }
+.order-cancel-summary { display: grid; gap: 7px; margin: 6px 0; padding: 12px 0; border-top: 1px solid var(--outline-variant); border-bottom: 1px solid var(--outline-variant); color: var(--on-surface); font-size: 14px; }
+.order-cancel-summary > span { color: var(--on-surface-variant); }
+.order-cancel-summary ul { display: grid; gap: 4px; max-height: 130px; overflow-y: auto; margin: 0; padding-left: 20px; }
+.order-cancel-field { display: grid; gap: 7px; margin-top: 8px; color: var(--on-surface); font-size: 13px; font-weight: 700; }
+.order-cancel-field select, .order-cancel-field textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--on-surface); font: inherit; font-weight: 400; }
+.order-cancel-field textarea { resize: vertical; }
+.order-cancel-error { color: var(--error); }
+.order-cancel-locked { overflow-wrap: anywhere; }
+@media (max-width: 520px) { .order-cancel-dialog { max-height: calc(100dvh - 24px); } }

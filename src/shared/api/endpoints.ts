@@ -188,6 +188,8 @@ export const endpoints = {
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/send-to-kitchen`,
     serveOrder: (restaurantId: string, sessionId: number, orderId: number) =>
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/serve`,
+    cancelOrder: (restaurantId: string, sessionId: number, orderId: number) =>
+      `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/cancel`,
     bill: (sessionId: number) => `/table-sessions/${sessionId}/bill`,
     billCheckout: (sessionId: number) => `/table-sessions/${sessionId}/bill/checkout`,
     billPaymentRefresh: (sessionId: number, paymentId: number) =>
@@ -200,6 +202,7 @@ export const endpoints = {
     detail: (sessionId: number) => `/public/table-sessions/${sessionId}`,
     orders: (sessionId: number) => `/public/table-sessions/${sessionId}/orders`,
     orderDetail: (sessionId: number, orderId: number) => `/public/table-sessions/${sessionId}/orders/${orderId}`,
+    cancelOrder: (sessionId: number, orderId: number) => `/public/table-sessions/${sessionId}/orders/${orderId}/cancel`,
   },
   kitchen: {
     orders: (restaurantId: string) => `/restaurants/${restaurantId}/kitchen/orders`,

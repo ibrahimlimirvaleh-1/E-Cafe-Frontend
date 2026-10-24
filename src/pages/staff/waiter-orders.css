@@ -70,6 +70,7 @@
 .waiter-order-row-main > :last-child { text-align: right; white-space: nowrap; }
 .waiter-order-row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 0 12px 10px; }
 .waiter-order-row-actions .ui-button { min-height: 40px; padding-inline: 12px; font-size: 12px; }
+.waiter-order-row-actions .waiter-order-cancel-action { border-color: var(--outline-variant); color: var(--error); }
 .waiter-order-row-main:focus-visible { outline: 2px solid var(--secondary); outline-offset: -2px; }
 .waiter-orders-history-list { max-height: 305px; overflow-y: auto; border-top: 1px solid var(--outline-variant); scrollbar-gutter: stable; }
 .waiter-orders-history-columns, .waiter-orders-history-list > button { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(180px, 1.2fr) 110px 110px; align-items: center; gap: 12px; width: 100%; padding: 9px 12px; text-align: left; }
