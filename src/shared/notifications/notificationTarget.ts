@@ -34,6 +34,24 @@ export function getNotificationTarget(notification: NotificationItem, user?: Cur
   const notificationRestaurantId = valueAsString(notification.restaurantId)
   const restaurantId = payloadRestaurantId || notificationRestaurantId
 
+  if (payload.section === 'order-cancellation-request') {
+    if (payloadRestaurantId && notificationRestaurantId && payloadRestaurantId !== notificationRestaurantId) return ''
+    const sessionId = valueAsString(payload.tableSessionId || payload.TableSessionId)
+    const orderId = valueAsString(payload.orderId || payload.OrderId)
+    if (!/^[1-9]\d*$/.test(sessionId) || !/^[1-9]\d*$/.test(orderId)) return ''
+    if (isInRole(user, [RoleIds.Customer])) {
+      return `/orders?${new URLSearchParams({ sessionId, orderId })}`
+    }
+    if (!/^[1-9]\d*$/.test(restaurantId)) return ''
+    if (isInRole(user, [RoleIds.Waiter], restaurantId)) {
+      return `/waiter/restaurants/${encodeURIComponent(restaurantId)}/sessions/${encodeURIComponent(sessionId)}/orders?orderId=${encodeURIComponent(orderId)}`
+    }
+    if (isInRole(user, [RoleIds.Kitchen], restaurantId)) {
+      return `/kitchen?${new URLSearchParams({ restaurantId, orderId })}`
+    }
+    return ''
+  }
+
   const isSessionCloseReview = notification.typeName?.toLowerCase() === 'tablesessionclosereviewrequired' ||
     (notification.relatedEntityType?.toLowerCase() === 'tablesession' && payload.section === 'session-close-review')
   if (isSessionCloseReview) {

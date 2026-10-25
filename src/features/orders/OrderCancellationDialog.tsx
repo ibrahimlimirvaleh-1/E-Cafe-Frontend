@@ -1,5 +1,6 @@
 import { Ban, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CancellableOrder } from './useOrderCancellation'
 import { i18n } from '../../shared/i18n/i18n'
 import { Button } from '../../shared/ui/Button'
@@ -66,7 +67,7 @@ export function OrderCancellationDialog({ order, tableName, busy, error, uncerta
     if (uncertainReason && !busy) dialogRef.current?.querySelector<HTMLElement>('.order-cancel-confirm')?.focus()
   }, [uncertainReason, busy])
 
-  return <div className="modal-backdrop reservation-action-backdrop" role="presentation">
+  return createPortal(<div className="modal-backdrop reservation-action-backdrop" role="presentation">
     <section ref={dialogRef} className="reservation-action-dialog order-cancel-dialog" role="dialog" aria-modal="true" aria-labelledby="order-cancel-title" aria-describedby="order-cancel-description">
       <header className="reservation-action-dialog-header"><div className="reservation-action-dialog-icon" aria-hidden="true"><Ban size={20} /></div><button className="reservation-action-dialog-close" type="button" aria-label={i18n.t('ui.common.close')} disabled={busy} onClick={onClose}><X size={18} /></button></header>
       <div className="reservation-action-dialog-body">
@@ -78,5 +79,5 @@ export function OrderCancellationDialog({ order, tableName, busy, error, uncerta
       </div>
       <footer className="reservation-action-dialog-actions"><Button type="button" variant="secondary" disabled={busy} onClick={onClose}>{i18n.t('ui.common.close')}</Button><Button type="button" variant="danger" className="order-cancel-confirm" disabled={busy || !valid} onClick={() => onConfirm(reason)}>{busy ? i18n.t('ui.orderCancel.wait') : uncertainReason ? i18n.t('ui.orderCancel.retry') : i18n.t('ui.orderCancel.confirm')}</Button></footer>
     </section>
-  </div>
+  </div>, document.body)
 }

@@ -10,6 +10,10 @@ import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { SessionBillPanel } from '../../features/settlement/SessionBillPanel'
 import { OrderCancellationDialog } from '../../features/orders/OrderCancellationDialog'
+import { CancellationRequestDialog } from '../../features/orders/CancellationRequestDialog'
+import { CancellationRequestInfo } from '../../features/orders/CancellationRequestInfo'
+import { hasCurrentCancellationRequest } from '../../features/orders/cancellationRequest'
+import { useCancellationRequestAction } from '../../features/orders/useCancellationRequestAction'
 import { useOrderCancellation } from '../../features/orders/useOrderCancellation'
 import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
@@ -139,6 +143,7 @@ function OrderDetail({ order, timeZone, onClose }: { order: CustomerSessionOrder
       {order.statusId === orderStatusId.created && !order.sentToKitchenAt ? <p>{i18n.t('ui.pages.customer.my_orders_page.metbexe_gonderilmesini_gozleyir_6bb1aa')}</p> : null}
       {order.cancellationReason ? <p><strong>{i18n.t('ui.orderCancel.cancelledReason')}</strong> {order.cancellationReason}</p> : null}
     </div>
+    {order.cancellationRequest ? <CancellationRequestInfo request={order.cancellationRequest} timeZone={timeZone} /> : null}
   </section>
 }
 
@@ -152,6 +157,7 @@ export function MyOrdersPage() {
   const [revision, setRevision] = useState(0)
   const [settlementRevision, setSettlementRevision] = useState(0)
   const [cancelledOrders, setCancelledOrders] = useState<Record<string, CustomerSessionOrderResponse>>({})
+  const [requestOrders, setRequestOrders] = useState<Record<string, CustomerSessionOrderResponse>>({})
   const [autoSession, setAutoSession] = useState<{ scope: string; id: number } | null>(null)
   const lastRefreshRef = useRef(0)
   const workspaceRef = useRef<HTMLElement | null>(null)
@@ -219,12 +225,36 @@ export function MyOrdersPage() {
     },
     () => setRevision((value) => value + 1),
   )
+  const cancellationRequest = useCancellationRequestAction<CustomerSessionOrderResponse>(
+    cancelScope,
+    (orderId, _operation, reason) => ecafeApi.customerTableSessions.requestCancellation(sessionId!, orderId, reason),
+    (orderId) => ecafeApi.customerTableSessions.getOrder(sessionId!, orderId),
+    (order) => {
+      setRequestOrders((current) => ({ ...current, [`${userScope}:${sessionId}:${order.id}`]: order }))
+      setRevision((value) => value + 1)
+    },
+    () => setRevision((value) => value + 1),
+  )
+  function displayOrder(record: CustomerSessionOrderResponse) {
+    const key = `${userScope}:${sessionId}:${record.id}`
+    const cancelled = cancelledOrders[key]
+    if (cancelled && record.statusId !== orderStatusId.cancelled) return cancelled
+    const pending = requestOrders[key]
+    if (!pending || hasCurrentCancellationRequest(record.cancellationRequest, pending.cancellationRequest)) return record
+    return pending
+  }
 
   useEffect(() => {
     if (!cancel.intent?.uncertainReason) return
     const fromDetail = selectedOrder.data?.id === cancel.intent.order.id && !selectedOrder.error ? selectedOrder.data : null
     const fromList = !orders.error ? orders.data?.items.find((order) => order.id === cancel.intent?.order.id) ?? null : null
     cancel.reconcile(fromDetail ?? fromList)
+  })
+  useEffect(() => {
+    if (!cancellationRequest.intent?.uncertain) return
+    const fromDetail = selectedOrder.data?.id === cancellationRequest.intent.order.id && !selectedOrder.error ? selectedOrder.data : null
+    const fromList = !orders.error ? orders.data?.items.find((order) => order.id === cancellationRequest.intent?.order.id) ?? null : null
+    cancellationRequest.reconcile(fromDetail ?? fromList)
   })
 
   useEffect(() => { setOrderPage(1) }, [sessionId])
@@ -296,19 +326,22 @@ export function MyOrdersPage() {
           <div className="customer-orders-section-heading customer-order-workspace-heading"><div><span className="customer-orders-kicker">{validSession.restaurantName || 'Restoran'}</span><h2>{validSession.tableName || `Masa #${validSession.tableId}`}</h2><p><Clock3 size={15} /> {i18n.t('ui.pages.customer.my_orders_page.acilis_59e910')} {formatReservationDateTime(validSession.openedAt, validSession.timeZone)}</p></div><Badge tone={sessionStatus(validSession.statusId).tone}>{sessionStatus(validSession.statusId).label}</Badge></div>
           <SessionBillPanel key={`${userScope}:${validSession.id}`} sessionId={validSession.id} revision={settlementRevision} />
           {cancel.notice ? <p className={cancel.noticeTone === 'success' ? 'customer-orders-cancel-success' : 'customer-orders-error'} role="status">{cancel.notice}</p> : null}
+          {cancellationRequest.notice ? <p className={cancellationRequest.noticeTone === 'success' ? 'customer-orders-cancel-success' : 'customer-orders-error'} role="status">{cancellationRequest.notice}</p> : null}
           {selectedSession.error ? <p className="customer-orders-error" role="alert">{i18n.t('ui.pages.customer.my_orders_page.sessiya_yenilenmedi_son_yuklenmis_melu_64874d')}</p> : null}
           {requestedOrderId !== null ? <button className="customer-order-detail-back" onClick={() => chooseOrder(null)} type="button"><ArrowLeft size={17} />{i18n.t('ui.pages.customer.my_orders_page.sifarislere_qayit_afeddb')}</button> : null}
           {requestedOrderId !== null && selectedOrder.loading && !selectedOrder.data ? <p className="customer-orders-muted" role="status">{i18n.t('ui.pages.customer.my_orders_page.sifaris_detali_yuklenir_d98e58')}</p> : null}
           {requestedOrderId !== null && selectedOrder.error ? <p className="customer-orders-error" role="alert">{errorMessage(selectedOrder.error, i18n.t('ui.orders.order'))}</p> : null}
-          {selectedOrder.data ? <OrderDetail order={cancelledOrders[`${userScope}:${sessionId}:${selectedOrder.data.id}`] ?? selectedOrder.data} timeZone={validSession.timeZone} onClose={() => chooseOrder(null)} /> : null}
+          {selectedOrder.data ? <OrderDetail order={displayOrder(selectedOrder.data)} timeZone={validSession.timeZone} onClose={() => chooseOrder(null)} /> : null}
           <div className="customer-order-list-area">
             {orders.error ? <p className="customer-orders-error" role="alert">{errorMessage(orders.error, i18n.t('ui.orders.orders'))}</p> : null}
             {orders.loading && !orders.data ? <p className="customer-orders-muted" role="status">{i18n.t('ui.pages.customer.my_orders_page.sifarisler_yuklenir_917624')}</p> : null}
             {orders.data?.items.length === 0 ? <div className="customer-orders-empty"><ReceiptText size={25} /><h3>{i18n.t('ui.pages.customer.my_orders_page.bu_sessiyada_hele_sifaris_yoxdur_647a47')}</h3><p>{i18n.t('ui.pages.customer.my_orders_page.sifaris_yaradildiqda_onun_gedisati_bur_262595')}</p></div> : null}
-            {orders.data && orders.data.items.length > 0 ? <div className="customer-order-list"><h3>{i18n.t('ui.pages.customer.my_orders_page.sifarisler_0b5f10')} <span>{orders.data.totalCount}</span></h3>{orders.data.items.map((record) => { const order = cancelledOrders[`${userScope}:${sessionId}:${record.id}`] ?? record; return <article className="customer-order-row" key={order.id}>
+            {orders.data && orders.data.items.length > 0 ? <div className="customer-order-list"><h3>{i18n.t('ui.pages.customer.my_orders_page.sifarisler_0b5f10')} <span>{orders.data.totalCount}</span></h3>{orders.data.items.map((record) => { const order = displayOrder(record); return <article className="customer-order-row" key={order.id}>
               <div className="customer-order-row-main"><span className="customer-orders-kicker">{i18n.t('ui.pages.customer.my_orders_page.sifaris_96cfd8')}{order.id}</span><strong>{order.items.length ? order.items.map((item) => item.name).join(', ') :i18n.t('ui.pages.customer.my_orders_page.mehsul_melumati_yoxdur_a5371c')}</strong><small>{formatReservationDateTime(order.openedAt, validSession.timeZone)} · {i18n.t('ui.count.items', { count: order.items.length })}</small></div>
               <div className="customer-order-row-action"><span className="customer-order-amount"><small>{i18n.t('ui.pages.customer.my_orders_page.mehsul_cemi_82c1ba')}</small><strong>{money(order.subtotal)}</strong></span><Badge tone={orderTone(order.statusId)}>{orderKitchenLabel(order.statusId, order.sentToKitchenAt)}</Badge><button aria-label={i18n.t('ui.order.viewDetails', { id: order.id })} onClick={() => chooseOrder(order.id)} title={i18n.t('ui.pages.customer.my_orders_page.detallara_bax_38343d')} type="button"><ArrowRight size={18} /></button></div>
-              {order.canCancel || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id ? <div className="customer-order-row-cancel"><Button type="button" variant="secondary" disabled={Boolean(orders.error || selectedSession.error) || cancel.busy || Boolean(cancel.intent?.uncertainReason && cancel.intent.order.id !== order.id)} onClick={() => cancel.open(order, validSession.tableName || `Masa #${validSession.tableId}`)}><Ban size={16} />{i18n.t('ui.orderCancel.action')}</Button></div> : null}
+              {order.cancellationRequest ? <CancellationRequestInfo request={order.cancellationRequest} timeZone={validSession.timeZone} /> : null}
+              {order.canCancel || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id ? <div className="customer-order-row-cancel"><Button type="button" variant="secondary" disabled={Boolean(orders.error || selectedSession.error) || cancel.busy || cancellationRequest.busy || Boolean(cancel.intent?.uncertainReason && cancel.intent.order.id !== order.id)} onClick={() => cancel.open(order, validSession.tableName || `Masa #${validSession.tableId}`)}><Ban size={16} />{i18n.t('ui.orderCancel.action')}</Button></div>
+                : order.canRequestCancellation || cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? <div className="customer-order-row-cancel"><Button type="button" variant="secondary" disabled={Boolean(orders.error || selectedSession.error) || cancel.busy || cancellationRequest.busy} onClick={() => cancellationRequest.open(order, 'request')}><Ban size={16} />{i18n.t('ui.cancellationRequest.action')}</Button></div> : null}
             </article> })}</div> : null}
             {orders.data ? <PaginationControls ariaLabel={i18n.t('ui.pages.customer.my_orders_page.sifarisler_sehifelemesi_4d0d57')} hasNextPage={orders.data.hasNextPage} hasPreviousPage={orders.data.hasPreviousPage} pageIndex={orders.data.pageIndex} totalPages={orders.data.totalPages} totalCount={orders.data.totalCount} onPageChange={setOrderPage} /> : null}
           </div>
@@ -316,5 +349,6 @@ export function MyOrdersPage() {
       </section>
     </div>
     {cancel.intent?.visible && validSession && !selectedSession.error ? <OrderCancellationDialog key={`${cancelScope}:${cancel.intent.order.id}`} order={cancel.intent.order} tableName={cancel.intent.tableName} busy={cancel.busy} error={cancel.error} uncertainReason={cancel.intent.uncertainReason} onClose={cancel.close} onConfirm={(reason) => void cancel.submit(reason)} /> : null}
+    {cancellationRequest.intent?.visible && validSession && !selectedSession.error ? <CancellationRequestDialog key={`${cancelScope}:${cancellationRequest.intent.order.id}`} order={cancellationRequest.intent.order} operation="request" busy={cancellationRequest.busy} error={cancellationRequest.error} uncertainReason={cancellationRequest.intent.uncertain ? cancellationRequest.intent.reason : null} onClose={cancellationRequest.close} onConfirm={(reason) => void cancellationRequest.submit(reason)} /> : null}
   </main>
 }

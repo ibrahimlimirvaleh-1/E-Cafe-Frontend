@@ -354,6 +354,16 @@ export type CreateSessionOrderRequest = {
   items: { itemId: number; quantity: number; note?: string; expectedUnitPrice: number }[]
 }
 
+export type OrderCancellationRequestResponse = {
+  id: number
+  statusId: number
+  reason: string
+  requestedAt: string
+  forwardedAt: string | null
+  resolvedAt: string | null
+  decisionReason: string | null
+}
+
 export type SessionOrderResponse = {
   id: number
   restaurantId: number
@@ -368,6 +378,9 @@ export type SessionOrderResponse = {
   servedAt: string | null
   canMarkServed: boolean
   canCancel: boolean
+  canRequestCancellation: boolean
+  canForwardCancellationRequest: boolean
+  cancellationRequest: OrderCancellationRequestResponse | null
   cancelledAt: string | null
   cancellationReason: string | null
   note: string | null
@@ -411,6 +424,8 @@ export type CustomerSessionOrderResponse = {
   servedAt: string | null
   closedAt: string | null
   canCancel: boolean
+  canRequestCancellation: boolean
+  cancellationRequest: OrderCancellationRequestResponse | null
   cancelledAt: string | null
   cancellationReason: string | null
   subtotal: number
@@ -444,8 +459,24 @@ export type KitchenOrderResponse = {
   canAccept: boolean
   canStartPreparing: boolean
   canMarkReady: boolean
+  canDecideCancellationRequest: boolean
+  cancellationRequest: OrderCancellationRequestResponse | null
   note: string | null
   items: { id: number; itemId: number; name: string; quantity: number; note: string | null }[]
+}
+
+function mapOrderCancellationRequest(value: unknown): OrderCancellationRequestResponse | null {
+  if (!value || typeof value !== 'object') return null
+  const record = value as AnyRecord
+  return {
+    id: num(record.id),
+    statusId: num(record.statusId),
+    reason: str(record.reason),
+    requestedAt: str(record.requestedAt),
+    forwardedAt: record.forwardedAt == null ? null : str(record.forwardedAt),
+    resolvedAt: record.resolvedAt == null ? null : str(record.resolvedAt),
+    decisionReason: record.decisionReason == null ? null : str(record.decisionReason),
+  }
 }
 
 // API cavabını ofisiantın masa sessiyası modelinə çevirir.
@@ -498,6 +529,9 @@ function mapSessionOrder(record: AnyRecord): SessionOrderResponse {
     servedAt: record.servedAt == null ? null : str(record.servedAt),
     canMarkServed: bool(record.canMarkServed),
     canCancel: bool(record.canCancel),
+    canRequestCancellation: bool(record.canRequestCancellation),
+    canForwardCancellationRequest: bool(record.canForwardCancellationRequest),
+    cancellationRequest: mapOrderCancellationRequest(record.cancellationRequest),
     cancelledAt: record.cancelledAt == null ? null : str(record.cancelledAt),
     cancellationReason: record.cancellationReason == null ? null : str(record.cancellationReason),
     note: record.note == null ? null : str(record.note),
@@ -547,6 +581,8 @@ function mapCustomerSessionOrder(record: AnyRecord): CustomerSessionOrderRespons
     servedAt: record.servedAt == null ? null : str(record.servedAt),
     closedAt: record.closedAt == null ? null : str(record.closedAt),
     canCancel: bool(record.canCancel),
+    canRequestCancellation: bool(record.canRequestCancellation),
+    cancellationRequest: mapOrderCancellationRequest(record.cancellationRequest),
     cancelledAt: record.cancelledAt == null ? null : str(record.cancelledAt),
     cancellationReason: record.cancellationReason == null ? null : str(record.cancellationReason),
     subtotal: num(record.subtotal),
@@ -583,6 +619,8 @@ function mapKitchenOrder(record: AnyRecord): KitchenOrderResponse {
     canAccept: bool(record.canAccept),
     canStartPreparing: bool(record.canStartPreparing),
     canMarkReady: bool(record.canMarkReady),
+    canDecideCancellationRequest: bool(record.canDecideCancellationRequest),
+    cancellationRequest: mapOrderCancellationRequest(record.cancellationRequest),
     note: record.note == null ? null : str(record.note),
     items: asArray<AnyRecord>(record.items).map((item) => ({
       id: num(item.id),
@@ -2425,6 +2463,16 @@ export const ecafeApi = {
       })
       return mapSessionOrder(result.data as AnyRecord)
     },
+    requestCancellation: async (restaurantId: string, sessionId: number, orderId: number, reason: string) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.cancellationRequest(restaurantId, sessionId, orderId), {
+        method: 'POST', body: JSON.stringify({ reason: reason.trim() }),
+      })
+      return mapSessionOrder(result.data as AnyRecord)
+    },
+    forwardCancellationRequest: async (restaurantId: string, sessionId: number, orderId: number) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.forwardCancellationRequest(restaurantId, sessionId, orderId), { method: 'POST' })
+      return mapSessionOrder(result.data as AnyRecord)
+    },
   },
 
   customerTableSessions: {
@@ -2452,6 +2500,12 @@ export const ecafeApi = {
       })
       return mapCustomerSessionOrder(result.data as AnyRecord)
     },
+    requestCancellation: async (sessionId: number, orderId: number, reason: string) => {
+      const result = await httpClient<unknown>(endpoints.customerTableSessions.cancellationRequest(sessionId, orderId), {
+        method: 'POST', body: JSON.stringify({ reason: reason.trim() }),
+      })
+      return mapCustomerSessionOrder(result.data as AnyRecord)
+    },
   },
 
   kitchen: {
@@ -2463,6 +2517,16 @@ export const ecafeApi = {
     },
     progressOrder: async (restaurantId: string, orderId: number, action: KitchenProgressAction) => {
       const result = await httpClient<unknown>(endpoints.kitchen.orderAction(restaurantId, orderId, action), { method: 'POST' })
+      return mapKitchenOrder(result.data as AnyRecord)
+    },
+    getCancellationRequest: async (restaurantId: string, orderId: number, signal?: AbortSignal) => {
+      const result = await httpClient<unknown>(endpoints.kitchen.cancellationRequest(restaurantId, orderId), { signal })
+      return mapKitchenOrder(result.data as AnyRecord)
+    },
+    decideCancellationRequest: async (restaurantId: string, orderId: number, approved: boolean, reason: string) => {
+      const result = await httpClient<unknown>(endpoints.kitchen.cancellationDecision(restaurantId, orderId), {
+        method: 'POST', body: JSON.stringify({ approved, reason: reason.trim() }),
+      })
       return mapKitchenOrder(result.data as AnyRecord)
     },
   },

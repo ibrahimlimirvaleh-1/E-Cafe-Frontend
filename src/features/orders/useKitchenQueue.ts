@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ecafeApi, type KitchenOrderResponse } from '../../shared/api/ecafeApi'
 import { ApiError, normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
+import { hasCurrentCancellationRequest } from './cancellationRequest'
 
 type QueueState = {
   scopeKey: string
@@ -34,7 +35,7 @@ export function useKitchenQueue(userId: string, restaurantId: string, page: numb
   const applyOrder = useCallback((order: KitchenOrderResponse) => {
     if (String(order.restaurantId) !== restaurantId) return
     const previous = confirmedOrdersRef.current.get(order.id)
-    const confirmed = previous && previous.statusId > order.statusId ? previous : order
+    const confirmed = previous && (previous.statusId > order.statusId || previous.statusId === order.statusId && !hasCurrentCancellationRequest(order.cancellationRequest, previous.cancellationRequest)) ? previous : order
     confirmedOrdersRef.current.set(order.id, confirmed)
     setState((current) => current.scopeKey !== scopeRef.current || !current.data ? current : {
       ...current,
@@ -68,7 +69,9 @@ export function useKitchenQueue(userId: string, restaurantId: string, page: numb
           const items = data.items.map((order) => {
             const confirmed = confirmedOrdersRef.current.get(order.id)
             if (!confirmed) return order
-            return order.statusId >= confirmed.statusId ? order : confirmed
+            if (order.statusId < confirmed.statusId) return confirmed
+            if (order.statusId === confirmed.statusId && !hasCurrentCancellationRequest(order.cancellationRequest, confirmed.cancellationRequest)) return confirmed
+            return order
           }).filter((order) => statusId === null || order.statusId === statusId)
           setState({ scopeKey, data: { ...data, items }, error: '', isStale: false, lastSuccessAt: Date.now(), isLoading: false, isRefreshing: false })
         }

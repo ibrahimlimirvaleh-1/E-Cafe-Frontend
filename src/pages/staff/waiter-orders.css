@@ -69,6 +69,8 @@
 .waiter-order-row-main > span { color: var(--on-surface-variant); }
 .waiter-order-row-main > :last-child { text-align: right; white-space: nowrap; }
 .waiter-order-row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 0 12px 10px; }
+.waiter-order-row > .cancellation-request-info { margin: 0 12px 10px; }
+.waiter-order-summary > .cancellation-request-info { margin-block: 12px; }
 .waiter-order-row-actions .ui-button { min-height: 40px; padding-inline: 12px; font-size: 12px; }
 .waiter-order-row-actions .waiter-order-cancel-action { border-color: var(--outline-variant); color: var(--error); }
 .waiter-order-row-main:focus-visible { outline: 2px solid var(--secondary); outline-offset: -2px; }

@@ -253,6 +253,8 @@
 }
 
 .customer-order-row-cancel { grid-column: 1 / -1; display: flex; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--outline-variant); }
+.customer-order-row > .cancellation-request-info { grid-column: 1 / -1; }
+.customer-order-detail > .cancellation-request-info { margin-top: 14px; }
 .customer-order-row-cancel .ui-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: auto; min-width: 44px; min-height: 44px; padding: 8px 12px; border-color: var(--outline-variant); color: var(--error); font-size: 12px; }
 .customer-orders-cancel-success { margin: 12px 0; color: var(--on-surface); font-size: 13px; }
 
