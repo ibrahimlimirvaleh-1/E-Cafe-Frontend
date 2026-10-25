@@ -367,6 +367,9 @@ export type SessionOrderResponse = {
   sentToKitchenAt: string | null
   servedAt: string | null
   canMarkServed: boolean
+  canCancel: boolean
+  cancelledAt: string | null
+  cancellationReason: string | null
   note: string | null
   subtotal: number
   items: {
@@ -407,6 +410,9 @@ export type CustomerSessionOrderResponse = {
   readyAt: string | null
   servedAt: string | null
   closedAt: string | null
+  canCancel: boolean
+  cancelledAt: string | null
+  cancellationReason: string | null
   subtotal: number
   items: {
     id: number
@@ -491,6 +497,9 @@ function mapSessionOrder(record: AnyRecord): SessionOrderResponse {
     sentToKitchenAt: record.sentToKitchenAt == null ? null : str(record.sentToKitchenAt),
     servedAt: record.servedAt == null ? null : str(record.servedAt),
     canMarkServed: bool(record.canMarkServed),
+    canCancel: bool(record.canCancel),
+    cancelledAt: record.cancelledAt == null ? null : str(record.cancelledAt),
+    cancellationReason: record.cancellationReason == null ? null : str(record.cancellationReason),
     note: record.note == null ? null : str(record.note),
     subtotal: num(record.subtotal),
     items: asArray<AnyRecord>(record.items).map((item) => ({
@@ -537,6 +546,9 @@ function mapCustomerSessionOrder(record: AnyRecord): CustomerSessionOrderRespons
     readyAt: record.readyAt == null ? null : str(record.readyAt),
     servedAt: record.servedAt == null ? null : str(record.servedAt),
     closedAt: record.closedAt == null ? null : str(record.closedAt),
+    canCancel: bool(record.canCancel),
+    cancelledAt: record.cancelledAt == null ? null : str(record.cancelledAt),
+    cancellationReason: record.cancellationReason == null ? null : str(record.cancellationReason),
     subtotal: num(record.subtotal),
     items: asArray<AnyRecord>(record.items).map((item) => ({
       id: num(item.id),
@@ -2407,6 +2419,12 @@ export const ecafeApi = {
       })
       return mapSessionOrder(result.data as AnyRecord)
     },
+    cancelOrder: async (restaurantId: string, sessionId: number, orderId: number, reason: string) => {
+      const result = await httpClient<unknown>(endpoints.tableSessions.cancelOrder(restaurantId, sessionId, orderId), {
+        method: 'POST', body: JSON.stringify({ reason: reason.trim() }),
+      })
+      return mapSessionOrder(result.data as AnyRecord)
+    },
   },
 
   customerTableSessions: {
@@ -2426,6 +2444,12 @@ export const ecafeApi = {
     },
     getOrder: async (sessionId: number, orderId: number, signal?: AbortSignal) => {
       const result = await httpClient<unknown>(endpoints.customerTableSessions.orderDetail(sessionId, orderId), { signal })
+      return mapCustomerSessionOrder(result.data as AnyRecord)
+    },
+    cancelOrder: async (sessionId: number, orderId: number, reason: string) => {
+      const result = await httpClient<unknown>(endpoints.customerTableSessions.cancelOrder(sessionId, orderId), {
+        method: 'POST', body: JSON.stringify({ reason: reason.trim() }),
+      })
       return mapCustomerSessionOrder(result.data as AnyRecord)
     },
   },
