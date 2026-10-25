@@ -7,6 +7,10 @@ import { clearPendingOrderIntent, pendingOrderStorageKey, readPendingOrderIntent
 import { clearWaiterOrderDraft, readWaiterOrderDraft, saveWaiterOrderDraft, waiterOrderDraftKey, type WaiterDraftLine } from '../../features/orders/waiterOrderDraft'
 import { serveWaiterOrder } from '../../features/orders/serveWaiterOrder'
 import { OrderCancellationDialog } from '../../features/orders/OrderCancellationDialog'
+import { CancellationRequestDialog } from '../../features/orders/CancellationRequestDialog'
+import { CancellationRequestInfo } from '../../features/orders/CancellationRequestInfo'
+import { hasCurrentCancellationRequest } from '../../features/orders/cancellationRequest'
+import { useCancellationRequestAction } from '../../features/orders/useCancellationRequestAction'
 import { useOrderCancellation } from '../../features/orders/useOrderCancellation'
 import { SessionCloseReviewActions } from '../../features/reservations/SessionCloseReviewActions'
 import { ecafeApi, type CreateSessionOrderRequest, type SessionBillResponse, type SessionOrderResponse, type WaiterTableSessionResponse } from '../../shared/api/ecafeApi'
@@ -58,6 +62,7 @@ function OrderSummary({ order, timeZone, onClose }: { order: SessionOrderRespons
     {order.servedAt ? <p>{i18n.t('ui.pages.staff.waiter_session_orders_page.teqdim_edilib_00b1bf')} {formatReservationDateTime(order.servedAt, timeZone)}</p> : null}
     {order.cancelledAt ? <p>{i18n.t('ui.orderCancel.cancelledAt')} {formatReservationDateTime(order.cancelledAt, timeZone)}</p> : null}
     {order.cancellationReason ? <p className="waiter-order-note">{i18n.t('ui.orderCancel.cancelledReason')} {order.cancellationReason}</p> : null}
+    {order.cancellationRequest ? <CancellationRequestInfo request={order.cancellationRequest} timeZone={timeZone} /> : null}
     <ul>{order.items.map((line) => <li key={line.id}><span><strong>{line.quantity} × {line.name}</strong>{line.note ? <small>{line.note}</small> : null}</span><strong>{money(line.lineTotal)}</strong></li>)}</ul>
     {order.note ? <p className="waiter-order-note">{i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_2d4f8a')} {order.note}</p> : null}
   </div>
@@ -132,6 +137,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const [serveNotice, setServeNotice] = useState('')
   const [servedOrders, setServedOrders] = useState<Record<number, SessionOrderResponse>>({})
   const [cancelledOrders, setCancelledOrders] = useState<Record<number, SessionOrderResponse>>({})
+  const [requestOrders, setRequestOrders] = useState<Record<number, SessionOrderResponse>>({})
   const [serveAccessDenied, setServeAccessDenied] = useState(false)
   const [bill, setBill] = useState<SessionBillResponse | null>(null)
   const inFlightRef = useRef(false)
@@ -151,8 +157,32 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     },
     () => { setOrdersRevision((value) => value + 1); setReloadKey((value) => value + 1) },
   )
+  const cancellationRequest = useCancellationRequestAction<SessionOrderResponse>(
+    `${userId}:${scopeKey}:${page}`,
+    (orderId, operation, reason) => operation === 'forward'
+      ? ecafeApi.tableSessions.forwardCancellationRequest(restaurantId, sessionId, orderId)
+      : ecafeApi.tableSessions.requestCancellation(restaurantId, sessionId, orderId, reason),
+    (orderId) => ecafeApi.tableSessions.getOrder(restaurantId, sessionId, orderId),
+    (order) => {
+      setRequestOrders((current) => ({ ...current, [order.id]: order }))
+      setOrdersRevision((value) => value + 1)
+      window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+    },
+    () => setOrdersRevision((value) => value + 1),
+  )
+  function displayOrder(record: SessionOrderResponse) {
+    const cancelled = cancelledOrders[record.id]
+    if (cancelled && record.statusId !== orderStatusId.cancelled) return cancelled
+    const served = servedOrders[record.id]
+    if (served && !record.servedAt && record.statusId === orderStatusId.ready) return served
+    const pending = requestOrders[record.id]
+    if (!pending || hasCurrentCancellationRequest(record.cancellationRequest, pending.cancellationRequest)) return record
+    return pending
+  }
   const cancellationBlocksSend = (orderId: number) => cancel.intent?.order.id === orderId &&
     (cancel.busy || cancel.intent.visible || Boolean(cancel.intent.uncertainReason))
+  const requestBlocksOrder = (orderId: number) => cancellationRequest.intent?.order.id === orderId &&
+    (cancellationRequest.busy || cancellationRequest.intent.visible || cancellationRequest.intent.uncertain)
 
   useEffect(() => {
     if (validRequestedOrderId !== null) setSelectedOrderId(validRequestedOrderId)
@@ -227,13 +257,9 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const subtotal = cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0)
   const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0)
   const selectedOrderRecord = detail.hasData && detail.data?.kind === 'found' && !detail.error ? detail.data.order : null
-  const selectedOrder = selectedOrderRecord && cancelledOrders[selectedOrderRecord.id] && selectedOrderRecord.statusId !== orderStatusId.cancelled
-    ? cancelledOrders[selectedOrderRecord.id]
-    : selectedOrderRecord && servedOrders[selectedOrderRecord.id] && !selectedOrderRecord.servedAt && selectedOrderRecord.statusId === orderStatusId.ready
-    ? servedOrders[selectedOrderRecord.id]
-    : selectedOrderRecord && sentOrderTimes[selectedOrderRecord.id]
-      ? { ...selectedOrderRecord, sentToKitchenAt: sentOrderTimes[selectedOrderRecord.id] }
-      : selectedOrderRecord
+  const selectedOrder = selectedOrderRecord && sentOrderTimes[selectedOrderRecord.id]
+    ? displayOrder({ ...selectedOrderRecord, sentToKitchenAt: sentOrderTimes[selectedOrderRecord.id] })
+    : selectedOrderRecord ? displayOrder(selectedOrderRecord) : null
   const orderPage = orders.hasData && !orders.error ? orders.data : null
   const selectedOutsidePage = selectedOrder && !orderPage?.items.some((order) => order.id === selectedOrder.id) ? [selectedOrder] : []
   const visibleOrders = [...selectedOutsidePage, ...(orderPage?.items || [])].sort((left, right) => {
@@ -253,6 +279,12 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     const confirmed = selectedOrderRecord?.id === cancel.intent.order.id ? selectedOrderRecord
       : orderPage?.items.find((order) => order.id === cancel.intent?.order.id) ?? null
     cancel.reconcile(confirmed)
+  })
+  useEffect(() => {
+    if (!cancellationRequest.intent?.uncertain) return
+    const confirmed = selectedOrderRecord?.id === cancellationRequest.intent.order.id ? selectedOrderRecord
+      : orderPage?.items.find((order) => order.id === cancellationRequest.intent?.order.id) ?? null
+    cancellationRequest.reconcile(confirmed)
   })
 
   useEffect(() => {
@@ -275,7 +307,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
 
   // Cavabı itmiş göndərmə yalnız həmin sifariş ID-si ilə təkrarlanır; yeni sifariş yaradılmır.
   async function sendToKitchen(orderId: number) {
-    if (sendInFlightRef.current || sessionUnavailable || session.error || busy || cancellationBlocksSend(orderId)) return
+    if (sendInFlightRef.current || sessionUnavailable || session.error || busy || cancellationBlocksSend(orderId) || requestBlocksOrder(orderId)) return
     sendInFlightRef.current = true
     setSendingOrderId(orderId)
     setDispatchError('')
@@ -308,7 +340,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
 
   // Nəticəsi itən təqdimetmə eyni sifarişə təkrarlanır; yeni sifariş və ödəniş yaratmır.
   async function markServed(orderId: number) {
-    if (serveInFlightRef.current || sessionUnavailable || session.error || busy) return
+    if (serveInFlightRef.current || sessionUnavailable || session.error || busy || requestBlocksOrder(orderId)) return
     serveInFlightRef.current = true
     setServingOrderId(orderId)
     setServeError('')
@@ -479,6 +511,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     {serveNotice ? <StatusMessage tone="success" autoHideMs={false}>{serveNotice}</StatusMessage> : null}
     {serveError ? <StatusMessage tone={uncertainServedId !== null ? 'warning' : 'danger'} autoHideMs={false}>{serveError}</StatusMessage> : null}
     {cancel.notice ? <StatusMessage tone={cancel.noticeTone} autoHideMs={false}>{cancel.notice}</StatusMessage> : null}
+    {cancellationRequest.notice ? <StatusMessage tone={cancellationRequest.noticeTone} autoHideMs={false}>{cancellationRequest.notice}</StatusMessage> : null}
     {feedback && !sessionUnavailable ? <StatusMessage tone={pendingIntent || priceConflict || keyConflict ? 'warning' : 'danger'} autoHideMs={false}>{feedback}</StatusMessage> : null}
     {draftError && !sessionUnavailable ? <StatusMessage tone="warning" autoHideMs={false}>{draftError}</StatusMessage> : null}
     {pendingIntent && !sessionUnavailable ? <div className="waiter-order-pending">
@@ -514,14 +547,15 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       {orders.error ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_siyahisi_yenilenmedi_085ed1')} {orders.error}</StatusMessage> : null}
       {orderPage && visibleOrders.length === 0 ? <p className="waiter-orders-muted">{i18n.t('ui.pages.staff.waiter_session_orders_page.bu_masa_ucun_sifaris_yoxdur_67bbfa')}</p> : null}
       {visibleOrders.length > 0 ? <div className="waiter-orders-history-list"><div className="waiter-orders-history-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_23da3b')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.yaradilib_526f2e')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.miqdar_77c299')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.mebleg_3d95ed')}</span></div>{visibleOrders.map((record) => {
-        const order = cancelledOrders[record.id] && record.statusId !== orderStatusId.cancelled ? cancelledOrders[record.id]
-          : servedOrders[record.id] && !record.servedAt && record.statusId === orderStatusId.ready ? servedOrders[record.id] : record
+        const order = displayOrder(record)
         return <div className={`waiter-order-row${selectedOrderId === order.id ? ' is-selected' : ''}`} key={order.id}>
           <button type="button" className="waiter-order-row-main" onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}><span className="waiter-order-history-id"><strong>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_96cfd8')}{order.id}</strong><small>{orderKitchenLabel(order.statusId, sentOrderTimes[order.id] || order.sentToKitchenAt)}</small></span><span>{formatReservationDateTime(order.openedAt, session.data?.timeZone)}</span><span>{i18n.t('ui.count.items', { count: order.items.reduce((sum, line) => sum + line.quantity, 0) })}</span><strong>{money(order.subtotal)}</strong></button>
-          {order.statusId === orderStatusId.created && !order.sentToKitchenAt || order.canMarkServed || order.canCancel || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id ? <div className="waiter-order-row-actions">
-            {order.statusId === orderStatusId.created && !order.sentToKitchenAt ? <Button type="button" variant="secondary" disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || sendingOrderId !== null || cancellationBlocksSend(order.id)} onClick={() => void sendToKitchen(order.id)}>{sendingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <SendHorizontal size={16} />}{sendingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.gonderilir_e1bb27') : uncertainOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.eyni_sifarisi_tekrar_gonder_a76b51') : i18n.t('ui.pages.staff.waiter_session_orders_page.metbexe_gonder_784c49')}</Button> : null}
-            {order.canMarkServed ? <Button type="button" disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || servingOrderId !== null} onClick={() => void markServed(order.id)}>{servingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <CircleCheck size={16} />}{servingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_edilir_b735f7') : uncertainServedId === order.id ? i18n.t('ui.waiter.checkServeResult') : i18n.t('ui.waiter.serve')}</Button> : null}
-            {order.canCancel || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id ? <Button type="button" variant="secondary" className="waiter-order-cancel-action" disabled={busy || Boolean(pendingIntent) || sendingOrderId !== null || servingOrderId !== null || sendInFlightRef.current || serveInFlightRef.current || sessionUnavailable || !session.data || Boolean(session.error) || Boolean(orders.error) || cancel.busy || Boolean(cancel.intent?.uncertainReason && cancel.intent.order.id !== order.id)} onClick={() => { if (inFlightRef.current || sendInFlightRef.current || serveInFlightRef.current || pendingIntent) return; cancel.open(order, session.data?.tableName || `Masa-${session.data?.tableNo ?? order.tableId}`) }}><Ban size={16} />{i18n.t('ui.orderCancel.action')}</Button> : null}
+          {order.cancellationRequest ? <CancellationRequestInfo request={order.cancellationRequest} timeZone={session.data?.timeZone} /> : null}
+          {order.statusId === orderStatusId.created && !order.sentToKitchenAt || order.canMarkServed || order.canCancel || order.canForwardCancellationRequest || order.canRequestCancellation || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id || cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? <div className="waiter-order-row-actions">
+            {order.statusId === orderStatusId.created && !order.sentToKitchenAt ? <Button type="button" variant="secondary" disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || sendingOrderId !== null || cancellationBlocksSend(order.id) || requestBlocksOrder(order.id)} onClick={() => void sendToKitchen(order.id)}>{sendingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <SendHorizontal size={16} />}{sendingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.gonderilir_e1bb27') : uncertainOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.eyni_sifarisi_tekrar_gonder_a76b51') : i18n.t('ui.pages.staff.waiter_session_orders_page.metbexe_gonder_784c49')}</Button> : null}
+            {order.canMarkServed ? <Button type="button" disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || servingOrderId !== null || requestBlocksOrder(order.id)} onClick={() => void markServed(order.id)}>{servingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <CircleCheck size={16} />}{servingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_edilir_b735f7') : uncertainServedId === order.id ? i18n.t('ui.waiter.checkServeResult') : i18n.t('ui.waiter.serve')}</Button> : null}
+            {order.canCancel || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id ? <Button type="button" variant="secondary" className="waiter-order-cancel-action" disabled={busy || Boolean(pendingIntent) || sendingOrderId !== null || servingOrderId !== null || sendInFlightRef.current || serveInFlightRef.current || sessionUnavailable || !session.data || Boolean(session.error) || Boolean(orders.error) || cancel.busy || cancellationRequest.busy || Boolean(cancel.intent?.uncertainReason && cancel.intent.order.id !== order.id)} onClick={() => { if (inFlightRef.current || sendInFlightRef.current || serveInFlightRef.current || pendingIntent) return; cancel.open(order, session.data?.tableName || `Masa-${session.data?.tableNo ?? order.tableId}`) }}><Ban size={16} />{i18n.t('ui.orderCancel.action')}</Button>
+              : order.canForwardCancellationRequest || order.canRequestCancellation || cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? <Button type="button" variant="secondary" className="waiter-order-cancel-action" disabled={busy || Boolean(pendingIntent) || sendingOrderId !== null || servingOrderId !== null || sendInFlightRef.current || serveInFlightRef.current || sessionUnavailable || Boolean(session.error) || Boolean(orders.error) || cancel.busy || cancellationRequest.busy} onClick={() => { if (inFlightRef.current || sendInFlightRef.current || serveInFlightRef.current || pendingIntent) return; const uncertain = cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? cancellationRequest.intent : null; cancellationRequest.open(uncertain?.order ?? order, uncertain?.operation ?? (order.canForwardCancellationRequest ? 'forward' : 'request')) }}><Ban size={16} />{i18n.t(order.canForwardCancellationRequest ? 'ui.cancellationRequest.forward' : 'ui.cancellationRequest.action')}</Button> : null}
           </div> : null}
         </div>
       })}</div> : null}
@@ -529,5 +563,6 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       {selectedOrderId !== null ? <div className="waiter-orders-detail" aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}>{detail.isLoading ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_yuklenir_d98e58')}</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} timeZone={session.data?.timeZone} onClose={() => setSelectedOrderId(null)} /> : null}</div> : null}
     </section> : null}
     {cancel.intent?.visible ? <OrderCancellationDialog key={cancel.intent.order.id} order={cancel.intent.order} tableName={cancel.intent.tableName} busy={cancel.busy} error={cancel.error} uncertainReason={cancel.intent.uncertainReason} onClose={cancel.close} onConfirm={(reason) => void cancel.submit(reason)} /> : null}
+    {cancellationRequest.intent?.visible ? <CancellationRequestDialog key={`${cancellationRequest.intent.order.id}:${cancellationRequest.intent.operation}`} order={cancellationRequest.intent.order} operation={cancellationRequest.intent.operation} busy={cancellationRequest.busy} error={cancellationRequest.error} uncertainReason={cancellationRequest.intent.uncertain ? cancellationRequest.intent.reason : null} onClose={cancellationRequest.close} onConfirm={(reason) => void cancellationRequest.submit(reason)} /> : null}
   </main>
 }

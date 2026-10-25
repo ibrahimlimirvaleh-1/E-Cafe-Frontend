@@ -190,6 +190,10 @@ export const endpoints = {
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/serve`,
     cancelOrder: (restaurantId: string, sessionId: number, orderId: number) =>
       `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/cancel`,
+    cancellationRequest: (restaurantId: string, sessionId: number, orderId: number) =>
+      `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/cancellation-request`,
+    forwardCancellationRequest: (restaurantId: string, sessionId: number, orderId: number) =>
+      `/restaurants/${restaurantId}/table-sessions/${sessionId}/orders/${orderId}/cancellation-request/forward`,
     bill: (sessionId: number) => `/table-sessions/${sessionId}/bill`,
     billCheckout: (sessionId: number) => `/table-sessions/${sessionId}/bill/checkout`,
     billPaymentRefresh: (sessionId: number, paymentId: number) =>
@@ -203,11 +207,17 @@ export const endpoints = {
     orders: (sessionId: number) => `/public/table-sessions/${sessionId}/orders`,
     orderDetail: (sessionId: number, orderId: number) => `/public/table-sessions/${sessionId}/orders/${orderId}`,
     cancelOrder: (sessionId: number, orderId: number) => `/public/table-sessions/${sessionId}/orders/${orderId}/cancel`,
+    cancellationRequest: (sessionId: number, orderId: number) =>
+      `/public/table-sessions/${sessionId}/orders/${orderId}/cancellation-request`,
   },
   kitchen: {
     orders: (restaurantId: string) => `/restaurants/${restaurantId}/kitchen/orders`,
     orderAction: (restaurantId: string, orderId: number, action: KitchenProgressAction) =>
       `/restaurants/${restaurantId}/kitchen/orders/${orderId}/${action}`,
+    cancellationRequest: (restaurantId: string, orderId: number) =>
+      `/restaurants/${restaurantId}/kitchen/orders/${orderId}/cancellation-request`,
+    cancellationDecision: (restaurantId: string, orderId: number) =>
+      `/restaurants/${restaurantId}/kitchen/orders/${orderId}/cancellation-request/decision`,
   },
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,

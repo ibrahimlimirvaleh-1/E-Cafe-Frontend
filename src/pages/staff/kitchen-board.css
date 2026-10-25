@@ -23,6 +23,8 @@
 .kitchen-queue-columns, .kitchen-queue-row { display: grid; grid-template-columns: 170px minmax(110px, .7fr) minmax(0, 2fr) 190px; gap: 16px; min-width: 0; }
 .kitchen-queue-columns { padding: 10px 12px; background: var(--surface-low); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; }
 .kitchen-queue-row { align-items: start; padding: 15px 12px; border-bottom: 1px solid var(--outline-variant); }
+.kitchen-queue-row.is-focused { background: var(--surface-low); box-shadow: inset 3px 0 var(--secondary); }
+.kitchen-queue-focused { border-top: 1px solid var(--outline-variant); }
 .kitchen-queue-order, .kitchen-queue-table { display: grid; gap: 5px; min-width: 0; }
 .kitchen-queue-order strong { color: var(--on-surface); font-size: 16px; }
 .kitchen-queue-order span, .kitchen-queue-table span { color: var(--on-surface-variant); font-size: 12px; }
@@ -45,6 +47,8 @@
 :root[data-theme='dark'] .kitchen-queue-state .ui-button.ui-button-secondary { background: var(--surface-high); color: var(--on-surface); }
 .kitchen-queue-state .kitchen-action-warning { color: var(--warning); text-align: right; overflow-wrap: anywhere; }
 .kitchen-ticket-error { grid-column: 1 / -1; margin: 0; font-size: 12px; }
+.kitchen-queue-items .cancellation-request-info { margin-top: 12px; }
+.kitchen-request-recheck { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: 6px; color: var(--on-surface); font-size: 13px; }
 .kitchen-action-spinner { animation: kitchen-action-spin .8s linear infinite; }
 @keyframes kitchen-action-spin { to { transform: rotate(360deg); } }
 @media (max-width: 800px) {
