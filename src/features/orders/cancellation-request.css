@@ -3,11 +3,13 @@
 .cancellation-request-info-heading time, .cancellation-request-info small, .cancellation-request-info p span { color: var(--on-surface-variant); font-size: 12px; }
 .cancellation-request-info p { display: grid; gap: 2px; margin: 0; }
 .cancellation-request-dialog { grid-template-rows: auto minmax(0, 1fr) auto; max-height: min(90dvh, 720px); overflow: hidden; border-radius: 8px; }
-.cancellation-request-dialog .reservation-action-dialog-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 3px; }
+.cancellation-request-dialog .reservation-action-dialog-body { display: flex; flex-direction: column; align-items: stretch; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 3px; }
+.cancellation-request-dialog .reservation-action-dialog-body > * { flex: none; }
 .cancellation-request-dialog .reservation-action-dialog-actions { padding-top: 12px; border-top: 1px solid var(--outline-variant); }
 .cancellation-request-dialog .reservation-action-dialog-close, .cancellation-request-dialog .reservation-action-dialog-actions .ui-button { min-height: 44px; }
 .cancellation-request-dialog .reservation-action-dialog-close { min-width: 44px; }
 .cancellation-request-dialog .order-cancel-field select, .cancellation-request-dialog .order-cancel-field textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--on-surface); font: inherit; font-weight: 400; }
+.cancellation-request-dialog .order-cancel-field textarea { min-height: 88px; }
 .cancellation-request-dialog .order-cancel-field { display: grid; gap: 7px; margin-top: 8px; color: var(--on-surface); font-size: 13px; font-weight: 700; }
 .cancellation-request-dialog .order-cancel-error { color: var(--error); }
 .cancellation-request-choice { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-low); }

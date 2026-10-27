@@ -54,6 +54,46 @@ async function contextFor(browser, roleId, viewport) {
   return { context, page, errors, roleId }
 }
 
+async function assertDecisionDialogLayout(page, name) {
+  const layout = await page.evaluate(() => {
+    const dialog = document.querySelector('.cancellation-request-dialog')
+    const header = dialog.querySelector('.reservation-action-dialog-header')
+    const body = dialog.querySelector('.reservation-action-dialog-body')
+    const footer = dialog.querySelector('.reservation-action-dialog-actions')
+    const products = dialog.querySelector('.cancellation-request-products')
+    const radios = [...dialog.querySelectorAll('.cancellation-request-ingredients-options label')]
+    const textarea = dialog.querySelector('#cancellation-request-reason')
+    const rect = (element) => element.getBoundingClientRect()
+    return {
+      dialog: rect(dialog), header: rect(header), body: rect(body), footer: rect(footer),
+      products: rect(products), radios: radios.map(rect), textarea: rect(textarea),
+      pageWidth: document.documentElement.scrollWidth, viewportWidth: innerWidth, viewportHeight: innerHeight,
+    }
+  })
+  assert.ok(layout.products.height >= 32, `${name}: product list collapsed`)
+  assert.ok(layout.radios.every((radio) => radio.height >= 44), `${name}: ingredient choice collapsed`)
+  assert.ok(layout.textarea.height >= 80, `${name}: reason field collapsed`)
+  assert.ok(layout.products.bottom <= layout.radios[0].top, `${name}: products overlap ingredient choice`)
+  assert.ok(layout.radios[0].bottom <= layout.radios[1].top, `${name}: ingredient choices overlap`)
+  assert.ok(layout.radios[1].bottom <= layout.textarea.top, `${name}: ingredient choice overlaps reason`)
+  assert.ok(layout.header.bottom <= layout.body.top + 2, `${name}: header overlaps body`)
+  assert.ok(layout.body.bottom <= layout.footer.top + 2, `${name}: footer overlaps body`)
+  assert.ok(layout.products.top >= layout.body.top - 1 && layout.products.bottom <= layout.body.bottom + 1, `${name}: product list is hidden before scrolling`)
+  assert.ok(layout.dialog.bottom <= layout.viewportHeight + 1, `${name}: dialog extends past viewport`)
+  assert.ok(layout.pageWidth <= layout.viewportWidth, `${name}: horizontal overflow`)
+  await page.locator('.reservation-action-dialog-body').evaluate((body) => { body.scrollTop = body.scrollHeight })
+  const scrolled = await page.evaluate(() => {
+    const body = document.querySelector('.cancellation-request-dialog .reservation-action-dialog-body').getBoundingClientRect()
+    const textarea = document.querySelector('#cancellation-request-reason').getBoundingClientRect()
+    const lastChoice = [...document.querySelectorAll('.cancellation-request-ingredients-options label')].at(-1).getBoundingClientRect()
+    return { body, textarea, lastChoice }
+  })
+  assert.ok(scrolled.lastChoice.top >= scrolled.body.top - 1 && scrolled.lastChoice.bottom <= scrolled.body.bottom + 1, `${name}: last ingredient choice is hidden after scrolling`)
+  assert.ok(scrolled.textarea.top >= scrolled.body.top - 1 && scrolled.textarea.bottom <= scrolled.body.bottom + 1, `${name}: reason field is hidden after scrolling`)
+  await page.screenshot({ path: path.join(dist, `cancellation-request-kitchen-unused-${name}-scrolled.png`) })
+  await page.locator('.reservation-action-dialog-body').evaluate((body) => { body.scrollTop = 0 })
+}
+
 function commonRoute(roleId, route, pathname) {
   if (pathname === '/api/v1/user/refresh') return response(route, { accessToken: token(roleId) })
   if (pathname === '/api/v1/profile') return response(route, { userId: String(roleId), name: 'QA', surname: 'User', roleId, restaurantId: roleId === 5 ? null : 1, isActive: true, profiles: [{ restaurantId: roleId === 5 ? null : 1, restaurantName: 'Test Restaurant', roleId, roleName: roleId === 5 ? 'Customer' : roleId === 4 ? 'Waiter' : 'Kitchen', isActive: true }] })
@@ -261,18 +301,23 @@ async function kitchen(browser) {
     assert.equal(await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).last().isDisabled(), true)
     await page.getByRole('dialog').getByLabel('Xeyr, istifadə olunmayıb').check()
     await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-390.png') })
+    await assertDecisionDialogLayout(page, '390')
     await page.setViewportSize({ width: 320, height: 700 })
     await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-320.png') })
+    await assertDecisionDialogLayout(page, '320')
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     await page.setViewportSize({ width: 390, height: 844 })
     await page.evaluate(() => { document.documentElement.dataset.theme = 'dark' })
     await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-dark-390.png') })
+    await assertDecisionDialogLayout(page, 'dark-390')
     await page.evaluate(() => { document.documentElement.dataset.theme = 'light' })
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-1440.png') })
+    await assertDecisionDialogLayout(page, '1440')
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     await page.evaluate(() => { document.documentElement.dataset.theme = 'dark' })
     await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-dark-1440.png') })
+    await assertDecisionDialogLayout(page, 'dark-1440')
     await page.evaluate(() => { document.documentElement.dataset.theme = 'light' })
     await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).last().click()
     await page.getByText('Sifariş #502 ləğv edildi.').waitFor()
