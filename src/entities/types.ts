@@ -177,11 +177,19 @@ export type InventoryMovement = {
   quantityChange: number
   unitId: number
   unitName: string
+  unitCode: string
   movementTypeId: number
   movementType: string
   movementTypeCode: string
   reason?: string | null
-  quantityAfterMovement: number
+  quantityAfterMovement: number | null
+  relatedOrderId: string | null
+  relatedOrderItemId: number | null
+  orderItemName: string | null
+  orderItemQuantity: number | null
+  tableNo: number | null
+  timeZone: string | null
+  reversedMovementId: number | null
   createdAt: string
 }
 

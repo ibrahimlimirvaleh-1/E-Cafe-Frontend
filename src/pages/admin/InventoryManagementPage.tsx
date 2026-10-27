@@ -1,6 +1,6 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { useTranslation } from 'react-i18next'
-import { History, Pencil, Plus, Power, Trash2, X } from 'lucide-react'
+import { History, Pencil, Plus, Power, Trash2 } from 'lucide-react'
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
@@ -20,12 +20,12 @@ import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { RestaurantContextCard } from '../../shared/ui/RestaurantContextCard'
 import { RestaurantSelectField } from '../../shared/ui/RestaurantSelectField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import type { InventoryItem, InventoryMovement, MenuItem, Recipe } from '../../entities/types'
-import { getCurrentLanguage } from '../../shared/i18n/i18n'
-import { getIntlLocale } from '../../shared/i18n/language'
+import type { InventoryItem, MenuItem, Recipe } from '../../entities/types'
 import { azSourceFrom, emptyTranslations, translationPayload, translationValuesFrom } from '../../shared/i18n/contentTranslations'
 import { ContentTranslationTabs } from '../../shared/ui/ContentTranslationTabs'
 import type { LookupItem } from '../../entities/types'
+import { InventoryHistoryDialog } from './InventoryHistoryDialog'
+import { formatInventoryQuantity, inventoryUnitLabel } from '../../shared/lib/inventoryFormatting'
 
 type InventoryPageMode = 'items' | 'create' | 'movements' | 'movement-create' | 'recipes' | 'recipe-create'
 type PendingDelete = { id: string; label: string; type: 'inventory' | 'recipe' } | null
@@ -56,26 +56,7 @@ function unitLabel(units: LookupItem[], unitId: number, fallback?: string) {
 }
 
 function stockAmount(item: InventoryItem) {
-  return `${item.quantityOnHand.toLocaleString(getIntlLocale(getCurrentLanguage()))} ${item.unitCode || item.unitName}`
-}
-
-function formatDateTime(value: string) {
-  if (!value) {
-    return '-'
-  }
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return date.toLocaleString(getIntlLocale(getCurrentLanguage()), {
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
+  return `${formatInventoryQuantity(item.quantityOnHand)} ${inventoryUnitLabel(item.unitCode, item.unitName)}`
 }
 
 export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPageMode }) {
@@ -96,9 +77,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   const [onlyLowStock, setOnlyLowStock] = useState(false)
   const [inventoryPageNumber, setInventoryPageNumber] = useState(1)
   const [inventoryPageSize, setInventoryPageSize] = useState(10)
-  const [movementPageNumber, setMovementPageNumber] = useState(1)
-  const [movementPageSize, setMovementPageSize] = useState(10)
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
+  const [historySelection, setHistorySelection] = useState<{ restaurantId: string; item: InventoryItem } | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [editingInventoryId, setEditingInventoryId] = useState('')
   const [translations, setTranslations] = useState(emptyTranslations)
@@ -133,10 +112,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   const selectedRestaurant = accessibleRestaurants.find((restaurant) => restaurant.id === restaurantId)
 
   const { data: inventoryItems, isLoading: inventoryLoading } = useKeyedAsyncData(
-    () => (restaurantId ? ecafeApi.inventory.list(restaurantId, { onlyLowStock }) : Promise.resolve([])),
+    () => (restaurantId && mode !== 'movements' ? ecafeApi.inventory.list(restaurantId, { onlyLowStock }) : Promise.resolve([])),
     [],
-    `${restaurantId}:${onlyLowStock}`,
-    [restaurantId, onlyLowStock, reloadKey, activeI18n.resolvedLanguage],
+    `${restaurantId}:${mode}:${onlyLowStock}`,
+    [restaurantId, mode, onlyLowStock, reloadKey, activeI18n.resolvedLanguage],
   )
   const { data: movementInventoryPage, isLoading: movementInventoryLoading } = useKeyedAsyncData(
     () =>
@@ -152,13 +131,13 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     [restaurantId, mode, onlyLowStock, inventoryPageNumber, inventoryPageSize, reloadKey, activeI18n.resolvedLanguage],
   )
   const { data: menuItems } = useKeyedAsyncData(
-    () => (restaurantId ? ecafeApi.menu.adminItems(restaurantId) : Promise.resolve([])),
+    () => (restaurantId && (mode === 'recipes' || mode === 'recipe-create') ? ecafeApi.menu.adminItems(restaurantId) : Promise.resolve([])),
     [],
-    restaurantId,
-    [restaurantId, reloadKey, activeI18n.resolvedLanguage],
+    `${restaurantId}:${mode}`,
+    [restaurantId, mode, reloadKey, activeI18n.resolvedLanguage],
   )
-  const { data: movementTypes } = useAsyncData(() => ecafeApi.lookups.inventoryMovementTypes(), [], [])
-  const { data: units } = useAsyncData(() => ecafeApi.lookups.units(), [], [activeI18n.resolvedLanguage])
+  const { data: movementTypes } = useAsyncData(() => mode === 'movement-create' ? ecafeApi.lookups.inventoryMovementTypes() : Promise.resolve([]), [], [mode])
+  const { data: units } = useAsyncData(() => ['create', 'movement-create', 'recipe-create'].includes(mode) ? ecafeApi.lookups.units() : Promise.resolve([]), [], [mode, activeI18n.resolvedLanguage])
   const inventoryRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory' : '/admin/inventory'
   const movementRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory/movements' : '/admin/inventory/movements'
   const recipeRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/recipes' : '/admin/recipes'
@@ -199,25 +178,12 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     () => menuItems.find((item) => item.id === selectedMenuItemId) ?? menuItems[0],
     [menuItems, selectedMenuItemId],
   )
-  const { data: movementPage } = useKeyedAsyncData(
-    () =>
-      restaurantId && inventoryItem
-        ? ecafeApi.inventory.movementsPaginated(restaurantId, inventoryItem.id, {
-            pageNumber: movementPageNumber,
-            pageSize: movementPageSize,
-          })
-        : Promise.resolve(emptyPage<InventoryMovement>()),
-    emptyPage<InventoryMovement>(),
-    `${restaurantId}:${inventoryItem?.id || ''}:${movementPageNumber}:${movementPageSize}`,
-    [restaurantId, inventoryItem?.id, movementPageNumber, movementPageSize, reloadKey],
-  )
   const { data: recipes } = useKeyedAsyncData(
     () => (restaurantId && menuItem ? ecafeApi.recipes.list(restaurantId, menuItem.id) : Promise.resolve([])),
     [],
     `${restaurantId}:${menuItem?.id || ''}`,
     [restaurantId, menuItem?.id, reloadKey],
   )
-  const movements = movementPage.items
 
   useEffect(() => {
     if (editingInventoryItemId && editRestaurantId && editRestaurantAccessible && restaurantId !== editRestaurantId) {
@@ -236,8 +202,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   }, [restaurantId, onlyLowStock])
 
   useEffect(() => {
-    setMovementPageNumber(1)
-  }, [restaurantId, inventoryItem?.id])
+    if (historySelection && historySelection.restaurantId !== restaurantId) setHistorySelection(null)
+  }, [historySelection, restaurantId])
 
   useEffect(() => {
     if (mode === 'movement-create' && movementInventoryItemId) {
@@ -613,7 +579,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                       </span>
                       <span>
                         <small>{i18n.t('ui.pages.admin.inventory_management_page.limit_674b0e')}</small>
-                        <strong>{item.lowStockThreshold} {item.unitCode || item.unitName}</strong>
+                        <strong>{formatInventoryQuantity(item.lowStockThreshold)} {inventoryUnitLabel(item.unitCode, item.unitName)}</strong>
                       </span>
                       <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>{item.isLowStock ?i18n.t('ui.pages.admin.inventory_management_page.az_qalir_0cc343') : item.isActive ?i18n.t('ui.pages.admin.inventory_management_page.aktiv_816345') :i18n.t('ui.pages.admin.inventory_management_page.deaktiv_477e77')}</Badge>
                     </button>
@@ -670,7 +636,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                           <strong>{item.name}</strong>
                         </td>
                         <td>{stockAmount(item)}</td>
-                        <td>{item.lowStockThreshold} {item.unitCode || item.unitName}</td>
+                        <td>{formatInventoryQuantity(item.lowStockThreshold)} {inventoryUnitLabel(item.unitCode, item.unitName)}</td>
                         <td>
                           <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>
                             {item.isLowStock ?i18n.t('ui.pages.admin.inventory_management_page.az_qalir_0cc343') : item.isActive ?i18n.t('ui.pages.admin.inventory_management_page.normal_a7248e') :i18n.t('ui.pages.admin.inventory_management_page.deaktiv_477e77')}
@@ -679,11 +645,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                         <td>
                           <div className="inline-actions inventory-table-actions">
                             <ActionIconButton
-                              label={`${item.name} tarixçəsinə bax`}
+                              label={i18n.t('ui.inventoryHistory.open', { name: item.name })}
                               onClick={() => {
                                 setSelectedInventoryId(item.id)
-                                setMovementPageNumber(1)
-                                setIsHistoryModalOpen(true)
+                                setHistorySelection({ restaurantId, item })
                               }}
                             >
                               <History size={17} />
@@ -736,7 +701,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                   <article className="resource-summary-card">
                     <div>
                       <strong>{inventoryItem.name}</strong>
-                      <span>{stockAmount(inventoryItem)} {i18n.t('ui.pages.admin.inventory_management_page.limit_e214ad')} {inventoryItem.lowStockThreshold} {inventoryItem.unitCode || inventoryItem.unitName}</span>
+                      <span>{stockAmount(inventoryItem)} {i18n.t('ui.pages.admin.inventory_management_page.limit_e214ad')} {formatInventoryQuantity(inventoryItem.lowStockThreshold)} {inventoryUnitLabel(inventoryItem.unitCode, inventoryItem.unitName)}</span>
                     </div>
                     <Badge tone={inventoryItem.isLowStock ? 'warning' : inventoryItem.isActive ? 'success' : 'neutral'}>
                       {inventoryItem.isLowStock ?i18n.t('ui.pages.admin.inventory_management_page.az_qalir_0cc343') : inventoryItem.isActive ?i18n.t('ui.pages.admin.inventory_management_page.normal_a7248e') :i18n.t('ui.pages.admin.inventory_management_page.deaktiv_477e77')}
@@ -889,65 +854,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         onConfirm={confirmPendingDelete}
         title={i18n.t('ui.pages.admin.inventory_management_page.silmeni_tesdiqle_33a429')}
       />
-      {isHistoryModalOpen && inventoryItem ? (
-        <div className="modal-backdrop" role="presentation" onClick={() => setIsHistoryModalOpen(false)}>
-          <section className="inventory-history-modal" role="dialog" aria-modal="true" aria-label={`${inventoryItem.name} tarixçəsi`} onClick={(event) => event.stopPropagation()}>
-            <header className="audit-detail-header">
-              <div>
-                <span className="eyebrow">{i18n.t('ui.pages.admin.inventory_management_page.tarixce_ee0b11')}</span>
-                <h2>{inventoryItem.name}</h2>
-                <p className="muted-text">{i18n.t('ui.pages.admin.inventory_management_page.cari_miqdar_86e9f6')} {stockAmount(inventoryItem)}</p>
-              </div>
-              <button type="button" className="icon-button" aria-label={i18n.t('ui.pages.admin.inventory_management_page.bagla_c1cf91')} onClick={() => setIsHistoryModalOpen(false)}>
-                <X size={18} />
-              </button>
-            </header>
-
-            <div className="inventory-history-table-shell">
-              <table className="inventory-table inventory-history-table">
-                <thead>
-                  <tr>
-                    <th>{i18n.t('ui.pages.admin.inventory_management_page.hereket_5bcb49')}</th>
-                    <th>{i18n.t('ui.pages.admin.inventory_management_page.deyisiklik_ddd7af')}</th>
-                    <th>{i18n.t('ui.pages.admin.inventory_management_page.son_miqdar_592b4e')}</th>
-                    <th>{i18n.t('ui.pages.admin.inventory_management_page.sebeb_33efd0')}</th>
-                    <th>{i18n.t('ui.pages.admin.inventory_management_page.tarix_2dc57a')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {movements.map((movement) => (
-                    <tr key={movement.id}>
-                      <td>
-                        <strong>{movement.movementType || movement.movementTypeCode || '-'}</strong>
-                      </td>
-                      <td>{movement.quantityChange} {movement.unitName}</td>
-                      <td>{movement.quantityAfterMovement} {movement.unitName}</td>
-                      <td>{movement.reason || '-'}</td>
-                      <td>{formatDateTime(movement.createdAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {movements.length === 0 ? <EmptyState title={i18n.t('ui.pages.admin.inventory_management_page.tarixce_yoxdur_8f8757')} message={i18n.t('ui.pages.admin.inventory_management_page.bu_stok_elementi_uzre_hereket_tapilmad_6c5ff2')} /> : null}
-            </div>
-
-            <PaginationControls
-              ariaLabel={i18n.t('ui.pages.admin.inventory_management_page.stok_hereketleri_tarixcesi_sehifeleme_beab1d')}
-              hasNextPage={movementPage.hasNextPage}
-              hasPreviousPage={movementPage.hasPreviousPage}
-              onPageChange={setMovementPageNumber}
-              onPageSizeChange={(size) => {
-                setMovementPageSize(size)
-                setMovementPageNumber(1)
-              }}
-              pageIndex={movementPage.pageIndex}
-              pageSize={movementPageSize}
-              totalCount={movementPage.totalCount}
-              totalPages={movementPage.totalPages}
-            />
-          </section>
-        </div>
-      ) : null}
+      {historySelection ? <InventoryHistoryDialog key={`${historySelection.restaurantId}:${historySelection.item.id}`} restaurantId={historySelection.restaurantId} item={historySelection.item} restaurantTimeZone={selectedRestaurant?.timeZone} onClose={() => setHistorySelection(null)} /> : null}
     </main>
   )
 }

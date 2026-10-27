@@ -151,7 +151,7 @@ export function AdminShell() {
           </NavLink>
           {modules.map(({ icon: Icon, permissionKey, route, title }) => {
             const label = permissionKey === 'restaurants' && !isPlatformAdmin ? t('ui.nav.restaurant') : permissionKey === 'audit-logs' && route === '/admin/outbox' ? t('ui.nav.outbox') : title
-            return <NavLink key={route} to={route} {...navLabel(label)}><Icon size={18} aria-hidden="true" /><span className="admin-nav-label">{label}</span></NavLink>
+            return <NavLink key={route} to={route} className={({ isActive }) => isActive && !(route === '/admin/inventory' && location.pathname.startsWith('/admin/inventory/movements')) ? 'active' : undefined} {...navLabel(label)}><Icon size={18} aria-hidden="true" /><span className="admin-nav-label">{label}</span></NavLink>
           })}
           {isPlatformAdmin ? <NavLink to="/admin/localization" {...navLabel(t('ui.localization.title'))}><Languages size={18} aria-hidden="true" /><span className="admin-nav-label">{t('ui.localization.title')}</span></NavLink> : null}
         </nav>
