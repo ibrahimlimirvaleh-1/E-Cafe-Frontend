@@ -362,6 +362,8 @@ export type OrderCancellationRequestResponse = {
   forwardedAt: string | null
   resolvedAt: string | null
   decisionReason: string | null
+  ingredientsUnused: boolean | null
+  stockReturnedAt: string | null
 }
 
 export type SessionOrderResponse = {
@@ -476,6 +478,8 @@ function mapOrderCancellationRequest(value: unknown): OrderCancellationRequestRe
     forwardedAt: record.forwardedAt == null ? null : str(record.forwardedAt),
     resolvedAt: record.resolvedAt == null ? null : str(record.resolvedAt),
     decisionReason: record.decisionReason == null ? null : str(record.decisionReason),
+    ingredientsUnused: typeof record.ingredientsUnused === 'boolean' ? record.ingredientsUnused : null,
+    stockReturnedAt: record.stockReturnedAt == null ? null : str(record.stockReturnedAt),
   }
 }
 
@@ -2523,9 +2527,10 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(endpoints.kitchen.cancellationRequest(restaurantId, orderId), { signal })
       return mapKitchenOrder(result.data as AnyRecord)
     },
-    decideCancellationRequest: async (restaurantId: string, orderId: number, approved: boolean, reason: string) => {
+    decideCancellationRequest: async (restaurantId: string, orderId: number, approved: boolean, reason: string, ingredientsUnused: boolean | null) => {
+      if (approved && ingredientsUnused === null) throw new Error('An explicit ingredient-use decision is required')
       const result = await httpClient<unknown>(endpoints.kitchen.cancellationDecision(restaurantId, orderId), {
-        method: 'POST', body: JSON.stringify({ approved, reason: reason.trim() }),
+        method: 'POST', body: JSON.stringify(approved ? { approved, reason: reason.trim(), ingredientsUnused } : { approved, reason: reason.trim() }),
       })
       return mapKitchenOrder(result.data as AnyRecord)
     },

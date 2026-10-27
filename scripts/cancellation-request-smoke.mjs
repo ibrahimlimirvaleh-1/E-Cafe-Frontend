@@ -17,8 +17,8 @@ function response(route, data) {
   return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data }) })
 }
 
-function requestRecord(id, statusId, reason = 'Plan dəyişdi', decisionReason = null) {
-  return { id, statusId, reason, requestedAt: now, forwardedAt: statusId >= 2 ? now : null, resolvedAt: statusId >= 3 ? now : null, decisionReason }
+function requestRecord(id, statusId, reason = 'Plan dəyişdi', decisionReason = null, ingredientsUnused = null, stockReturnedAt = null) {
+  return { id, statusId, reason, requestedAt: now, forwardedAt: statusId >= 2 ? now : null, resolvedAt: statusId >= 3 ? now : null, decisionReason, ingredientsUnused, stockReturnedAt }
 }
 
 function order(id, roleId, cancellationRequest = null) {
@@ -52,6 +52,46 @@ async function contextFor(browser, roleId, viewport) {
   const errors = []
   page.on('pageerror', (error) => errors.push(error.message))
   return { context, page, errors, roleId }
+}
+
+async function assertDecisionDialogLayout(page, name) {
+  const layout = await page.evaluate(() => {
+    const dialog = document.querySelector('.cancellation-request-dialog')
+    const header = dialog.querySelector('.reservation-action-dialog-header')
+    const body = dialog.querySelector('.reservation-action-dialog-body')
+    const footer = dialog.querySelector('.reservation-action-dialog-actions')
+    const products = dialog.querySelector('.cancellation-request-products')
+    const radios = [...dialog.querySelectorAll('.cancellation-request-ingredients-options label')]
+    const textarea = dialog.querySelector('#cancellation-request-reason')
+    const rect = (element) => element.getBoundingClientRect()
+    return {
+      dialog: rect(dialog), header: rect(header), body: rect(body), footer: rect(footer),
+      products: rect(products), radios: radios.map(rect), textarea: rect(textarea),
+      pageWidth: document.documentElement.scrollWidth, viewportWidth: innerWidth, viewportHeight: innerHeight,
+    }
+  })
+  assert.ok(layout.products.height >= 32, `${name}: product list collapsed`)
+  assert.ok(layout.radios.every((radio) => radio.height >= 44), `${name}: ingredient choice collapsed`)
+  assert.ok(layout.textarea.height >= 80, `${name}: reason field collapsed`)
+  assert.ok(layout.products.bottom <= layout.radios[0].top, `${name}: products overlap ingredient choice`)
+  assert.ok(layout.radios[0].bottom <= layout.radios[1].top, `${name}: ingredient choices overlap`)
+  assert.ok(layout.radios[1].bottom <= layout.textarea.top, `${name}: ingredient choice overlaps reason`)
+  assert.ok(layout.header.bottom <= layout.body.top + 2, `${name}: header overlaps body`)
+  assert.ok(layout.body.bottom <= layout.footer.top + 2, `${name}: footer overlaps body`)
+  assert.ok(layout.products.top >= layout.body.top - 1 && layout.products.bottom <= layout.body.bottom + 1, `${name}: product list is hidden before scrolling`)
+  assert.ok(layout.dialog.bottom <= layout.viewportHeight + 1, `${name}: dialog extends past viewport`)
+  assert.ok(layout.pageWidth <= layout.viewportWidth, `${name}: horizontal overflow`)
+  await page.locator('.reservation-action-dialog-body').evaluate((body) => { body.scrollTop = body.scrollHeight })
+  const scrolled = await page.evaluate(() => {
+    const body = document.querySelector('.cancellation-request-dialog .reservation-action-dialog-body').getBoundingClientRect()
+    const textarea = document.querySelector('#cancellation-request-reason').getBoundingClientRect()
+    const lastChoice = [...document.querySelectorAll('.cancellation-request-ingredients-options label')].at(-1).getBoundingClientRect()
+    return { body, textarea, lastChoice }
+  })
+  assert.ok(scrolled.lastChoice.top >= scrolled.body.top - 1 && scrolled.lastChoice.bottom <= scrolled.body.bottom + 1, `${name}: last ingredient choice is hidden after scrolling`)
+  assert.ok(scrolled.textarea.top >= scrolled.body.top - 1 && scrolled.textarea.bottom <= scrolled.body.bottom + 1, `${name}: reason field is hidden after scrolling`)
+  await page.screenshot({ path: path.join(dist, `cancellation-request-kitchen-unused-${name}-scrolled.png`) })
+  await page.locator('.reservation-action-dialog-body').evaluate((body) => { body.scrollTop = 0 })
 }
 
 function commonRoute(roleId, route, pathname) {
@@ -173,17 +213,25 @@ async function kitchen(browser) {
   let second = order(502, 6, requestRecord(5, 2))
   let third = order(503, 6, requestRecord(6, 2))
   let fourth = order(504, 6, requestRecord(7, 2))
+  let fifth = order(505, 6, requestRecord(8, 2))
+  let sixth = order(506, 6, requestRecord(9, 2))
+  let seventh = order(507, 6, requestRecord(10, 2))
   let thirdAttempts = 0
+  let sixthAttempts = 0
+  let seventhAttempts = 0
   const decisions = []
   await page.route(`${origin}/**`, (route) => {
     const pathname = new URL(route.request().url()).pathname
     if (!pathname.startsWith('/api/v1/')) return asset(route, pathname)
     if (commonRoute(6, route, pathname)) return
-    if (pathname === '/api/v1/restaurants/1/kitchen/orders') return response(route, { items: [first, second, third, fourth], pageIndex: 1, totalPages: 1, totalCount: 4 })
+    if (pathname === '/api/v1/restaurants/1/kitchen/orders') return response(route, { items: [first, second, third, fourth, fifth, sixth, seventh], pageIndex: 1, totalPages: 1, totalCount: 7 })
     if (pathname === '/api/v1/restaurants/1/kitchen/orders/501/cancellation-request') return response(route, first)
     if (pathname === '/api/v1/restaurants/1/kitchen/orders/502/cancellation-request') return response(route, second)
     if (pathname === '/api/v1/restaurants/1/kitchen/orders/503/cancellation-request') return response(route, third)
     if (pathname === '/api/v1/restaurants/1/kitchen/orders/504/cancellation-request') return response(route, fourth)
+    if (pathname === '/api/v1/restaurants/1/kitchen/orders/505/cancellation-request') return response(route, fifth)
+    if (pathname === '/api/v1/restaurants/1/kitchen/orders/506/cancellation-request') return response(route, sixth)
+    if (pathname === '/api/v1/restaurants/1/kitchen/orders/507/cancellation-request') return response(route, seventh)
     if (pathname === '/api/v1/restaurants/1/kitchen/orders/501/cancellation-request/decision') {
       decisions.push(JSON.parse(route.request().postData()))
       first = order(501, 6, requestRecord(4, 4, 'Plan dəyişdi', 'Hazırlıq artıq gedir'))
@@ -191,7 +239,7 @@ async function kitchen(browser) {
     }
     if (pathname === '/api/v1/restaurants/1/kitchen/orders/502/cancellation-request/decision') {
       decisions.push(JSON.parse(route.request().postData()))
-      second = order(502, 6, requestRecord(5, 3, 'Plan dəyişdi', 'Hazırlıq dayandırıldı'))
+      second = order(502, 6, requestRecord(5, 3, 'Plan dəyişdi', 'Hazırlıq dayandırıldı', true, now))
       return route.abort('failed')
     }
     if (pathname === '/api/v1/restaurants/1/kitchen/orders/503/cancellation-request/decision') {
@@ -203,8 +251,26 @@ async function kitchen(browser) {
       return response(route, third)
     }
     if (pathname === '/api/v1/restaurants/1/kitchen/orders/504/cancellation-request/decision') {
-      fourth = order(504, 6, requestRecord(7, 3, 'Plan dəyişdi', 'Başqa aşpaz qəbul etdi'))
+      assert.deepEqual(JSON.parse(route.request().postData()), { approved: true, reason: 'Hazırlıq dayandırıldı', ingredientsUnused: true })
+      fourth = order(504, 6, requestRecord(7, 3, 'Plan dəyişdi', 'Başqa aşpaz qəbul etdi', false))
       return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ statusCode: 409, code: 'OrderCancellationRequestConflict', message: 'Decision already made' }) })
+    }
+    if (pathname === '/api/v1/restaurants/1/kitchen/orders/505/cancellation-request/decision') {
+      assert.deepEqual(JSON.parse(route.request().postData()), { approved: true, reason: 'Ərzaq istifadə olunub', ingredientsUnused: false })
+      fifth = order(505, 6, requestRecord(8, 3, 'Plan dəyişdi', 'Ərzaq istifadə olunub', false))
+      return response(route, fifth)
+    }
+    if (pathname === '/api/v1/restaurants/1/kitchen/orders/506/cancellation-request/decision') {
+      sixthAttempts++
+      assert.deepEqual(JSON.parse(route.request().postData()), { approved: true, reason: 'Hazırlıq dayandırıldı', ingredientsUnused: true })
+      if (sixthAttempts === 1) return route.abort('failed')
+      sixth = order(506, 6, requestRecord(9, 3, 'Plan dəyişdi', 'Hazırlıq dayandırıldı', true, now))
+      return response(route, sixth)
+    }
+    if (pathname === '/api/v1/restaurants/1/kitchen/orders/507/cancellation-request/decision') {
+      seventhAttempts++
+      assert.deepEqual(JSON.parse(route.request().postData()), { approved: true, reason: 'Hazırlıq dayandırıldı', ingredientsUnused: true })
+      return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ statusCode: 409, code: 'OrderStockReturnInvalid', message: 'Stok uçotu uyğun deyil. Ləğv təsdiqlənmədi.' }) })
     }
     return response(route, {})
   })
@@ -232,9 +298,31 @@ async function kitchen(browser) {
     await secondRow.getByRole('button', { name: 'Sorğunu nəzərdən keçir' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).first().click()
     await page.locator('#cancellation-request-reason').fill('Hazırlıq dayandırıldı')
+    assert.equal(await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).last().isDisabled(), true)
+    await page.getByRole('dialog').getByLabel('Xeyr, istifadə olunmayıb').check()
+    await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-390.png') })
+    await assertDecisionDialogLayout(page, '390')
+    await page.setViewportSize({ width: 320, height: 700 })
+    await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-320.png') })
+    await assertDecisionDialogLayout(page, '320')
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.evaluate(() => { document.documentElement.dataset.theme = 'dark' })
+    await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-dark-390.png') })
+    await assertDecisionDialogLayout(page, 'dark-390')
+    await page.evaluate(() => { document.documentElement.dataset.theme = 'light' })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-1440.png') })
+    await assertDecisionDialogLayout(page, '1440')
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+    await page.evaluate(() => { document.documentElement.dataset.theme = 'dark' })
+    await page.screenshot({ path: path.join(dist, 'cancellation-request-kitchen-unused-dark-1440.png') })
+    await assertDecisionDialogLayout(page, 'dark-1440')
+    await page.evaluate(() => { document.documentElement.dataset.theme = 'light' })
     await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).last().click()
     await page.getByText('Sifariş #502 ləğv edildi.').waitFor()
-    assert.deepEqual(decisions, [{ approved: false, reason: 'Hazırlıq artıq gedir' }, { approved: true, reason: 'Hazırlıq dayandırıldı' }])
+    await secondRow.getByText('İstifadə olunmamış ərzaq stoka qaytarılıb:').waitFor()
+    assert.deepEqual(decisions, [{ approved: false, reason: 'Hazırlıq artıq gedir' }, { approved: true, reason: 'Hazırlıq dayandırıldı', ingredientsUnused: true }])
     const thirdRow = page.locator('.kitchen-queue-row').filter({ hasText: '#503' })
     await thirdRow.getByRole('button', { name: 'Sorğunu nəzərdən keçir' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Sorğunu rədd et' }).first().click()
@@ -250,11 +338,46 @@ async function kitchen(browser) {
     assert.equal(thirdAttempts, 2)
     const fourthRow = page.locator('.kitchen-queue-row').filter({ hasText: '#504' })
     await fourthRow.getByRole('button', { name: 'Sorğunu nəzərdən keçir' }).click()
-    await page.getByRole('dialog').getByRole('button', { name: 'Sorğunu rədd et' }).first().click()
-    await page.locator('#cancellation-request-reason').fill('Hazırlıq davam etməlidir')
-    await page.getByRole('dialog').getByRole('button', { name: 'Sorğunu rədd et' }).last().click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).first().click()
+    await page.locator('#cancellation-request-reason').fill('Hazırlıq dayandırıldı')
+    await page.getByRole('dialog').getByLabel('Xeyr, istifadə olunmayıb').check()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).last().click()
     await page.getByText('Sifarişin vəziyyəti dəyişib. Məlumatlar yenilənir.').waitFor()
     await fourthRow.getByText('Ləğv sorğusu qəbul edildi').waitFor()
+    assert.equal(await fourthRow.getByText('İstifadə olunmamış ərzaq stoka qaytarılıb:').count(), 0)
+    const fifthRow = page.locator('.kitchen-queue-row').filter({ hasText: '#505' })
+    await fifthRow.getByRole('button', { name: 'Sorğunu nəzərdən keçir' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).first().click()
+    await page.locator('#cancellation-request-reason').fill('Ərzaq istifadə olunub')
+    await page.getByRole('dialog').getByLabel('Bəli, istifadə olunub').check()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).last().click()
+    await fifthRow.getByText('Ləğv sorğusu qəbul edildi').waitFor()
+    assert.equal(await fifthRow.getByText('İstifadə olunmamış ərzaq stoka qaytarılıb:').count(), 0)
+    const sixthRow = page.locator('.kitchen-queue-row').filter({ hasText: '#506' })
+    await sixthRow.getByRole('button', { name: 'Sorğunu nəzərdən keçir' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).first().click()
+    await page.locator('#cancellation-request-reason').fill('Hazırlıq dayandırıldı')
+    await page.getByRole('dialog').getByLabel('Xeyr, istifadə olunmayıb').check()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).last().click()
+    await page.getByText(/Nəticə məlum deyil/).waitFor()
+    await page.getByRole('dialog').getByRole('button', { name: 'Bağla' }).last().click()
+    await sixthRow.getByRole('button', { name: 'Sorğunu nəzərdən keçir' }).click()
+    await page.getByRole('dialog').getByText('Təkrar yoxlamada əvvəlki ərzaq qərarı saxlanılır:').waitFor()
+    assert.equal(await page.getByRole('dialog').getByLabel('Bəli, istifadə olunub').count(), 0)
+    await page.getByRole('dialog').getByRole('button', { name: 'Eyni cəhdi yoxla' }).click()
+    await sixthRow.getByText('İstifadə olunmamış ərzaq stoka qaytarılıb:').waitFor()
+    assert.equal(sixthAttempts, 2)
+    const seventhRow = page.locator('.kitchen-queue-row').filter({ hasText: '#507' })
+    await seventhRow.getByRole('button', { name: 'Sorğunu nəzərdən keçir' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).first().click()
+    await page.locator('#cancellation-request-reason').fill('Hazırlıq dayandırıldı')
+    await page.getByRole('dialog').getByLabel('Xeyr, istifadə olunmayıb').check()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ləğvi təsdiqlə' }).last().click()
+    await page.getByRole('dialog').getByRole('alert').getByText('Stok uçotu uyğun deyil. Ləğv təsdiqlənmədi.').waitFor()
+    assert.equal(await page.getByRole('dialog').getByLabel('Xeyr, istifadə olunmayıb').isChecked(), true)
+    assert.equal(seventhAttempts, 1)
+    await seventhRow.getByText('Mətbəxin qərarı gözlənilir').waitFor()
+    await page.getByRole('dialog').getByRole('button', { name: 'Bağla' }).last().click()
     await page.setViewportSize({ width: 320, height: 700 })
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     assert.deepEqual(errors, [])

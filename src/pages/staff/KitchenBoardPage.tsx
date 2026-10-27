@@ -81,6 +81,7 @@ function KitchenQueue({ userId, restaurantId, focusOrderId }: { userId: string; 
   const [actionStates, setActionStates] = useState<Record<number, OrderActionState>>({})
   const [warning, setWarning] = useState('')
   const [decisionChoice, setDecisionChoice] = useState<'approve' | 'reject' | null>(null)
+  const [ingredientsUnusedChoice, setIngredientsUnusedChoice] = useState<boolean | null>(null)
   const [focusedOrderState, setFocusedOrderState] = useState<{ scope: string; order: KitchenOrderResponse } | null>(null)
   const [focusError, setFocusError] = useState('')
   const focusScope = `${restaurantId}:${focusOrderId ?? ''}`
@@ -101,9 +102,9 @@ function KitchenQueue({ userId, restaurantId, focusOrderId }: { userId: string; 
   const queue = useKitchenQueue(userId, restaurantId, page, statusId, revision)
   const cancellationRequest = useCancellationRequestAction<KitchenOrderResponse>(
     `${userId}:${restaurantId}:${statusId ?? 'all'}:${page}`,
-    (orderId, operation, reason) => ecafeApi.kitchen.decideCancellationRequest(restaurantId, orderId, operation === 'approve', reason),
+    (orderId, operation, reason, ingredientsUnused) => ecafeApi.kitchen.decideCancellationRequest(restaurantId, orderId, operation === 'approve', reason, ingredientsUnused),
     (orderId) => ecafeApi.kitchen.getCancellationRequest(restaurantId, orderId),
-    (order) => { queue.applyOrder(order); if (order.id === focusOrderId) setFocusedOrderState({ scope: focusScope, order }); setDecisionChoice(null); setRevision((value) => value + 1) },
+    (order) => { queue.applyOrder(order); if (order.id === focusOrderId) setFocusedOrderState({ scope: focusScope, order }); setDecisionChoice(null); setIngredientsUnusedChoice(null); setRevision((value) => value + 1) },
     () => setRevision((value) => value + 1),
   )
 
@@ -169,6 +170,7 @@ function KitchenQueue({ userId, restaurantId, focusOrderId }: { userId: string; 
     const uncertain = cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? cancellationRequest.intent : null
     if (cancellationRequest.intent?.uncertain && !uncertain) return
     setDecisionChoice(uncertain ? uncertain.operation as 'approve' | 'reject' : null)
+    setIngredientsUnusedChoice(uncertain ? uncertain.ingredientsUnused : null)
     cancellationRequest.open(uncertain?.order ?? order, uncertain?.operation ?? 'approve')
   }
 
@@ -263,7 +265,7 @@ function KitchenQueue({ userId, restaurantId, focusOrderId }: { userId: string; 
     {queue.data && queue.data.items.length === 0 && !focusedOrder ? <div className="kitchen-queue-empty"><ClipboardList size={24} aria-hidden="true" /><strong>{i18n.t('ui.pages.staff.kitchen_board_page.hazirda_sifaris_yoxdur_927267')}</strong></div> : null}
     {queue.data && queue.data.items.length > 0 ? <div className="kitchen-queue-list"><div className="kitchen-queue-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.kitchen_board_page.sifaris_vaxt_e1170e')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.masa_058c4c')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.mehsullar_dbcc49')}</span><span>{i18n.t('ui.pages.staff.kitchen_board_page.veziyyet_emeliyyat_12c45b')}</span></div>{queue.data.items.map((order) => <KitchenTicket key={order.id} order={order} focused={order.id === focusOrderId} actionState={actionStates[order.id]} actionsDisabled={queue.isStale || Boolean(queue.error) || cancellationRequest.intent?.order.id === order.id && cancellationRequest.busy} now={now} onAction={(action) => void runAction(order.id, action)} onReview={() => openReview(order)} />)}</div> : null}
     {queue.data ? <PaginationControls ariaLabel={i18n.t('ui.pages.staff.kitchen_board_page.metbex_novbesi_sehifeleri_bf1e48')} pageIndex={queue.data.pageIndex} totalPages={queue.data.totalPages} totalCount={queue.data.totalCount} pageSize={20} hasPreviousPage={queue.data.hasPreviousPage} hasNextPage={queue.data.hasNextPage} onPageChange={(nextPage) => { scopeGenerationRef.current += 1; setPage(nextPage) }} /> : null}
-    {cancellationRequest.intent?.visible ? <CancellationRequestDialog key={cancellationRequest.intent.order.id} order={cancellationRequest.intent.order} operation={cancellationRequest.intent.operation} decisionChoice={cancellationRequest.intent.uncertain ? cancellationRequest.intent.operation as 'approve' | 'reject' : decisionChoice} onDecisionChoice={(choice) => { setDecisionChoice(choice); cancellationRequest.open(cancellationRequest.intent!.order, choice) }} busy={cancellationRequest.busy} error={cancellationRequest.error} uncertainReason={cancellationRequest.intent.uncertain ? cancellationRequest.intent.reason : null} onClose={() => { setDecisionChoice(null); cancellationRequest.close() }} onConfirm={(reason) => void cancellationRequest.submit(reason)} /> : null}
+    {cancellationRequest.intent?.visible ? <CancellationRequestDialog key={cancellationRequest.intent.order.id} order={cancellationRequest.intent.order} operation={cancellationRequest.intent.operation} decisionChoice={cancellationRequest.intent.uncertain ? cancellationRequest.intent.operation as 'approve' | 'reject' : decisionChoice} onDecisionChoice={(choice) => { setDecisionChoice(choice); setIngredientsUnusedChoice(null); cancellationRequest.open(cancellationRequest.intent!.order, choice) }} ingredientsUnused={cancellationRequest.intent.uncertain ? cancellationRequest.intent.ingredientsUnused : ingredientsUnusedChoice} onIngredientsUnusedChange={setIngredientsUnusedChoice} busy={cancellationRequest.busy} error={cancellationRequest.error} uncertainReason={cancellationRequest.intent.uncertain ? cancellationRequest.intent.reason : null} onClose={() => { setDecisionChoice(null); setIngredientsUnusedChoice(null); cancellationRequest.close() }} onConfirm={(reason, unused) => void cancellationRequest.submit(reason, unused)} /> : null}
   </section>
 }
 
