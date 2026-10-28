@@ -85,9 +85,12 @@ async function assertDecisionDialogLayout(page, name) {
   const scrolled = await page.evaluate(() => {
     const body = document.querySelector('.cancellation-request-dialog .reservation-action-dialog-body').getBoundingClientRect()
     const info = document.querySelector('.cancellation-request-dialog .cancellation-request-info').getBoundingClientRect()
-    return { body, info }
+    const header = document.querySelector('.cancellation-request-dialog .reservation-action-dialog-header').getBoundingClientRect()
+    const title = document.querySelector('#cancellation-request-title').getBoundingClientRect()
+    return { body, info, header, title }
   })
   assert.ok(scrolled.info.top >= scrolled.body.top - 1 && scrolled.info.bottom <= scrolled.body.bottom + 1, `${name}: request info is hidden after scrolling`)
+  assert.ok(scrolled.title.width > 0 && scrolled.title.height > 0 && scrolled.title.top >= scrolled.header.top - 1 && scrolled.title.bottom <= scrolled.header.bottom + 1, `${name}: title is hidden after scrolling`)
   await page.screenshot({ path: path.join(dist, `cancellation-request-kitchen-unused-${name}-scrolled.png`) })
   await page.locator('.reservation-action-dialog-body').evaluate((body) => { body.scrollTop = 0 })
 }
