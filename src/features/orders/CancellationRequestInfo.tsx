@@ -11,7 +11,7 @@ export function CancellationRequestInfo({ request, timeZone }: { request: OrderC
     {request.decisionReason ? <p><span>{i18n.t('ui.cancellationRequest.decisionReason')}</span>{request.decisionReason}</p> : null}
     {request.forwardedAt ? <small>{i18n.t('ui.cancellationRequest.forwardedAt')} {formatReservationDateTime(request.forwardedAt, timeZone)}</small> : null}
     {request.resolvedAt ? <small>{i18n.t('ui.cancellationRequest.resolvedAt')} {formatReservationDateTime(request.resolvedAt, timeZone)}</small> : null}
-    {request.statusId === cancellationRequestStatus.approved && request.ingredientsUnused === true && request.stockReturnedAt
-      ? <small className="cancellation-request-stock-returned">{i18n.t('ui.cancellationRequest.stockReturnedAt')} {formatReservationDateTime(request.stockReturnedAt, timeZone)}</small> : null}
+    {request.statusId === cancellationRequestStatus.approved && request.stockReturnedAt
+      ? <small className="cancellation-request-stock-returned">{i18n.t('ui.partialStockReturn.returnedAt')} {formatReservationDateTime(request.stockReturnedAt, timeZone)}</small> : null}
   </div>
 }

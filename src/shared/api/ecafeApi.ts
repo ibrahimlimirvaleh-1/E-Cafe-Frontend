@@ -363,8 +363,22 @@ export type OrderCancellationRequestResponse = {
   resolvedAt: string | null
   decisionReason: string | null
   ingredientsUnused: boolean | null
+  stockReturnMode: StockReturnMode | null
   stockReturnedAt: string | null
 }
+
+export type StockReturnMode = 1 | 2 | 3
+export type StockReturnEntry = { inventoryItemId: number; returnQuantity: string }
+export type CancellationStockReturnSelection = { mode: StockReturnMode; stockReturns: StockReturnEntry[] }
+export type KitchenStockReturnIngredient = {
+  inventoryItemId: number
+  name: string
+  unitId: number
+  unitName: string
+  unitCode: string
+  consumedQuantity: string
+}
+export type KitchenStockReturnPreview = { orderId: number; ingredients: KitchenStockReturnIngredient[] }
 
 export type SessionOrderResponse = {
   id: number
@@ -463,6 +477,7 @@ export type KitchenOrderResponse = {
   canMarkReady: boolean
   canDecideCancellationRequest: boolean
   cancellationRequest: OrderCancellationRequestResponse | null
+  stockReturns: StockReturnEntry[] | null
   note: string | null
   items: { id: number; itemId: number; name: string; quantity: number; note: string | null }[]
 }
@@ -479,6 +494,7 @@ function mapOrderCancellationRequest(value: unknown): OrderCancellationRequestRe
     resolvedAt: record.resolvedAt == null ? null : str(record.resolvedAt),
     decisionReason: record.decisionReason == null ? null : str(record.decisionReason),
     ingredientsUnused: typeof record.ingredientsUnused === 'boolean' ? record.ingredientsUnused : null,
+    stockReturnMode: [1, 2, 3].includes(num(record.stockReturnMode)) ? num(record.stockReturnMode) as StockReturnMode : null,
     stockReturnedAt: record.stockReturnedAt == null ? null : str(record.stockReturnedAt),
   }
 }
@@ -625,6 +641,10 @@ function mapKitchenOrder(record: AnyRecord): KitchenOrderResponse {
     canMarkReady: bool(record.canMarkReady),
     canDecideCancellationRequest: bool(record.canDecideCancellationRequest),
     cancellationRequest: mapOrderCancellationRequest(record.cancellationRequest),
+    stockReturns: record.stockReturns == null ? null : asArray<AnyRecord>(record.stockReturns).map((item) => ({
+      inventoryItemId: item.inventoryItemId == null ? Number.NaN : num(item.inventoryItemId),
+      returnQuantity: str(item.returnQuantityText ?? item.returnQuantity),
+    })),
     note: record.note == null ? null : str(record.note),
     items: asArray<AnyRecord>(record.items).map((item) => ({
       id: num(item.id),
@@ -634,6 +654,23 @@ function mapKitchenOrder(record: AnyRecord): KitchenOrderResponse {
       note: item.note == null ? null : str(item.note),
     })),
   }
+}
+
+function mapKitchenStockReturnPreview(value: unknown, orderId: number): KitchenStockReturnPreview {
+  if (!value || typeof value !== 'object') throw new Error('Invalid stock return preview')
+  const record = value as AnyRecord
+  if (num(record.orderId) !== orderId || !Array.isArray(record.ingredients)) throw new Error('Invalid stock return preview')
+  const ingredients = record.ingredients.map((value: unknown) => {
+    if (!value || typeof value !== 'object') throw new Error('Invalid stock return preview')
+    const ingredient = value as AnyRecord
+    const inventoryItemId = Number(ingredient.inventoryItemId)
+    const unitId = Number(ingredient.unitId)
+    const consumedQuantity = str(ingredient.consumedQuantityText ?? ingredient.consumedQuantity)
+    if (ingredient.consumedQuantityText == null && typeof ingredient.consumedQuantity === 'number' && ingredient.consumedQuantity > 1_000_000_000 || !/^(?:0|[1-9]\d{0,11})(?:\.\d{1,6})?$/.test(consumedQuantity) || !Number.isSafeInteger(inventoryItemId) || inventoryItemId <= 0 || !Number.isSafeInteger(unitId) || unitId <= 0 || !str(ingredient.name).trim()) throw new Error('Invalid stock return preview')
+    return { inventoryItemId, name: str(ingredient.name), unitId, unitName: str(ingredient.unitName), unitCode: str(ingredient.unitCode), consumedQuantity }
+  })
+  if (new Set(ingredients.map((item) => item.inventoryItemId)).size !== ingredients.length) throw new Error('Invalid stock return preview')
+  return { orderId, ingredients }
 }
 
 export type ReservationWaitingInfo = {
@@ -2535,10 +2572,17 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(endpoints.kitchen.cancellationRequest(restaurantId, orderId), { signal })
       return mapKitchenOrder(result.data as AnyRecord)
     },
-    decideCancellationRequest: async (restaurantId: string, orderId: number, approved: boolean, reason: string, ingredientsUnused: boolean | null) => {
-      if (approved && ingredientsUnused === null) throw new Error('An explicit ingredient-use decision is required')
+    getCancellationStockReturn: async (restaurantId: string, orderId: number, signal?: AbortSignal) => {
+      const result = await httpClient<unknown>(endpoints.kitchen.cancellationStockReturn(restaurantId, orderId), { signal })
+      return mapKitchenStockReturnPreview(result.data, orderId)
+    },
+    decideCancellationRequest: async (restaurantId: string, orderId: number, approved: boolean, reason: string, selection: CancellationStockReturnSelection | null) => {
+      if (approved && !selection) throw new Error('An explicit stock return decision is required')
       const result = await httpClient<unknown>(endpoints.kitchen.cancellationDecision(restaurantId, orderId), {
-        method: 'POST', body: JSON.stringify(approved ? { approved, reason: reason.trim(), ingredientsUnused } : { approved, reason: reason.trim() }),
+        method: 'POST', body: JSON.stringify(approved ? {
+          approved, reason: reason.trim(), stockReturnMode: selection!.mode,
+          ...(selection!.mode === 3 ? { stockReturns: selection!.stockReturns } : {}),
+        } : { approved, reason: reason.trim() }),
       })
       return mapKitchenOrder(result.data as AnyRecord)
     },
