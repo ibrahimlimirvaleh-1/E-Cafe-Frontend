@@ -2,30 +2,79 @@
 .cancellation-request-info-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
 .cancellation-request-info-heading time, .cancellation-request-info small, .cancellation-request-info p span { color: var(--on-surface-variant); font-size: 12px; }
 .cancellation-request-info p { display: grid; gap: 2px; margin: 0; }
-.cancellation-request-dialog { grid-template-rows: auto minmax(0, 1fr) auto; max-height: min(90dvh, 720px); overflow: hidden; border-radius: 8px; }
-.cancellation-request-dialog .reservation-action-dialog-body { display: flex; flex-direction: column; align-items: stretch; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 3px; }
+.cancellation-request-dialog { grid-template-rows: auto minmax(0, 1fr) auto; gap: 0; max-height: min(90dvh, 760px); overflow: hidden; border-radius: 8px; padding: 0; }
+.cancellation-request-dialog.is-kitchen-decision { width: min(760px, 100%); }
+.cancellation-request-dialog .reservation-action-dialog-header { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 12px; min-width: 0; padding: 16px 20px; border-bottom: 1px solid var(--outline-variant); }
+.cancellation-request-dialog .reservation-action-dialog-header h2 { min-width: 0; margin: 0; color: var(--on-surface); font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
+.cancellation-request-dialog .reservation-action-dialog-body { display: flex; flex-direction: column; align-items: stretch; min-height: 0; overflow-y: auto; overscroll-behavior: contain; gap: 12px; padding: 18px 20px; }
 .cancellation-request-dialog .reservation-action-dialog-body > * { flex: none; }
-.cancellation-request-dialog .reservation-action-dialog-actions { padding-top: 12px; border-top: 1px solid var(--outline-variant); }
-.cancellation-request-dialog .reservation-action-dialog-close, .cancellation-request-dialog .reservation-action-dialog-actions .ui-button { min-height: 44px; }
-.cancellation-request-dialog .reservation-action-dialog-close { min-width: 44px; }
+.cancellation-request-dialog .reservation-action-dialog-actions { padding: 14px 20px; border-top: 1px solid var(--outline-variant); background: var(--surface-lowest); }
+.cancellation-request-dialog .reservation-action-dialog-close, .cancellation-request-dialog .reservation-action-dialog-actions .ui-button { min-width: 44px; min-height: 44px; }
 .cancellation-request-dialog .order-cancel-field select, .cancellation-request-dialog .order-cancel-field textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--on-surface); font: inherit; font-weight: 400; }
-.cancellation-request-dialog .order-cancel-field textarea { min-height: 88px; }
-.cancellation-request-dialog .order-cancel-field { display: grid; gap: 7px; margin-top: 8px; color: var(--on-surface); font-size: 13px; font-weight: 700; }
+.cancellation-request-dialog .order-cancel-field textarea { min-height: 82px; resize: vertical; }
+.cancellation-request-dialog .order-cancel-field { display: grid; gap: 7px; margin: 0; color: var(--on-surface); font-size: 13px; font-weight: 700; }
 .cancellation-request-dialog .order-cancel-error { color: var(--error); }
+.cancellation-request-summary { overflow-wrap: anywhere; }
+.cancellation-request-summary strong { color: var(--on-surface); }
 .cancellation-request-choice { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-low); }
 .cancellation-request-choice button { flex: 1; min-height: 44px; border: 0; border-radius: 4px; background: transparent; color: var(--on-surface-variant); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .cancellation-request-choice button[aria-pressed='true'] { background: var(--surface-lowest); color: var(--on-surface); box-shadow: 0 1px 3px rgb(0 0 0 / 10%); }
 .cancellation-request-choice button:focus-visible { outline: 2px solid var(--secondary); }
-.cancellation-request-ingredients { min-width: 0; margin: 14px 0 0; padding: 0; border: 0; }
+.cancellation-request-ingredients { min-width: 0; margin: 2px 0 0; padding: 0; border: 0; }
 .cancellation-request-ingredients legend { margin-bottom: 8px; color: var(--on-surface); font-size: 13px; font-weight: 700; }
-.cancellation-request-ingredients-options { display: grid; gap: 8px; }
-.cancellation-request-ingredients-options label { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 12px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--on-surface); cursor: pointer; }
+.cancellation-request-ingredients-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.cancellation-request-ingredients-options label { display: flex; align-items: flex-start; gap: 10px; min-width: 0; min-height: 74px; padding: 12px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--on-surface); cursor: pointer; }
 .cancellation-request-ingredients-options label:has(input:checked) { border-color: var(--secondary); background: var(--surface-low); }
 .cancellation-request-ingredients-options label:has(input:focus-visible) { outline: 2px solid var(--secondary); outline-offset: 2px; }
-.cancellation-request-ingredients-options input { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--secondary); }
-.cancellation-request-ingredients-options span { display: grid; gap: 2px; min-width: 0; font-size: 13px; }
-.cancellation-request-ingredients-options small { color: var(--on-surface-variant); font-size: 12px; font-weight: 400; }
+.cancellation-request-ingredients-options input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--secondary); }
+.cancellation-request-ingredients-options span { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.cancellation-request-ingredients-options small { color: var(--on-surface-variant); font-size: 12px; font-weight: 400; line-height: 1.35; }
 .cancellation-request-stock-returned { color: var(--secondary) !important; font-weight: 700; }
-.cancellation-request-products { display: grid; gap: 4px; max-height: 120px; overflow-y: auto; margin: 12px 0; padding: 10px 0 10px 24px; border-block: 1px solid var(--outline-variant); font-size: 13px; }
-.cancellation-request-locked { overflow-wrap: anywhere; }
-@media (max-width: 520px) { .cancellation-request-dialog { max-height: calc(100dvh - 24px); } }
+.cancellation-request-products { display: grid; gap: 4px; max-height: 104px; overflow-y: auto; margin: 2px 0 0; padding: 10px 0 10px 24px; border-block: 1px solid var(--outline-variant); font-size: 13px; }
+.cancellation-request-locked { display: grid; gap: 4px; overflow-wrap: anywhere; }
+.cancellation-request-locked small { color: var(--on-surface-variant); }
+.cancellation-request-dialog .cancellation-request-info { padding: 0; border: 0; background: transparent; }
+.cancellation-stock-preview { display: grid; gap: 12px; min-width: 0; padding-top: 12px; border-top: 1px solid var(--outline-variant); }
+.cancellation-stock-preview-error { display: grid; justify-items: start; gap: 10px; }
+.cancellation-stock-preview-error .ui-button { min-height: 44px; gap: 8px; }
+.cancellation-stock-summary { display: grid; gap: 10px; min-width: 0; font-size: 13px; }
+.cancellation-stock-summary ul { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.cancellation-stock-summary li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--outline-variant); overflow-wrap: anywhere; }
+.cancellation-stock-summary li strong { white-space: nowrap; }
+.cancellation-stock-grid { display: grid; min-width: 0; font-size: 13px; }
+.cancellation-stock-grid-head, .cancellation-stock-row { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr) minmax(0, 1fr) minmax(0, 0.85fr); gap: 12px; align-items: center; }
+.cancellation-stock-grid-head { padding: 10px 0; border-bottom: 1px solid var(--outline-variant); color: var(--on-surface-variant); font-size: 11px; font-weight: 700; }
+.cancellation-stock-row { padding: 12px 0; border-bottom: 1px solid var(--outline-variant); }
+.cancellation-stock-row > * { min-width: 0; overflow-wrap: anywhere; }
+.cancellation-stock-row > span { font-variant-numeric: tabular-nums; }
+.cancellation-stock-row label { display: flex; align-items: center; gap: 6px; }
+.cancellation-stock-row label input { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--on-surface); font: inherit; font-variant-numeric: tabular-nums; }
+.cancellation-stock-row label input[aria-invalid='true'] { border-color: var(--error); }
+.cancellation-stock-row label small { flex: none; color: var(--on-surface-variant); }
+.cancellation-stock-row-error { grid-column: 3 / -1; }
+
+@media (max-width: 700px) {
+  .cancellation-request-ingredients-options { grid-template-columns: 1fr; }
+  .cancellation-request-ingredients-options label { min-height: 56px; }
+  .cancellation-stock-grid-head { display: none; }
+  .cancellation-stock-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; align-items: end; }
+  .cancellation-stock-name { grid-column: 1 / -1; }
+  .cancellation-stock-row [data-label]::before { content: attr(data-label); display: block; margin-bottom: 5px; color: var(--on-surface-variant); font-size: 11px; font-weight: 700; }
+  .cancellation-stock-row label { display: block; }
+  .cancellation-stock-row label input { width: calc(100% - 30px); }
+  .cancellation-stock-row label small { margin-left: 5px; }
+  .cancellation-stock-row-error { grid-column: 1 / -1; }
+}
+
+@media (max-width: 520px) {
+  .modal-backdrop.reservation-action-backdrop { padding: 10px; }
+  .cancellation-request-dialog { max-height: calc(100dvh - 20px); }
+  .cancellation-request-dialog .reservation-action-dialog-header,
+  .cancellation-request-dialog .reservation-action-dialog-actions { padding: 12px 16px; }
+  .cancellation-request-dialog .reservation-action-dialog-header { gap: 10px; }
+  .cancellation-request-dialog .reservation-action-dialog-header h2 { font-size: 16px; }
+  .cancellation-request-dialog .reservation-action-dialog-body { padding: 14px 16px; }
+  .cancellation-stock-row { grid-template-columns: minmax(0, 1fr); }
+  .cancellation-stock-name { grid-column: 1; }
+  .cancellation-stock-row label input { width: calc(100% - 34px); }
+}

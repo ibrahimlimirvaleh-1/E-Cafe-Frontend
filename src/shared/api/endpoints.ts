@@ -218,6 +218,8 @@ export const endpoints = {
       `/restaurants/${restaurantId}/kitchen/orders/${orderId}/cancellation-request`,
     cancellationDecision: (restaurantId: string, orderId: number) =>
       `/restaurants/${restaurantId}/kitchen/orders/${orderId}/cancellation-request/decision`,
+    cancellationStockReturn: (restaurantId: string, orderId: number) =>
+      `/restaurants/${restaurantId}/kitchen/orders/${orderId}/cancellation-request/stock-return`,
   },
   staff: {
     list: (restaurantId: string) => `/staff/${restaurantId}`,
