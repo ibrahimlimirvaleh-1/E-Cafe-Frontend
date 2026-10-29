@@ -8,9 +8,11 @@ import {
   getReservationErrorMessage,
   isCustomerDailyReservationLimit,
   isDepositAmountChanged,
+  isReservationArrivalCutoffPassed,
   isTableReservationConflict,
 } from '../../features/menu/reservationErrors'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
+import { getAvailabilityMessage, isAvailabilityBookable } from '../../features/menu/reservationAvailability'
 import { ecafeApi, type TableAvailabilityResponse } from '../../shared/api/ecafeApi'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -60,6 +62,7 @@ export function TableSelectionPage() {
   const [reservationError, setReservationError] = useState('')
   const [reservationErrorTone, setReservationErrorTone] = useState<'danger' | 'warning'>('danger')
   const [unavailableTableIds, setUnavailableTableIds] = useState<Set<string>>(new Set())
+  const [availabilityReload, setAvailabilityReload] = useState(0)
   const { data: availability, error: availabilityError, isLoading } = useAsyncData<TableAvailabilityResponse | null>(
     async () => {
       if (!reservedAt) {
@@ -69,7 +72,7 @@ export function TableSelectionPage() {
       return ecafeApi.tables.checkAvailability(restaurantId, reservedAt)
     },
     null,
-    [restaurantId, reservedAt, peopleCount],
+    [restaurantId, reservedAt, peopleCount, availabilityReload],
   )
   const displayedDepositAmount = latestDepositAmount ?? availability?.depositAmount
 
@@ -87,6 +90,7 @@ export function TableSelectionPage() {
   }
 
   const handleTableSelect = (tableId: string) => {
+    if (!availability || !isAvailabilityBookable(availability)) return
     if (displayedDepositAmount === undefined) {
       setReservationError('Bu tarix üçün depozit məlumatı yüklənməyib. Səhifəni yeniləyib yenidən yoxlayın.')
       return
@@ -97,18 +101,40 @@ export function TableSelectionPage() {
     setAcceptsLimitedSeating(false)
   }
 
-  const handlePreorder = () => {
+  const refreshSelectionAvailability = async () => {
+    const current = await ecafeApi.tables.checkAvailability(restaurantId, reservedAt)
+    if (!isAvailabilityBookable(current) || (current.tables.length > 0 && !current.tables.some((table) => table.id === selectedTableId))) {
+      setSelectedTableId(null)
+      setPendingDepositAmount(null)
+      setLatestDepositAmount(null)
+      setAvailabilityReload((value) => value + 1)
+      setReservationErrorTone('warning')
+      setReservationError(getAvailabilityMessage(current))
+      return null
+    }
+    return current
+  }
+
+  const handlePreorder = async () => {
     if (!selectedTableId || displayedDepositAmount === undefined) {
       return
     }
-
-    const nextParams = new URLSearchParams(searchParams)
-    nextParams.set('tableId', selectedTableId)
-    nextParams.set('shownDepositAmount', String(displayedDepositAmount))
-    if (selectedTable?.mustVacateAt && acceptsLimitedSeating) {
-      nextParams.set('acceptsLimitedSeating', 'true')
+    setIsCreatingReservation(true)
+    try {
+      const current = await refreshSelectionAvailability()
+      if (!current) return
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('tableId', selectedTableId)
+      nextParams.set('shownDepositAmount', String(current.depositAmount ?? displayedDepositAmount))
+      if (selectedTable?.mustVacateAt && acceptsLimitedSeating) {
+        nextParams.set('acceptsLimitedSeating', 'true')
+      }
+      navigate(`/restaurants/${restaurantId}/menu?${nextParams.toString()}`)
+    } catch (error) {
+      await handleCreateError(error)
+    } finally {
+      setIsCreatingReservation(false)
     }
-    navigate(`/restaurants/${restaurantId}/menu?${nextParams.toString()}`)
   }
 
   const createReservation = async (depositAmount: number) => {
@@ -129,7 +155,9 @@ export function TableSelectionPage() {
   const handleCreateError = async (error: unknown) => {
     if (isDepositAmountChanged(error)) {
       try {
-        const currentAmount = (await ecafeApi.tables.checkAvailability(restaurantId, reservedAt)).depositAmount
+        const currentAvailability = await refreshSelectionAvailability()
+        if (!currentAvailability) return
+        const currentAmount = currentAvailability.depositAmount
         if (currentAmount !== undefined) {
           setLatestDepositAmount(currentAmount)
           setPendingDepositAmount(currentAmount)
@@ -140,11 +168,16 @@ export function TableSelectionPage() {
       }
     }
     const tableConflict = isTableReservationConflict(error)
+    const cutoffPassed = isReservationArrivalCutoffPassed(error)
+    if (cutoffPassed) {
+      setSelectedTableId(null)
+      setAvailabilityReload((value) => value + 1)
+    }
     if (tableConflict && selectedTableId) {
       setUnavailableTableIds((current) => new Set(current).add(selectedTableId))
       setSelectedTableId(null)
     }
-    setReservationErrorTone(isCustomerDailyReservationLimit(error) ? 'warning' : 'danger')
+    setReservationErrorTone(isCustomerDailyReservationLimit(error) || cutoffPassed ? 'warning' : 'danger')
     setReservationError(getReservationErrorMessage(error))
   }
 
@@ -156,7 +189,9 @@ export function TableSelectionPage() {
     setIsCreatingReservation(true)
 
     try {
-      const currentAmount = (await ecafeApi.tables.checkAvailability(restaurantId, reservedAt)).depositAmount
+      const currentAvailability = await refreshSelectionAvailability()
+      if (!currentAvailability) return
+      const currentAmount = currentAvailability.depositAmount
       if (currentAmount === undefined) {
         setReservationError('Bu tarix üçün depozit məlumatı yüklənməyib. Yenidən yoxlayın.')
         return
@@ -180,6 +215,13 @@ export function TableSelectionPage() {
     setIsCreatingReservation(true)
     setReservationError('')
     try {
+      const current = await refreshSelectionAvailability()
+      if (!current) return
+      if (current.depositAmount !== pendingDepositAmount) {
+        setPendingDepositAmount(current.depositAmount ?? null)
+        setLatestDepositAmount(current.depositAmount ?? null)
+        return
+      }
       await createReservation(pendingDepositAmount)
       setPendingDepositAmount(null)
     } catch (error) {
@@ -191,7 +233,7 @@ export function TableSelectionPage() {
   }
 
   const tables = availability?.tables ?? []
-  const visibleTables = isLoading || availabilityError
+  const visibleTables = isLoading || availabilityError || !availability || !isAvailabilityBookable(availability)
     ? []
     : tables
       .filter((table) => table.capacity >= peopleCount)
@@ -232,15 +274,15 @@ export function TableSelectionPage() {
         </div>
         <div className="reservation-table-legend"><span><i className="available" /> {i18n.t('ui.pages.customer.table_selection_page.bosdur_23162a')}</span><span><i className="capacity" /> {i18n.t('ui.pages.customer.table_selection_page.tutum_1c836d')}</span></div>
       </div>
-      {availability?.message ? (
-        <p className={`reservation-availability-message ${availability.hasAvailableTable ? 'success' : 'warning'}`}>
-          {availability.message}
+      {availability && (availability.message || !isAvailabilityBookable(availability)) ? (
+        <p className={`reservation-availability-message ${isAvailabilityBookable(availability) ? 'success' : 'warning'}`}>
+          {isAvailabilityBookable(availability) ? availability.message : getAvailabilityMessage(availability)}
         </p>
       ) : null}
       {reservationError ? <p className={`reservation-availability-message ${reservationErrorTone}`}>{reservationError}</p> : null}
       {availabilityError ? <p className="reservation-availability-message danger">{i18n.t('ui.pages.customer.table_selection_page.masalarin_veziyyeti_yuklenmedi_sehifen_924e25')}</p> : null}
       {isLoading ? <p className="online-only">{i18n.t('ui.pages.customer.table_selection_page.masalar_yuklenir_fa9b85')}</p> : null}
-      {!isLoading && !availabilityError && visibleTables.length === 0 ? <p className="online-only">{availability?.message || 'Bu saat üçün uyğun masa yoxdur. Başqa saat seçin.'}</p> : null}
+      {!isLoading && !availabilityError && visibleTables.length === 0 && !availability ? <p className="online-only">Bu saat üçün uyğun masa yoxdur. Başqa saat seçin.</p> : null}
       <section className="choice-grid reservation-table-grid">
         {visibleTables.map((table) => {
           return (

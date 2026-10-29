@@ -1,6 +1,7 @@
 import type { RestaurantWorkingHour } from '../../entities/types'
 import { httpClient } from '../../shared/api/httpClient'
 import { endpoints } from '../../shared/api/endpoints'
+import { workingHoursRequest } from '../../shared/lib/workingHours'
 
 export type ScheduleParticipant = {
   id: number; reservationId: number | null; tableSessionId: number | null
@@ -22,13 +23,14 @@ export type ScheduleOffer = {
 function normalizeChange(change: ScheduleChange | null) {
   return change ? { ...change, workingHours: change.workingHours.map(hour => ({
     ...hour, opensAt: hour.opensAt.slice(0, 5), closesAt: hour.closesAt.slice(0, 5),
+    lastReservationArrivalAt: hour.lastReservationArrivalAt?.slice(0, 5) || null,
   })) } : null
 }
 
 export const scheduleApi = {
   get: async (id: string) => normalizeChange((await httpClient<ScheduleChange | null>(endpoints.schedule.get(id))).data),
   propose: async (id: string, workingHours: RestaurantWorkingHour[], reason: string) =>
-    normalizeChange((await httpClient<ScheduleChange>(endpoints.schedule.get(id), { method: 'POST', body: JSON.stringify({ workingHours, reason }) })).data)!,
+    normalizeChange((await httpClient<ScheduleChange>(endpoints.schedule.get(id), { method: 'POST', body: JSON.stringify({ workingHours: workingHoursRequest(workingHours), reason }) })).data)!,
   apply: async (id: string, token: string) =>
     normalizeChange((await httpClient<ScheduleChange>(endpoints.schedule.apply(id), { method: 'POST', body: JSON.stringify({ token }) })).data)!,
   withdraw: async (id: string, token: string) =>

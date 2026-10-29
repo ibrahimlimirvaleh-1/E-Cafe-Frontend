@@ -1,10 +1,15 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { CalendarClock, CheckCircle2, Clock, Table2, Users } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ReservationStepper } from '../../features/menu/ReservationStepper'
+import { getAvailabilityMessage, isAvailabilityBookable } from '../../features/menu/reservationAvailability'
 import { ecafeApi, type TableAvailabilityResponse } from '../../shared/api/ecafeApi'
+import type { Restaurant } from '../../entities/types'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { getReservationDayHours } from '../../shared/lib/workingHours'
 import { Button } from '../../shared/ui/Button'
 import { LocalizedDateInput } from '../../shared/ui/LocalizedDateInput'
 import { PageHeader } from '../../shared/ui/PageHeader'
@@ -44,6 +49,7 @@ function formatReservedAt(value: string) {
 }
 
 export function ReservationTimePage() {
+  const { i18n: translation } = useTranslation()
   const { restaurantId = '' } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -58,20 +64,34 @@ export function ReservationTimePage() {
   const [availability, setAvailability] = useState<TableAvailabilityResponse | null>(null)
   const [error, setError] = useState('')
   const [isChecking, setIsChecking] = useState(false)
+  const selectionVersion = useRef(0)
+  const { data: restaurant } = useAsyncData<Restaurant | null>(() => ecafeApi.restaurants.detail(restaurantId), null, [restaurantId, translation.resolvedLanguage])
   const reservedAt = buildReservedAt(date, time)
+  const dayHours = restaurant?.workingHours.length ? getReservationDayHours(restaurant.workingHours, date, time) : null
   const [hours, minutes] = time.split(':')
+
+  function changeSelection(nextDate: string, nextTime: string) {
+    selectionVersion.current++
+    setIsChecking(false)
+    setDate(nextDate)
+    setTime(nextTime)
+    setAvailability(null)
+    setError('')
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const requestVersion = ++selectionVersion.current
     setError('')
     setAvailability(null)
     setIsChecking(true)
 
     try {
       const result = await ecafeApi.tables.checkAvailability(restaurantId, reservedAt)
+      if (selectionVersion.current !== requestVersion) return
       setAvailability(result)
 
-      if (result.hasAvailableTable) {
+      if (isAvailabilityBookable(result)) {
         const params = new URLSearchParams({
           reservedAt: result.reservedAt || reservedAt,
           availableCount: String(result.availableCount),
@@ -80,9 +100,10 @@ export function ReservationTimePage() {
         navigate(`/restaurants/${restaurantId}/tables?${params.toString()}`)
       }
     } catch (apiError) {
+      if (selectionVersion.current !== requestVersion) return
       setError(apiError instanceof Error ? apiError.message : 'Boş masa yoxlanıla bilmədi.')
     } finally {
-      setIsChecking(false)
+      if (selectionVersion.current === requestVersion) setIsChecking(false)
     }
   }
 
@@ -107,16 +128,16 @@ export function ReservationTimePage() {
         <form className="reservation-time-form" onSubmit={handleSubmit}>
           <label className="reservation-field">
             <span>{i18n.t('ui.pages.customer.reservation_time_page.tarix_2dc57a')}</span>
-            <LocalizedDateInput min={toDateInputValue(new Date())} onChange={(event) => setDate(event.target.value)} value={date} />
+            <LocalizedDateInput min={toDateInputValue(new Date())} onChange={(event) => changeSelection(event.target.value, time)} value={date} />
           </label>
           <label className="reservation-field">
             <span>{i18n.t('ui.pages.customer.reservation_time_page.gelis_saati_a2cc3f')}</span>
             <div className="reservation-time-input" role="group" aria-label={i18n.t('ui.pages.customer.reservation_time_page.gelis_saati_a2cc3f')}>
-              <select aria-label={i18n.t('ui.pages.customer.reservation_time_page.saat_6bc5a9')} onChange={(event) => setTime(`${event.target.value}:${minutes}`)} value={hours}>
+              <select aria-label={i18n.t('ui.pages.customer.reservation_time_page.saat_6bc5a9')} onChange={(event) => changeSelection(date, `${event.target.value}:${minutes}`)} value={hours}>
                 {hourOptions.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
               </select>
               <b>:</b>
-              <select aria-label={i18n.t('ui.pages.customer.reservation_time_page.deqiqe_349901')} onChange={(event) => setTime(`${hours}:${event.target.value}`)} value={minutes}>
+              <select aria-label={i18n.t('ui.pages.customer.reservation_time_page.deqiqe_349901')} onChange={(event) => changeSelection(date, `${hours}:${event.target.value}`)} value={minutes}>
                 {minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}
               </select>
             </div>
@@ -141,6 +162,12 @@ export function ReservationTimePage() {
           </Button>
         </form>
 
+        {dayHours ? <div className="reservation-day-hours" aria-label={i18n.t('ui.arrival.selectedDayHours')}>
+          <strong>{i18n.t('ui.arrival.selectedDayHours')}{dayHours.dayOfWeek !== new Date(`${date}T12:00:00Z`).getUTCDay() ? ` · ${i18n.t('ui.arrival.previousDayShift')}` : ''}</strong>
+          <span>{i18n.t('ui.arrival.opensAt')} / {i18n.t('ui.arrival.closesAt')}: {dayHours.isClosed ? i18n.t('ui.shared.ui.working_hours_field.baglidir_208993') : <>{dayHours.opensAt} - {dayHours.closesAt}{dayHours.closeDayOffset === 1 ? ' (+1)' : ''}</>}</span>
+          {!dayHours.isClosed ? <span>{i18n.t('ui.arrival.lastReservationArrival')}: {dayHours.lastReservationArrivalAt ? <>{dayHours.lastReservationArrivalAt}{dayHours.lastReservationArrivalDayOffset === 1 ? ' (+1)' : ''}</> : i18n.t('ui.arrival.noSeparateLimit')}</span> : null}
+        </div> : null}
+
         <div className="reservation-time-preview">
           <div className="reservation-preview-label">
             <span>{i18n.t('ui.pages.customer.reservation_time_page.seciminiz_776ec5')}</span>
@@ -152,13 +179,11 @@ export function ReservationTimePage() {
           </div>
         </div>
 
-        {availability && !availability.hasAvailableTable ? (
+        {availability && !isAvailabilityBookable(availability) ? (
           <div className="reservation-availability-message warning">
             <Clock size={20} />
             <span>
-              {availability.isRestaurantOpen
-                ? availability.message || 'Bu saat üçün boş masa yoxdur. Başqa tarix və ya saat seçin.'
-                : availability.message || 'Seçdiyiniz tarix və saatda restoran bağlıdır. Başqa vaxt seçin.'}
+              {getAvailabilityMessage(availability, restaurant?.timeZone || undefined)}
             </span>
           </div>
         ) : null}

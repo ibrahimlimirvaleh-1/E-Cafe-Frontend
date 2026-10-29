@@ -80,6 +80,10 @@ function mapWorkingHour(record: AnyRecord): RestaurantWorkingHour {
     opensAt,
     closesAt,
     closeDayOffset: num(record.closeDayOffset ?? record.close_day_offset, inferredCloseDayOffset),
+    lastReservationArrivalAt: record.lastReservationArrivalAt == null && record.last_reservation_arrival_at == null
+      ? null : timeText(record.lastReservationArrivalAt ?? record.last_reservation_arrival_at, ''),
+    lastReservationArrivalDayOffset: record.lastReservationArrivalDayOffset == null && record.last_reservation_arrival_day_offset == null
+      ? null : num(record.lastReservationArrivalDayOffset ?? record.last_reservation_arrival_day_offset),
     isClosed: bool(record.isClosed ?? record.is_closed),
   }
 }

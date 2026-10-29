@@ -31,6 +31,7 @@ import type {
   WorkflowAction,
 } from '../../entities/types'
 import { endpoints, type KitchenProgressAction } from './endpoints'
+import { workingHoursRequest } from '../lib/workingHours'
 import { ApiError, fetchProtectedBlob, getApiOrigin, httpClient } from './httpClient'
 import type { ContentEntityType, ContentTranslationResponse, TranslationPayload } from '../i18n/contentTranslations'
 
@@ -229,6 +230,8 @@ type UpdateTableRequest = CreateTableRequest & {
 
 export type TableAvailabilityResponse = {
   reservedAt: string
+  reservationArrivalCutoffAt?: string | null
+  isReservationArrivalAllowed?: boolean
   depositAmount?: number
   reservationPreBlockMinutes: number
   tableTurnoverBufferMinutes: number
@@ -261,6 +264,7 @@ export type ReservationResponse = {
   restaurantId: number
   tableId: number
   reservedAt: string
+  reservationArrivalCutoffAt?: string | null
   noShowDeadlineAt: string
   timeZone?: string | null
   mustVacateAt?: string | null
@@ -1115,6 +1119,8 @@ function mapTableAvailability(record: AnyRecord, restaurantId: string, fallbackR
 
   return {
     reservedAt: str(record.reservedAt || record.ReservedAt, fallbackReservedAt),
+    reservationArrivalCutoffAt: str(record.reservationArrivalCutoffAt ?? record.ReservationArrivalCutoffAt) || null,
+    isReservationArrivalAllowed: bool(record.isReservationArrivalAllowed ?? record.IsReservationArrivalAllowed, true),
     depositAmount: record.depositAmount == null && record.DepositAmount == null
       ? undefined
       : num(record.depositAmount ?? record.DepositAmount),
@@ -1138,6 +1144,7 @@ function mapReservationResponse(record: AnyRecord): ReservationResponse {
     restaurantId: num(record.restaurantId),
     tableId: num(record.tableId),
     reservedAt: str(record.reservedAt || record.ReservedAt),
+    reservationArrivalCutoffAt: str(record.reservationArrivalCutoffAt ?? record.ReservationArrivalCutoffAt) || null,
     noShowDeadlineAt: str(record.noShowDeadlineAt || record.NoShowDeadlineAt),
     timeZone: str(record.timeZone) || null,
     mustVacateAt: str(record.mustVacateAt || record.MustVacateAt) || null,
@@ -1752,11 +1759,15 @@ export const ecafeApi = {
       formData.set('ServiceFeePercent', String(request.serviceFeePercent))
       formData.set('StaffSettlementPeriod', String(request.staffSettlementPeriod))
       appendIfPresent(formData, 'TimeZone', request.timeZone)
-      request.workingHours?.forEach((workingHour, index) => {
+      workingHoursRequest(request.workingHours ?? []).forEach((workingHour, index) => {
         formData.set(`WorkingHours[${index}].DayOfWeek`, String(workingHour.dayOfWeek))
         formData.set(`WorkingHours[${index}].OpensAt`, workingHour.opensAt)
         formData.set(`WorkingHours[${index}].ClosesAt`, workingHour.closesAt)
         formData.set(`WorkingHours[${index}].CloseDayOffset`, String(workingHour.closeDayOffset))
+        if (workingHour.lastReservationArrivalAt != null) {
+          formData.set(`WorkingHours[${index}].LastReservationArrivalAt`, workingHour.lastReservationArrivalAt)
+          formData.set(`WorkingHours[${index}].LastReservationArrivalDayOffset`, String(workingHour.lastReservationArrivalDayOffset ?? 0))
+        }
         formData.set(`WorkingHours[${index}].IsClosed`, String(workingHour.isClosed))
       })
       appendIfPresent(formData, 'DefaultWaiterTableLimit', request.defaultWaiterTableLimit)
@@ -1807,7 +1818,7 @@ export const ecafeApi = {
           serviceFeePercent: request.serviceFeePercent,
           staffSettlementPeriod: request.staffSettlementPeriod,
           timeZone: request.timeZone || null,
-          workingHours: request.workingHours ?? [],
+          workingHours: workingHoursRequest(request.workingHours ?? []),
           defaultWaiterTableLimit: request.defaultWaiterTableLimit,
           fileIds: request.fileIds,
         }),

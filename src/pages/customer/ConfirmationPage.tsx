@@ -155,7 +155,8 @@ export function ConfirmationPage() {
           {reservation ? (
             <>
               <dl className="reservation-confirmation-details">
-                <div><dt>{i18n.t('ui.pages.customer.confirmation_page.tarix_ve_saat_d1a058')}</dt><dd>{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</dd></div>
+                <div><dt>{i18n.t('ui.pages.customer.confirmation_page.tarix_ve_saat_d1a058')}</dt><dd>{formatReservationDateTime(reservation.expectedArrivalAt || reservation.reservedAt, reservation.timeZone || undefined)}</dd></div>
+                {reservation.expectedArrivalAt ? <div><dt>{i18n.t('ui.arrival.originalReservationTime')}</dt><dd>{formatReservationDateTime(reservation.reservedAt, reservation.timeZone || undefined)}</dd></div> : null}
                 <div><dt>{i18n.t('ui.pages.customer.confirmation_page.masa_058c4c')}</dt><dd>{reservation.tableName || `Masa ${reservation.tableId}`}</dd></div>
                 <div><dt>{i18n.t('ui.pages.customer.confirmation_page.qonaq_sayi_012aa3')}</dt><dd>{i18n.t('ui.count.guests', { count: reservation.peopleCount })}</dd></div>
                 <div><dt>{i18n.t('ui.pages.customer.confirmation_page.status_920e41')}</dt><dd>{getReservationStatusPresentation(reservation.status).label}</dd></div>
@@ -163,6 +164,7 @@ export function ConfirmationPage() {
                 <div><dt>{i18n.t('ui.pages.customer.confirmation_page.depozit_4a14b8')}</dt><dd>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` :i18n.t('ui.pages.customer.confirmation_page.teleb_olunmur_46f021')}</dd></div>
                 {!reservation.expectedArrivalAt && !reservation.arrivedAt && isReservationConfirmed(reservation.status) ? <div><dt>{i18n.t('ui.pages.customer.confirmation_page.gelis_ucun_son_vaxt_04c872')}</dt><dd>{formatReservationDateTime(reservation.noShowDeadlineAt, reservation.timeZone || undefined)}</dd></div> : null}
                 {reservation.mustVacateAt ? <div><dt>{i18n.t('ui.pages.customer.confirmation_page.masani_tehvil_vaxti_4e00d4')}</dt><dd>{formatReservationDateTime(reservation.mustVacateAt, reservation.timeZone || undefined)}</dd></div> : null}
+                {reservation.reservationArrivalCutoffAt ? <div><dt>{i18n.t('ui.arrival.reservationCutoffSnapshot')}</dt><dd>{formatReservationDateTime(reservation.reservationArrivalCutoffAt, reservation.timeZone || undefined)}</dd></div> : null}
                 {reservation.holdExpiresAt ? <div><dt>{i18n.t('ui.pages.customer.confirmation_page.odenis_ucun_son_vaxt_81dc6d')}</dt><dd>{formatReservationDateTime(reservation.holdExpiresAt)}</dd></div> : null}
               </dl>
 

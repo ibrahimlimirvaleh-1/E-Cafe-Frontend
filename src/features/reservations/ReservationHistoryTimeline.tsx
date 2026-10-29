@@ -151,7 +151,7 @@ export function ReservationHistoryTimeline({ items, viewer = 'customer', current
                   <div className="reservation-history-content">
                     <div className="reservation-history-title-row">
                       <strong>{viewer === 'manager' || item.fromStatus === item.toStatus ? eventLabel(item) : presentation.label}</strong>
-                      {viewer === 'customer' && isCurrent ? <span className="reservation-history-current">{requiresReceptionReview ?i18n.t('ui.features.reservations.reservation_history_timeline.son_qeyd_dc58de') :i18n.t('ui.features.reservations.reservation_history_timeline.hazirki_merhele_1977da')}</span> : null}
+                      {viewer === 'customer' && isCurrent ? <span className="reservation-history-current">{requiresReceptionReview ? i18n.t('ui.features.reservations.reservation_history_timeline.son_qeyd_dc58de') : item.fromStatus === item.toStatus ? i18n.t('ui.features.reservations.reservation_history_timeline.son_yenilenme_5994c9') : i18n.t('ui.features.reservations.reservation_history_timeline.hazirki_merhele_1977da')}</span> : null}
                     </div>
                     <div className="reservation-history-meta">
                       <time dateTime={item.changedAt}>{formatReservationDateTime(item.changedAt, timeZone)}</time>
