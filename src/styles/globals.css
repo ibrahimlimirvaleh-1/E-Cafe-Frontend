@@ -4034,6 +4034,7 @@ img {
   display: grid;
   gap: 8px;
   min-width: 0;
+  container-type: inline-size;
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius);
   padding: 10px 12px 12px;
@@ -4046,14 +4047,21 @@ img {
   font-weight: 700;
 }
 
-.working-hours-bulk { display: grid; gap: 12px; min-width: 0; padding: 4px 0 18px; border-bottom: 1px solid var(--outline-variant); }
+.working-hours-bulk { min-width: 0; border-bottom: 1px solid var(--outline-variant); }
+.working-hours-bulk summary { display: flex; align-items: center; gap: 8px; min-height: 42px; color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+.working-hours-bulk summary::-webkit-details-marker { display: none; }
+.working-hours-bulk-chevron { margin-left: auto; transition: transform .15s ease; }
+.working-hours-bulk[open] .working-hours-bulk-chevron { transform: rotate(180deg); }
+.working-hours-bulk-content { display: grid; gap: 12px; padding: 6px 0 16px; }
 .working-hours-bulk-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap; }
 .working-hours-bulk-heading strong, .working-hours-bulk-days > strong { color: var(--text); font-size: 13px; font-weight: 800; }
 .working-hours-bulk-heading span { color: var(--text-muted); font-size: 12px; }
-.working-hours-bulk-times { display: grid; grid-template-columns: minmax(128px, 1fr) minmax(128px, 1fr) auto; align-items: end; gap: 10px; min-width: 0; }
+.working-hours-bulk-times { display: grid; grid-template-columns: 140px 140px minmax(130px, 1fr); align-items: end; gap: 10px; min-width: 0; }
 .working-hours-bulk-times > label:not(.working-day-next-day) { display: grid; gap: 5px; min-width: 0; color: var(--text-muted); font-size: 12px; font-weight: 700; }
 .working-hours-bulk-times .working-day-next-day { min-height: 40px; }
-.working-hours-bulk-cutoff { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; min-width: 0; }
+.working-hours-bulk-cutoff { display: flex; align-items: end; gap: 8px 16px; flex-wrap: wrap; min-width: 0; }
+.working-hours-mode { display: grid; gap: 5px; min-width: 170px; color: var(--text-muted); font-size: 12px; font-weight: 700; }
+.working-hours-mode select { min-height: 40px; min-width: 0; padding: 6px 8px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--text); font: inherit; }
 .working-hours-bulk-days { display: grid; gap: 8px; min-width: 0; }
 .working-hours-bulk-day-options { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; min-width: 0; }
 .working-hours-bulk-day-options label { display: inline-flex; align-items: center; gap: 5px; min-width: 0; color: var(--text); font-size: 12px; font-weight: 600; }
@@ -4063,28 +4071,36 @@ img {
 .working-hours-bulk-actions .ui-button { min-height: 40px; }
 .working-hours-bulk-notice { margin: 0; color: var(--success); font-size: 12px; font-weight: 700; }
 
-.working-hours-list {
-  display: grid;
-  gap: 6px;
-}
+.working-hours-list { display: grid; }
+.working-hours-column-headings, .working-hours-row { display: grid; grid-template-columns: minmax(128px, .55fr) minmax(280px, 1.1fr) minmax(280px, 1.1fr); gap: 12px; min-width: 0; }
+.working-hours-column-headings { padding: 8px 8px 2px; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
 
 .working-hours-row {
   display: grid;
-  grid-template-columns: minmax(104px, 1fr) 128px 128px auto;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding-block: 8px;
+  align-items: start;
+  padding: 8px;
   border-bottom: 1px solid var(--outline-variant);
 }
 .working-hours-row:last-child { border-bottom: 0; }
-.working-hours-cutoff-controls { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; min-width: 0; padding: 6px 0 0 24px; }
-.working-hours-no-cutoff { display: inline-flex; align-items: center; gap: 7px; color: var(--text-muted); font-size: 12px; font-weight: 600; }
-.working-hours-no-cutoff input { width: 16px; height: 16px; accent-color: var(--accent); }
-.working-hours-cutoff-time { display: inline-flex; align-items: center; gap: 8px; min-width: 0; color: var(--text); font-size: 12px; font-weight: 700; }
-.working-hours-cutoff-time input { width: 128px; max-width: 100%; min-height: 40px; padding: 6px 8px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--text); font: inherit; }
-.working-hours-cutoff-time input[aria-invalid='true'] { border-color: var(--danger); }
-.working-hours-cutoff-error { flex-basis: 100%; color: var(--danger); font-size: 12px; }
+.working-hours-day-cell { display: flex; align-items: flex-start; gap: 9px; min-width: 0; padding-top: 7px; color: var(--text); font-size: 13px; }
+.working-hours-day-cell > span { display: grid; gap: 2px; min-width: 0; }
+.working-hours-day-cell small { color: var(--text-muted); font-size: 11px; }
+.working-hours-day-cell input { flex: 0 0 auto; width: 16px; height: 16px; accent-color: var(--accent); }
+.working-hours-time-cell, .working-hours-arrival-cell { display: grid; align-content: start; gap: 5px; min-width: 0; }
+.working-hours-arrival-cell.has-cutoff { grid-template-columns: minmax(0, 1fr) 128px; align-items: start; gap: 5px 8px; }
+.working-hours-arrival-cell.has-cutoff .working-hours-cutoff-input { grid-column: 2; grid-row: 1; }
+.working-hours-arrival-cell.has-cutoff .working-day-next-day, .working-hours-arrival-cell.has-cutoff .working-hours-cutoff-error { grid-column: 1 / -1; }
+.working-hours-time-pair { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.working-hours-time-pair > label { display: grid; gap: 3px; color: var(--text-muted); font-size: 11px; font-weight: 600; }
+.working-hours-time-pair input { width: 128px; min-height: 38px; }
+.working-hours-arrival-cell select { width: 100%; min-height: 38px; padding: 6px 8px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--text); font: inherit; font-size: 12px; }
+.working-hours-cutoff-input { width: 128px; min-height: 38px; padding: 6px 8px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--text); font: inherit; }
+.working-hours-bulk-cutoff .working-hours-cutoff-time { display: grid; gap: 5px; color: var(--text-muted); font-size: 12px; font-weight: 700; }
+.working-hours-bulk-cutoff .working-hours-cutoff-time input { width: 128px; min-height: 40px; padding: 6px 8px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-lowest); color: var(--text); font: inherit; }
+.working-hours-bulk-cutoff .working-hours-cutoff-time input[aria-invalid='true'] { border-color: var(--danger); }
+.working-hours-cutoff-input[aria-invalid='true'], .working-hours-time-select[aria-invalid='true'] { border-color: var(--danger); }
+.working-hours-cutoff-error { color: var(--danger); font-size: 11px; }
+.working-hours-mobile-heading { display: none; }
 
 .working-day-toggle {
   display: flex;
@@ -4130,6 +4146,23 @@ img {
   width: 14px;
   height: 14px;
   accent-color: var(--accent);
+}
+
+@container (max-width: 760px) {
+  .working-hours-column-headings { display: none; }
+  .working-hours-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 10px; }
+  .working-hours-day-cell { grid-column: 1 / -1; }
+  .working-hours-mobile-heading { display: block; color: var(--text-muted); font-size: 11px; font-weight: 700; }
+}
+
+@container (max-width: 460px) {
+  .working-hours-row { grid-template-columns: minmax(0, 1fr); }
+  .working-hours-day-cell { grid-column: 1; }
+  .working-hours-time-pair { flex-wrap: nowrap; }
+  .working-hours-time-pair > label { flex: 1 1 0; min-width: 0; }
+  .working-hours-time-pair input { width: 100%; }
+  .working-hours-arrival-cell.has-cutoff { grid-template-columns: minmax(0, 1fr); }
+  .working-hours-arrival-cell.has-cutoff .working-hours-cutoff-input { grid-column: 1; grid-row: auto; }
 }
 
 .working-hours-display {
@@ -5730,20 +5763,10 @@ img {
     grid-template-columns: 1fr;
   }
 
-  .working-hours-row {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .working-hours-cutoff-controls { padding-left: 0; }
-  .working-hours-cutoff-time { flex-wrap: wrap; }
-
-  .working-day-next-day {
-    grid-column: 2;
-  }
-
-  .working-day-toggle {
-    grid-column: 1 / -1;
-  }
+  .working-hours-column-headings { display: none; }
+  .working-hours-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 10px; }
+  .working-hours-day-cell { grid-column: 1 / -1; }
+  .working-hours-mobile-heading { display: block; color: var(--text-muted); font-size: 11px; font-weight: 700; }
 
   .owner-mode-switch,
   .owner-results button,
@@ -10365,6 +10388,14 @@ body,
 @media (max-width: 480px) {
   .working-hours-bulk-times { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .working-hours-bulk-times .working-day-next-day { grid-column: 1 / -1; min-height: auto; }
+  .working-hours-bulk-times > label:not(.working-day-next-day) { min-width: 0; }
+  .working-hours-bulk-times .working-hours-time-select { width: 100%; }
+  .working-hours-row { grid-template-columns: minmax(0, 1fr); }
+  .working-hours-day-cell { grid-column: 1; }
+  .working-hours-time-pair { flex-wrap: nowrap; }
+  .working-hours-time-pair > label { flex: 1 1 0; min-width: 0; }
+  .working-hours-time-pair input { width: 100%; }
+  .working-hours-arrival-cell select { max-width: 100%; }
   .working-hours-bulk-day-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
   .working-hours-bulk-actions .ui-button { flex: 1 1 100%; justify-content: center; }
   .working-hours-display { grid-template-columns: minmax(0, 1fr); }
