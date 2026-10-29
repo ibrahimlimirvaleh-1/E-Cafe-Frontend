@@ -1,4 +1,5 @@
 import { ApiError } from '../../shared/api/httpClient'
+import { i18n } from '../../shared/i18n/i18n'
 
 const CUSTOMER_DAILY_RESERVATION_CODE = 'CustomerAlreadyHasReservationToday'
 const TABLE_ALREADY_RESERVED_CODE = 'TableAlreadyReserved'
@@ -6,6 +7,9 @@ const DEPOSIT_AMOUNT_CHANGED_CODE = 'ReservationDepositAmountChanged'
 
 export function getReservationErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
+    if (error.code === 'ReservationArrivalCutoffPassed') {
+      return i18n.t('ui.arrival.cutoffPassed')
+    }
     if (error.code === CUSTOMER_DAILY_RESERVATION_CODE) {
       return 'Bu gün bu restoran üçün artıq aktiv rezervasiyanız var. Başqa tarix seçin.'
     }
@@ -42,4 +46,8 @@ export function isCustomerDailyReservationLimit(error: unknown) {
 
 export function isDepositAmountChanged(error: unknown) {
   return error instanceof ApiError && error.code === DEPOSIT_AMOUNT_CHANGED_CODE
+}
+
+export function isReservationArrivalCutoffPassed(error: unknown) {
+  return error instanceof ApiError && error.code === 'ReservationArrivalCutoffPassed'
 }

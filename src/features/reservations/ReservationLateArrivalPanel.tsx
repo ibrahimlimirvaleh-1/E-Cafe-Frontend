@@ -20,10 +20,11 @@ export function ReservationLateArrivalPanel({ reservation, refreshKey, onChanged
   const [error, setError] = useState('')
   const [now, setNow] = useState(Date.now())
   const [loadKey, setLoadKey] = useState(0)
+  const [optionsLoading, setOptionsLoading] = useState(false)
   const dialogRef = useRef<HTMLElement>(null)
   const mutationVersionRef = useRef(0)
   const arrivalChoiceId = useId()
-  const eligible = isReservationConfirmed(reservation.status) && !reservation.expectedArrivalAt
+  const eligible = isReservationConfirmed(reservation.status) && !reservation.expectedArrivalAt && !reservation.arrivedAt && !reservation.seatedAt
   const isOpen = isChoosing || Boolean(offer)
 
   useEffect(() => {
@@ -33,15 +34,23 @@ export function ReservationLateArrivalPanel({ reservation, refreshKey, onChanged
       setOptions(null)
       setOffer(null)
       setIsChoosing(false)
+      setOptionsLoading(false)
       return
     }
+    setOptions(null)
+    setOptionsLoading(true)
     ecafeApi.reservations.getArrivalOptions(String(reservation.id)).then((data) => {
       if (!current || version !== mutationVersionRef.current) return
       setOptions(data)
+      setArrivalAt((selected) => data.canRequest && data.arrivalChoices.some((value) => value === selected && new Date(value).getTime() > Date.now()) ? selected : '')
+      setOptionsLoading(false)
       if (data?.offer && !data.offer.accepted) setOffer(data.offer)
       else setOffer(null)
     }).catch((err) => {
-      if (current && version === mutationVersionRef.current) setError(normalizeCaughtApiError(err, 'Gecikmə seçimləri yüklənmədi.').message)
+      if (current && version === mutationVersionRef.current) {
+        setOptionsLoading(false)
+        setError(normalizeCaughtApiError(err, 'Gecikmə seçimləri yüklənmədi.').message)
+      }
     })
     return () => { current = false }
   }, [reservation.id, eligible, refreshKey, loadKey])
@@ -84,7 +93,7 @@ export function ReservationLateArrivalPanel({ reservation, refreshKey, onChanged
   }, [isOpen])
 
   async function requestOffer() {
-    if (!arrivalAt || busy) return
+    if (busy || !options?.canRequest || !options.arrivalChoices.includes(arrivalAt) || new Date(arrivalAt).getTime() <= Date.now()) return
     mutationVersionRef.current++
     setBusy(true); setError('')
     try {
@@ -97,7 +106,7 @@ export function ReservationLateArrivalPanel({ reservation, refreshKey, onChanged
   }
 
   async function decide(accept: boolean) {
-    if (!offer || busy) return
+    if (!offer || busy || accept && (error || new Date(offer.decisionExpiresAt).getTime() <= Date.now())) return
     mutationVersionRef.current++
     setBusy(true); setError('')
     try {
@@ -129,13 +138,15 @@ export function ReservationLateArrivalPanel({ reservation, refreshKey, onChanged
   const expired = offer && new Date(offer.decisionExpiresAt).getTime() <= now
   const refundAvailable = reservation.canCancelWithRefund && new Date(reservation.refundCancellationDeadlineAt || '').getTime() > now
   const choices = options?.arrivalChoices.filter((value) => new Date(value).getTime() > now) || []
+  const noAvailableChoices = eligible && !optionsLoading && options !== null && choices.length === 0 && !offer && !error
   return (
     <>
       <ReservationArrivalSummary reservation={reservation} />
       {eligible ? <div className="reservation-arrival-action">
-        {options?.canRequest ? <Button variant="secondary" onClick={() => {
+        {options?.canRequest && choices.length > 0 ? <Button variant="secondary" onClick={() => {
           setError(''); setNow(Date.now()); setArrivalAt(''); setIsChoosing(true); setLoadKey((value) => value + 1)
         }}><Clock3 size={17} />{i18n.t('ui.features.reservations.reservation_late_arrival_panel.gecikirem_1f2c77')}</Button> : null}
+        {!isOpen && noAvailableChoices ? <p className="reservation-arrival-unavailable" role="status">{i18n.t('ui.arrival.noAvailableChoices')}</p> : null}
         {!isOpen && error ? <p role="alert">{error}</p> : null}
       </div> : null}
       {isOpen ? <div className="modal-backdrop reservation-action-backdrop">
@@ -151,24 +162,26 @@ export function ReservationLateArrivalPanel({ reservation, refreshKey, onChanged
                 <option value="">{i18n.t('ui.features.reservations.reservation_late_arrival_panel.vaxt_secin_e1e6f0')}</option>
                 {choices.map((value) => <option value={value} key={value}>{formatReservationDateTime(value, options?.timeZone)}</option>)}
               </select>
+              {optionsLoading ? <p role="status">{i18n.t('ui.arrival.choicesLoading')}</p> : null}
+              {noAvailableChoices ? <p className="reservation-arrival-unavailable" role="status">{i18n.t('ui.arrival.noAvailableChoices')}</p> : null}
             </div> : <>
               <dl className="reservation-arrival-terms">
                 <div><dt>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.yeni_gelis_vaxti_397ff9')}</dt><dd>{formatReservationDateTime(offer.arrivalAt, offer.timeZone)}</dd></div>
                 <div><dt>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.gelis_ucun_son_vaxt_04c872')}</dt><dd>{formatReservationDateTime(offer.noShowDeadlineAt, offer.timeZone)}</dd></div>
                 {offer.mustVacateAt ? <div><dt>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.masani_tehvil_vermelisiniz_fd4727')}</dt><dd>{formatReservationDateTime(offer.mustVacateAt, offer.timeZone)}</dd></div> : null}
               </dl>
-              <p>{offer.mustVacateAt ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.novbeti_rezervasiya_ucun_masani_goster_d54727') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.gelis_ucun_son_vaxtadek_masa_sizin_ucu_829c5d')} {i18n.t('ui.features.reservations.reservation_late_arrival_panel.bu_rezervasiya_ucun_gecikme_vaxtini_ya_5a64e5')}</p>
+              <p>{offer.mustVacateAt ? i18n.t('ui.arrival.tableUseDeadline') : i18n.t('ui.features.reservations.reservation_late_arrival_panel.gelis_ucun_son_vaxtadek_masa_sizin_ucu_829c5d')} {i18n.t('ui.features.reservations.reservation_late_arrival_panel.bu_rezervasiya_ucun_gecikme_vaxtini_ya_5a64e5')}</p>
               {offer.hasDeposit ? <p className="reservation-arrival-warning">{refundAvailable ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.legv_zamani_hazirda_depozitin_geri_ode_a7193f') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.hazirda_legv_etseniz_depozit_geri_qayt_51d0fa')} {i18n.t('ui.features.reservations.reservation_late_arrival_panel.gecikme_geri_odenis_ucun_legv_muddetin_e6dac5')}</p> : null}
-              <p className="reservation-arrival-expiry" role="status">{expired ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.teklifin_vaxti_bitdi_gelis_ucun_evvelk_d3cc07') : `Qərar üçün son vaxt: ${formatReservationDateTime(offer.decisionExpiresAt, offer.timeZone)}`}</p>
+              <p className="reservation-arrival-expiry" role="status">{expired ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.teklifin_vaxti_bitdi_gelis_ucun_evvelk_d3cc07') : i18n.t('ui.arrival.decisionDeadline', { time: formatReservationDateTime(offer.decisionExpiresAt, offer.timeZone) })}</p>
             </>}
             {error ? <p className="reservation-arrival-error" role="alert">{error}</p> : null}
           </div>
           <footer className="reservation-action-dialog-actions reservation-arrival-dialog-actions">
-            {!offer ? <Button disabled={busy || !choices.includes(arrivalAt)} onClick={() => void requestOffer()}><Clock3 size={17} />{busy ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.yoxlanilir_b497d3') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.uygunlugu_yoxla_ddb12a')}</Button> : expired ? <Button disabled={busy} onClick={() => {
+            {!offer ? <Button disabled={busy || !options?.canRequest || !choices.includes(arrivalAt)} onClick={() => void requestOffer()}><Clock3 size={17} />{busy ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.yoxlanilir_b497d3') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.uygunlugu_yoxla_ddb12a')}</Button> : expired ? <Button disabled={busy} onClick={() => {
               setOffer(null); setIsChoosing(false); setLoadKey((value) => value + 1); onChanged()
             }}>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.bagla_ve_yenile_f750f4')}</Button> : <>
               {error ? <Button disabled={busy} variant="secondary" onClick={() => void refreshOffer()}>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.sertleri_yeniden_yoxla_b5187e')}</Button> : null}
-              <Button disabled={busy} onClick={() => void decide(true)}><Check size={17} />{busy ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.icra_olunur_e4744c') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.raziyam_masani_saxla_5b8a8b')}</Button>
+              <Button disabled={busy || Boolean(error)} onClick={() => void decide(true)}><Check size={17} />{busy ?i18n.t('ui.features.reservations.reservation_late_arrival_panel.icra_olunur_e4744c') :i18n.t('ui.features.reservations.reservation_late_arrival_panel.raziyam_masani_saxla_5b8a8b')}</Button>
               <Button disabled={busy} variant="danger" onClick={() => void decide(false)}>{i18n.t('ui.features.reservations.reservation_late_arrival_panel.razi_deyilem_rezervasiyani_legv_et_2a8349')}</Button>
             </>}
           </footer>

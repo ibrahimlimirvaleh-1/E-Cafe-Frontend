@@ -112,6 +112,8 @@ export type RestaurantWorkingHour = {
   opensAt: string
   closesAt: string
   closeDayOffset: number
+  lastReservationArrivalAt: string | null
+  lastReservationArrivalDayOffset: number | null
   isClosed: boolean
 }
 
