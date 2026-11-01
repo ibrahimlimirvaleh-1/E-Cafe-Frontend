@@ -9,7 +9,7 @@ import { Button } from '../../shared/ui/Button'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import './session-bill.css'
 
-type Props = { sessionId: number; revision?: number; onBillChange?: (bill: SessionBillResponse | null) => void }
+type Props = { sessionId: number; revision?: number; onBillChange?: (bill: SessionBillResponse | null) => void; onLoadingChange?: (loading: boolean) => void }
 type CheckoutIntent = { key: string; previousPaymentId: number | null }
 type TestOutcome = 'Succeeded' | 'Failed' | 'Cancelled' | 'Pending'
 
@@ -35,13 +35,15 @@ function getIntentKey(scope: string, previousPaymentId: number | null) {
   return key
 }
 
-export function SessionBillPanel({ sessionId, revision = 0, onBillChange }: Props) {
+export function SessionBillPanel({ sessionId, revision = 0, onBillChange, onLoadingChange }: Props) {
   const { user } = useAuth()
   const scope = `${user?.userId || ''}:${sessionId}`
   const scopeRef = useRef(scope)
   scopeRef.current = scope
   const onBillChangeRef = useRef(onBillChange)
   onBillChangeRef.current = onBillChange
+  const onLoadingChangeRef = useRef(onLoadingChange)
+  onLoadingChangeRef.current = onLoadingChange
   const requestIdRef = useRef(0)
   const previousRevisionRef = useRef(revision)
   const [bill, setBill] = useState<SessionBillResponse | null>(null)
@@ -53,6 +55,7 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange }: Prop
 
   const loadBill = useCallback(async (quiet = false) => {
     const requestId = ++requestIdRef.current
+    onLoadingChangeRef.current?.(true)
     if (!quiet) setLoading(true)
     try {
       const result = await ecafeApi.tableSessions.getBill(sessionId)
@@ -70,7 +73,10 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange }: Prop
       }
       throw cause
     } finally {
-      if (requestId === requestIdRef.current && scopeRef.current === scope) setLoading(false)
+      if (requestId === requestIdRef.current && scopeRef.current === scope) {
+        setLoading(false)
+        onLoadingChangeRef.current?.(false)
+      }
     }
   }, [scope, sessionId])
 
@@ -161,8 +167,8 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange }: Prop
     {bill ? <>
       <dl className="session-bill-amounts">
         <div><dt>{i18n.t('ui.features.settlement.session_bill_panel.sifarislerin_cemi_3f4438')}</dt><dd>{money(bill.totalAmount, bill.currencyCode)}</dd></div>
-        <div><dt>{i18n.t('ui.features.settlement.session_bill_panel.depozit_krediti_594f24')}</dt><dd>{money(bill.depositCreditAmount, bill.currencyCode)}</dd></div>
-        <div><dt>{i18n.t('ui.features.settlement.session_bill_panel.odenilmis_e025f3')}</dt><dd>{money(bill.paidAmount, bill.currencyCode)}</dd></div>
+        <div><dt>{i18n.t('ui.sessionBill.depositApplied')}</dt><dd>{money(bill.depositCreditAmount, bill.currencyCode)}</dd></div>
+        <div><dt>{i18n.t('ui.sessionBill.additionalPaid')}</dt><dd>{money(bill.paidAmount, bill.currencyCode)}</dd></div>
         <div className="session-bill-due"><dt>{i18n.t('ui.features.settlement.session_bill_panel.qaliq_c4a16a')}</dt><dd>{money(bill.remainingAmount, bill.currencyCode)}</dd></div>
       </dl>
       {payment?.requiresRefund ? <StatusMessage tone="warning" autoHideMs={false} dismissible={false}>{i18n.t('ui.features.settlement.session_bill_panel.bu_odenis_ayrica_yoxlanmalidir_yeni_od_081f52')}</StatusMessage> : null}
@@ -171,7 +177,9 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange }: Prop
       {bill.hasUnservedOrders ? <p className="session-bill-muted">{i18n.t('ui.features.settlement.session_bill_panel.hesablasma_ucun_evvel_aciq_sifarisler__67a45b')}</p> : null}
       {!bill.isOpen ? <p className="session-bill-muted">{i18n.t('ui.features.settlement.session_bill_panel.bu_sessiya_baglanib_hesab_yalniz_baxis_170d9a')}</p> : null}
       {payment ? <p className="session-bill-payment"><span>{i18n.t('ui.features.settlement.session_bill_panel.son_odenis_9f4fa3')}</span><strong>{paymentStatusLabel(payment.statusId, payment.status)}</strong><span>{money(payment.amount, payment.currencyCode)}</span></p> : null}
-      {bill.isOpen && bill.remainingAmount <= 0 && !bill.hasUnservedOrders && !payment ? <p className="session-bill-muted"><ShieldCheck size={16} /> {i18n.t('ui.features.settlement.session_bill_panel.elave_odenis_teleb_olunmur_5491cb')}</p> : null}
+      {bill.isOpen && bill.remainingAmount <= 0 && !bill.hasUnservedOrders && !payment ? <p className="session-bill-muted"><ShieldCheck size={16} /> {bill.depositCreditAmount >= bill.totalAmount && bill.totalAmount > 0
+        ? i18n.t('ui.sessionBill.depositCovered', { amount: money(bill.depositCreditAmount, bill.currencyCode) })
+        : i18n.t('ui.features.settlement.session_bill_panel.elave_odenis_teleb_olunmur_5491cb')}</p> : null}
       {feedback ? <StatusMessage tone="warning" autoHideMs={false}>{feedback}</StatusMessage> : null}
       {bill.isOpen && bill.enabled && !payment?.requiresRefund ? <div className="session-bill-actions">
         {bill.canPay ? <Button type="button" disabled={!canAct} onClick={() => void checkout()}><CreditCard size={17} />{busy ?i18n.t('ui.features.settlement.session_bill_panel.yoxlanilir_b497d3') : bill.isTest ?i18n.t('ui.features.settlement.session_bill_panel.test_odenisi_yarat_9b69ec') :i18n.t('ui.features.settlement.session_bill_panel.odenise_kec_3d18d4')}</Button> : null}

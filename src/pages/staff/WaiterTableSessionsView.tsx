@@ -144,7 +144,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
       <Button type="button" variant="secondary" onClick={refresh} title={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalarini_yenile_305fb7')} aria-label={i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalarini_yenile_305fb7')}><RefreshCw size={18} /></Button>
     </div>
     {!restaurantId ? <StatusMessage tone="warning" autoHideMs={false}>{i18n.t('ui.pages.staff.waiter_table_sessions_view.size_aid_restoran_tapilmadi_3fdf18')}</StatusMessage> : null}
-    {notice ? <StatusMessage tone="success" autoHideMs={false}>{notice}</StatusMessage> : null}
+    {notice ? <StatusMessage tone="success" className="staff-action-toast">{notice}</StatusMessage> : null}
     {error ? <StatusMessage tone={uncertain ? 'warning' : 'danger'} autoHideMs={false}>{error}</StatusMessage> : null}
     <div className="waiter-sessions-sections" role="group" aria-label={i18n.t('ui.pages.staff.waiter_dashboard_page.ofisiant_paneli_gorunusu_a7fa7e')}>
       <button type="button" aria-pressed={activeSection === 'tables'} className={activeSection === 'tables' ? 'is-active' : ''} onClick={() => setActiveSection('tables')}>{i18n.t('ui.waiter.tables')}<span>{sessions.hasData && !sessions.error ? sessions.data.totalCount : '—'}</span></button>
@@ -152,7 +152,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
     </div>
     {activeSection === 'ready' ? <section className="waiter-ready-section" aria-label={i18n.t('ui.waiter.readyOrders')}>
       <div className="waiter-sessions-summary"><strong>{i18n.t('ui.waiter.readyOrders')} · {ready.hasData && !ready.error ? ready.data.totalCount : '—'}</strong>{ready.isRefreshing ? <span role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.yenilenir_283de5')}</span> : null}</div>
-      {ready.isLoading ? <p className="waiter-reservations-muted" role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_yuklenir_917624')}</p> : null}
+      {ready.isLoading && !ready.hasData ? <p className="waiter-reservations-muted" role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_yuklenir_917624')}</p> : null}
       {ready.error ? <StatusMessage tone="danger" autoHideMs={false}>{ready.error}</StatusMessage> : null}
       {ready.hasData && !ready.error && readyItems.length === 0 && !pendingEntry ? <p className="waiter-ready-empty">{i18n.t('ui.waiter.noReadyOrders')}</p> : null}
       <div className="waiter-ready-list">{[...(pendingEntry ? [pendingEntry] : []), ...readyItems].map((entry) => <article className={`waiter-ready-row${uncertain?.order.id === entry.order.id ? ' is-uncertain' : ''}`} key={entry.order.id}>
@@ -163,7 +163,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
     </section> : <>
     {sessions.error ? <StatusMessage tone="danger" autoHideMs={false}>{sessions.error}</StatusMessage> : null}
     <div className="waiter-sessions-summary"><strong>{sessions.hasData && !sessions.error ? `${sessions.data.totalCount} açıq masa` : i18n.t('ui.pages.staff.waiter_table_sessions_view.aciq_masalar_94a704')}</strong>{sessions.isRefreshing ? <span role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.yenilenir_283de5')}</span> : null}</div>
-    {sessions.isLoading ? <p className="waiter-reservations-muted" role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalari_yuklenir_e3e0bd')}</p> : null}
+    {sessions.isLoading && !sessions.hasData ? <p className="waiter-reservations-muted" role="status">{i18n.t('ui.pages.staff.waiter_table_sessions_view.masa_sessiyalari_yuklenir_e3e0bd')}</p> : null}
     {!sessions.isLoading && !sessions.error && sessions.hasData && sessions.data.items.length === 0 ? <div className="waiter-reservations-empty" role="status">
       <span className="waiter-reservations-empty-icon"><Table2 size={22} aria-hidden="true" /></span>
       <div><strong>{i18n.t('ui.pages.staff.waiter_table_sessions_view.aciq_masa_sessiyasi_yoxdur_2d0a73')}</strong><p>{i18n.t('ui.pages.staff.waiter_table_sessions_view.hazirda_size_teyin_edilmis_aciq_masa_t_18df8e')}</p></div>
