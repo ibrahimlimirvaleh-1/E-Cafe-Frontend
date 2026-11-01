@@ -3,6 +3,7 @@ import { ecafeApi, type KitchenOrderResponse } from '../../shared/api/ecafeApi'
 import { ApiError, normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { hasCurrentCancellationRequest } from './cancellationRequest'
+import { matchesOrderScope, ORDER_CHANGED_EVENT, ORDER_SYNC_EVENT, type OrderChangedPayload } from '../../shared/realtime/orderEvents'
 
 type QueueState = {
   scopeKey: string
@@ -52,6 +53,15 @@ export function useKitchenQueue(userId: string, restaurantId: string, page: numb
     let active = true
     let timer: number | null = null
     let inFlight: AbortController | null = null
+    let dirty = false
+
+    function schedule(delay: number) {
+      if (timer !== null) window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        timer = null
+        void load()
+      }, delay)
+    }
 
     // Sorğular ardıcıl gedir; köhnə restoran/səhifə cavabı yeni növbəyə yazılmır.
     async function load() {
@@ -86,29 +96,48 @@ export function useKitchenQueue(userId: string, restaurantId: string, page: numb
         }
       } finally {
         if (inFlight === controller) inFlight = null
-        if (active && !document.hidden) timer = window.setTimeout(() => void load(), pollDelayMs)
+        if (active && !document.hidden) {
+          schedule(dirty ? 180 : pollDelayMs)
+          dirty = false
+        }
       }
     }
 
-    function onVisibilityChange() {
+    function requestRefresh() {
       if (timer !== null) window.clearTimeout(timer)
       timer = null
-      if (!document.hidden) void load()
+      if (document.hidden || inFlight) {
+        dirty = true
+        return
+      }
+      schedule(180)
     }
 
-    function onNotificationsChanged() {
-      if (timer !== null) window.clearTimeout(timer)
-      timer = null
-      void load()
+    function onVisibilityChange() {
+      if (!document.hidden) requestRefresh()
+      else if (timer !== null) {
+        window.clearTimeout(timer)
+        timer = null
+      }
+    }
+    function onOrderChanged(event: Event) {
+      const payload = (event as CustomEvent<OrderChangedPayload>).detail
+      if (payload && matchesOrderScope(payload, restaurantId)) requestRefresh()
     }
 
     document.addEventListener('visibilitychange', onVisibilityChange)
-    window.addEventListener('ecafe:notifications-refresh', onNotificationsChanged)
+    window.addEventListener('online', requestRefresh)
+    window.addEventListener('ecafe:notifications-refresh', requestRefresh)
+    window.addEventListener(ORDER_SYNC_EVENT, requestRefresh)
+    window.addEventListener(ORDER_CHANGED_EVENT, onOrderChanged)
     void load()
     return () => {
       active = false
       document.removeEventListener('visibilitychange', onVisibilityChange)
-      window.removeEventListener('ecafe:notifications-refresh', onNotificationsChanged)
+      window.removeEventListener('online', requestRefresh)
+      window.removeEventListener('ecafe:notifications-refresh', requestRefresh)
+      window.removeEventListener(ORDER_SYNC_EVENT, requestRefresh)
+      window.removeEventListener(ORDER_CHANGED_EVENT, onOrderChanged)
       if (timer !== null) window.clearTimeout(timer)
       inFlight?.abort()
     }

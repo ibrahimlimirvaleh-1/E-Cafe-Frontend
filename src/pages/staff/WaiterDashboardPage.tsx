@@ -11,6 +11,7 @@ import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useOrderInvalidation } from '../../shared/realtime/useOrderInvalidation'
 import { formatReservationDateTime, getTodayDateInputValue } from '../../shared/lib/dateFormatting'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { LocalizedDateInput } from '../../shared/ui/LocalizedDateInput'
@@ -79,7 +80,7 @@ export function WaiterDashboardPage() {
   }, [waitingQuery, targetReservationId])
 
   const pageKey = showTables ? 'inactive' : `${restaurantId}:${date}:${waitingOnly}:${page}`
-  const { data: pageResult, error } = useAsyncData(
+  const { data: pageResult, error, isLoading: pageLoading } = useAsyncData(
     () => !showTables && restaurantId ? ecafeApi.reservations.listForService(restaurantId, {
       pageNumber: page, pageSize: 20, reservedDate: date || undefined, waitingOnly,
     }).then((result) => ({ key: pageKey, page: result })) : Promise.resolve({ key: pageKey, page: emptyPage }),
@@ -100,6 +101,7 @@ export function WaiterDashboardPage() {
   )
   const actions = actionsResult.key === actionsKey ? actionsResult.items : []
   const actionsLoading = Boolean(selected) && actionsResult.key !== actionsKey && !actionsError
+  useOrderInvalidation(restaurantId, null, !showTables, pageLoading || actionsLoading, () => setReloadKey((value) => value + 1))
   const now = Date.now()
   const markArrived = actions.find((action) => action.code === 'markArrived')
   const checkIn = actions.find((action) => action.code === 'checkIn')

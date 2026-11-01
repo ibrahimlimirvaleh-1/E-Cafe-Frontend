@@ -1999,6 +1999,8 @@
   "ui.waiter.openTable": "Masanı aç",
   "ui.waiter.manageTable": "Sifarişlərə keç",
   "ui.waiter.billUnavailable": "Hesab hələ təsdiqlənməyib. Yeni sifariş üçün Hesab bölməsində vəziyyəti yoxlayın və lazım olsa hesabı yeniləyin.",
+  "ui.realtime.reconnecting": "Canlı bağlantı bərpa olunur. Məlumatlar avtomatik yenilənəcək.",
+  "ui.realtime.offline": "Canlı bağlantı yoxdur. Məlumatlar ehtiyat yenilənmə ilə yoxlanılır.",
   "ui.waiter.draftUnavailable": "Qaralama sifariş saxlanmadı. Brauzer yaddaşını yoxlayın.",
   "ui.inventoryHistory.eyebrow": "Stok tarixçəsi",
   "ui.inventoryHistory.open": "{{name}} tarixçəsinə bax",

@@ -12,6 +12,7 @@ import { orderStatusId } from '../../shared/lib/orderStatus'
 import { Button } from '../../shared/ui/Button'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
+import { useOrderInvalidation } from '../../shared/realtime/useOrderInvalidation'
 import './waiter-sessions.css'
 
 const emptySessions: PaginatedResponse<WaiterTableSessionResponse> = {
@@ -65,6 +66,7 @@ export function WaiterTableSessionsView({ restaurantId, restaurantName, restaura
     () => restaurantId ? ecafeApi.tableSessions.listReadyOrders(restaurantId, readyPage) : Promise.resolve(emptyReadyOrders),
     emptyReadyOrders, `${restaurantId}:${readyPage}`, [reloadKey, revision],
   )
+  useOrderInvalidation(restaurantId, null, true, sessions.isLoading || sessions.isRefreshing || ready.isLoading || ready.isRefreshing, () => setRevision((value) => value + 1))
 
   useEffect(() => {
     if (sessions.hasData && page > sessions.data.totalPages) setPage(Math.max(1, sessions.data.totalPages))

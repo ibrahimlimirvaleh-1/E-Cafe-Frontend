@@ -123,7 +123,7 @@ function KitchenQueue({ userId, restaurantId, focusOrderId }: { userId: string; 
       })
       .catch((error) => { if (!controller.signal.aborted) setFocusError(normalizeCaughtApiError(error, i18n.t('ui.cancellationRequest.accessLost')).message) })
     return () => controller.abort()
-  }, [restaurantId, focusOrderId, focusScope, revision, queue.applyOrder])
+  }, [restaurantId, focusOrderId, focusScope, revision, queue.lastSuccessAt, queue.applyOrder])
 
   useEffect(() => {
     if (!focusedOrder) return

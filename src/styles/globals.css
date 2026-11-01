@@ -964,6 +964,36 @@ img {
   flex: 0 0 auto;
 }
 
+.realtime-indicator {
+  position: absolute;
+  left: -3px;
+  bottom: -3px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 2px solid var(--surface-lowest);
+  border-radius: 50%;
+  color: var(--warning);
+  background: var(--surface-low);
+  pointer-events: none;
+}
+
+.notification-connection-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--outline-variant);
+  color: var(--on-surface-variant);
+  background: var(--surface-low);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.notification-connection-note svg { flex: 0 0 auto; color: var(--warning); }
+
 .notification-trigger {
   position: relative;
 }
@@ -1005,6 +1035,8 @@ img {
   background: var(--surface-lowest);
   box-shadow: var(--shadow-lg);
 }
+
+.notification-menu .notification-popover { background: var(--surface-lowest); }
 
 .notification-popover header {
   display: flex;
@@ -6723,7 +6755,7 @@ body,
   }
 
   .notification-menu {
-    position: static;
+    position: relative;
   }
 
   .notification-popover {

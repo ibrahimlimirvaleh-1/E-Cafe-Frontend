@@ -1,6 +1,9 @@
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { API_BASE_URL, getApiOrigin } from '../api/httpClient'
 import { getAccessToken } from '../auth/tokenStorage'
+import { dispatchOrderChanged } from './orderEvents'
+
+export type RealtimeConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'offline'
 
 type UserSessionEventsOptions = {
   onUserDeactivated: (message: string) => void
@@ -8,6 +11,7 @@ type UserSessionEventsOptions = {
   onRestaurantAccessChanged: (payload: RestaurantAccessChangedPayload) => void
   onNotificationsChanged: () => void
   onConnectionRestored?: () => void
+  onConnectionStatusChange?: (status: RealtimeConnectionStatus) => void
 }
 
 type UserEventPayload = {
@@ -25,6 +29,7 @@ const USER_DEACTIVATED_EVENT = 'UserDeactivated'
 const USER_ROLE_CHANGED_EVENT = 'UserRoleChanged'
 const RESTAURANT_ACCESS_CHANGED_EVENT = 'RestaurantAccessChanged'
 const NOTIFICATIONS_CHANGED_EVENT = 'NotificationsChanged'
+const ORDER_CHANGED_HUB_EVENT = 'OrderChanged'
 const DEFAULT_DEACTIVATION_MESSAGE = 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.'
 const DEFAULT_ROLE_CHANGED_MESSAGE = 'Rolunuz dəyişdirildi. Sessiya məlumatları yenilənir.'
 const DEFAULT_RESTAURANT_ACCESS_CHANGED_MESSAGE = 'Restoran üzrə icazələr yeniləndi. Səhifə yenilənir.'
@@ -35,6 +40,7 @@ export function createUserSessionEventsConnection({
   onRestaurantAccessChanged,
   onNotificationsChanged,
   onConnectionRestored,
+  onConnectionStatusChange,
 }: UserSessionEventsOptions) {
   const connection = new HubConnectionBuilder()
     .withUrl(getUserEventsHubUrl(), {
@@ -47,12 +53,16 @@ export function createUserSessionEventsConnection({
     .configureLogging(import.meta.env.DEV ? LogLevel.Information : LogLevel.Warning)
     .build()
 
+  connection.onreconnecting(() => onConnectionStatusChange?.('reconnecting'))
+  connection.onclose(() => onConnectionStatusChange?.('offline'))
   connection.onreconnected(() => {
+    onConnectionStatusChange?.('connected')
     onConnectionRestored?.()
     onNotificationsChanged()
   })
 
   connection.on(NOTIFICATIONS_CHANGED_EVENT, onNotificationsChanged)
+  connection.on(ORDER_CHANGED_HUB_EVENT, dispatchOrderChanged)
 
   connection.on(USER_DEACTIVATED_EVENT, (payload?: UserEventPayload) => {
     onUserDeactivated(payload?.message?.trim() || DEFAULT_DEACTIVATION_MESSAGE)

@@ -8,6 +8,7 @@ import { ecafeApi, type CustomerSessionOrderResponse, type CustomerTableSessionR
 import { ApiError, normalizeCaughtApiError } from '../../shared/api/httpClient'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useAuth } from '../../shared/auth/AuthContext'
+import { useOrderInvalidation } from '../../shared/realtime/useOrderInvalidation'
 import { SessionBillPanel } from '../../features/settlement/SessionBillPanel'
 import { OrderCancellationDialog } from '../../features/orders/OrderCancellationDialog'
 import { CancellationRequestDialog } from '../../features/orders/CancellationRequestDialog'
@@ -25,32 +26,34 @@ import { PaginationControls } from '../../shared/ui/PaginationControls'
 import './customer-orders.css'
 
 type QueryError = { statusCode?: number; message: string }
-type QueryState<T> = { scope: string; data: T | null; error: QueryError | null; loading: boolean }
+type QueryState<T> = { scope: string; data: T | null; error: QueryError | null; loading: boolean; fetching: boolean }
 
 // Sorğu konteksti dəyişəndə əvvəlki müştəri və ya sessiyanın cavabını göstərmir.
 function useScopedQuery<T>(scope: string, enabled: boolean, refresh: number, loader: (signal: AbortSignal) => Promise<T>) {
   const loaderRef = useRef(loader)
   loaderRef.current = loader
-  const [state, setState] = useState<QueryState<T>>({ scope: '', data: null, error: null, loading: false })
+  const [state, setState] = useState<QueryState<T>>({ scope: '', data: null, error: null, loading: false, fetching: false })
 
   useEffect(() => {
     if (!enabled) {
-      setState((previous) => previous.data === null && previous.error === null && !previous.loading
-        ? previous : { scope, data: null, error: null, loading: false })
+      setState((previous) => previous.data === null && previous.error === null && !previous.loading && !previous.fetching
+        ? previous : { scope, data: null, error: null, loading: false, fetching: false })
       return
     }
     const controller = new AbortController()
     let active = true
     // Eyni kontekstdə fon yoxlaması mövcud məzmunu və onun ölçülərini dəyişmir.
     setState((previous) => {
-      if (previous.scope === scope && previous.data !== null) return previous
+      if (previous.scope === scope && previous.data !== null) return { ...previous, fetching: true }
       if (previous.scope === scope && previous.loading) return previous
-      return { scope, data: null, error: null, loading: true }
+      return { scope, data: null, error: null, loading: true, fetching: true }
     })
     void loaderRef.current(controller.signal).then((data) => {
       if (active) setState((previous) => {
-        if (previous.scope === scope && previous.error === null && !previous.loading && JSON.stringify(previous.data) === JSON.stringify(data)) return previous
-        return { scope, data, error: null, loading: false }
+        if (previous.scope === scope && previous.error === null && !previous.loading && JSON.stringify(previous.data) === JSON.stringify(data)) {
+          return { ...previous, fetching: false }
+        }
+        return { scope, data, error: null, loading: false, fetching: false }
       })
     }).catch((error: unknown) => {
       if (!active || controller.signal.aborted) return
@@ -61,6 +64,7 @@ function useScopedQuery<T>(scope: string, enabled: boolean, refresh: number, loa
         data: restricted ? null : previous.scope === scope ? previous.data : null,
         error: { statusCode: normalized.statusCode, message: normalized.message },
         loading: false,
+        fetching: false,
       }))
     })
     return () => {
@@ -71,7 +75,7 @@ function useScopedQuery<T>(scope: string, enabled: boolean, refresh: number, loa
 
   return state.scope === scope && enabled
     ? state
-    : { scope, data: null, error: null, loading: enabled } as QueryState<T>
+    : { scope, data: null, error: null, loading: enabled, fetching: enabled } as QueryState<T>
 }
 
 // URL-dən yalnız təhlükəsiz, müsbət ID qəbul edir.
@@ -213,6 +217,9 @@ export function MyOrdersPage() {
     `${userScope}:order:${sessionId}:${requestedOrderId}`, isCustomer && validSession !== null && requestedOrderId !== null, revision,
     (signal) => ecafeApi.customerTableSessions.getOrder(sessionId!, requestedOrderId!, signal),
   )
+  useOrderInvalidation(String(validSession?.restaurantId ?? ''), sessionId, isCustomer && validSession !== null,
+    sessions.fetching || selectedSession.fetching || orders.fetching || selectedOrder.fetching,
+    () => setRevision((value) => value + 1))
   const cancelScope = `${userScope}:${sessionId}:${orderPage}`
   const cancel = useOrderCancellation<CustomerSessionOrderResponse>(
     cancelScope,
@@ -324,7 +331,7 @@ export function MyOrdersPage() {
         {sessionId !== null && selectedSession.error && !validSession ? <div className="customer-orders-empty"><h2>{i18n.t('ui.pages.customer.my_orders_page.sessiya_elcatan_deyil_07dfff')}</h2><p role="alert">{errorMessage(selectedSession.error, i18n.t('ui.orders.session'))}</p><Button variant="secondary" onClick={() => { if (requestedSessionId) { const next = new URLSearchParams(searchParams); next.delete('sessionId'); next.delete('orderId'); setSearchParams(next) } else setRevision((value) => value + 1) }} type="button">{requestedSessionId ?i18n.t('ui.pages.customer.my_orders_page.siyahiya_qayit_f779ce') :i18n.t('ui.pages.customer.my_orders_page.yeniden_yoxla_9c69a3')}</Button></div> : null}
         {validSession ? <>
           <div className="customer-orders-section-heading customer-order-workspace-heading"><div><span className="customer-orders-kicker">{validSession.restaurantName || 'Restoran'}</span><h2>{validSession.tableName || `Masa #${validSession.tableId}`}</h2><p><Clock3 size={15} /> {i18n.t('ui.pages.customer.my_orders_page.acilis_59e910')} {formatReservationDateTime(validSession.openedAt, validSession.timeZone)}</p></div><Badge tone={sessionStatus(validSession.statusId).tone}>{sessionStatus(validSession.statusId).label}</Badge></div>
-          <SessionBillPanel key={`${userScope}:${validSession.id}`} sessionId={validSession.id} revision={settlementRevision} />
+          <SessionBillPanel key={`${userScope}:${validSession.id}`} restaurantId={String(validSession.restaurantId)} sessionId={validSession.id} revision={settlementRevision} />
           {cancel.notice ? <p className={cancel.noticeTone === 'success' ? 'customer-orders-cancel-success' : 'customer-orders-error'} role="status">{cancel.notice}</p> : null}
           {cancellationRequest.notice ? <p className={cancellationRequest.noticeTone === 'success' ? 'customer-orders-cancel-success' : 'customer-orders-error'} role="status">{cancellationRequest.notice}</p> : null}
           {selectedSession.error ? <p className="customer-orders-error" role="alert">{i18n.t('ui.pages.customer.my_orders_page.sessiya_yenilenmedi_son_yuklenmis_melu_64874d')}</p> : null}
