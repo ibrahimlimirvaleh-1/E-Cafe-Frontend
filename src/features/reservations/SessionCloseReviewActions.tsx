@@ -37,10 +37,15 @@ export function SessionCloseReviewActions({ id, restaurantId, reservationId, ses
   const [error, setError] = useState('')
   const [showBill, setShowBill] = useState(!deferBill)
   const [bill, setBill] = useState<SessionBillResponse | null>(null)
+  const [billLoading, setBillLoading] = useState(true)
+  const [billRevisionAtLoad, setBillRevisionAtLoad] = useState(billRevision)
   function updateBill(next: SessionBillResponse | null) {
     setBill(next)
+    setBillRevisionAtLoad(billRevision)
     onBillChange?.(next)
   }
+  const canCloseBill = Boolean(bill && sessionId !== null && bill.tableSessionId === sessionId && bill.isOpen &&
+    bill.canClose && bill.remainingAmount <= 0 && !bill.hasUnservedOrders && !billLoading && billRevisionAtLoad === billRevision)
 
   // Bağlama və davam qərarları yalnız açıq istifadəçi təsdiqindən sonra göndərilir.
   async function complete() {
@@ -50,7 +55,7 @@ export function SessionCloseReviewActions({ id, restaurantId, reservationId, ses
     try {
       const latestBill = await ecafeApi.tableSessions.getBill(sessionId)
       updateBill(latestBill)
-      if (!latestBill.canClose) {
+      if (latestBill.tableSessionId !== sessionId || !latestBill.isOpen || !latestBill.canClose || latestBill.remainingAmount > 0 || latestBill.hasUnservedOrders) {
         setDialog(null)
         setShowBill(true)
         window.dispatchEvent(new Event('ecafe:notifications-refresh'))
@@ -101,14 +106,14 @@ export function SessionCloseReviewActions({ id, restaurantId, reservationId, ses
       </div>
     </div> : null}
     {reviewConfirmedAt ? <p className="session-close-review-confirmed">{i18n.t('ui.features.reservations.session_close_review_actions.xidmetin_davami_qeyd_edilib_44287b')} {formatReservationDateTime(reviewConfirmedAt, timeZone || undefined)}</p> : null}
-    {sessionId !== null && showBill ? <SessionBillPanel sessionId={sessionId} revision={billRevision} onBillChange={updateBill} /> : null}
+    {sessionId !== null && showBill ? <SessionBillPanel sessionId={sessionId} revision={billRevision} onBillChange={updateBill} onLoadingChange={setBillLoading} /> : null}
     {canComplete || canContinue ? <div className="session-close-review-buttons">
       {canComplete && !showBill ? <Button type="button" variant="secondary" onClick={() => setShowBill(true)}><CheckCircle2 size={17} />{i18n.t('ui.features.reservations.session_close_review_actions.hesabi_yoxla_f100b8')}</Button> : null}
-      {canComplete && showBill ? <Button type="button" disabled={busy || !bill?.canClose} onClick={() => { setError(''); setDialog('complete') }} title={!bill?.canClose ?i18n.t('ui.features.reservations.session_close_review_actions.yalniz_hesablasma_tamamlandiqdan_sonra_26733c') : undefined}><CheckCircle2 size={17} />{i18n.t('ui.features.reservations.session_close_review_actions.xidmeti_bitir_4c724c')}</Button> : null}
+      {canComplete && showBill ? <Button type="button" disabled={busy || !canCloseBill} onClick={() => { setError(''); setDialog('complete') }} title={!canCloseBill ?i18n.t('ui.features.reservations.session_close_review_actions.yalniz_hesablasma_tamamlandiqdan_sonra_26733c') : undefined}><CheckCircle2 size={17} />{i18n.t('ui.features.reservations.session_close_review_actions.xidmeti_bitir_4c724c')}</Button> : null}
       {canContinue ? <Button type="button" variant="secondary" disabled={busy} onClick={() => { setError(''); setDialog('continue') }}><Clock3 size={17} />{i18n.t('ui.features.reservations.session_close_review_actions.xidmet_davam_edir_25ab84')}</Button> : null}
     </div> : null}
     {error && !dialog ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
-    <ReservationReasonDialog isOpen={dialog === 'complete'} title={i18n.t('ui.features.reservations.session_close_review_actions.masa_xidmeti_bitirilsin_4f200d')} description={i18n.t('ui.features.reservations.session_close_review_actions.qonaqlarin_masadan_ayrildigini_ve_hesa_aabcca')} confirmLabel={i18n.t('ui.features.reservations.session_close_review_actions.xidmeti_bitir_4c724c')} confirmVariant="primary" isSubmitting={busy} error={dialog === 'complete' ? error : ''} requireReason={false} showReason={false} onClose={() => { if (!busy) setDialog(null) }} onConfirm={() => void complete()} />
+    <ReservationReasonDialog isOpen={dialog === 'complete'} title={i18n.t('ui.features.reservations.session_close_review_actions.masa_xidmeti_bitirilsin_4f200d')} description={`${i18n.t('ui.features.reservations.session_close_review_actions.qonaqlarin_masadan_ayrildigini_ve_hesa_aabcca')} ${bill ? i18n.t('ui.sessionClose.billSummary', { deposit: `${bill.depositCreditAmount.toFixed(2)} ${bill.currencyCode}`, paid: `${bill.paidAmount.toFixed(2)} ${bill.currencyCode}`, remaining: `${bill.remainingAmount.toFixed(2)} ${bill.currencyCode}` }) : ''}`} confirmLabel={i18n.t('ui.features.reservations.session_close_review_actions.xidmeti_bitir_4c724c')} confirmVariant="primary" isSubmitting={busy} error={dialog === 'complete' ? error : ''} requireReason={false} showReason={false} onClose={() => { if (!busy) setDialog(null) }} onConfirm={() => void complete()} />
     <SessionContinueDialog isOpen={dialog === 'continue'} isSubmitting={busy} error={dialog === 'continue' ? error : ''} onClose={() => { if (!busy) setDialog(null) }} onConfirm={(reviewAgainAt, reason) => void continueService(reviewAgainAt, reason)} />
   </div>
 }

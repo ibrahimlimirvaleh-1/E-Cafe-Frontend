@@ -120,7 +120,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const [menuRevision, setMenuRevision] = useState(0)
   const [ordersRevision, setOrdersRevision] = useState(0)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(validRequestedOrderId)
-  const [createdOrder, setCreatedOrder] = useState<SessionOrderResponse | null>(null)
+  const [actionNotice, setActionNotice] = useState('')
   const [feedback, setFeedback] = useState(pendingIntent ? 'Əvvəlki sifariş cəhdinin nəticəsi bilinmir. Eyni cəhdi yenidən yoxlayın.' : '')
   const [priceConflict, setPriceConflict] = useState(false)
   const [keyConflict, setKeyConflict] = useState(false)
@@ -129,12 +129,10 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const [sendingOrderId, setSendingOrderId] = useState<number | null>(null)
   const [uncertainOrderId, setUncertainOrderId] = useState<number | null>(null)
   const [dispatchError, setDispatchError] = useState('')
-  const [dispatchNotice, setDispatchNotice] = useState('')
   const [sentOrderTimes, setSentOrderTimes] = useState<Record<number, string>>({})
   const [servingOrderId, setServingOrderId] = useState<number | null>(null)
   const [uncertainServedId, setUncertainServedId] = useState<number | null>(null)
   const [serveError, setServeError] = useState('')
-  const [serveNotice, setServeNotice] = useState('')
   const [servedOrders, setServedOrders] = useState<Record<number, SessionOrderResponse>>({})
   const [cancelledOrders, setCancelledOrders] = useState<Record<number, SessionOrderResponse>>({})
   const [requestOrders, setRequestOrders] = useState<Record<number, SessionOrderResponse>>({})
@@ -150,6 +148,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     (orderId, reason) => ecafeApi.tableSessions.cancelOrder(restaurantId, sessionId, orderId, reason),
     (orderId) => ecafeApi.tableSessions.getOrder(restaurantId, sessionId, orderId),
     (order) => {
+      setActionNotice(i18n.t('ui.orderCancel.success', { id: order.id }))
       setCancelledOrders((current) => ({ ...current, [order.id]: order }))
       setOrdersRevision((value) => value + 1)
       setReloadKey((value) => value + 1)
@@ -163,7 +162,8 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       ? ecafeApi.tableSessions.forwardCancellationRequest(restaurantId, sessionId, orderId)
       : ecafeApi.tableSessions.requestCancellation(restaurantId, sessionId, orderId, reason),
     (orderId) => ecafeApi.tableSessions.getOrder(restaurantId, sessionId, orderId),
-    (order) => {
+    (order, operation) => {
+      setActionNotice(i18n.t(`ui.cancellationRequest.success.${operation}`, { id: order.id }))
       setRequestOrders((current) => ({ ...current, [order.id]: order }))
       setOrdersRevision((value) => value + 1)
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
@@ -256,11 +256,11 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     : [], [menu.hasData, menu.error, menu.data.items, categoryId, search])
   const subtotal = cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0)
   const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0)
-  const selectedOrderRecord = detail.hasData && detail.data?.kind === 'found' && !detail.error ? detail.data.order : null
+  const selectedOrderRecord = detail.hasData && detail.data?.kind === 'found' ? detail.data.order : null
   const selectedOrder = selectedOrderRecord && sentOrderTimes[selectedOrderRecord.id]
     ? displayOrder({ ...selectedOrderRecord, sentToKitchenAt: sentOrderTimes[selectedOrderRecord.id] })
     : selectedOrderRecord ? displayOrder(selectedOrderRecord) : null
-  const orderPage = orders.hasData && !orders.error ? orders.data : null
+  const orderPage = orders.hasData ? orders.data : null
   const selectedOutsidePage = selectedOrder && !orderPage?.items.some((order) => order.id === selectedOrder.id) ? [selectedOrder] : []
   const visibleOrders = [...selectedOutsidePage, ...(orderPage?.items || [])].sort((left, right) => {
     const priority = (order: SessionOrderResponse) => order.statusId === orderStatusId.ready ? 0
@@ -291,7 +291,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     if (!uncertainOrderConfirmed || uncertainOrderId === null) return
     setUncertainOrderId(null)
     setDispatchError('')
-    setDispatchNotice(`Sifariş #${uncertainOrderId} mətbəxə göndərildi.`)
+    setActionNotice(`Sifariş #${uncertainOrderId} mətbəxə göndərildi.`)
   }, [uncertainOrderConfirmed, uncertainOrderId])
 
   const uncertainServeConfirmed = uncertainServedId !== null && Boolean(
@@ -302,7 +302,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     if (!uncertainServeConfirmed || uncertainServedId === null) return
     setUncertainServedId(null)
     setServeError('')
-    setServeNotice(`Sifariş #${uncertainServedId} təqdim edildi.`)
+    setActionNotice(`Sifariş #${uncertainServedId} təqdim edildi.`)
   }, [uncertainServeConfirmed, uncertainServedId])
 
   // Cavabı itmiş göndərmə yalnız həmin sifariş ID-si ilə təkrarlanır; yeni sifariş yaradılmır.
@@ -311,15 +311,14 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     sendInFlightRef.current = true
     setSendingOrderId(orderId)
     setDispatchError('')
-    setDispatchNotice('')
+    setActionNotice('')
     try {
       const updated = await ecafeApi.tableSessions.sendOrderToKitchen(restaurantId, sessionId, orderId)
       if (updated.id !== orderId || !updated.sentToKitchenAt) throw new Error('Göndərmə cavabı təsdiqlənmədi.')
       if (!mountedRef.current) return
       setSentOrderTimes((current) => ({ ...current, [orderId]: updated.sentToKitchenAt! }))
       setUncertainOrderId(null)
-      setCreatedOrder(null)
-      setDispatchNotice(`Sifariş #${orderId} mətbəxə göndərildi.`)
+      setActionNotice(`Sifariş #${orderId} mətbəxə göndərildi.`)
       setOrdersRevision((value) => value + 1)
     } catch (error) {
       if (!mountedRef.current) return
@@ -344,13 +343,13 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     serveInFlightRef.current = true
     setServingOrderId(orderId)
     setServeError('')
-    setServeNotice('')
+    setActionNotice('')
     try {
       const updated = await serveWaiterOrder(restaurantId, sessionId, orderId)
       if (!mountedRef.current) return
       setServedOrders((current) => ({ ...current, [orderId]: updated }))
       setUncertainServedId(null)
-      setServeNotice(`Sifariş #${orderId} təqdim edildi.`)
+      setActionNotice(`Sifariş #${orderId} təqdim edildi.`)
       setOrdersRevision((value) => value + 1)
     } catch (error) {
       if (!mountedRef.current) return
@@ -391,7 +390,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       setPendingIntent(null)
       setKeyConflict(false)
       setPriceConflict(false)
-      setCreatedOrder(order)
+      setActionNotice(`${i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_96cfd8')}${order.id} ${i18n.t('ui.pages.staff.waiter_session_orders_page.yaradildi_mehsul_cemi_3ed07a')} ${money(order.subtotal)}${i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_metbexe_gonderilmeyib_e3d65a')}`)
       setCart([])
       setNote('')
       setSelectedOrderId(order.id)
@@ -449,7 +448,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     const intent = { key: crypto.randomUUID(), payload: JSON.stringify(buildOrderBody(cart, note)), createdAt: Date.now() }
     try { savePendingOrderIntent(storageKey, intent) }
     catch { setFeedback('Sifariş cəhdi təhlükəsiz saxlanmadı. Brauzer yaddaşını yoxlayın.'); return }
-    setCreatedOrder(null)
+    setActionNotice('')
     setPendingIntent(intent)
     void sendIntent(intent)
   }
@@ -505,13 +504,12 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       <SessionCloseReviewActions restaurantId={restaurantId} reservationId={session.data.reservationId} sessionId={sessionId} canComplete={session.data.reservationId !== null} completeAs="waiter" canContinue={false} requiresReview={session.data.requiresCloseReview} reviewDueAt={session.data.closeReviewDueAt} reviewConfirmedAt={session.data.closeReviewConfirmedAt} timeZone={session.data.timeZone} billRevision={ordersRevision} onBillChange={setBill} onChanged={() => navigate('/waiter?view=tables')} />
     </section> : null}
     {billPaymentPending ? <StatusMessage tone="warning" autoHideMs={false}>{i18n.t('ui.pages.staff.waiter_session_orders_page.odenis_gozlemededir_yeni_sifaris_ucun__fe73dd')}</StatusMessage> : null}
-    {createdOrder ? <StatusMessage tone="success" autoHideMs={false}>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_96cfd8')}{createdOrder.id} {i18n.t('ui.pages.staff.waiter_session_orders_page.yaradildi_mehsul_cemi_3ed07a')} {money(createdOrder.subtotal)}{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_metbexe_gonderilmeyib_e3d65a')}</StatusMessage> : null}
-    {dispatchNotice ? <StatusMessage tone="success" autoHideMs={false}>{dispatchNotice}</StatusMessage> : null}
+    {activeTab === 'new' && session.data && !sessionUnavailable && !bill ? <StatusMessage tone="warning" autoHideMs={false}>{i18n.t('ui.waiter.billUnavailable')}</StatusMessage> : null}
+    {actionNotice ? <StatusMessage tone="success" className="staff-action-toast">{actionNotice}</StatusMessage> : null}
     {dispatchError ? <StatusMessage tone={uncertainOrderId !== null ? 'warning' : 'danger'} autoHideMs={false}>{dispatchError}</StatusMessage> : null}
-    {serveNotice ? <StatusMessage tone="success" autoHideMs={false}>{serveNotice}</StatusMessage> : null}
     {serveError ? <StatusMessage tone={uncertainServedId !== null ? 'warning' : 'danger'} autoHideMs={false}>{serveError}</StatusMessage> : null}
-    {cancel.notice ? <StatusMessage tone={cancel.noticeTone} autoHideMs={false}>{cancel.notice}</StatusMessage> : null}
-    {cancellationRequest.notice ? <StatusMessage tone={cancellationRequest.noticeTone} autoHideMs={false}>{cancellationRequest.notice}</StatusMessage> : null}
+    {cancel.notice && cancel.noticeTone !== 'success' ? <StatusMessage tone="warning" autoHideMs={false}>{cancel.notice}</StatusMessage> : null}
+    {cancellationRequest.notice && cancellationRequest.noticeTone !== 'success' ? <StatusMessage tone="warning" autoHideMs={false}>{cancellationRequest.notice}</StatusMessage> : null}
     {feedback && !sessionUnavailable ? <StatusMessage tone={pendingIntent || priceConflict || keyConflict ? 'warning' : 'danger'} autoHideMs={false}>{feedback}</StatusMessage> : null}
     {draftError && !sessionUnavailable ? <StatusMessage tone="warning" autoHideMs={false}>{draftError}</StatusMessage> : null}
     {pendingIntent && !sessionUnavailable ? <div className="waiter-order-pending">
@@ -543,7 +541,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
     </div> : null}
     {!sessionUnavailable && activeTab === 'orders' ? <section className="waiter-orders-history" aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.masa_sifarisleri_a21dba')}>
       <div className="waiter-orders-section-heading"><div><h2>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_0b5f10')}</h2><span>{orderPage ? `${orderPage.totalCount} sifariş` : ''}</span></div><Button type="button" variant="secondary" title={i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisleri_yenile_870c48')} aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisleri_yenile_870c48')} onClick={() => setOrdersRevision((value) => value + 1)}><RefreshCw size={17} /></Button></div>
-      {orders.isLoading ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_yuklenir_917624')}</p> : null}
+      {orders.isLoading && !orderPage ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_yuklenir_917624')}</p> : null}
       {orders.error ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_siyahisi_yenilenmedi_085ed1')} {orders.error}</StatusMessage> : null}
       {orderPage && visibleOrders.length === 0 ? <p className="waiter-orders-muted">{i18n.t('ui.pages.staff.waiter_session_orders_page.bu_masa_ucun_sifaris_yoxdur_67bbfa')}</p> : null}
       {visibleOrders.length > 0 ? <div className="waiter-orders-history-list"><div className="waiter-orders-history-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_23da3b')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.yaradilib_526f2e')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.miqdar_77c299')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.mebleg_3d95ed')}</span></div>{visibleOrders.map((record) => {
@@ -560,7 +558,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
         </div>
       })}</div> : null}
       {orderPage ? <PaginationControls ariaLabel={i18n.t('ui.pages.staff.waiter_session_orders_page.masa_sifarisi_sehifeleri_5776fb')} pageIndex={orderPage.pageIndex} totalPages={orderPage.totalPages} totalCount={orderPage.totalCount} pageSize={20} hasPreviousPage={orderPage.hasPreviousPage} hasNextPage={orderPage.hasNextPage} onPageChange={(next) => { setPage(next); setSelectedOrderId(null) }} /> : null}
-      {selectedOrderId !== null ? <div className="waiter-orders-detail" aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}>{detail.isLoading ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_yuklenir_d98e58')}</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} timeZone={session.data?.timeZone} onClose={() => setSelectedOrderId(null)} /> : null}</div> : null}
+      {selectedOrderId !== null ? <aside className="waiter-orders-detail" aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_f143a4')}>{detail.isLoading && !selectedOrder ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_detali_yuklenir_d98e58')}</p> : null}{detail.error ? <StatusMessage tone="danger" autoHideMs={false}>{detail.error}</StatusMessage> : null}{selectedOrder ? <OrderSummary order={selectedOrder} timeZone={session.data?.timeZone} onClose={() => setSelectedOrderId(null)} /> : null}</aside> : null}
     </section> : null}
     {cancel.intent?.visible ? <OrderCancellationDialog key={cancel.intent.order.id} order={cancel.intent.order} tableName={cancel.intent.tableName} busy={cancel.busy} error={cancel.error} uncertainReason={cancel.intent.uncertainReason} onClose={cancel.close} onConfirm={(reason) => void cancel.submit(reason)} /> : null}
     {cancellationRequest.intent?.visible ? <CancellationRequestDialog key={`${cancellationRequest.intent.order.id}:${cancellationRequest.intent.operation}`} order={cancellationRequest.intent.order} operation={cancellationRequest.intent.operation} busy={cancellationRequest.busy} error={cancellationRequest.error} uncertainReason={cancellationRequest.intent.uncertain ? cancellationRequest.intent.reason : null} onClose={cancellationRequest.close} onConfirm={(reason) => void cancellationRequest.submit(reason)} /> : null}

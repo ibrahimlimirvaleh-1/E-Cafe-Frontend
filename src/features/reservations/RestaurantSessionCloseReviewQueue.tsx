@@ -43,7 +43,7 @@ export function RestaurantSessionCloseReviewQueue({ restaurantId, userId, reload
   return <section className="session-close-review-queue" id="session-close-review" aria-label={i18n.t('ui.features.reservations.restaurant_session_close_review_queue.baglanmasi_yoxlanmali_masa_sessiyalari_7a954e')}>
     <div className="session-close-review-queue-header"><h2>{i18n.t('ui.features.reservations.restaurant_session_close_review_queue.baglanmasi_yoxlanmali_masalar_ed13cf')}</h2>{queue.hasData && !queue.error ? <span>{i18n.t('ui.count.sessions', { count: queue.data.totalCount })}</span> : null}</div>
     {queue.error ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.features.reservations.restaurant_session_close_review_queue.yoxlama_novbesi_yuklenmedi_fffdf4')} {queue.error}</StatusMessage> : null}
-    {notice ? <StatusMessage tone="success" autoHideMs={false}>{notice}</StatusMessage> : null}
+    {notice ? <StatusMessage tone="success">{notice}</StatusMessage> : null}
     {queue.isLoading ? <p role="status">{i18n.t('ui.features.reservations.restaurant_session_close_review_queue.yoxlama_novbesi_yuklenir_65afd3')}</p> : null}
     {queue.hasData && !queue.error && queue.data.items.length > 0 ? <div className="session-close-review-queue-list">
       {queue.data.items.map((session) => <article className="session-close-review-queue-row" key={session.id}>

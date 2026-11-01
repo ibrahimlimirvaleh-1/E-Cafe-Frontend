@@ -130,7 +130,7 @@ export function LocalizationPage() {
       </Button>
     } />
     {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
-    {notice ? <StatusMessage tone="success" autoHideMs={false}>{notice}</StatusMessage> : null}
+    {notice ? <StatusMessage tone="success">{notice}</StatusMessage> : null}
     <div className="localization-toolbar">
       <div className="localization-tabs" role="tablist" aria-label={t('ui.localization.views')}>
         <button role="tab" aria-selected={view === 'draft'} className={view === 'draft' ? 'active' : ''} type="button" onClick={() => setView('draft')}>{t('ui.localization.draft')}</button>

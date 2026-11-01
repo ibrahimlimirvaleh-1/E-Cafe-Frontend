@@ -19,6 +19,7 @@ let createPosts = 0
 let delayedCreate = false
 let pendingPayment = false
 let completePosts = 0
+let billScenario = 'unpaid10'
 const pageErrors = []
 
 function json(route, data, status = 200) {
@@ -92,9 +93,12 @@ try {
       if (pathname === '/api/v1/public/restaurants/1/menu') return json(route, [{ id: 1, name: 'Drinks', isActive: true, items: [{ id: 1, name: 'Tea', price: 5, isActive: true }] }])
       if (pathname === '/api/v1/table-sessions/11/bill' || pathname === '/api/v1/table-sessions/12/bill') {
         const pending = pathname.includes('/12/')
+        if (!pending && billScenario === 'error') return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'Bill unavailable' }) })
+        const amount = !pending && billScenario !== 'unpaid10' ? 7 : 10
+        const covered = !pending && billScenario === 'covered7'
         return json(route, { tableSessionId: pending ? 12 : 11, restaurantId: 1, reservationId: pending ? null : 31,
-          currencyCode: 'AZN', totalAmount: 10, depositCreditAmount: 0, paidAmount: 0, remainingAmount: 10,
-          hasUnservedOrders: false, isOpen: true, enabled: true, isTest: true, canPay: false, canClose: false,
+          currencyCode: 'AZN', totalAmount: amount, depositCreditAmount: covered ? 7 : 0, paidAmount: 0, remainingAmount: covered ? 0 : amount,
+          hasUnservedOrders: false, isOpen: true, enabled: true, isTest: true, canPay: false, canClose: covered,
           latestPayment: pending && pendingPayment ? { id: 1, tableSessionId: 12, amount: 10, currencyCode: 'AZN', statusId: 3001, status: 'Pending', isTest: true, requiresRefund: false } : null })
       }
       if (pathname.endsWith('/notifications')) return json(route, { items: [], pageIndex: 1, totalPages: 1, totalCount: 0 })
@@ -186,6 +190,19 @@ try {
   await unsentRow.getByRole('button', { name: 'Eyni sifarişi təkrar göndər' }).click()
   await page.getByText('Sifariş #502 mətbəxə göndərildi.').waitFor()
   assert.equal(rowSendPosts, 2)
+  const actionToast = page.locator('.staff-action-toast')
+  assert.equal(await actionToast.evaluate((node) => getComputedStyle(node).position), 'fixed')
+  await actionToast.hover()
+  await page.waitForTimeout(5700)
+  assert.equal(await actionToast.count(), 1)
+  await page.mouse.move(0, 0)
+  await actionToast.waitFor({ state: 'detached', timeout: 6500 })
+  await unsentRow.evaluate((node) => { node.dataset.refreshIdentity = 'preserved' })
+  const scrollBeforeRefresh = await page.evaluate(() => scrollY)
+  await page.getByRole('button', { name: 'Sifarişləri yenilə' }).click()
+  await page.waitForTimeout(350)
+  assert.equal(await unsentRow.getAttribute('data-refresh-identity'), 'preserved')
+  assert.equal(await page.evaluate(() => scrollY), scrollBeforeRefresh)
   assert.equal(await unsentRow.getByRole('button', { name: 'Mətbəxə göndər', exact: true }).count(), 0)
   const readyRow = page.locator('.waiter-order-row').filter({ hasText: 'Sifariş #505' })
   await readyRow.locator('.waiter-order-row-main').click()
@@ -243,7 +260,29 @@ try {
   await page.getByRole('button', { name: /^Yeni sifariş/ }).click()
   assert.equal(await page.locator('.waiter-orders-cart-line').count(), 0)
   assert.equal(createPosts, 1)
-  await page.getByRole('link', { name: 'Açıq masalar' }).click()
+  billScenario = 'unpaid7'
+  await page.getByRole('button', { name: 'Hesab' }).click()
+  await page.getByRole('button', { name: 'Hesabı yenilə' }).click()
+  await page.getByText('7.00 AZN').first().waitFor()
+  assert.equal(await page.getByRole('button', { name: 'Xidməti bitir' }).isDisabled(), true)
+  assert.equal(completePosts, 0)
+  billScenario = 'error'
+  await page.getByRole('button', { name: 'Hesabı yenilə' }).click()
+  await page.getByText('Bill unavailable').waitFor()
+  await page.getByRole('button', { name: /^Yeni sifariş/ }).click()
+  await page.getByText('Hesab hələ təsdiqlənməyib.', { exact: false }).waitFor()
+  assert.equal(await page.getByRole('button', { name: 'Tea əlavə et' }).isDisabled(), true)
+  await page.getByRole('button', { name: 'Hesab' }).click()
+  billScenario = 'covered7'
+  await page.getByRole('button', { name: 'Hesabı yenilə' }).click()
+  await page.getByText('7.00 AZN depozit hesabı tam qarşılayır. Əlavə ödəniş tələb olunmur.').waitFor()
+  assert.equal(await page.getByRole('button', { name: 'Xidməti bitir' }).isEnabled(), true)
+  await page.getByRole('button', { name: 'Xidməti bitir' }).click()
+  const closeDialog = page.getByRole('dialog', { name: 'Masa xidməti bitirilsin?' })
+  assert.match(await closeDialog.innerText(), /depozitdən 7.00 AZN, əlavə ödənilmiş 0.00 AZN, qalıq 0.00 AZN/)
+  await closeDialog.getByRole('button', { name: 'Xidməti bitir' }).click()
+  await page.waitForURL(/\/waiter\?view=tables/)
+  assert.equal(completePosts, 1)
   await page.getByRole('button', { name: 'Tünd rejimə keç' }).click()
   await page.waitForTimeout(350)
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)

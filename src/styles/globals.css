@@ -4891,6 +4891,16 @@ img {
   box-shadow: var(--shadow-sm);
 }
 
+.form-message.staff-action-toast {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 1100;
+  width: min(420px, calc(100vw - 32px));
+  margin: 0;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .16);
+}
+
 .upload-field .upload-error {
   border-color: rgba(198, 28, 28, 0.3);
   background: var(--danger-bg);

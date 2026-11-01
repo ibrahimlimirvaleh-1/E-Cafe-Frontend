@@ -118,7 +118,7 @@ export function RestaurantSchedulePanel({ restaurantId, workingHours, onApplied 
         <Button type="button" variant="secondary" disabled={busy} onClick={() => run(() => scheduleApi.withdraw(restaurantId, change.token), 'Təklif geri götürüldü.')}><Undo2 size={17} /> {i18n.t('ui.features.reservations.restaurant_schedule_panel.teklifi_geri_gotur_b4f642')}</Button>
       </div>
     </> : null}
-    {notice ? <StatusMessage tone={noticeTone} autoHideMs={false}>{notice}</StatusMessage> : null}
+    {notice ? <StatusMessage tone={noticeTone} autoHideMs={noticeTone === 'success' ? undefined : false}>{notice}</StatusMessage> : null}
     {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
   </section>
 }
