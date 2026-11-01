@@ -1,9 +1,10 @@
 import { i18n } from '../i18n/i18n'
-import { Bell, CheckCheck, FileText } from 'lucide-react'
+import { Bell, CheckCheck, FileText, WifiOff } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { NotificationItem } from '../../entities/types'
 import { ecafeApi } from '../api/ecafeApi'
+import { ApiError } from '../api/httpClient'
 import { useAuth } from '../auth/AuthContext'
 import { getNotificationTarget } from '../notifications/notificationTarget'
 import { getIntlLocale } from '../i18n/language'
@@ -26,16 +27,23 @@ function formatNotificationDate(value: string) {
 }
 
 export function NotificationBell() {
-  const { isAuthenticated, selectProfileForRestaurant, user } = useAuth()
+  const { isAuthenticated, realtimeStatus, selectProfileForRestaurant, user } = useAuth()
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const requestIdRef = useRef(0)
   const hasLoadedRef = useRef(false)
+  const inFlightRef = useRef(false)
+  const pendingRef = useRef(false)
+  const retryCountRef = useRef(0)
+  const authBlockedRef = useRef(false)
+  const refreshTimerRef = useRef<number | undefined>(undefined)
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const activeProfileKey = `${user?.userId || ''}:${user?.restaurantId || ''}:${user?.roleId || ''}`
+  const connectionDescription = realtimeStatus === 'connected' ? '' : i18n.t(
+    realtimeStatus === 'reconnecting' || realtimeStatus === 'connecting' ? 'ui.realtime.reconnecting' : 'ui.realtime.offline')
 
   const loadNotifications = useCallback(async () => {
     if (!isAuthenticated) {
@@ -44,9 +52,20 @@ export function NotificationBell() {
       hasLoadedRef.current = false
       return
     }
+    if (authBlockedRef.current || document.hidden) return
+
+    if (inFlightRef.current) {
+      pendingRef.current = true
+      return
+    }
+
+    window.clearTimeout(refreshTimerRef.current)
+    inFlightRef.current = true
 
     const requestId = requestIdRef.current + 1
     requestIdRef.current = requestId
+    let succeeded = false
+    let canRetry = true
     setIsLoading(!hasLoadedRef.current)
     try {
       const [items, count] = await Promise.all([ecafeApi.notifications.list(), ecafeApi.notifications.unreadCount()])
@@ -54,37 +73,72 @@ export function NotificationBell() {
         setNotifications(items)
         setUnreadCount(count)
         hasLoadedRef.current = true
+        retryCountRef.current = 0
+        succeeded = true
       }
     } catch (error) {
+      if (requestIdRef.current === requestId && error instanceof ApiError && [401, 403].includes(error.statusCode)) {
+        authBlockedRef.current = true
+        canRetry = false
+      }
       if (import.meta.env.DEV) {
         console.error('Notifications could not be refreshed.', error)
       }
     } finally {
       if (requestIdRef.current === requestId) {
+        inFlightRef.current = false
         setIsLoading(false)
+        const pending = pendingRef.current
+        pendingRef.current = false
+        const retryDelay = Math.min(30000, 3000 * 2 ** Math.min(retryCountRef.current, 4))
+        if (!succeeded) retryCountRef.current += 1
+        if (canRetry && !document.hidden) refreshTimerRef.current = window.setTimeout(() => void loadNotifications(), pending ? 200 : succeeded ? 45000 : retryDelay)
       }
     }
   }, [activeProfileKey, isAuthenticated])
 
   useEffect(() => {
+    requestIdRef.current += 1
     hasLoadedRef.current = false
+    inFlightRef.current = false
+    pendingRef.current = false
+    retryCountRef.current = 0
+    authBlockedRef.current = false
+    setNotifications([])
+    setUnreadCount(0)
     void loadNotifications()
+    return () => {
+      requestIdRef.current += 1
+      window.clearTimeout(refreshTimerRef.current)
+      inFlightRef.current = false
+      pendingRef.current = false
+    }
   }, [activeProfileKey, loadNotifications])
 
   useEffect(() => {
     const onRefresh = () => {
-      void loadNotifications()
+      if (authBlockedRef.current || document.hidden) return
+      if (inFlightRef.current) {
+        pendingRef.current = true
+        return
+      }
+      window.clearTimeout(refreshTimerRef.current)
+      refreshTimerRef.current = window.setTimeout(() => void loadNotifications(), 200)
     }
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
         window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+      } else {
+        window.clearTimeout(refreshTimerRef.current)
       }
     }
 
     window.addEventListener('ecafe:notifications-refresh', onRefresh)
+    window.addEventListener('online', onRefresh)
     document.addEventListener('visibilitychange', onVisible)
     return () => {
       window.removeEventListener('ecafe:notifications-refresh', onRefresh)
+      window.removeEventListener('online', onRefresh)
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [loadNotifications])
@@ -158,15 +212,17 @@ export function NotificationBell() {
         aria-label={i18n.t('ui.shared.layout.notification_bell.bildirisler_1f9d3f')}
         className={`icon-action notification-trigger${unreadCount > 0 ? ' has-unread' : ''}`}
         onClick={onToggle}
-        title={i18n.t('ui.shared.layout.notification_bell.bildirisler_1f9d3f')}
+        title={`${i18n.t('ui.shared.layout.notification_bell.bildirisler_1f9d3f')}${connectionDescription ? ` · ${connectionDescription}` : ''}`}
         type="button"
       >
         <Bell size={18} />
         {unreadCount > 0 ? <span>{unreadCount > 9 ? '9+' : unreadCount}</span> : null}
       </button>
+      {connectionDescription ? <span className="realtime-indicator" role="status" aria-label={connectionDescription}><WifiOff size={12} /></span> : null}
 
       {isOpen ? (
         <div className="notification-popover">
+          {connectionDescription ? <p className="notification-connection-note" role="status"><WifiOff size={15} />{connectionDescription}</p> : null}
           <header>
             <div>
               <strong>{i18n.t('ui.shared.layout.notification_bell.bildirisler_1f9d3f')}</strong>

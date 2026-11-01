@@ -25,6 +25,7 @@ import { paymentStatusId } from '../../shared/lib/paymentStatus'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
+import { useOrderInvalidation } from '../../shared/realtime/useOrderInvalidation'
 import './waiter-orders.css'
 
 type CartLine = WaiterDraftLine
@@ -232,6 +233,9 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       catch (error) { if (error instanceof ApiError && error.statusCode === 404) return { kind: 'missing' }; throw error }
     }, null, detailKey, [reloadKey, ordersRevision],
   )
+  useOrderInvalidation(restaurantId, sessionId, true,
+    session.isLoading || session.isRefreshing || orders.isLoading || orders.isRefreshing || detail.isLoading || detail.isRefreshing,
+    () => setReloadKey((value) => value + 1))
 
   useEffect(() => {
     if (!detail.hasData || detail.data?.kind !== 'missing') return

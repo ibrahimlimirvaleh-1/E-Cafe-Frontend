@@ -7,9 +7,10 @@ import { useAuth } from '../../shared/auth/AuthContext'
 import { paymentStatusId, paymentStatusLabel } from '../../shared/lib/paymentStatus'
 import { Button } from '../../shared/ui/Button'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
+import { useOrderInvalidation } from '../../shared/realtime/useOrderInvalidation'
 import './session-bill.css'
 
-type Props = { sessionId: number; revision?: number; onBillChange?: (bill: SessionBillResponse | null) => void; onLoadingChange?: (loading: boolean) => void }
+type Props = { restaurantId: string; sessionId: number; revision?: number; onBillChange?: (bill: SessionBillResponse | null) => void; onLoadingChange?: (loading: boolean) => void }
 type CheckoutIntent = { key: string; previousPaymentId: number | null }
 type TestOutcome = 'Succeeded' | 'Failed' | 'Cancelled' | 'Pending'
 
@@ -35,9 +36,10 @@ function getIntentKey(scope: string, previousPaymentId: number | null) {
   return key
 }
 
-export function SessionBillPanel({ sessionId, revision = 0, onBillChange, onLoadingChange }: Props) {
+export function SessionBillPanel({ restaurantId, sessionId, revision = 0, onBillChange, onLoadingChange }: Props) {
   const { user } = useAuth()
-  const scope = `${user?.userId || ''}:${sessionId}`
+  const checkoutScope = `${user?.userId || ''}:${sessionId}`
+  const scope = `${user?.userId || ''}:${restaurantId}:${sessionId}`
   const scopeRef = useRef(scope)
   scopeRef.current = scope
   const onBillChangeRef = useRef(onBillChange)
@@ -48,6 +50,7 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange, onLoad
   const previousRevisionRef = useRef(revision)
   const [bill, setBill] = useState<SessionBillResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [fetching, setFetching] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [feedback, setFeedback] = useState('')
@@ -56,6 +59,7 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange, onLoad
   const loadBill = useCallback(async (quiet = false) => {
     const requestId = ++requestIdRef.current
     onLoadingChangeRef.current?.(true)
+    setFetching(true)
     if (!quiet) setLoading(true)
     try {
       const result = await ecafeApi.tableSessions.getBill(sessionId)
@@ -75,10 +79,14 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange, onLoad
     } finally {
       if (requestId === requestIdRef.current && scopeRef.current === scope) {
         setLoading(false)
+        setFetching(false)
         onLoadingChangeRef.current?.(false)
       }
     }
   }, [scope, sessionId])
+
+  useOrderInvalidation(restaurantId, sessionId, true, fetching || busy,
+    () => { void loadBill(true).catch(() => {}) })
 
   useEffect(() => {
     setBill(null)
@@ -97,17 +105,17 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange, onLoad
   }, [loadBill, revision])
 
   useEffect(() => {
-    const refresh = () => { if (!document.hidden && !busy) void loadBill(true).catch(() => {}) }
+    const refresh = () => { if (!document.hidden && !busy && !fetching) void loadBill(true).catch(() => {}) }
     const timer = window.setInterval(refresh, 30_000)
     window.addEventListener('ecafe:notifications-refresh', refresh)
     return () => {
       window.clearInterval(timer)
       window.removeEventListener('ecafe:notifications-refresh', refresh)
     }
-  }, [busy, loadBill])
+  }, [busy, fetching, loadBill])
 
   const payment = bill?.latestPayment
-  const canAct = Boolean(bill && bill.isOpen && !payment?.requiresRefund && !loading && !busy && !error && !syncRequired)
+  const canAct = Boolean(bill && bill.isOpen && !payment?.requiresRefund && !fetching && !busy && !error && !syncRequired)
   const canSimulate = Boolean(canAct && bill?.enabled && bill.isTest && payment?.isTest && payment.statusId === paymentStatusId.pending)
 
   async function checkout() {
@@ -116,13 +124,13 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange, onLoad
     setFeedback('')
     let responseReceived = false
     try {
-      const key = getIntentKey(scope, payment?.id ?? null)
+      const key = getIntentKey(checkoutScope, payment?.id ?? null)
       const created = await ecafeApi.tableSessions.checkoutBill(sessionId, key)
       responseReceived = true
       setSyncRequired(true)
       onBillChangeRef.current?.(null)
       await loadBill()
-      window.sessionStorage.removeItem(intentStorageKey(scope))
+      window.sessionStorage.removeItem(intentStorageKey(checkoutScope))
       if (!created.isTest && created.checkoutUrl) {
         const url = new URL(created.checkoutUrl)
         if (url.protocol !== 'https:') throw new Error('Ödəniş ünvanı təhlükəsiz deyil.')
@@ -161,7 +169,7 @@ export function SessionBillPanel({ sessionId, revision = 0, onBillChange, onLoad
   }
 
   return <section className="session-bill" aria-label={i18n.t('ui.features.settlement.session_bill_panel.masa_hesabi_2a4b3c')}>
-    <div className="session-bill-heading"><div><span>{i18n.t('ui.features.settlement.session_bill_panel.yekun_hesab_5746c7')}</span><h3>{i18n.t('ui.features.settlement.session_bill_panel.masa_hesabi_2a4b3c')}</h3></div><Button type="button" variant="secondary" disabled={loading || busy} onClick={() => { setFeedback(''); void loadBill().catch(() => {}) }} aria-label={i18n.t('ui.features.settlement.session_bill_panel.hesabi_yenile_dd2ed6')} title={i18n.t('ui.features.settlement.session_bill_panel.hesabi_yenile_dd2ed6')}><RefreshCw size={17} /></Button></div>
+    <div className="session-bill-heading"><div><span>{i18n.t('ui.features.settlement.session_bill_panel.yekun_hesab_5746c7')}</span><h3>{i18n.t('ui.features.settlement.session_bill_panel.masa_hesabi_2a4b3c')}</h3></div><Button type="button" variant="secondary" disabled={fetching || busy} onClick={() => { setFeedback(''); void loadBill().catch(() => {}) }} aria-label={i18n.t('ui.features.settlement.session_bill_panel.hesabi_yenile_dd2ed6')} title={i18n.t('ui.features.settlement.session_bill_panel.hesabi_yenile_dd2ed6')}><RefreshCw size={17} /></Button></div>
     {loading && !bill ? <p role="status" className="session-bill-muted">{i18n.t('ui.features.settlement.session_bill_panel.hesab_yuklenir_d11ae9')}</p> : null}
     {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
     {bill ? <>

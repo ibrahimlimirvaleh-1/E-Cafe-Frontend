@@ -106,7 +106,7 @@ export function SessionCloseReviewActions({ id, restaurantId, reservationId, ses
       </div>
     </div> : null}
     {reviewConfirmedAt ? <p className="session-close-review-confirmed">{i18n.t('ui.features.reservations.session_close_review_actions.xidmetin_davami_qeyd_edilib_44287b')} {formatReservationDateTime(reviewConfirmedAt, timeZone || undefined)}</p> : null}
-    {sessionId !== null && showBill ? <SessionBillPanel sessionId={sessionId} revision={billRevision} onBillChange={updateBill} onLoadingChange={setBillLoading} /> : null}
+    {sessionId !== null && showBill ? <SessionBillPanel restaurantId={restaurantId} sessionId={sessionId} revision={billRevision} onBillChange={updateBill} onLoadingChange={setBillLoading} /> : null}
     {canComplete || canContinue ? <div className="session-close-review-buttons">
       {canComplete && !showBill ? <Button type="button" variant="secondary" onClick={() => setShowBill(true)}><CheckCircle2 size={17} />{i18n.t('ui.features.reservations.session_close_review_actions.hesabi_yoxla_f100b8')}</Button> : null}
       {canComplete && showBill ? <Button type="button" disabled={busy || !canCloseBill} onClick={() => { setError(''); setDialog('complete') }} title={!canCloseBill ?i18n.t('ui.features.reservations.session_close_review_actions.yalniz_hesablasma_tamamlandiqdan_sonra_26733c') : undefined}><CheckCircle2 size={17} />{i18n.t('ui.features.reservations.session_close_review_actions.xidmeti_bitir_4c724c')}</Button> : null}

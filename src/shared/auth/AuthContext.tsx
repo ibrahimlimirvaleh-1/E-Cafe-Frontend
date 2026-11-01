@@ -1,4 +1,5 @@
 import { i18n } from '../i18n/i18n'
+import { HubConnectionState } from '@microsoft/signalr'
 import { roleLabel } from '../i18n/roleLabel'
 import { useTranslation } from 'react-i18next'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -10,7 +11,8 @@ import { clearAuthTokens, getAccessToken, hasManualLogoutMarker, markManualLogou
 import type { AuthTokens } from './tokenStorage'
 import { ecafeApi } from '../api/ecafeApi'
 import { refreshAccessToken } from '../api/httpClient'
-import { createUserSessionEventsConnection } from '../realtime/userSessionEvents'
+import { createUserSessionEventsConnection, type RealtimeConnectionStatus } from '../realtime/userSessionEvents'
+import { dispatchOrderSync } from '../realtime/orderEvents'
 import { getHomePathForUser } from './authz'
 import { profileKey, readStoredProfileKey, writeStoredProfileKey } from './activeProfileStorage'
 import { Button } from '../ui/Button'
@@ -37,6 +39,7 @@ type SessionNotice = {
 
 type AuthContextValue = {
   user: CurrentUser | null
+  realtimeStatus: RealtimeConnectionStatus
   isAuthReady: boolean
   isAuthenticated: boolean
   setSession: (tokens: AuthTokens) => void
@@ -123,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const noticeTimerRef = useRef<number | undefined>(undefined)
   const profilePromptUserIdRef = useRef('')
   const [sessionNotice, setSessionNotice] = useState<SessionNotice | null>(null)
+  const [realtimeStatus, setRealtimeStatus] = useState<RealtimeConnectionStatus>('connecting')
   const [isProfilePromptOpen, setIsProfilePromptOpen] = useState(false)
   const [user, setUser] = useState<CurrentUser | null>(() => {
     const token = getAccessToken()
@@ -345,11 +349,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user || !getAccessToken()) {
+      setRealtimeStatus('connecting')
       return
     }
 
     let logoutTimerId: number | undefined
+    let disposed = false
+    let retryId: number | undefined
+    let starting = false
+    setRealtimeStatus('connecting')
     const connection = createUserSessionEventsConnection({
+      onConnectionStatusChange: (status) => {
+        if (disposed) return
+        setRealtimeStatus(status)
+        if (status === 'offline') scheduleRetry()
+      },
       onUserDeactivated: (message) => {
         showPersistentSessionNotice({
           title: 'Giriş dayandırıldı',
@@ -419,6 +433,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       },
       onConnectionRestored: async () => {
+        dispatchOrderSync()
         try {
           const refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
           const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
@@ -432,12 +447,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     })
 
-    let disposed = false
-    let retryId: number | undefined
-    const startConnection = async () => {
+    function scheduleRetry() {
+      if (disposed || retryId !== undefined) return
+      retryId = window.setTimeout(() => {
+        retryId = undefined
+        void startConnection()
+      }, 10000)
+    }
+
+    async function startConnection() {
+      if (disposed || starting || !navigator.onLine) {
+        if (!disposed && !navigator.onLine) setRealtimeStatus('offline')
+        return
+      }
+      if (connection.state !== HubConnectionState.Disconnected) return
+      starting = true
       try {
         await connection.start()
         if (!disposed) {
+          setRealtimeStatus('connected')
+          dispatchOrderSync()
           window.dispatchEvent(new Event('ecafe:notifications-refresh'))
         }
       } catch (error) {
@@ -445,15 +474,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('Realtime session connection failed.', error)
         }
         if (!disposed) {
-          retryId = window.setTimeout(() => void startConnection(), 10000)
+          setRealtimeStatus('offline')
+          scheduleRetry()
         }
+      } finally {
+        starting = false
       }
     }
 
+    function onOnline() {
+      window.clearTimeout(retryId)
+      retryId = undefined
+      dispatchOrderSync()
+      window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+      void startConnection()
+    }
+    function onVisible() {
+      if (document.visibilityState === 'visible') dispatchOrderSync()
+    }
+    window.addEventListener('online', onOnline)
+    document.addEventListener('visibilitychange', onVisible)
     void startConnection()
 
     return () => {
       disposed = true
+      window.removeEventListener('online', onOnline)
+      document.removeEventListener('visibilitychange', onVisible)
       window.clearTimeout(retryId)
       window.clearTimeout(logoutTimerId)
       void connection.stop()
@@ -463,6 +509,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      realtimeStatus,
       isAuthReady,
       isAuthenticated: user !== null,
       setSession: (tokens) => {
@@ -526,7 +573,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [isAuthReady, user],
+    [isAuthReady, realtimeStatus, user],
   )
 
   useEffect(() => {
