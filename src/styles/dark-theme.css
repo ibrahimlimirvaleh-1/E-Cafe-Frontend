@@ -41,15 +41,9 @@
   background: var(--surface-lowest);
 }
 
-:root[data-theme='dark'] .form-message-warning,
 :root[data-theme='dark'] .reservation-history-current {
   color: var(--warning);
   background: var(--warning-bg);
-}
-
-:root[data-theme='dark'] .form-message-info {
-  color: var(--info);
-  background: var(--info-bg);
 }
 
 :root[data-theme='dark'] .session-termination-notice span,
@@ -109,7 +103,7 @@
   background: var(--surface-low);
 }
 
-:root[data-theme='dark'] :is(.reservation-proof-panel, .reservation-time-preview, .reservation-table-card.selected, .reservation-proof-submitted, .form-message-success, .session-termination-notice, .contract-workflow-cell.next-step) {
+:root[data-theme='dark'] :is(.reservation-proof-panel, .reservation-time-preview, .reservation-table-card.selected, .reservation-proof-submitted, .session-termination-notice, .contract-workflow-cell.next-step) {
   border-color: var(--outline-variant);
   background: var(--surface-low);
 }
@@ -122,7 +116,7 @@
   color: var(--on-surface-variant);
 }
 
-:root[data-theme='dark'] :is(.reservation-payment-meta span, .form-message-success, .reservation-proof-submitted) {
+:root[data-theme='dark'] :is(.reservation-payment-meta span, .reservation-proof-submitted) {
   color: var(--success);
 }
 
@@ -184,7 +178,7 @@
   background: var(--danger-bg);
 }
 
-:root[data-theme='dark'] :is(.ui-button-danger, .ui-button.danger, .action-icon-button-danger, .form-message-danger .form-message-icon) {
+:root[data-theme='dark'] :is(.ui-button-danger, .ui-button.danger, .action-icon-button-danger) {
   color: var(--on-primary);
 }
 
@@ -195,8 +189,4 @@
 
 :root[data-theme='dark'] :is(.reservation-detail-actions, .reservation-confirmation-actions) .ui-button-danger {
   color: var(--danger);
-}
-
-:root[data-theme='dark'] :is(.form-message-success .form-message-icon, .form-message-warning .form-message-icon) {
-  color: var(--on-primary);
 }
