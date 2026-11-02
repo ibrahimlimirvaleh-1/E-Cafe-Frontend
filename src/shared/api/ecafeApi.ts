@@ -427,6 +427,7 @@ export type CustomerTableSessionResponse = {
   openedAt: string
   closedAt: string | null
   timeZone: string
+  canCreateOrder: boolean
 }
 
 export type CustomerSessionOrderResponse = {
@@ -585,6 +586,7 @@ function mapCustomerTableSession(record: AnyRecord): CustomerTableSessionRespons
     openedAt: str(record.openedAt),
     closedAt: record.closedAt == null ? null : str(record.closedAt),
     timeZone: str(record.timeZone).trim() || 'Asia/Baku',
+    canCreateOrder: bool(record.canCreateOrder),
   }
 }
 
@@ -2552,6 +2554,12 @@ export const ecafeApi = {
     },
     getOrder: async (sessionId: number, orderId: number, signal?: AbortSignal) => {
       const result = await httpClient<unknown>(endpoints.customerTableSessions.orderDetail(sessionId, orderId), { signal })
+      return mapCustomerSessionOrder(result.data as AnyRecord)
+    },
+    createOrder: async (sessionId: number, key: string, payload: string) => {
+      const result = await httpClient<unknown>(endpoints.customerTableSessions.orders(sessionId), {
+        method: 'POST', headers: { 'Idempotency-Key': key }, body: payload,
+      })
       return mapCustomerSessionOrder(result.data as AnyRecord)
     },
     cancelOrder: async (sessionId: number, orderId: number, reason: string) => {

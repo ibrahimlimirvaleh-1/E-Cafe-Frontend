@@ -9,6 +9,10 @@ export function waiterOrderDraftKey(userId: string, restaurantId: string, sessio
   return `ecafe.waiter.order-draft.v1:${userId}:${restaurantId}:${sessionId}`
 }
 
+export function customerOrderDraftKey(userId: string, restaurantId: string, sessionId: number) {
+  return `ecafe.customer.order-draft.v1:${userId}:${restaurantId}:${sessionId}`
+}
+
 export function readWaiterOrderDraft(key: string): WaiterOrderDraft {
   try {
     const raw = window.localStorage.getItem(key)

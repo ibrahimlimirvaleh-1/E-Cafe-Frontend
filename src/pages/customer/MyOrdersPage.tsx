@@ -10,6 +10,7 @@ import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { useOrderInvalidation } from '../../shared/realtime/useOrderInvalidation'
 import { SessionBillPanel } from '../../features/settlement/SessionBillPanel'
+import { CustomerOrderComposer } from '../../features/orders/CustomerOrderComposer'
 import { OrderCancellationDialog } from '../../features/orders/OrderCancellationDialog'
 import { CancellationRequestDialog } from '../../features/orders/CancellationRequestDialog'
 import { CancellationRequestInfo } from '../../features/orders/CancellationRequestInfo'
@@ -145,6 +146,7 @@ function OrderDetail({ order, timeZone, onClose }: { order: CustomerSessionOrder
       <h4>{i18n.t('ui.pages.customer.my_orders_page.gedisat_6d8883')}</h4>
       <ol>{milestones.map((step) => <li key={step.label}><Check size={15} aria-hidden="true" /><span>{step.label}</span><time>{formatReservationDateTime(step.at, timeZone)}</time></li>)}</ol>
       {order.statusId === orderStatusId.created && !order.sentToKitchenAt ? <p>{i18n.t('ui.pages.customer.my_orders_page.metbexe_gonderilmesini_gozleyir_6bb1aa')}</p> : null}
+      {order.statusId === orderStatusId.pendingWaiterConfirmation ? <p>{i18n.t('ui.customerOrder.awaitingWaiter')}</p> : null}
       {order.cancellationReason ? <p><strong>{i18n.t('ui.orderCancel.cancelledReason')}</strong> {order.cancellationReason}</p> : null}
     </div>
     {order.cancellationRequest ? <CancellationRequestInfo request={order.cancellationRequest} timeZone={timeZone} /> : null}
@@ -331,6 +333,17 @@ export function MyOrdersPage() {
         {sessionId !== null && selectedSession.error && !validSession ? <div className="customer-orders-empty"><h2>{i18n.t('ui.pages.customer.my_orders_page.sessiya_elcatan_deyil_07dfff')}</h2><p role="alert">{errorMessage(selectedSession.error, i18n.t('ui.orders.session'))}</p><Button variant="secondary" onClick={() => { if (requestedSessionId) { const next = new URLSearchParams(searchParams); next.delete('sessionId'); next.delete('orderId'); setSearchParams(next) } else setRevision((value) => value + 1) }} type="button">{requestedSessionId ?i18n.t('ui.pages.customer.my_orders_page.siyahiya_qayit_f779ce') :i18n.t('ui.pages.customer.my_orders_page.yeniden_yoxla_9c69a3')}</Button></div> : null}
         {validSession ? <>
           <div className="customer-orders-section-heading customer-order-workspace-heading"><div><span className="customer-orders-kicker">{validSession.restaurantName || 'Restoran'}</span><h2>{validSession.tableName || `Masa #${validSession.tableId}`}</h2><p><Clock3 size={15} /> {i18n.t('ui.pages.customer.my_orders_page.acilis_59e910')} {formatReservationDateTime(validSession.openedAt, validSession.timeZone)}</p></div><Badge tone={sessionStatus(validSession.statusId).tone}>{sessionStatus(validSession.statusId).label}</Badge></div>
+          <CustomerOrderComposer key={`${userScope}:${validSession.id}`} session={validSession} userId={user?.userId || ''}
+            disabled={Boolean(selectedSession.error || orders.error)} onRefresh={() => setRevision((value) => value + 1)}
+            onCreated={(orderId) => {
+              setOrderPage(1)
+              setRevision((value) => value + 1)
+              setSettlementRevision((value) => value + 1)
+              const next = new URLSearchParams(searchParams)
+              next.set('sessionId', String(validSession.id))
+              next.set('orderId', String(orderId))
+              setSearchParams(next)
+            }} />
           <SessionBillPanel key={`${userScope}:${validSession.id}`} restaurantId={String(validSession.restaurantId)} sessionId={validSession.id} revision={settlementRevision} />
           {cancel.notice ? <p className={cancel.noticeTone === 'success' ? 'customer-orders-cancel-success' : 'customer-orders-error'} role="status">{cancel.notice}</p> : null}
           {cancellationRequest.notice ? <p className={cancellationRequest.noticeTone === 'success' ? 'customer-orders-cancel-success' : 'customer-orders-error'} role="status">{cancellationRequest.notice}</p> : null}
