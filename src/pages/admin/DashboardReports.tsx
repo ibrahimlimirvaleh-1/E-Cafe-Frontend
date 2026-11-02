@@ -5,6 +5,7 @@ import { formatDateOnlyAz } from '../../shared/lib/dateFormatting'
 import { orderKitchenLabel } from '../../shared/lib/orderStatus'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
+import { DashboardDonut } from './DashboardDonut'
 import { formatDashboardMoment, type DashboardFormatters, type DashboardTranslate } from './dashboardFormatting'
 import { useDashboardReportData } from './useDashboardReportData'
 import { OperationalReportTable } from './OperationalReportTable'
@@ -98,9 +99,12 @@ function ReportRows({ data, view, t, locale, formatters }: {
         {row.servedAtUtc ? <small>{t('dashboardReports.servedAt')}: {formatDashboardMoment(row.servedAtUtc, locale, timezone)}</small> : null}
       </td>
       <td data-label={t('dashboardReports.column.status')}><span className={`role-dashboard-status${statusTone(row.statusId)}`}>{orderKitchenLabel(row.statusId, row.sentToKitchenAtUtc)}</span></td>
-      <td data-label={t('dashboardReports.column.items')} className="is-numeric">{formatters.number.format(row.itemQuantity)}</td>
-      <td data-label={t('dashboardReports.column.quoted')} className="is-numeric">{formatters.money.format(row.itemSubtotal)}</td>
-      {view !== 'manager' ? <td data-label={t('dashboardReports.column.confirmed')} className="is-numeric">{formatters.money.format(row.confirmedAmount)}</td> : null}
+      <td data-label={t('dashboardReports.column.itemUnits')} className="is-numeric">{formatters.number.format(row.itemQuantity)}</td>
+      <td data-label={t('dashboardReports.column.originalSubtotal')} className={`is-numeric${row.statusId === 2007 ? ' is-cancelled-quote' : ''}`}>
+        {formatters.money.format(row.itemSubtotal)}
+        {row.statusId === 2007 ? <small>{t('dashboardReports.cancelledOriginal')}</small> : null}
+      </td>
+      {view !== 'manager' ? <td data-label={t('dashboardReports.column.confirmedOrderAmount')} className="is-numeric">{formatters.money.format(row.confirmedAmount)}</td> : null}
     </tr>)}
   </>
   if (data.kind === 'reservations') return <>
@@ -141,6 +145,10 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
   const totalPages = data ? Math.max(1, Math.ceil(data.totalRows / Math.max(1, data.pageSize))) : 1
 
   const rowCount = data?.detail ? data.detail.rows.length : data?.kind === 'orders' ? data.orders.length : data?.kind === 'reservations' ? data.reservations.length : data?.payments.length ?? 0
+  const orderMetric = (key: string) => data?.metrics.find((metric) => metric.key === key)?.value
+  const totalOrders = orderMetric('totalOrders')
+  const pendingOrders = orderMetric('pendingOrders')
+  const cancelledOrders = orderMetric('cancelledOrders')
 
   return <section className="role-dashboard-reports" aria-label={t('dashboardReports.title')}>
     <div className="role-dashboard-report-toolbar">
@@ -189,21 +197,34 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
         {report.loading ? <span role="status"><RefreshCw size={13} aria-hidden="true" />{t('dashboard.refreshing')}</span> : null}
       </div>
       <ReportMetrics data={data} t={t} formatters={formatters} />
+      {kind === 'orders' && totalOrders !== undefined && pendingOrders !== undefined && cancelledOrders !== undefined ? (
+        <DashboardDonut title={t('dashboardReports.orderStages')} total={totalOrders}
+          totalLabel={t('dashboardReports.ordersTotal')} totalFormatted={formatters.number.format(totalOrders)}
+          emptyLabel={t('dashboardReports.noOrders')} note={t('dashboardReports.orderStagesNote')}
+          parts={[
+            { label: t('dashboardReports.metric.pendingOrders'), value: pendingOrders, formatted: formatters.number.format(pendingOrders), color: 'var(--dashboard-blue)' },
+            { label: t('dashboardReports.metric.cancelledOrders'), value: cancelledOrders, formatted: formatters.number.format(cancelledOrders), color: 'var(--dashboard-red)' },
+            { label: t('dashboardReports.otherStages'), value: totalOrders - pendingOrders - cancelledOrders, formatted: formatters.number.format(totalOrders - pendingOrders - cancelledOrders), color: 'var(--dashboard-teal)' },
+          ]} />
+      ) : null}
       <div className="role-dashboard-report-head">
         <div><h2>{reportLabel(kind, t)}</h2><p>{t(operationalKinds.includes(kind) ? `operationalReports.caption.${kind}` : `dashboardReports.caption.${kind}`)}</p></div>
         <span>{t('dashboard.totalRows', { count: data.totalRows })}</span>
       </div>
       {rowCount > 0 && data.detail ? <OperationalReportTable detail={data.detail} timeZone={data.timeZone} locale={locale} formatters={formatters} t={t} /> : rowCount > 0 ? <div className="role-dashboard-report-table-scroll"><table>
         <thead><tr>
-          {(kind === 'orders' ? ['order', 'location', 'date', 'status', 'items', 'quoted', ...(view === 'manager' ? [] : ['confirmed'])]
+          {(kind === 'orders' ? ['order', 'location', 'date', 'status', 'itemUnits', 'originalSubtotal', ...(view === 'manager' ? [] : ['confirmedOrderAmount'])]
             : kind === 'reservations' ? ['reservation', 'location', 'date', 'status', 'arrival', 'guests', 'deposit']
-              : ['event', 'restaurant', 'date', 'purpose', 'related', 'amount']).map((column) => <th key={column} scope="col">{t(`dashboardReports.column.${column}`)}</th>)}
+              : ['event', 'restaurant', 'date', 'purpose', 'related', 'amount']).map((column) => <th key={column} scope="col"
+                className={['itemUnits', 'originalSubtotal', 'confirmedOrderAmount', 'guests', 'deposit', 'amount'].includes(column) ? 'is-numeric' : undefined}>
+                {t(`dashboardReports.column.${column}`)}
+              </th>)}
         </tr></thead>
         <tbody><ReportRows data={data} view={view} t={t} locale={locale} formatters={formatters} /></tbody>
       </table></div> : <p className="role-dashboard-empty role-dashboard-report-empty">{t('dashboardReports.empty')}</p>}
       <PaginationControls ariaLabel={t('dashboardReports.pages')} pageIndex={data.pageIndex} totalPages={totalPages}
         hasPreviousPage={data.pageIndex > 1} hasNextPage={data.pageIndex < totalPages} onPageChange={report.setPageIndex} />
-      {kind === 'orders' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.orderAmountNote')}</p> : null}
+      {kind === 'orders' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.originalSubtotalNote')}</p> : null}
       {kind === 'reservations' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.depositNote')}</p> : null}
       {kind === 'payments' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.paymentNote')}</p> : null}
       {operationalKinds.includes(kind) ? <p className="role-dashboard-report-footnote">{t(`operationalReports.note.${kind}`)}</p> : null}

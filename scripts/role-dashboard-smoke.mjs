@@ -8,6 +8,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright')
 const dist = path.resolve('dist')
 const origin = 'http://ecafe.test'
 const requests = []
+let chartOverride = null
+let financialOverride = null
 const contractStatuses = [
   { id: 6001, labels: ['Qaralama', 'Draft', 'Черновик'], tone: 'is-warning' },
   { id: 6002, labels: ['Təsdiq gözləyir', 'Awaiting signature', 'Ожидает подписи'], tone: 'is-warning' },
@@ -276,7 +278,10 @@ try {
         if (/^\/api\/v1\/localization\/dictionaries\//.test(name)) return reply({ language: name.split('/').at(-1), version: 'v1', fallbackLanguage: 'az', messages: {} })
         if (name === `/api/v1/dashboard/${view}`) {
           requests.push({ view, search: url.searchParams.toString() })
-          return reply(dashboard(view, url.searchParams))
+          const result = dashboard(view, url.searchParams)
+          if (chartOverride) result.chart.points = chartOverride
+          if (financialOverride) result.financials = financialOverride
+          return reply(result)
         }
         if (name.endsWith('/notifications')) return reply({ items: [], pageIndex: 1, totalPages: 1, totalCount: 0 })
         if (name.endsWith('/unread-count')) return reply({ count: 0 })
@@ -300,6 +305,16 @@ try {
       continue
     }
     await page.locator('.role-dashboard-metric').first().waitFor()
+    if (view === 'platform') {
+      await page.evaluate(() => document.fonts.ready)
+      const cdp = await context.newCDPSession(page)
+      await cdp.send('DOM.enable')
+      await cdp.send('CSS.enable')
+      const { root } = await cdp.send('DOM.getDocument')
+      const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: '.role-dashboard-chart h2' })
+      console.log('Dashboard fonts:', await page.locator('.role-dashboard-chart h2').evaluate((element) => getComputedStyle(element).fontFamily), JSON.stringify(await cdp.send('CSS.getPlatformFontsForNode', { nodeId })))
+      await cdp.detach()
+    }
     assert.equal(await page.locator('.role-dashboard-metric').count(), 4)
     assert.equal(await page.locator('.role-dashboard-alerts li').count(), 1)
     assert.equal(await page.locator('.role-dashboard-financials').count(), view === 'manager' ? 0 : 1)
@@ -380,6 +395,28 @@ try {
       await page.screenshot({ path: path.join(dist, 'role-dashboard-platform-dark.png'), fullPage: true })
       await page.locator('.theme-toggle').click()
     }
+    await page.getByRole('button', { name: 'Xətt və sahə qrafiki' }).click()
+    assert.equal(await page.getByRole('button', { name: 'Xətt və sahə qrafiki' }).getAttribute('aria-pressed'), 'true')
+    const points = page.locator('.role-dashboard-chart-point-control')
+    await points.first().focus()
+    await page.keyboard.press('End')
+    assert.equal(await points.last().evaluate((element) => document.activeElement === element), true)
+    await page.keyboard.press('Home')
+    await page.keyboard.press('ArrowRight')
+    assert.equal(await points.nth(1).evaluate((element) => document.activeElement === element), true)
+    await page.locator('.role-dashboard-chart-data summary').click()
+    assert.equal(await page.locator('.role-dashboard-chart-data tbody tr').count(), await points.count())
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-line-1440.png`), fullPage: true })
+    await page.locator('.role-dashboard-chart').screenshot({ path: path.join(dist, `role-dashboard-${view}-line-chart.png`) })
+    for (const width of [390, 320]) {
+      await page.setViewportSize({ width, height: 844 })
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+      await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-line-${width}.png`), fullPage: true })
+    }
+    await page.setViewportSize({ width: 1365, height: 900 })
+    await page.getByRole('button', { name: 'Sütun qrafiki' }).click()
     await assertDesktopSidebar(page, view)
     await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-desktop.png`), fullPage: true })
     await page.setViewportSize({ width: 390, height: 844 })
@@ -391,6 +428,7 @@ try {
       assert.match(await page.locator('.role-dashboard-metric strong').first().innerText(), /₼/)
       await page.getByRole('button', { name: 'Test', exact: true }).click()
       await page.getByText('Yalnız test ödənişləri').waitFor()
+      assert.equal(await page.locator('.role-dashboard-financials .role-dashboard-donut-ring').count(), 1)
       assert.match(requests.at(-1).search, /paymentMode=test/)
       await page.getByRole('button', { name: '2', exact: true }).click()
       await page.getByText('Buta Baku', { exact: true }).waitFor()
@@ -413,6 +451,34 @@ try {
       await page.screenshot({ path: path.join(dist, 'role-dashboard-owner-large-amount-desktop.png'), fullPage: true })
     }
     assert.deepEqual(errors, [])
+    if (view === 'platform') {
+      for (const length of [0, 1, 92]) {
+        chartOverride = Array.from({ length }, (_, index) => ({ bucketStartUtc: new Date(Date.UTC(2026, 7, 1 + index, 8)).toISOString(), value: index + 1 }))
+        await page.reload()
+        await page.locator('.role-dashboard-metric').first().waitFor()
+        if (!length) assert.equal(await page.locator('.role-dashboard-chart-empty').count(), 1)
+        else {
+          await page.getByRole('button', { name: 'Xətt və sahə qrafiki' }).click()
+          assert.equal(await page.locator('.role-dashboard-chart-point-control').count(), length)
+          assert.doesNotMatch(await page.locator('.role-dashboard-chart-line').getAttribute('d'), /NaN|Infinity/)
+          await page.locator('.role-dashboard-chart-point-control').first().focus()
+          await page.keyboard.press('End')
+          assert.equal(await page.locator('.role-dashboard-chart-point-control').last().evaluate((element) => element === document.activeElement), true)
+        }
+        await page.setViewportSize({ width: 320, height: 844 })
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+        await page.locator('.theme-toggle').click()
+        await page.screenshot({ path: path.join(dist, `role-dashboard-chart-${length}-320-dark.png`), fullPage: true })
+      }
+      chartOverride = null
+      for (const [total, deposit, session, expected] of [[0, 0, 0, 1], [0.3, 0.1, 0.2, 1], [10, 5, 5.01, 0], [10, -1, 11, 0]]) {
+        financialOverride = { collectedAmount: total, depositCollectedAmount: deposit, sessionCollectedAmount: session, refundedAmount: 0, netCollectedAmount: total }
+        await page.reload()
+        await page.locator('.role-dashboard-metric').first().waitFor()
+        assert.equal(await page.locator('.role-dashboard-financials .role-dashboard-donut').count(), expected)
+      }
+      financialOverride = null
+    }
     await context.close()
   }
   console.log('Role dashboard smoke passed')

@@ -1,11 +1,13 @@
 import {
-  AlertCircle, BellRing, CalendarDays, ChefHat, CircleCheck, ClipboardList,
+  AlertCircle, BarChart3, BellRing, CalendarDays, ChefHat, CircleCheck, ClipboardList,
   CreditCard, FileClock, FileText, ListFilter, ReceiptText, ShoppingBag,
-  Store, Table2, Users, Wallet, type LucideIcon,
+  LineChart, Store, Table2, Users, Wallet, type LucideIcon,
 } from 'lucide-react'
+import { useState, type KeyboardEvent } from 'react'
 import type { DashboardResponse, DashboardView } from '../../shared/api/dashboardApi'
 import { mapContractStatus } from '../../shared/api/mappers'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
+import { DashboardDonut } from './DashboardDonut'
 import { formatDashboardMoment, type DashboardFormatters, type DashboardTranslate } from './dashboardFormatting'
 
 type CommonProps = {
@@ -86,9 +88,26 @@ export function DashboardMetrics({ data, view, t, formatters }: CommonProps & { 
 }
 
 export function DashboardChart({ data, t, locale, formatters }: CommonProps & { data: DashboardResponse }) {
+  const [mode, setMode] = useState<'bar' | 'line'>('bar')
   const { chart, timeZone } = data
   const hasActivity = chart.points.some((point) => point.value > 0)
   const scale = hasActivity ? chartScale(chart.points.map((point) => point.value), chart.unit) : null
+  const linePoints = scale ? chart.points.map((point, index) => ({
+    x: (index + 0.5) / chart.points.length * 1000,
+    y: 220 - Math.max(0, point.value) / scale.maximum * 220,
+  })) : []
+  const linePath = linePoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const areaPath = linePoints.length ? `${linePath} L ${linePoints.at(-1)!.x} 220 L ${linePoints[0].x} 220 Z` : ''
+
+  function focusPoint(event: KeyboardEvent<HTMLElement>) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    const points = Array.from(event.currentTarget.closest('.role-dashboard-chart-body')?.querySelectorAll<HTMLElement>('.role-dashboard-chart-point-control') ?? [])
+    const current = points.indexOf(event.currentTarget)
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? points.length - 1
+      : Math.max(0, Math.min(points.length - 1, current + (event.key === 'ArrowRight' ? 1 : -1)))
+    event.preventDefault()
+    points[next]?.focus()
+  }
 
   return (
     <section className="role-dashboard-chart" aria-labelledby="role-dashboard-chart-title">
@@ -99,7 +118,15 @@ export function DashboardChart({ data, t, locale, formatters }: CommonProps & { 
           </h2>
           <p>{t('dashboard.chart.caption')}</p>
         </div>
-        <span className="role-dashboard-chart-key"><i />{t('dashboard.currentPeriod')}</span>
+        <div className="role-dashboard-chart-actions">
+          <span className="role-dashboard-chart-key"><i />{t('dashboard.currentPeriod')}</span>
+          <div className="role-dashboard-chart-modes" role="group" aria-label={t('dashboard.chart.mode')}>
+            <button type="button" aria-label={t('dashboard.chart.mode.bar')} title={t('dashboard.chart.mode.bar')}
+              aria-pressed={mode === 'bar'} onClick={() => setMode('bar')}><BarChart3 size={16} aria-hidden="true" /></button>
+            <button type="button" aria-label={t('dashboard.chart.mode.line')} title={t('dashboard.chart.mode.line')}
+              aria-pressed={mode === 'line'} onClick={() => setMode('line')}><LineChart size={16} aria-hidden="true" /></button>
+          </div>
+        </div>
       </div>
 
       {scale ? (
@@ -112,16 +139,27 @@ export function DashboardChart({ data, t, locale, formatters }: CommonProps & { 
               <div className="role-dashboard-chart-grid" aria-hidden="true">
                 {scale.ticks.map((tick) => <span key={tick} />)}
               </div>
-              <div className="role-dashboard-chart-bars" style={{ gridTemplateColumns: `repeat(${chart.points.length}, minmax(0, 1fr))` }}>
+              {mode === 'bar' ? <div className="role-dashboard-chart-bars" style={{ gridTemplateColumns: `repeat(${chart.points.length}, minmax(0, 1fr))` }}>
                 {chart.points.map((point) => {
                   const detail = `${formatDashboardMoment(point.bucketStartUtc, locale, timeZone)} · ${formatters.value(point.value, chart.unit)}`
                   return (
-                    <div className="role-dashboard-chart-column" key={point.bucketStartUtc} role="img" tabIndex={0} aria-label={detail} data-tooltip={detail}>
+                    <div className="role-dashboard-chart-column role-dashboard-chart-point-control" key={point.bucketStartUtc} role="img" tabIndex={0} aria-label={detail} data-tooltip={detail} onKeyDown={focusPoint}>
                       <div className="role-dashboard-chart-bar" style={{ height: `${point.value > 0 ? Math.max(1.5, point.value / scale.maximum * 100) : 0}%` }} />
                     </div>
                   )
                 })}
-              </div>
+              </div> : <div className="role-dashboard-chart-line-plot">
+                <svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                  <path className="role-dashboard-chart-area" d={areaPath} />
+                  <path className="role-dashboard-chart-line" d={linePath} />
+                </svg>
+                {chart.points.map((point, index) => {
+                  const detail = `${formatDashboardMoment(point.bucketStartUtc, locale, timeZone)} · ${formatters.value(point.value, chart.unit)}`
+                  return <div className={`role-dashboard-chart-point role-dashboard-chart-point-control${linePoints[index].y < 52 ? ' is-high' : ''}`} key={point.bucketStartUtc}
+                    role="img" tabIndex={0} aria-label={detail} data-tooltip={detail} onKeyDown={focusPoint}
+                    style={{ left: `${linePoints[index].x / 10}%`, top: `${linePoints[index].y}px` }} />
+                })}
+              </div>}
               <div className="role-dashboard-chart-labels" style={{ gridTemplateColumns: `repeat(${chart.points.length}, minmax(0, 1fr))` }}>
                 {chart.points.map((point) => (
                   <time key={point.bucketStartUtc} dateTime={point.bucketStartUtc}>{formatDashboardMoment(point.bucketStartUtc, locale, timeZone, chart.granularity)}</time>
@@ -138,6 +176,16 @@ export function DashboardChart({ data, t, locale, formatters }: CommonProps & { 
         <span>{t('dashboard.chart.unit')}: {chart.unit === 'AZN' ? 'AZN' : t('dashboard.count')}</span>
         <span>{t('dashboard.updated')}: {formatDashboardMoment(data.generatedAtUtc, locale, timeZone)}</span>
       </div>
+      {chart.points.length ? <details className="role-dashboard-chart-data">
+        <summary><Table2 size={15} aria-hidden="true" />{t('dashboard.chart.dataTable')}</summary>
+        <div><table>
+          <thead><tr><th scope="col">{t('dashboard.chart.date')}</th><th scope="col" className="is-numeric">{t('dashboard.chart.value')}</th></tr></thead>
+          <tbody>{chart.points.map((point) => <tr key={point.bucketStartUtc}>
+            <td>{formatDashboardMoment(point.bucketStartUtc, locale, timeZone)}</td>
+            <td className="is-numeric">{formatters.value(point.value, chart.unit)}</td>
+          </tr>)}</tbody>
+        </table></div>
+      </details> : null}
     </section>
   )
 }
@@ -182,6 +230,11 @@ export function DashboardFinancials({ data, t, formatters }: CommonProps & { dat
   if (!data.financials) return null
   const financials = data.financials
   const keys = ['collectedAmount', 'refundedAmount', 'netCollectedAmount', 'depositCollectedAmount', 'sessionCollectedAmount'] as const
+  const amounts = [financials.collectedAmount, financials.depositCollectedAmount, financials.sessionCollectedAmount]
+  const cents = amounts.map((value) => Math.round(value * 100))
+  const otherCents = cents[0] - cents[1] - cents[2]
+  const other = otherCents / 100
+  const showComposition = amounts.every((value, index) => Number.isFinite(value) && value >= 0 && Number.isSafeInteger(cents[index])) && otherCents >= 0
 
   return (
     <section className="role-dashboard-financials" aria-label={t('dashboard.financials')}>
@@ -191,6 +244,15 @@ export function DashboardFinancials({ data, t, formatters }: CommonProps & { dat
           <p>{t(`dashboard.modeDescription.${data.paymentMode}`)}</p>
         </div>
       </div>
+      <div className={`role-dashboard-financial-layout${showComposition ? ' has-composition' : ''}`}>
+      {showComposition ? <DashboardDonut title={t('dashboard.financial.composition')} total={cents[0] / 100}
+        totalLabel={t('dashboard.financial.collectedAmount')} totalFormatted={formatters.money.format(financials.collectedAmount)}
+        emptyLabel={t('dashboard.financial.noComposition')} note={t('dashboard.financial.compositionNote')}
+        parts={[
+          { label: t('dashboard.financial.depositCollectedAmount'), value: cents[1] / 100, formatted: formatters.money.format(financials.depositCollectedAmount), color: 'var(--dashboard-teal)' },
+          { label: t('dashboard.financial.sessionCollectedAmount'), value: cents[2] / 100, formatted: formatters.money.format(financials.sessionCollectedAmount), color: 'var(--dashboard-blue)' },
+          { label: t('dashboard.financial.otherCollectedAmount'), value: Math.max(0, other), formatted: formatters.money.format(Math.max(0, other)), color: 'var(--secondary)' },
+        ]} /> : null}
       <dl>
         {keys.map((key) => (
           <div key={key}>
@@ -199,6 +261,7 @@ export function DashboardFinancials({ data, t, formatters }: CommonProps & { dat
           </div>
         ))}
       </dl>
+      </div>
     </section>
   )
 }
@@ -223,9 +286,9 @@ function SessionRows({ data, t, locale, formatters }: CommonProps & { data: Dash
           <small>#{row.sessionId} · {formatDashboardMoment(row.openedAt, locale, data.timeZone)}</small>
         </td>
         <td>{row.waiterName || '—'}</td>
-        <td>{row.guestCount ?? '—'}</td>
-        <td>{row.requiresReview ? '—' : formatters.money.format(row.orderAmount)}</td>
-        <td>{row.requiresReview ? '—' : formatters.money.format(row.remainingAmount)}</td>
+        <td className="is-numeric">{row.guestCount ?? '—'}</td>
+        <td className="is-numeric">{row.requiresReview ? '—' : formatters.money.format(row.orderAmount)}</td>
+        <td className="is-numeric">{row.requiresReview ? '—' : formatters.money.format(row.remainingAmount)}</td>
         <td><span className={`role-dashboard-status${tone}`}>{t(`dashboard.state.${state}`)}</span></td>
       </tr>
     )
@@ -245,10 +308,10 @@ function BranchRows({ data, t, locale, formatters }: CommonProps & { data: Dashb
     return (
       <tr key={row.restaurantId}>
         <td><strong>{row.name}</strong><small>{row.branchName || '—'}</small></td>
-        <td>{formatters.number.format(row.reservationCount)}</td>
-        <td>{formatters.number.format(row.orderCount)}</td>
-        <td>{formatters.money.format(row.orderAmount)}</td>
-        <td>{formatters.money.format(row.collectedAmount)}</td>
+        <td className="is-numeric">{formatters.number.format(row.reservationCount)}</td>
+        <td className="is-numeric">{formatters.number.format(row.orderCount)}</td>
+        <td className="is-numeric">{formatters.money.format(row.orderAmount)}</td>
+        <td className="is-numeric">{formatters.money.format(row.collectedAmount)}</td>
         <td>
           {row.contractId == null ? t('dashboard.noContract') : (
             <>
@@ -273,7 +336,7 @@ export function DashboardTable({ data, view, t, locale, formatters, onPageChange
   const rows = manager ? data.sessionRows : data.branchRows
   const columns = manager
     ? ['table', 'waiter', 'guests', 'orderAmount', 'remaining', 'state']
-    : ['branch', 'reservations', 'orders', 'orderAmount', 'collected', 'contract']
+    : ['branch', 'reservations', 'orders', 'confirmedOrderAmount', 'collected', 'contract']
   const totalPages = Math.max(1, Math.ceil(data.totalRows / Math.max(1, data.pageSize)))
 
   return (
@@ -290,7 +353,10 @@ export function DashboardTable({ data, view, t, locale, formatters, onPageChange
         <div className="role-dashboard-table-scroll">
           <table>
             <thead>
-              <tr>{columns.map((key) => <th key={key} scope="col">{t(`dashboard.column.${key}`)}</th>)}</tr>
+              <tr>{columns.map((key) => <th key={key} scope="col"
+                className={['guests', 'orderAmount', 'remaining', 'reservations', 'orders', 'confirmedOrderAmount', 'collected'].includes(key) ? 'is-numeric' : undefined}>
+                {t(`dashboard.column.${key}`)}
+              </th>)}</tr>
             </thead>
             <tbody>
               {manager

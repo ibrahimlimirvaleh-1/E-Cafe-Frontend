@@ -28,7 +28,10 @@ function cellValue(
 export function OperationalReportTable(props: Props) {
   const { detail, t } = props
   return <div className="role-dashboard-report-table-scroll"><table>
-    <thead><tr>{detail.columns.map((column) => <th key={column.key} scope="col">{t(`operationalReports.column.${column.key}`, { defaultValue: column.key })}</th>)}</tr></thead>
+    <thead><tr>{detail.columns.map((column) => <th key={column.key} scope="col"
+      className={['number', 'currency', 'minutes', 'percent'].includes(column.format) ? 'is-numeric' : undefined}>
+      {t(`operationalReports.column.${column.key}`, { defaultValue: column.key })}
+    </th>)}</tr></thead>
     <tbody>{detail.rows.map((row) => <tr key={row.id}>
       {detail.columns.map((column, index) => <td key={column.key} data-label={t(`operationalReports.column.${column.key}`, { defaultValue: column.key })}
         className={['number', 'currency', 'minutes', 'percent'].includes(column.format) ? 'is-numeric' : undefined}>
