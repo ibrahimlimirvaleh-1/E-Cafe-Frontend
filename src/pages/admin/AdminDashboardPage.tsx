@@ -26,7 +26,7 @@ export function AdminDashboardPage() {
   const locale = getDashboardLocale(i18n.resolvedLanguage)
   const formatters = useMemo(() => createDashboardFormatters(locale), [locale])
   const { view, data } = state
-  const effectiveReportKind = view === 'manager' && reportKind === 'payments' ? 'orders' : reportKind
+  const effectiveReportKind = view === 'manager' && ['payments', 'settlements', 'branches'].includes(reportKind) ? 'orders' : reportKind
 
   useEffect(() => { setActiveTab('overview'); setReportKind('orders') }, [user?.userId, user?.roleId, user?.restaurantId])
 
@@ -65,7 +65,7 @@ export function AdminDashboardPage() {
         </button>)}
       </div>
 
-      <DashboardFilters state={state} user={user} t={t} showPaymentMode={activeTab === 'overview' || effectiveReportKind === 'payments'} />
+      <DashboardFilters state={state} user={user} t={t} showPaymentMode={activeTab === 'overview' || ['payments', 'settlements', 'branches'].includes(effectiveReportKind)} />
 
       {view === 'manager' && !state.hasManagerScope ? (
         <StatusMessage tone="warning" autoHideMs={false}>{t('dashboard.noRestaurant')}</StatusMessage>

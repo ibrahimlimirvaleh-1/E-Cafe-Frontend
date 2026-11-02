@@ -7,6 +7,7 @@ import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { formatDashboardMoment, type DashboardFormatters, type DashboardTranslate } from './dashboardFormatting'
 import { useDashboardReportData } from './useDashboardReportData'
+import { OperationalReportTable } from './OperationalReportTable'
 import type { DashboardState } from './useDashboardData'
 
 type Props = {
@@ -46,6 +47,21 @@ const reservationStatuses = [
   { id: 1009, key: 'status.rejected' },
 ] as const
 
+const reportGroups: Array<{ key: string; kinds: DashboardReportKind[] }> = [
+  { key: 'sales', kinds: ['orders', 'products'] },
+  { key: 'service', kinds: ['kitchen', 'cancellations', 'tables'] },
+  { key: 'reservations', kinds: ['reservations', 'reservation-outcomes'] },
+  { key: 'finance', kinds: ['payments', 'settlements', 'branches'] },
+  { key: 'inventory', kinds: ['stock'] },
+]
+
+const financialKinds: DashboardReportKind[] = ['payments', 'settlements', 'branches']
+const operationalKinds: DashboardReportKind[] = ['products', 'kitchen', 'cancellations', 'reservation-outcomes', 'tables', 'settlements', 'branches', 'stock']
+
+function reportLabel(kind: DashboardReportKind, t: DashboardTranslate) {
+  return t(operationalKinds.includes(kind) ? `operationalReports.kind.${kind}` : `dashboardReports.kind.${kind}`)
+}
+
 function statusTone(statusId: number) {
   if ([2007, 1005, 1006, 1007, 1009].includes(statusId)) return ' is-danger'
   if ([2009, 2001, 2008, 1001, 1008, 1010].includes(statusId)) return ' is-warning'
@@ -62,8 +78,9 @@ function ReservationStatus({ statusId, t }: { statusId: number; t: DashboardTran
 function ReportMetrics({ data, t, formatters }: { data: DashboardReportResponse; t: DashboardTranslate; formatters: DashboardFormatters }) {
   return <section className="role-dashboard-report-metrics" aria-label={t('dashboard.metrics')}>
     {data.metrics.map((metric) => <div className="role-dashboard-report-metric" key={metric.key}>
-      <span>{t(`dashboardReports.metric.${metric.key}`, { defaultValue: metric.key })}</span>
-      <strong>{formatters.value(metric.value, metric.unit)}</strong>
+      <span>{t(`${operationalKinds.includes(data.kind) ? 'operationalReports' : 'dashboardReports'}.metric.${metric.key}`, { defaultValue: metric.key })}</span>
+      <strong>{metric.unit === 'minutes' ? `${formatters.preciseNumber.format(metric.value)} ${t('operationalReports.unit.minutes')}`
+        : metric.unit === 'percent' ? `${formatters.preciseNumber.format(metric.value)}%` : formatters.value(metric.value, metric.unit)}</strong>
     </div>)}
   </section>
 }
@@ -114,40 +131,46 @@ function ReportRows({ data, view, t, locale, formatters }: {
 export function DashboardReports({ state, view, userId, kind, onKindChange, reloadKey, t, locale, formatters }: Props) {
   const [statusFilter, setStatusFilter] = useState<{ kind: DashboardReportKind; value: number | null }>({ kind: 'orders', value: null })
   const [paymentEvent, setPaymentEvent] = useState<DashboardPaymentEvent>('all')
+  const [dayStartHour, setDayStartHour] = useState(0)
   const statusId = statusFilter.kind === kind ? statusFilter.value : null
-  const report = useDashboardReportData(state, view, userId, kind, statusId, paymentEvent, reloadKey, t)
+  const report = useDashboardReportData(state, view, userId, kind, statusId, paymentEvent, dayStartHour, reloadKey, t)
   const data = report.data
-  const kinds: DashboardReportKind[] = view === 'manager' ? ['orders', 'reservations'] : ['orders', 'reservations', 'payments']
-  const statuses = kind === 'orders' ? orderStatuses : reservationStatuses
+  const statuses = kind === 'orders' ? orderStatuses : kind === 'reservations' ? reservationStatuses : []
+  const visibleGroups = reportGroups.map((group) => ({ ...group, kinds: group.kinds.filter((option) => view !== 'manager' || !financialKinds.includes(option)) }))
+    .filter((group) => group.kinds.length > 0)
   const totalPages = data ? Math.max(1, Math.ceil(data.totalRows / Math.max(1, data.pageSize))) : 1
 
-  const rowCount = data?.kind === 'orders' ? data.orders.length : data?.kind === 'reservations' ? data.reservations.length : data?.payments.length ?? 0
+  const rowCount = data?.detail ? data.detail.rows.length : data?.kind === 'orders' ? data.orders.length : data?.kind === 'reservations' ? data.reservations.length : data?.payments.length ?? 0
 
   return <section className="role-dashboard-reports" aria-label={t('dashboardReports.title')}>
     <div className="role-dashboard-report-toolbar">
-      <fieldset className="role-dashboard-segments role-dashboard-report-kinds">
-        <legend>{t('dashboardReports.kind')}</legend>
-        {kinds.map((option) => <button key={option} type="button" aria-pressed={kind === option} onClick={() => onKindChange(option)}>{t(`dashboardReports.kind.${option}`)}</button>)}
-      </fieldset>
-      <label className="role-dashboard-report-mobile-select">{t('dashboardReports.kind')}
+      <label className="role-dashboard-report-kind-select">{t('dashboardReports.kind')}
         <select value={kind} onChange={(event) => onKindChange(event.target.value as DashboardReportKind)}>
-          {kinds.map((option) => <option key={option} value={option}>{t(`dashboardReports.kind.${option}`)}</option>)}
+          {visibleGroups.map((group) => <optgroup key={group.key} label={t(`operationalReports.group.${group.key}`)}>
+            {group.kinds.map((option) => <option key={option} value={option}>{reportLabel(option, t)}</option>)}
+          </optgroup>)}
         </select>
       </label>
-      {kind !== 'payments' ? <label className="role-dashboard-report-status-filter">{t('dashboardReports.status')}
+      {statuses.length ? <label className="role-dashboard-report-status-filter">{t('dashboardReports.status')}
         <select aria-label={t('dashboardReports.status')} value={statusId ?? ''} onChange={(event) => setStatusFilter({ kind, value: event.target.value ? Number(event.target.value) : null })}>
           <option value="">{t('dashboardReports.allStatuses')}</option>
           {statuses.map((option) => <option key={option.id} value={option.id}>{t(option.key)}</option>)}
         </select>
-      </label> : <fieldset className="role-dashboard-segments role-dashboard-report-events">
+      </label> : null}
+      {kind === 'payments' ? <fieldset className="role-dashboard-segments role-dashboard-report-events">
         <legend>{t('dashboardReports.eventFilter')}</legend>
         {(['all', 'receipt', 'refund'] as const).map((option) => <button key={option} type="button" aria-pressed={paymentEvent === option} onClick={() => setPaymentEvent(option)}>{t(`dashboardReports.event.${option}`)}</button>)}
-      </fieldset>}
+      </fieldset> : null}
       {kind === 'payments' ? <label className="role-dashboard-report-mobile-select">{t('dashboardReports.eventFilter')}
         <select value={paymentEvent} onChange={(event) => setPaymentEvent(event.target.value as DashboardPaymentEvent)}>
           {(['all', 'receipt', 'refund'] as const).map((option) => <option key={option} value={option}>{t(`dashboardReports.event.${option}`)}</option>)}
         </select>
       </label> : null}
+      <label className="role-dashboard-report-day-start">{t('operationalReports.dayStartHour')}
+        <select value={dayStartHour} onChange={(event) => setDayStartHour(Number(event.target.value))}>
+          {Array.from({ length: 13 }, (_, hour) => <option key={hour} value={hour}>{String(hour).padStart(2, '0')}:00</option>)}
+        </select>
+      </label>
       <button className="role-dashboard-report-export" type="button" disabled={!data || report.exporting || !state.canLoad} onClick={() => void report.download()}>
         <Download size={16} aria-hidden="true" />{report.exporting ? t('dashboardReports.exporting') : t('dashboardReports.export')}
       </button>
@@ -161,15 +184,16 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
       <div className="role-dashboard-context">
         <CalendarDays size={15} aria-hidden="true" />{formatDateOnlyAz(data.from)} – {formatDateOnlyAz(data.to)}
         <span>{data.timeZone}</span>
-        {kind === 'payments' ? <span>{t(`dashboard.mode.${data.paymentMode}`)}</span> : null}
+        <span>{t('operationalReports.dayStartHour')}: {String(data.dayStartHour).padStart(2, '0')}:00</span>
+        {financialKinds.includes(kind) ? <span>{t(`dashboard.mode.${data.paymentMode}`)}</span> : null}
         {report.loading ? <span role="status"><RefreshCw size={13} aria-hidden="true" />{t('dashboard.refreshing')}</span> : null}
       </div>
       <ReportMetrics data={data} t={t} formatters={formatters} />
       <div className="role-dashboard-report-head">
-        <div><h2>{t(`dashboardReports.kind.${kind}`)}</h2><p>{t(`dashboardReports.caption.${kind}`)}</p></div>
+        <div><h2>{reportLabel(kind, t)}</h2><p>{t(operationalKinds.includes(kind) ? `operationalReports.caption.${kind}` : `dashboardReports.caption.${kind}`)}</p></div>
         <span>{t('dashboard.totalRows', { count: data.totalRows })}</span>
       </div>
-      {rowCount > 0 ? <div className="role-dashboard-report-table-scroll"><table>
+      {rowCount > 0 && data.detail ? <OperationalReportTable detail={data.detail} timeZone={data.timeZone} locale={locale} formatters={formatters} t={t} /> : rowCount > 0 ? <div className="role-dashboard-report-table-scroll"><table>
         <thead><tr>
           {(kind === 'orders' ? ['order', 'location', 'date', 'status', 'items', 'quoted', ...(view === 'manager' ? [] : ['confirmed'])]
             : kind === 'reservations' ? ['reservation', 'location', 'date', 'status', 'arrival', 'guests', 'deposit']
@@ -182,6 +206,7 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
       {kind === 'orders' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.orderAmountNote')}</p> : null}
       {kind === 'reservations' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.depositNote')}</p> : null}
       {kind === 'payments' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.paymentNote')}</p> : null}
+      {operationalKinds.includes(kind) ? <p className="role-dashboard-report-footnote">{t(`operationalReports.note.${kind}`)}</p> : null}
       <p className="role-dashboard-report-updated">{t('dashboard.updated')}: {formatDashboardMoment(data.generatedAtUtc, locale, data.timeZone)}</p>
     </> : null}
   </section>

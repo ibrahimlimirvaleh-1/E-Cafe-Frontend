@@ -7,7 +7,7 @@ import type { DashboardState } from './useDashboardData'
 type ScopedResult = { key: string; data: DashboardReportResponse }
 
 export function useDashboardReportData(state: DashboardState, view: DashboardView, userId: string | undefined,
-  kind: DashboardReportKind, statusId: number | null, paymentEvent: DashboardPaymentEvent, reloadKey: number, t: DashboardTranslate) {
+  kind: DashboardReportKind, statusId: number | null, paymentEvent: DashboardPaymentEvent, dayStartHour: number, reloadKey: number, t: DashboardTranslate) {
   const [pageIndex, setPageIndex] = useState(1)
   const [result, setResult] = useState<ScopedResult | null>(null)
   const [error, setError] = useState('')
@@ -19,14 +19,15 @@ export function useDashboardReportData(state: DashboardState, view: DashboardVie
   const scopedRestaurantId = view === 'manager' ? state.managerRestaurantId : restaurantId ?? undefined
   const query = useMemo<DashboardReportQuery>(() => ({
     view, kind, period, from, to, restaurantId: scopedRestaurantId,
-    paymentMode: kind === 'payments' ? paymentMode : 'real',
-    statusId: kind === 'payments' ? undefined : statusId ?? undefined,
+    paymentMode: ['payments', 'settlements', 'branches'].includes(kind) ? paymentMode : 'real',
+    statusId: kind === 'orders' || kind === 'reservations' ? statusId ?? undefined : undefined,
     paymentEvent: kind === 'payments' ? paymentEvent : undefined,
+    dayStartHour,
     pageIndex,
-  }), [view, kind, period, from, to, scopedRestaurantId, paymentMode, statusId, paymentEvent, pageIndex])
+  }), [view, kind, period, from, to, scopedRestaurantId, paymentMode, statusId, paymentEvent, dayStartHour, pageIndex])
   const key = JSON.stringify([userId, query])
-  const filterKey = JSON.stringify([userId, view, kind, period, from, to, scopedRestaurantId, query.paymentMode, statusId, paymentEvent])
-  const canLoad = state.canLoad && (view !== 'manager' || kind !== 'payments')
+  const filterKey = JSON.stringify([userId, view, kind, period, from, to, scopedRestaurantId, query.paymentMode, statusId, paymentEvent, dayStartHour])
+  const canLoad = state.canLoad && (view !== 'manager' || !['payments', 'settlements', 'branches'].includes(kind))
   const data = result?.key === key ? result.data : null
 
   useEffect(() => { setPageIndex(1) }, [filterKey])
@@ -38,7 +39,7 @@ export function useDashboardReportData(state: DashboardState, view: DashboardVie
     setError('')
     void getDashboardReport(query, controller.signal).then((response) => {
       if (controller.signal.aborted) return
-      if (response.kind !== kind || kind === 'payments' && response.paymentMode !== query.paymentMode) {
+      if (response.kind !== kind || response.dayStartHour !== dayStartHour || ['payments', 'settlements', 'branches'].includes(kind) && response.paymentMode !== query.paymentMode) {
         throw new Error(t('dashboardReports.responseMismatch'))
       }
       setResult({ key, data: response })
@@ -70,7 +71,7 @@ export function useDashboardReportData(state: DashboardState, view: DashboardVie
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `ecafe-${kind}-${data.from}-${data.to}${kind === 'payments' ? `-${query.paymentMode}` : ''}.csv`
+      anchor.download = `ecafe-${kind}-${data.from}-${data.to}-h${String(dayStartHour).padStart(2, '0')}${['payments', 'settlements', 'branches'].includes(kind) ? `-${query.paymentMode}` : ''}.csv`
       document.body.appendChild(anchor)
       anchor.click()
       anchor.remove()

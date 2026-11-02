@@ -4,7 +4,7 @@ import { fetchProtectedBlob, httpClient } from './httpClient'
 export type DashboardView = 'platform' | 'owner' | 'manager'
 export type DashboardPeriod = 'today' | 'week' | 'month' | 'custom'
 export type DashboardPaymentMode = 'real' | 'test'
-export type DashboardReportKind = 'orders' | 'reservations' | 'payments'
+export type DashboardReportKind = 'orders' | 'reservations' | 'payments' | 'products' | 'kitchen' | 'cancellations' | 'reservation-outcomes' | 'tables' | 'settlements' | 'branches' | 'stock'
 export type DashboardPaymentEvent = 'all' | 'receipt' | 'refund'
 
 export type DashboardQuery = {
@@ -80,10 +80,18 @@ export type DashboardReportQuery = DashboardQuery & {
   kind: DashboardReportKind
   statusId?: number
   paymentEvent?: DashboardPaymentEvent
+  dayStartHour: number
+}
+
+export type DashboardReportDetail = {
+  columns: Array<{ key: string; format: 'text' | 'number' | 'currency' | 'minutes' | 'percent' | 'datetime' | 'code' }>
+  rows: Array<{ id: string; cells: Array<{ text: string | null; number: number | null; utc: string | null }> }>
 }
 
 export type DashboardReportResponse = {
   kind: DashboardReportKind
+  dayStartHour: number
+  detail: DashboardReportDetail | null
   generatedAtUtc: string
   timeZone: string
   from: string
@@ -115,6 +123,7 @@ function reportParams(query: DashboardReportQuery) {
     period: query.period,
     paymentMode: query.paymentMode,
     pageIndex: String(query.pageIndex),
+    dayStartHour: String(query.dayStartHour),
   })
   if (query.restaurantId) params.set('restaurantId', String(query.restaurantId))
   if (query.period === 'custom' && query.from && query.to) {

@@ -13,6 +13,40 @@ let slowNextReport = false
 let emptyNextReport = false
 let failNextReport = false
 let slowNextExport = false
+const operationalColumns = {
+  products: ['restaurant', 'product', 'sold:number', 'cancelled:number', 'deliveredAmount:currency', 'averagePrice:currency'],
+  kitchen: ['orderId:number', 'restaurant', 'table', 'status:code', 'sentAt:datetime', 'acceptanceMinutes:minutes', 'preparationMinutes:minutes', 'servingMinutes:minutes', 'totalMinutes:minutes'],
+  cancellations: ['orderId:number', 'restaurant', 'table', 'cancelledAt:datetime', 'stage:code', 'reason', 'approvedBy', 'ingredient', 'unit', 'consumed:number', 'returned:number', 'notReturned:number', 'review:code'],
+  'reservation-outcomes': ['restaurant', 'arrivalDay:code', 'arrivalHour', 'reservations:number', 'guests:number', 'confirmed:number', 'arrived:number', 'late:number', 'seated:number', 'cancelled:number', 'noShow:number', 'noShowRate:percent'],
+  tables: ['restaurant', 'table', 'visits:number', 'closedVisits:number', 'occupiedMinutes:minutes', 'averageSessionMinutes:minutes', 'liveSessionId:number', 'remainingAmount:currency', 'review:code'],
+  settlements: ['event:code', 'recordId:number', 'restaurant', 'requestedAt:datetime', 'status:code', 'requestedAmount:currency', 'reservationId:number', 'sessionId:number', 'review:code'],
+  branches: ['restaurant', 'reservations:number', 'confirmedOrders:number', 'cancelled:number', 'confirmedAmount:currency', 'collected:currency', 'refunded:currency', 'netCollected:currency', 'averageOrder:currency', 'preparationMinutes:minutes'],
+  stock: ['restaurant', 'ingredient', 'unit', 'currentStock:number', 'threshold:number', 'incoming:number', 'outgoing:number', 'consumed:number', 'returned:number', 'waste:number', 'stockState:code', 'review:code'],
+}
+const operationalMetrics = {
+  products: ['productRows', 'soldUnits', 'cancelledUnits'],
+  kitchen: ['kitchenOrders', 'servedOrders', 'measuredPreparation', 'measuredServing', 'averagePreparation', 'averageServing'],
+  cancellations: ['cancelledOrders', 'ingredientRows'],
+  'reservation-outcomes': ['reservations', 'cancelledReservations', 'noShow'],
+  tables: ['tablesUsed', 'visits'],
+  settlements: ['paymentIssues', 'refundIssues'],
+  branches: ['branches'],
+  stock: ['stockItems', 'lowStock', 'outOfStock'],
+}
+
+function detail(kind) {
+  if (!operationalColumns[kind]) return null
+  const columns = operationalColumns[kind].map((entry) => {
+    const [key, format = 'text'] = entry.split(':')
+    return { key, format }
+  })
+  return { columns, rows: [{ id: `${kind}-1`, cells: columns.map(({ key, format }) => ({
+    text: format === 'code' ? key === 'status' ? kind === 'settlements' ? 'refund.8004' : 'order.2005' : key === 'stage' ? 'afterPreparation' : key === 'event' ? 'refund' : key === 'stockState' ? 'low' : key === 'arrivalDay' ? 'day.1' : 'yes'
+      : format === 'text' ? key === 'restaurant' ? 'Dolce Vita' : key === 'product' ? 'Espresso' : key === 'ingredient' ? 'Qəhvə' : key === 'unit' ? 'g' : key === 'table' ? 'Masa-1' : key === 'arrivalHour' ? '19:00' : 'Qeyd' : null,
+    number: ['number', 'currency', 'minutes', 'percent'].includes(format) ? key === 'preparationMinutes' && kind === 'kitchen' ? null : key === 'currentStock' ? 0.000125 : 12.5 : null,
+    utc: format === 'datetime' ? '2026-11-02T08:00:00Z' : null,
+  })) }] }
+}
 
 function token(roleId) {
   return `header.${Buffer.from(JSON.stringify({ userId: `user-${roleId}`, name: 'Test', surname: 'User', roleId: String(roleId), restaurantId: roleId === 3 ? '1' : null, restaurantRoles: roleId === 3 ? ['1:3'] : [] })).toString('base64url')}.signature`
@@ -48,8 +82,8 @@ function report(view, params) {
   const pageIndex = Number(params.get('pageIndex') || 1)
   const list = Array.from({ length: pageIndex === 1 ? 20 : 5 }, (_, index) => (pageIndex - 1) * 20 + index + 1)
   return {
-    kind, generatedAtUtc: '2026-11-02T10:00:00Z', timeZone: 'Asia/Baku', from: '2026-10-27', to: '2026-11-02', paymentMode: params.get('paymentMode') || 'real',
-    metrics: kind === 'orders' ? [
+    kind, dayStartHour: Number(params.get('dayStartHour') || 0), detail: detail(kind), generatedAtUtc: '2026-11-02T10:00:00Z', timeZone: 'Asia/Baku', from: '2026-10-27', to: '2026-11-02', paymentMode: params.get('paymentMode') || 'real',
+    metrics: operationalMetrics[kind] ? operationalMetrics[kind].map((key) => ({ key, value: key.startsWith('average') ? 12.5 : ['cancelledUnits', 'cancelledOrders', 'cancelledReservations', 'noShow', 'lowStock', 'outOfStock', 'refundIssues'].includes(key) ? 1 : 12, unit: key.startsWith('average') ? 'minutes' : 'count', previousValue: null, changePercent: null })) : kind === 'orders' ? [
       { key: 'totalOrders', value: 25, unit: 'count', previousValue: null, changePercent: null },
       { key: 'pendingOrders', value: 2, unit: 'count', previousValue: null, changePercent: null },
       { key: 'cancelledOrders', value: 1, unit: 'count', previousValue: null, changePercent: null },
@@ -60,7 +94,7 @@ function report(view, params) {
     orders: kind === 'orders' ? list.map((id) => ({ id, restaurantId: 1, restaurantName: 'Dolce Vita', tableName: 'Masa-1', tableSessionId: 21, sourceId: 1, statusId: id === 1 ? 2009 : id === 2 ? 2007 : 2005, openedAtUtc: '2026-11-02T08:00:00Z', sentToKitchenAtUtc: id === 1 ? null : '2026-11-02T08:01:00Z', servedAtUtc: id < 3 ? null : '2026-11-02T08:20:00Z', itemQuantity: 2, itemSubtotal: 15, confirmedAmount: id < 3 ? 0 : 15 })) : [],
     reservations: kind === 'reservations' ? list.map((id) => ({ id, restaurantId: 1, restaurantName: 'Dolce Vita', tableName: 'Masa-1', statusId: id === 1 ? 1002 : 1005, reservedAtUtc: '2026-11-02T13:00:00Z', peopleCount: 2, depositAmount: 20, arrivedAtUtc: id === 1 ? '2026-11-02T12:55:00Z' : null, seatedAtUtc: id === 1 ? '2026-11-02T13:00:00Z' : null })) : [],
     payments: kind === 'payments' ? [{ id: 1, event: 'receipt', restaurantId: 1, restaurantName: 'Dolce Vita', occurredAtUtc: '2026-11-02T08:00:00Z', amount: 40, purpose: 'deposit', reservationId: 1, tableSessionId: null, statusId: 3002, isTest: params.get('paymentMode') === 'test' }, { id: 1, event: 'refund', restaurantId: 1, restaurantName: 'Dolce Vita', occurredAtUtc: '2026-11-02T09:00:00Z', amount: 5, purpose: 'deposit', reservationId: 1, tableSessionId: null, statusId: 8005, isTest: params.get('paymentMode') === 'test' }] : [],
-    pageIndex, pageSize: 20, totalRows: kind === 'payments' ? 2 : 25,
+    pageIndex, pageSize: 20, totalRows: operationalColumns[kind] ? 1 : kind === 'payments' ? 2 : 25,
   }
 }
 
@@ -124,7 +158,7 @@ try {
     await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
     assert.equal(await page.locator('.role-dashboard-report-table-scroll tbody tr').count(), 20)
     assert.equal(await page.locator('.role-dashboard-report-metric').count(), view === 'manager' ? 4 : 5)
-    assert.equal(await page.getByRole('button', { name: 'Ödənişlər' }).count(), view === 'manager' ? 0 : 1)
+    assert.equal(await page.locator('.role-dashboard-report-kind-select option[value="payments"]').count(), view === 'manager' ? 0 : 1)
     assert.equal(await page.getByText('Təsdiqlənmiş sifariş məbləği').count(), view === 'manager' ? 0 : 1)
     assert.equal(await page.getByRole('group', { name: 'Ödəniş rejimi' }).count(), 0)
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
@@ -151,7 +185,7 @@ try {
     await page.getByText('#1', { exact: true }).first().waitFor()
     assert.equal(requests.at(-1).params.get('statusId'), '2009')
     assert.equal(requests.at(-1).params.get('pageIndex'), '1')
-    await page.getByRole('button', { name: 'Rezervasiyalar', exact: true }).click()
+    await page.locator('.role-dashboard-report-kind-select select').selectOption('reservations')
     await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
     assert.equal(await page.locator('.role-dashboard-report-metric').count(), 4)
     assert.equal(requests.at(-1).params.get('kind'), 'reservations')
@@ -164,14 +198,14 @@ try {
     }
     const reportCallsBeforeInvalid = requests.filter((item) => item.type === 'report').length
     await page.getByRole('button', { name: 'Tarix seç' }).click()
-    await page.getByLabel('Başlanğıc').fill('2026-01-01')
+    await page.getByLabel('Başlanğıc', { exact: true }).fill('2026-01-01')
     await page.getByLabel('Son', { exact: true }).fill('2026-06-01')
     await page.getByText('Tarix aralığı ən çox 92 gün ola bilər.').waitFor()
     assert.equal(requests.filter((item) => item.type === 'report').length, reportCallsBeforeInvalid)
     await page.getByRole('button', { name: '7 gün' }).click()
     await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
     if (view !== 'manager') {
-      await page.getByRole('button', { name: 'Ödənişlər', exact: true }).click()
+      await page.locator('.role-dashboard-report-kind-select select').selectOption('payments')
       await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
       assert.equal(await page.locator('.role-dashboard-report-metric').count(), 5)
       assert.equal(await page.locator('.role-dashboard-report-table-scroll tbody tr').count(), 2)
@@ -204,7 +238,7 @@ try {
         slowNextExport = true
         await page.getByRole('button', { name: 'CSV endir' }).click()
         await page.waitForFunction(() => document.querySelector('.role-dashboard-report-export')?.textContent?.includes('Hazırlanır'))
-        await page.getByRole('button', { name: 'Sifarişlər', exact: true }).click()
+        await page.locator('.role-dashboard-report-kind-select select').selectOption('orders')
         await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
         await page.waitForTimeout(650)
         assert.equal(unexpectedDownloads, 0)
@@ -223,13 +257,65 @@ try {
     await page.getByText('Hesabat müvəqqəti əlçatan deyil.').waitFor()
     await page.getByRole('button', { name: 'Yenilə', exact: true }).click()
     await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
+    const allowedOperationalKinds = Object.keys(operationalColumns).filter((option) => view !== 'manager' || !['settlements', 'branches'].includes(option))
+    assert.equal(await page.locator('.role-dashboard-report-kind-select option[value="settlements"]').count(), view === 'manager' ? 0 : 1)
+    assert.equal(await page.locator('.role-dashboard-report-kind-select option[value="branches"]').count(), view === 'manager' ? 0 : 1)
+    for (const operationalKind of allowedOperationalKinds) {
+      await page.locator('.role-dashboard-report-kind-select select').selectOption(operationalKind)
+      await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
+      assert.equal(requests.at(-1).params.get('kind'), operationalKind)
+      assert.equal(await page.locator('.role-dashboard-report-table-scroll th').count(), operationalColumns[operationalKind].length)
+      assert.equal(await page.locator('.role-dashboard-report-metric').count(), operationalMetrics[operationalKind].length)
+      assert.equal(await page.locator('.role-dashboard-report-status-filter').count(), 0)
+      assert.equal(await page.getByRole('group', { name: 'Ödəniş rejimi' }).count(), ['settlements', 'branches'].includes(operationalKind) ? 1 : 0)
+      if (operationalKind === 'kitchen') await page.locator('td[data-label="Hazırlanma müddəti"]').getByText('—').waitFor()
+      if (operationalKind === 'stock') assert.match(await page.locator('td[data-label="Cari qalıq"]').innerText(), /0[,.]000125/)
+      if (operationalKind === 'reservation-outcomes') await page.getByText('Bazar ertəsi', { exact: true }).waitFor()
+      await page.setViewportSize({ width: 390, height: 844 })
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+      await page.locator('.role-dashboard-report-table-scroll tbody tr').first().scrollIntoViewIfNeeded()
+      await page.screenshot({ path: path.join(dist, `dashboard-operational-${view}-${operationalKind}-390.png`) })
+      if (operationalKind === 'kitchen' || operationalKind === 'stock') {
+        await page.setViewportSize({ width: 320, height: 844 })
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+        await page.screenshot({ path: path.join(dist, `dashboard-operational-${view}-${operationalKind}-320.png`) })
+      }
+      await page.setViewportSize({ width: 1440, height: 900 })
+    }
+    await page.locator('.role-dashboard-report-day-start select').selectOption('4')
+    await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
+    assert.equal(requests.at(-1).params.get('dayStartHour'), '4')
+    await page.getByText('Hesabat günü başlanğıcı: 04:00').waitFor()
     if (view === 'platform') {
+      await page.locator('.role-dashboard-report-kind-select select').selectOption('stock')
+      const operationalDownload = page.waitForEvent('download')
+      await page.getByRole('button', { name: 'CSV endir' }).click()
+      assert.match((await operationalDownload).suggestedFilename(), /ecafe-stock.*-h04\.csv$/)
+      await page.screenshot({ path: path.join(dist, 'dashboard-operational-platform-stock-1440.png'), fullPage: true })
+      await page.locator('.theme-toggle').click()
+      await page.screenshot({ path: path.join(dist, 'dashboard-operational-platform-stock-dark-1440.png'), fullPage: true })
+      await page.locator('.theme-toggle').click()
+      let staleDownloads = 0
+      page.on('download', () => { staleDownloads += 1 })
+      slowNextExport = true
+      await page.getByRole('button', { name: 'CSV endir' }).click()
+      await page.waitForFunction(() => document.querySelector('.role-dashboard-report-export')?.textContent?.includes('Hazırlanır'))
+      await page.locator('.role-dashboard-report-day-start select').selectOption('5')
+      await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
+      await page.waitForTimeout(650)
+      assert.equal(staleDownloads, 0)
+    }
+    if (view === 'platform') {
+      await page.locator('.role-dashboard-report-kind-select select').selectOption('reservation-outcomes')
+      await page.getByText('Bazar ertəsi', { exact: true }).waitFor()
       await page.locator('.language-switcher-trigger').click()
       await page.locator('.language-switcher-option[lang="en"]').click()
       await page.getByRole('heading', { name: 'Reports', exact: true }).waitFor()
+      await page.getByText('Monday', { exact: true }).waitFor()
       await page.locator('.language-switcher-trigger').click()
       await page.locator('.language-switcher-option[lang="ru"]').click()
       await page.getByRole('heading', { name: 'Отчёты', exact: true }).waitFor()
+      await page.getByText('Понедельник', { exact: true }).waitFor()
       await page.locator('.language-switcher-trigger').click()
       await page.locator('.language-switcher-option[lang="az"]').click()
     }
