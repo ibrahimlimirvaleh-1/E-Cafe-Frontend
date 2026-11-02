@@ -14,7 +14,21 @@ function currentView(roleId?: string): DashboardView | null {
   return null
 }
 
-export function useDashboardData(user: CurrentUser | null, t: DashboardTranslate) {
+function customRangeError(period: DashboardPeriod, from: string, to: string): 'missing' | 'invalid' | 'tooLong' | null {
+  if (period !== 'custom') return null
+  if (!from || !to) return 'missing'
+  const parse = (value: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+    const date = new Date(`${value}T00:00:00Z`)
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : null
+  }
+  const first = parse(from)
+  const last = parse(to)
+  if (!first || !last || first.getUTCFullYear() < 2000 || last.getUTCFullYear() > 2100 || first > last) return 'invalid'
+  return (last.getTime() - first.getTime()) / 86_400_000 + 1 > 92 ? 'tooLong' : null
+}
+
+export function useDashboardData(user: CurrentUser | null, t: DashboardTranslate, enabled = true) {
   const view = currentView(user?.roleId)
   const [period, setPeriod] = useState<DashboardPeriod>(() => view === 'manager' ? 'today' : 'week')
   const [from, setFrom] = useState('')
@@ -30,7 +44,8 @@ export function useDashboardData(user: CurrentUser | null, t: DashboardTranslate
   const managerRestaurantId = Number(user?.restaurantId)
   const effectiveRestaurantId = view === 'manager' ? managerRestaurantId : restaurantId ?? undefined
   const effectivePaymentMode = view === 'manager' ? 'real' : paymentMode
-  const validCustomRange = period !== 'custom' || Boolean(from && to && from <= to)
+  const dateError = customRangeError(period, from, to)
+  const validCustomRange = dateError === null
   const hasManagerScope = Number.isSafeInteger(managerRestaurantId) && managerRestaurantId > 0
   const canLoad = Boolean(view && (view !== 'manager' || hasManagerScope) && validCustomRange)
   const identityKey = JSON.stringify([user?.userId, view, user?.restaurantId])
@@ -55,7 +70,7 @@ export function useDashboardData(user: CurrentUser | null, t: DashboardTranslate
   }, [refresh])
 
   useEffect(() => {
-    if (!view || !canLoad) return
+    if (!view || !canLoad || !enabled) return
     const controller = new AbortController()
     setLoading(true)
     setError('')
@@ -83,7 +98,7 @@ export function useDashboardData(user: CurrentUser | null, t: DashboardTranslate
     })
 
     return () => controller.abort()
-  }, [view, canLoad, effectiveRestaurantId, period, from, to, effectivePaymentMode, pageIndex, queryKey, identityKey, reloadKey, t])
+  }, [view, canLoad, enabled, effectiveRestaurantId, period, from, to, effectivePaymentMode, pageIndex, queryKey, identityKey, reloadKey, t])
 
   function changeRestaurant(id: number | null) {
     setRestaurantId(id)
@@ -118,6 +133,7 @@ export function useDashboardData(user: CurrentUser | null, t: DashboardTranslate
     loading,
     canLoad,
     validCustomRange,
+    dateError,
     hasManagerScope,
     managerRestaurantId,
     filters: { period, from, to, paymentMode, restaurantId },

@@ -8,12 +8,13 @@ type Props = {
   state: DashboardState
   user: CurrentUser | null
   t: DashboardTranslate
+  showPaymentMode?: boolean
 }
 
 const periods: DashboardPeriod[] = ['today', 'week', 'month', 'custom']
 const paymentModes: DashboardPaymentMode[] = ['real', 'test']
 
-export function DashboardFilters({ state, user, t }: Props) {
+export function DashboardFilters({ state, user, t, showPaymentMode = true }: Props) {
   const { view, filters, options } = state
   const managerRestaurant = user?.profiles.find((profile) => profile.restaurantId === user.restaurantId)?.restaurantName
     || options.find((option) => option.id === state.managerRestaurantId)?.name
@@ -53,7 +54,7 @@ export function DashboardFilters({ state, user, t }: Props) {
           ))}
         </fieldset>
 
-        {view !== 'manager' ? (
+        {view !== 'manager' && showPaymentMode ? (
           <fieldset className="role-dashboard-segments role-dashboard-payment-mode">
             <legend>{t('dashboard.paymentMode')}</legend>
             {paymentModes.map((mode) => (
@@ -83,7 +84,7 @@ export function DashboardFilters({ state, user, t }: Props) {
       ) : null}
 
       {!state.validCustomRange ? (
-        <p className="role-dashboard-hint" role="status">{t('dashboard.selectDates')}</p>
+        <p className="role-dashboard-hint" role="status">{t(state.dateError === 'tooLong' ? 'dashboardReports.rangeTooLong' : 'dashboard.selectDates')}</p>
       ) : null}
     </>
   )
