@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { MenuItem } from '../../entities/types'
 import { clearPendingOrderIntent, pendingOrderStorageKey, readPendingOrderIntent, savePendingOrderIntent, type PendingOrderIntent } from '../../features/orders/pendingOrderIntent'
+import { buildOrderBody, validateOrderCart } from '../../features/orders/orderCart'
 import { clearWaiterOrderDraft, readWaiterOrderDraft, saveWaiterOrderDraft, waiterOrderDraftKey, type WaiterDraftLine } from '../../features/orders/waiterOrderDraft'
 import { serveWaiterOrder } from '../../features/orders/serveWaiterOrder'
 import { OrderCancellationDialog } from '../../features/orders/OrderCancellationDialog'
@@ -40,18 +41,8 @@ function money(amount: number) {
   return `${amount.toFixed(2)} AZN`
 }
 
-// Ekrandakı qiyməti serverə yalnız gözlənilən qiymət kimi ötürür.
-function buildOrderBody(cart: CartLine[], note: string): CreateSessionOrderRequest {
-  const trimmedNote = note.trim()
-  return {
-    ...(trimmedNote ? { note: trimmedNote } : {}),
-    items: cart.map((line) => ({
-      itemId: Number(line.item.id),
-      quantity: line.quantity,
-      ...(line.note.trim() ? { note: line.note.trim() } : {}),
-      expectedUnitPrice: line.item.price,
-    })),
-  }
+function isPendingCustomerOrder(order: SessionOrderResponse) {
+  return order.sourceId === 1 && order.statusId === orderStatusId.pendingWaiterConfirmation && !order.sentToKitchenAt
 }
 
 // Seçilmiş sifarişin dəyişməz məzmununu göstərir; onClose yalnız detalı bağlayır.
@@ -267,11 +258,13 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   const orderPage = orders.hasData ? orders.data : null
   const selectedOutsidePage = selectedOrder && !orderPage?.items.some((order) => order.id === selectedOrder.id) ? [selectedOrder] : []
   const visibleOrders = [...selectedOutsidePage, ...(orderPage?.items || [])].sort((left, right) => {
-    const priority = (order: SessionOrderResponse) => order.statusId === orderStatusId.ready ? 0
-      : order.statusId === orderStatusId.created && !order.sentToKitchenAt ? 1
-        : order.statusId === orderStatusId.served || order.statusId === orderStatusId.closed || order.statusId === orderStatusId.cancelled ? 3 : 2
+    const priority = (order: SessionOrderResponse) => isPendingCustomerOrder(order) ? 0
+      : order.statusId === orderStatusId.ready ? 1
+        : order.statusId === orderStatusId.created && !order.sentToKitchenAt ? 2
+          : order.statusId === orderStatusId.served || order.statusId === orderStatusId.closed || order.statusId === orderStatusId.cancelled ? 4 : 3
     return priority(left) - priority(right)
   })
+  const pendingCustomerCount = visibleOrders.filter(isPendingCustomerOrder).length
   const pendingBody = pendingIntent ? JSON.parse(pendingIntent.payload) as CreateSessionOrderRequest : null
   const uncertainOrderConfirmed = uncertainOrderId !== null && Boolean(
     (selectedOrderRecord?.id === uncertainOrderId && selectedOrderRecord.sentToKitchenAt) ||
@@ -312,6 +305,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   // Cavabı itmiş göndərmə yalnız həmin sifariş ID-si ilə təkrarlanır; yeni sifariş yaradılmır.
   async function sendToKitchen(orderId: number) {
     if (sendInFlightRef.current || sessionUnavailable || session.error || busy || cancellationBlocksSend(orderId) || requestBlocksOrder(orderId)) return
+    const customerApproval = visibleOrders.some((order) => order.id === orderId && isPendingCustomerOrder(order))
     sendInFlightRef.current = true
     setSendingOrderId(orderId)
     setDispatchError('')
@@ -322,7 +316,7 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       if (!mountedRef.current) return
       setSentOrderTimes((current) => ({ ...current, [orderId]: updated.sentToKitchenAt! }))
       setUncertainOrderId(null)
-      setActionNotice(`Sifariş #${orderId} mətbəxə göndərildi.`)
+      setActionNotice(customerApproval ? i18n.t('ui.waiter.approvedAndSent', { id: orderId }) : `Sifariş #${orderId} mətbəxə göndərildi.`)
       setOrdersRevision((value) => value + 1)
     } catch (error) {
       if (!mountedRef.current) return
@@ -434,9 +428,8 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
   // Yeni UUID-ni yalnız yeni, istifadəçi tərəfindən təsdiqlənmiş sifariş üçün yaradır.
   function submitNewOrder() {
     if (!canEdit || inFlightRef.current || !menu.hasData || menu.error) return
-    if (!cart.length) { setFeedback('Əvvəl məhsul seçin.'); return }
-    if (cart.length > 100 || note.trim().length > 1000 || cart.some((line) =>
-      !Number.isSafeInteger(Number(line.item.id)) || line.quantity < 1 || line.quantity > 100 || line.note.trim().length > 500)) {
+    if (validateOrderCart(cart, note) === 'empty') { setFeedback('Əvvəl məhsul seçin.'); return }
+    if (validateOrderCart(cart, note) === 'invalid') {
       setFeedback('Məhsul sayı, miqdar və ya qeyd limitini yoxlayın.')
       return
     }
@@ -544,17 +537,17 @@ function SessionOrderWorkspace({ userId, restaurantId, sessionId }: { userId: st
       </section>
     </div> : null}
     {!sessionUnavailable && activeTab === 'orders' ? <section className="waiter-orders-history" aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.masa_sifarisleri_a21dba')}>
-      <div className="waiter-orders-section-heading"><div><h2>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_0b5f10')}</h2><span>{orderPage ? `${orderPage.totalCount} sifariş` : ''}</span></div><Button type="button" variant="secondary" title={i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisleri_yenile_870c48')} aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisleri_yenile_870c48')} onClick={() => setOrdersRevision((value) => value + 1)}><RefreshCw size={17} /></Button></div>
+      <div className="waiter-orders-section-heading"><div><h2>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_0b5f10')}</h2><span>{orderPage ? `${orderPage.totalCount} sifariş` : ''}</span>{pendingCustomerCount > 0 ? <span className="waiter-orders-pending-count">{i18n.t('ui.waiter.pendingCustomerOrders', { count: pendingCustomerCount })}</span> : null}</div><Button type="button" variant="secondary" title={i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisleri_yenile_870c48')} aria-label={i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisleri_yenile_870c48')} onClick={() => setOrdersRevision((value) => value + 1)}><RefreshCw size={17} /></Button></div>
       {orders.isLoading && !orderPage ? <p role="status">{i18n.t('ui.pages.staff.waiter_session_orders_page.sifarisler_yuklenir_917624')}</p> : null}
       {orders.error ? <StatusMessage tone="danger" autoHideMs={false}>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_siyahisi_yenilenmedi_085ed1')} {orders.error}</StatusMessage> : null}
       {orderPage && visibleOrders.length === 0 ? <p className="waiter-orders-muted">{i18n.t('ui.pages.staff.waiter_session_orders_page.bu_masa_ucun_sifaris_yoxdur_67bbfa')}</p> : null}
       {visibleOrders.length > 0 ? <div className="waiter-orders-history-list"><div className="waiter-orders-history-columns" aria-hidden="true"><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_23da3b')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.yaradilib_526f2e')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.miqdar_77c299')}</span><span>{i18n.t('ui.pages.staff.waiter_session_orders_page.mebleg_3d95ed')}</span></div>{visibleOrders.map((record) => {
         const order = displayOrder(record)
-        return <div className={`waiter-order-row${selectedOrderId === order.id ? ' is-selected' : ''}`} key={order.id}>
+        return <div className={`waiter-order-row${selectedOrderId === order.id ? ' is-selected' : ''}${isPendingCustomerOrder(order) ? ' is-awaiting-approval' : ''}`} key={order.id}>
           <button type="button" className="waiter-order-row-main" onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}><span className="waiter-order-history-id"><strong>{i18n.t('ui.pages.staff.waiter_session_orders_page.sifaris_96cfd8')}{order.id}</strong><small>{orderKitchenLabel(order.statusId, sentOrderTimes[order.id] || order.sentToKitchenAt)}</small></span><span>{formatReservationDateTime(order.openedAt, session.data?.timeZone)}</span><span>{i18n.t('ui.count.items', { count: order.items.reduce((sum, line) => sum + line.quantity, 0) })}</span><strong>{money(order.subtotal)}</strong></button>
           {order.cancellationRequest ? <CancellationRequestInfo request={order.cancellationRequest} timeZone={session.data?.timeZone} /> : null}
-          {order.statusId === orderStatusId.created && !order.sentToKitchenAt || order.canMarkServed || order.canCancel || order.canForwardCancellationRequest || order.canRequestCancellation || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id || cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? <div className="waiter-order-row-actions">
-            {order.statusId === orderStatusId.created && !order.sentToKitchenAt ? <Button type="button" variant="secondary" disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || sendingOrderId !== null || cancellationBlocksSend(order.id) || requestBlocksOrder(order.id)} onClick={() => void sendToKitchen(order.id)}>{sendingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <SendHorizontal size={16} />}{sendingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.gonderilir_e1bb27') : uncertainOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.eyni_sifarisi_tekrar_gonder_a76b51') : i18n.t('ui.pages.staff.waiter_session_orders_page.metbexe_gonder_784c49')}</Button> : null}
+          {isPendingCustomerOrder(order) || order.statusId === orderStatusId.created && !order.sentToKitchenAt || order.canMarkServed || order.canCancel || order.canForwardCancellationRequest || order.canRequestCancellation || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id || cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? <div className="waiter-order-row-actions">
+            {isPendingCustomerOrder(order) || order.statusId === orderStatusId.created && !order.sentToKitchenAt ? <Button type="button" variant={isPendingCustomerOrder(order) ? 'primary' : 'secondary'} disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || sendingOrderId !== null || cancellationBlocksSend(order.id) || requestBlocksOrder(order.id)} onClick={() => void sendToKitchen(order.id)}>{sendingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <SendHorizontal size={16} />}{sendingOrderId === order.id ? i18n.t(isPendingCustomerOrder(order) ? 'ui.waiter.approvingAndSending' : 'ui.pages.staff.waiter_session_orders_page.gonderilir_e1bb27') : uncertainOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.eyni_sifarisi_tekrar_gonder_a76b51') : i18n.t(isPendingCustomerOrder(order) ? 'ui.waiter.approveAndSend' : 'ui.pages.staff.waiter_session_orders_page.metbexe_gonder_784c49')}</Button> : null}
             {order.canMarkServed ? <Button type="button" disabled={busy || sessionUnavailable || !session.data || Boolean(session.error) || servingOrderId !== null || requestBlocksOrder(order.id)} onClick={() => void markServed(order.id)}>{servingOrderId === order.id ? <LoaderCircle className="waiter-order-dispatch-spinner" size={16} /> : <CircleCheck size={16} />}{servingOrderId === order.id ? i18n.t('ui.pages.staff.waiter_session_orders_page.qeyd_edilir_b735f7') : uncertainServedId === order.id ? i18n.t('ui.waiter.checkServeResult') : i18n.t('ui.waiter.serve')}</Button> : null}
             {order.canCancel || cancel.intent?.uncertainReason && cancel.intent.order.id === order.id ? <Button type="button" variant="secondary" className="waiter-order-cancel-action" disabled={busy || Boolean(pendingIntent) || sendingOrderId !== null || servingOrderId !== null || sendInFlightRef.current || serveInFlightRef.current || sessionUnavailable || !session.data || Boolean(session.error) || Boolean(orders.error) || cancel.busy || cancellationRequest.busy || Boolean(cancel.intent?.uncertainReason && cancel.intent.order.id !== order.id)} onClick={() => { if (inFlightRef.current || sendInFlightRef.current || serveInFlightRef.current || pendingIntent) return; cancel.open(order, session.data?.tableName || `Masa-${session.data?.tableNo ?? order.tableId}`) }}><Ban size={16} />{i18n.t('ui.orderCancel.action')}</Button>
               : order.canForwardCancellationRequest || order.canRequestCancellation || cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? <Button type="button" variant="secondary" className="waiter-order-cancel-action" disabled={busy || Boolean(pendingIntent) || sendingOrderId !== null || servingOrderId !== null || sendInFlightRef.current || serveInFlightRef.current || sessionUnavailable || Boolean(session.error) || Boolean(orders.error) || cancel.busy || cancellationRequest.busy} onClick={() => { if (inFlightRef.current || sendInFlightRef.current || serveInFlightRef.current || pendingIntent) return; const uncertain = cancellationRequest.intent?.uncertain && cancellationRequest.intent.order.id === order.id ? cancellationRequest.intent : null; cancellationRequest.open(uncertain?.order ?? order, uncertain?.operation ?? (order.canForwardCancellationRequest ? 'forward' : 'request')) }}><Ban size={16} />{i18n.t(order.canForwardCancellationRequest ? 'ui.cancellationRequest.forward' : 'ui.cancellationRequest.action')}</Button> : null}

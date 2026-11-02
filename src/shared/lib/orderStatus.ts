@@ -9,10 +9,12 @@ export const orderStatusId = {
   closed: 2006,
   cancelled: 2007,
   scheduled: 2008,
+  pendingWaiterConfirmation: 2009,
 } as const
 
 // Mətbəxə göndərilmə ayrıca vaxtla işarələnir; Created statusu qəbul demək deyil.
 export function orderKitchenLabel(statusId: number, sentToKitchenAt: string | null) {
+  if (statusId === orderStatusId.pendingWaiterConfirmation) return i18n.t('ui.orderStatus.pendingWaiterConfirmation')
   if (statusId === orderStatusId.created) return i18n.t(sentToKitchenAt ? 'ui.orderStatus.awaitingKitchen' : 'ui.orderStatus.notSent')
   if (statusId === orderStatusId.accepted) return i18n.t('ui.orderStatus.accepted')
   if (statusId === orderStatusId.preparing) return i18n.t('ui.orderStatus.preparing')

@@ -14,6 +14,10 @@ export function pendingOrderStorageKey(userId: string, restaurantId: string, ses
   return `${prefix}:${userId}:${restaurantId}:${sessionId}`
 }
 
+export function customerOrderIntentKey(userId: string, restaurantId: string, sessionId: number) {
+  return `ecafe.customerOrderIntent.v1:${userId}:${restaurantId}:${sessionId}`
+}
+
 // Saxlanmış məzmunu yoxlayır; başqa və ya zədələnmiş sorğunu təkrar göndərmir.
 export function parsePendingOrderIntent(value: string | null): PendingOrderIntent | null {
   if (!value) return null
