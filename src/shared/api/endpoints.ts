@@ -6,6 +6,16 @@ export const endpoints = {
     owner: '/dashboard/owner',
     manager: '/dashboard/manager',
   },
+  dashboardReports: {
+    platform: '/dashboard/platform/reports',
+    owner: '/dashboard/owner/reports',
+    manager: '/dashboard/manager/reports',
+  },
+  dashboardReportExports: {
+    platform: '/dashboard/platform/reports/export',
+    owner: '/dashboard/owner/reports/export',
+    manager: '/dashboard/manager/reports/export',
+  },
   localization: {
     dictionary: (language: string) => `/localization/dictionaries/${language}`,
     preference: '/localization/preference',
