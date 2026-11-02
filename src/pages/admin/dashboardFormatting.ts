@@ -8,6 +8,7 @@ export function getDashboardLocale(language?: string) {
 
 export function createDashboardFormatters(locale: string) {
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 })
+  const preciseNumber = new Intl.NumberFormat(locale, { maximumFractionDigits: 6 })
   const money = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'AZN',
@@ -17,6 +18,7 @@ export function createDashboardFormatters(locale: string) {
 
   return {
     number,
+    preciseNumber,
     money,
     value(amount: number, unit: string) {
       return ['azn', 'money', 'currency', '₼'].includes(unit.toLowerCase())
