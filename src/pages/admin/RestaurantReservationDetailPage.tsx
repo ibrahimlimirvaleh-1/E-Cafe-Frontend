@@ -196,9 +196,9 @@ export function RestaurantReservationDetailPage() {
           reviewConfirmedAt={reservation.sessionCloseReviewConfirmedAt} timeZone={reservation.timeZone}
           onChanged={(message) => { setActionMessage(message); setReloadKey((value) => value + 1) }} /> : null}
       {isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) && (reservation.waiting || reservation.requiresReceptionReview) ?
-        <ReservationWaitingManagement key={reservation.id} reservation={reservation} restaurantId={restaurantId}
+        <ReservationWaitingManagement key={`waiting:${reservation.id}`} reservation={reservation} restaurantId={restaurantId}
           onChanged={(message) => { setActionMessage(message); setReloadKey((value) => value + 1) }} /> : null}
-      <RestaurantRefundPanel key={reservation.id} reservationId={String(reservation.id)} restaurantId={restaurantId} />
+      <RestaurantRefundPanel key={`refund:${reservation.id}`} reservationId={String(reservation.id)} restaurantId={restaurantId} />
       {reservation.depositAmount > 0 && isInRole(user, [RoleIds.Manager, RoleIds.Owner], restaurantId) ? (
         <ManagerDepositPaymentPanel
           restaurantId={restaurantId}

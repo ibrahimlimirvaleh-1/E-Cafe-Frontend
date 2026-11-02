@@ -1,0 +1,60 @@
+body { margin: 0; }
+.message-preview { max-width: 1220px; margin: 0 auto; padding: 32px 24px 64px; }
+.message-preview-header, .message-preview-example-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.message-preview-header { margin-bottom: 26px; }
+.message-preview-header h1 { margin: 0; font-size: 26px; }
+.message-preview-controls { display: flex; align-items: center; gap: 8px; }
+.message-preview-languages { display: flex; gap: 4px; }
+.message-preview button { color: inherit; cursor: pointer; }
+.message-preview-languages button, .message-preview-theme, .message-preview-example-header button {
+  border: 1px solid var(--border-color); background: var(--surface-lowest); padding: 8px 12px;
+}
+.message-preview-theme { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; }
+.message-preview-languages .is-selected { border-color: currentColor; font-weight: 700; }
+.message-preview-views { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+.message-preview-views button { flex: 0 0 auto; border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 10px 14px; font-weight: 600; white-space: nowrap; }
+.message-preview-views button.is-selected { border-bottom-color: var(--secondary); color: var(--on-surface); }
+.message-preview-gallery { margin-top: 12px; }
+.message-preview-gallery.is-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
+.message-preview-variant { min-width: 0; padding: 18px 0 26px; border-bottom: 1px solid var(--border-color); }
+.message-preview-variant > h2 { margin: 0 0 18px; font-size: 20px; }
+.message-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.is-comparison .message-preview-grid { grid-template-columns: 1fr; gap: 16px; }
+.message-preview-example { min-width: 0; }
+.message-preview-example-header { margin-bottom: 8px; }
+.message-preview-example-header h3 { margin: 0; font-size: 13px; text-transform: capitalize; color: var(--on-surface-variant); }
+.message-preview-example-header button { padding: 5px 8px; font-size: 12px; }
+.message-preview-variant .form-message-success { --preview-accent: var(--success); }
+.message-preview-variant .form-message-info { --preview-accent: var(--info); }
+.message-preview-variant .form-message-warning { --preview-accent: var(--warning); }
+.message-preview-variant .form-message-danger { --preview-accent: var(--danger); }
+.variant-current .form-message {
+  align-items: flex-start; border: 1px solid color-mix(in srgb, var(--preview-accent) 30%, transparent);
+  border-radius: var(--radius-md); background: color-mix(in srgb, var(--preview-accent) 10%, var(--surface-lowest));
+  box-shadow: var(--shadow-sm); color: var(--preview-accent);
+}
+.variant-current .form-message-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--preview-accent); color: var(--on-primary); }
+.variant-quiet .form-message {
+  align-items: center; border: 0; border-radius: 6px; background: var(--surface-container);
+  box-shadow: none; color: var(--on-surface); font-weight: 650;
+}
+.variant-quiet .form-message-icon { width: 28px; height: 28px; background: transparent; color: var(--preview-accent); }
+.variant-quiet .form-message-title { font-weight: 650; }
+.variant-compact .form-message {
+  align-items: center; min-height: 44px; gap: 8px; padding: 8px 10px; border: 1px solid var(--border-color);
+  border-radius: 4px; background: var(--surface-lowest); box-shadow: none; color: var(--on-surface);
+  font-size: 13px; font-weight: 650; line-height: 18px;
+}
+.variant-compact .form-message-icon { width: 22px; height: 22px; background: transparent; color: var(--preview-accent); }
+.variant-compact .form-message-icon svg { width: 17px; height: 17px; }
+.variant-compact .form-message-close { width: 26px; height: 26px; }
+.variant-compact .form-message-content { gap: 3px; }
+.variant-compact .form-message-details { font-size: 12px; line-height: 16px; }
+@media (max-width: 800px) { .message-preview-gallery.is-comparison { grid-template-columns: 1fr; } }
+@media (max-width: 700px) {
+  .message-preview { padding: 24px 16px 48px; }
+  .message-preview-header { align-items: flex-start; flex-direction: column; }
+  .message-preview-views { flex-wrap: wrap; overflow: visible; }
+  .message-preview-views button { padding: 8px 10px; }
+  .message-preview-grid { grid-template-columns: 1fr; }
+}
