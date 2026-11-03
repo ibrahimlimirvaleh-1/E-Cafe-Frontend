@@ -100,7 +100,7 @@ function report(view, params) {
 }
 
 async function openPage(browser, roleId, view) {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true, reducedMotion: 'reduce' })
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true, reducedMotion: 'reduce', hasTouch: view === 'platform' })
   const page = await context.newPage()
   const errors = []
   page.on('pageerror', (error) => errors.push(error.message))
@@ -169,12 +169,14 @@ try {
     assert.equal(await page.locator('.role-dashboard-report-metric').getByText('Təsdiqlənmiş sifariş məbləği', { exact: true }).count(), view === 'manager' ? 0 : 1)
     const partition = await page.locator('.role-dashboard-reports .role-dashboard-donut').innerText()
     assert.match(partition, /25/)
-    const segments = page.locator('.role-dashboard-reports .role-dashboard-donut-segments')
-    assert.equal(await segments.evaluate((element) => getComputedStyle(element).animationName), 'none')
+    const orderDonut = page.locator('.role-dashboard-reports .role-dashboard-donut')
+    const arcs = orderDonut.locator('.role-dashboard-donut-arc')
+    assert.equal(await arcs.first().evaluate((element) => getComputedStyle(element).animationName), 'none')
     await page.emulateMedia({ reducedMotion: 'no-preference' })
-    assert.equal(await segments.evaluate((element) => getComputedStyle(element).animationName), 'dashboard-donut-enter')
+    assert.equal(await arcs.first().evaluate((element) => getComputedStyle(element).animationName), 'dashboard-donut-draw')
+    assert.ok(await arcs.last().evaluate((element) => parseFloat(getComputedStyle(element).animationDelay)) > 0)
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    assert.equal(await segments.evaluate((element) => getComputedStyle(element).maskImage), 'none')
+    assert.equal(await arcs.first().evaluate((element) => element.getAnimations().length), 0)
     assert.equal(await page.locator('.role-dashboard-report-table-scroll th.is-numeric').evaluateAll((cells) => cells.every((cell) => getComputedStyle(cell).textAlign === 'right')), true)
     assert.equal(await page.getByRole('group', { name: 'Ödəniş rejimi' }).count(), 0)
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
@@ -183,6 +185,22 @@ try {
     for (const width of [390, 320]) {
       await page.setViewportSize({ width, height: 844 })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+      if (view === 'platform') {
+        const choice = orderDonut.locator('.role-dashboard-donut-option').nth(1)
+        await choice.tap()
+        assert.equal(await choice.getAttribute('aria-pressed'), 'true')
+        assert.equal(await orderDonut.locator('.role-dashboard-donut-center strong').innerText(), '1')
+        assert.match(await orderDonut.locator('.role-dashboard-donut-share').innerText(), /^4\s*%$/)
+        await orderDonut.screenshot({ path: path.join(dist, `dashboard-donut-order-selected-${width}.png`) })
+        if (width === 320) {
+          await page.locator('.theme-toggle').click()
+          await orderDonut.screenshot({ path: path.join(dist, 'dashboard-donut-order-selected-320-dark.png') })
+          await page.locator('.theme-toggle').click()
+        }
+        await choice.tap()
+        assert.equal(await orderDonut.locator('.role-dashboard-donut-center strong').innerText(), '25')
+        await page.evaluate(() => window.scrollTo(0, 0))
+      }
       await page.screenshot({ path: path.join(dist, `dashboard-reports-${view}-${width}.png`), fullPage: true })
       await page.screenshot({ path: path.join(dist, `dashboard-reports-${view}-${width}-viewport.png`) })
       await page.locator('.role-dashboard-report-table-scroll tbody tr').first().scrollIntoViewIfNeeded()

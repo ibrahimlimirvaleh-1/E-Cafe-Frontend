@@ -201,12 +201,13 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
       <ReportMetrics data={data} t={t} formatters={formatters} />
       {showOrderStages ? (
         <DashboardDonut title={t('dashboardReports.orderStages')} total={totalOrders}
+          locale={locale} scope={JSON.stringify([data.from, data.to, state.filters.restaurantId, statusId, dayStartHour])}
           totalLabel={t('dashboardReports.ordersTotal')} totalFormatted={formatters.number.format(totalOrders)}
           emptyLabel={t('dashboardReports.noOrders')} note={t('dashboardReports.orderStagesNote')}
           parts={[
-            { label: t('dashboardReports.metric.pendingOrders'), value: pendingOrders, formatted: formatters.number.format(pendingOrders), color: 'var(--dashboard-blue)' },
-            { label: t('dashboardReports.metric.cancelledOrders'), value: cancelledOrders, formatted: formatters.number.format(cancelledOrders), color: 'var(--dashboard-red)' },
-            { label: t('dashboardReports.otherStages'), value: totalOrders - pendingOrders - cancelledOrders, formatted: formatters.number.format(totalOrders - pendingOrders - cancelledOrders), color: 'var(--dashboard-teal)' },
+            { key: 'pending', label: t('dashboardReports.metric.pendingOrders'), value: pendingOrders, formatted: formatters.number.format(pendingOrders), color: 'var(--dashboard-blue)' },
+            { key: 'cancelled', label: t('dashboardReports.metric.cancelledOrders'), value: cancelledOrders, formatted: formatters.number.format(cancelledOrders), color: 'var(--dashboard-red)' },
+            { key: 'other', label: t('dashboardReports.otherStages'), value: totalOrders - pendingOrders - cancelledOrders, formatted: formatters.number.format(totalOrders - pendingOrders - cancelledOrders), color: 'var(--dashboard-teal)' },
           ]} />
       ) : null}
       </div>

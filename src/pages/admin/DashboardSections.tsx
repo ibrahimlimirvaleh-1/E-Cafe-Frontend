@@ -281,7 +281,7 @@ export function DashboardAlerts({ data, t }: { data: DashboardResponse; t: Dashb
   )
 }
 
-export function DashboardFinancials({ data, t, formatters }: CommonProps & { data: DashboardResponse }) {
+export function DashboardFinancials({ data, t, locale, formatters, restaurantId }: CommonProps & { data: DashboardResponse; restaurantId: number | null }) {
   if (!data.financials) return null
   const financials = data.financials
   const amounts = [financials.collectedAmount, financials.depositCollectedAmount, financials.sessionCollectedAmount]
@@ -303,12 +303,13 @@ export function DashboardFinancials({ data, t, formatters }: CommonProps & { dat
       </div>
       <div className={`role-dashboard-financial-layout${showComposition ? ' has-composition' : ''}`}>
       {showComposition ? <DashboardDonut title={t('dashboard.financial.composition')} total={cents[0] / 100}
+        locale={locale} scope={JSON.stringify([data.from, data.to, data.paymentMode, restaurantId])}
         totalLabel={t('dashboard.financial.collectedAmount')} totalFormatted={formatters.money.format(financials.collectedAmount)}
         emptyLabel={t('dashboard.financial.noComposition')} note={t('dashboard.financial.compositionNote')}
         parts={[
-          { label: t('dashboard.financial.depositCollectedAmount'), value: cents[1] / 100, formatted: formatters.money.format(financials.depositCollectedAmount), color: 'var(--dashboard-teal)' },
-          { label: t('dashboard.financial.sessionCollectedAmount'), value: cents[2] / 100, formatted: formatters.money.format(financials.sessionCollectedAmount), color: 'var(--dashboard-blue)' },
-          { label: t('dashboard.financial.otherCollectedAmount'), value: Math.max(0, other), formatted: formatters.money.format(Math.max(0, other)), color: 'var(--secondary)' },
+          { key: 'deposit', label: t('dashboard.financial.depositCollectedAmount'), value: cents[1] / 100, formatted: formatters.money.format(financials.depositCollectedAmount), color: 'var(--dashboard-teal)' },
+          { key: 'session', label: t('dashboard.financial.sessionCollectedAmount'), value: cents[2] / 100, formatted: formatters.money.format(financials.sessionCollectedAmount), color: 'var(--dashboard-blue)' },
+          { key: 'other', label: t('dashboard.financial.otherCollectedAmount'), value: other, formatted: formatters.money.format(other), color: 'var(--secondary)' },
         ]} /> : null}
       <dl>
         {keys.map((key) => (
