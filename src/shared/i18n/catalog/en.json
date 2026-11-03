@@ -153,6 +153,7 @@
   "ui.nav.tracking": "Tracking",
   "ui.nav.orders": "Orders",
   "ui.nav.stock": "Inventory",
+  "ui.nav.inventoryGroup": "Inventory and recipes",
   "ui.nav.recipes": "Recipes",
   "ui.nav.panel": "Dashboard",
   "ui.nav.dashboard": "Dashboard",

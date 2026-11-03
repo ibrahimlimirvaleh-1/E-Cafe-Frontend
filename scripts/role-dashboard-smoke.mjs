@@ -178,6 +178,17 @@ async function assertDesktopSidebar(page, view) {
   assert.equal(await sidebar.locator('nav a[href="/admin/localization"]').count(), view === 'platform' ? 1 : 0)
   assert.equal(await sidebar.locator('nav a').evaluateAll((links) => links.every((link) => link.getBoundingClientRect().height <= 48)), true)
   if (view === 'platform') {
+    const inventory = sidebar.getByRole('button', { name: 'Stok və reseptlər' })
+    const inventoryLinks = sidebar.locator('#admin-nav-inventory')
+    assert.equal(await inventory.getAttribute('aria-expanded'), 'false')
+    assert.equal(await inventoryLinks.isVisible(), false)
+    await inventory.press('Enter')
+    assert.equal(await inventory.getAttribute('aria-expanded'), 'true')
+    assert.deepEqual(await inventoryLinks.locator('a').evaluateAll((links) => links.map((link) => link.getAttribute('href'))),
+      ['/admin/inventory', '/admin/inventory/movements', '/admin/recipes'])
+    await sidebar.screenshot({ path: path.join(dist, 'admin-sidebar-inventory-group-desktop.png') })
+    await inventory.press('Space')
+    assert.equal(await inventoryLinks.isVisible(), false)
     for (const width of [1440, 1280]) {
       await page.setViewportSize({ width, height: 900 })
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
@@ -209,6 +220,13 @@ async function assertDesktopSidebar(page, view) {
   assert.equal(await sidebar.locator('nav a[href="/admin"]').getAttribute('title'), 'Dashboard')
   assert.equal(await sidebar.locator('nav a[href="/admin"]').getAttribute('aria-label'), 'Dashboard')
   assert.equal(await sidebar.locator('nav a[href="/admin"] svg').count(), 1)
+  if (view === 'platform') {
+    const inventory = sidebar.getByRole('button', { name: 'Stok və reseptlər' })
+    assert.equal(await inventory.getAttribute('aria-label'), 'Stok və reseptlər')
+    await inventory.click()
+    assert.equal(await sidebar.getByRole('link', { name: 'Reseptlər' }).isVisible(), true)
+    await inventory.click()
+  }
   assert.ok(await sidebar.evaluate((element) => element.getBoundingClientRect().width) < expandedWidth)
   await assertFixedSidebar(page, true)
   if (view === 'platform') {
@@ -261,14 +279,23 @@ async function assertMobileSidebar(page, view) {
   assert.equal(await close.evaluate((element) => document.activeElement === element), true)
   assert.equal(await sidebar.locator('nav a.active').getAttribute('aria-current'), 'page')
   await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-drawer-mobile.png`) })
+  if (view === 'platform') {
+    const inventory = sidebar.getByRole('button', { name: 'Stok və reseptlər' })
+    await inventory.tap()
+    assert.equal(await sidebar.getByRole('link', { name: 'Reseptlər' }).isVisible(), true)
+    await sidebar.screenshot({ path: path.join(dist, 'admin-sidebar-inventory-group-mobile.png') })
+    await inventory.tap()
+    await close.focus()
+  }
+  const lastNavItem = sidebar.locator('nav :is(a, button):visible').last()
   await page.keyboard.press('Shift+Tab')
   await page.keyboard.press('Shift+Tab')
-  assert.equal(await sidebar.locator('nav a').last().evaluate((element) => document.activeElement === element), true)
+  assert.equal(await lastNavItem.evaluate((element) => document.activeElement === element), true)
   await page.keyboard.press('Tab')
   assert.equal(await sidebar.locator('.brand').evaluate((element) => document.activeElement === element), true)
   assert.equal(await page.locator('.admin-workspace').evaluate((element) => element.inert), true)
   await page.keyboard.press('Shift+Tab')
-  assert.equal(await sidebar.locator('nav a').last().evaluate((element) => document.activeElement === element), true)
+  assert.equal(await lastNavItem.evaluate((element) => document.activeElement === element), true)
   await page.keyboard.press('Escape')
   await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'Menyunu aç')
   assert.equal(await menu.evaluate((element) => document.activeElement === element), true)

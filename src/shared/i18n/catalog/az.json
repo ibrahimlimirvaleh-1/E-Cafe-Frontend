@@ -153,6 +153,7 @@
   "ui.nav.tracking": "İzləmə",
   "ui.nav.orders": "Sifarişlər",
   "ui.nav.stock": "Stok",
+  "ui.nav.inventoryGroup": "Stok və reseptlər",
   "ui.nav.recipes": "Reseptlər",
   "ui.nav.panel": "Panel",
   "ui.nav.dashboard": "Dashboard",
