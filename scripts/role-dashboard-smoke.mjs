@@ -41,6 +41,69 @@ async function assertIntegerChartAxis(page) {
   assert.ok(labels.every((label) => /^\d+$/.test(label)))
 }
 
+async function assertChartMotion(page) {
+  const bar = page.locator('.role-dashboard-chart-bar').first()
+  const donut = page.locator('.role-dashboard-donut-segments')
+  const center = page.locator('.role-dashboard-donut-center')
+  const line = page.locator('.role-dashboard-chart-line')
+  const area = page.locator('.role-dashboard-chart-area')
+  const marker = page.locator('.role-dashboard-chart-point').first()
+  const animation = (element, pseudo) => element.evaluate((node, pseudo) => getComputedStyle(node, pseudo).animationName, pseudo)
+
+  assert.equal(await animation(line), 'none')
+  await page.getByRole('button', { name: 'Sütun qrafiki' }).click()
+  assert.equal(await animation(bar), 'none')
+  assert.equal(await animation(donut), 'none')
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  assert.equal(await animation(bar), 'dashboard-bar-enter')
+  assert.equal(await animation(donut), 'dashboard-donut-enter')
+  assert.equal(await animation(center), 'none')
+  assert.deepEqual(await donut.evaluate((element) => [element.offsetWidth, element.offsetHeight]), [128, 128])
+  await page.getByRole('button', { name: 'Xətt və sahə qrafiki' }).click()
+  assert.equal(await line.getAttribute('pathLength'), '1')
+  assert.equal(await animation(line), 'dashboard-line-enter')
+  assert.equal(await animation(area), 'dashboard-chart-fade')
+  assert.equal(await animation(marker, '::before'), 'dashboard-chart-fade')
+  const plot = page.locator('.role-dashboard-chart-line-plot')
+  await plot.evaluate((element) => Promise.all(element.getAnimations({ subtree: true }).map((motion) => motion.finished)))
+  await marker.focus()
+  await marker.hover()
+  await marker.press('Enter')
+  assert.equal(await marker.getAttribute('aria-pressed'), 'true')
+  await marker.press('Escape')
+  assert.equal(await marker.getAttribute('aria-pressed'), 'false')
+  await page.locator('.role-dashboard-chart-data summary').click()
+  assert.equal(await plot.evaluate((element) => element.getAnimations({ subtree: true }).length), 0)
+  await page.locator('.role-dashboard-chart-data summary').click()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  assert.equal(await animation(line), 'none')
+  assert.equal(await animation(area), 'none')
+  assert.equal(await animation(marker, '::before'), 'none')
+  await page.getByRole('button', { name: 'Sütun qrafiki' }).click()
+}
+
+async function assertTouchChart(page) {
+  const points = page.locator('.role-dashboard-chart-point')
+  const firstPoint = points.first()
+  const secondPoint = points.nth(1)
+  const reading = page.locator('.role-dashboard-chart-reading')
+  const initial = await reading.innerText()
+  const height = (await reading.boundingBox()).height
+  await firstPoint.tap()
+  assert.equal(await firstPoint.getAttribute('aria-pressed'), 'true')
+  assert.equal(await page.locator('.role-dashboard-chart-guide').count(), 1)
+  assert.notEqual(await reading.innerText(), initial)
+  assert.equal((await reading.boundingBox()).height, height)
+  await page.locator('.role-dashboard-chart').screenshot({ path: path.join(dist, 'dashboard-trend-selected-320.png') })
+  await secondPoint.tap()
+  assert.equal(await firstPoint.getAttribute('aria-pressed'), 'false')
+  assert.equal(await secondPoint.getAttribute('aria-pressed'), 'true')
+  await secondPoint.tap()
+  assert.equal(await secondPoint.getAttribute('aria-pressed'), 'false')
+  assert.equal(await reading.innerText(), initial)
+  assert.equal(await page.locator('.role-dashboard-chart-guide').count(), 0)
+}
+
 async function assertFixedSidebar(page, collapsed) {
   const layout = await page.evaluate(() => {
     const sidebar = document.querySelector('.admin-sidebar').getBoundingClientRect()
@@ -263,7 +326,7 @@ function dashboard(view, params) {
 const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}) })
 try {
   for (const [roleId, view, restaurantId] of [[1, 'platform', undefined], [2, 'owner', '1'], [3, 'manager', '1'], [3, 'manager', ''], [3, 'manager', 'invalid']]) {
-    const context = await browser.newContext({ viewport: { width: 1365, height: 900 }, reducedMotion: 'reduce' })
+    const context = await browser.newContext({ viewport: { width: 1365, height: 900 }, reducedMotion: 'reduce', hasTouch: view === 'platform' })
     const page = await context.newPage()
     const errors = []
     page.on('pageerror', (error) => errors.push(error.message))
@@ -316,6 +379,12 @@ try {
       await cdp.detach()
     }
     assert.equal(await page.locator('.role-dashboard-metric').count(), 4)
+    const leadingLabels = { platform: 'Rezervasiya', owner: 'Təsdiqlənmiş sifariş məbləği', manager: 'Bugünkü rezervasiya' }
+    const leading = page.locator('.role-dashboard-metric.is-leading')
+    assert.equal(await leading.count(), 1)
+    assert.equal(await leading.locator('.role-dashboard-metric-head > span:first-child').textContent(), leadingLabels[view])
+    assert.equal(await leading.locator('.role-dashboard-metric-sparkline').count(), view === 'manager' ? 0 : 1)
+    assert.equal(await page.getByRole('button', { name: 'Xətt və sahə qrafiki' }).getAttribute('aria-pressed'), 'true')
     assert.equal(await page.locator('.role-dashboard-alerts li').count(), 1)
     assert.equal(await page.locator('.role-dashboard-financials').count(), view === 'manager' ? 0 : 1)
     assert.equal(await page.locator('.role-dashboard-table-scroll tbody tr').count(), view === 'platform' ? contractStatuses.length : 1)
@@ -348,6 +417,7 @@ try {
       await page.getByText('Hazırda diqqət tələb edən məsələ yoxdur.', { exact: true }).waitFor()
       assert.deepEqual(await page.locator('.role-dashboard-metric strong').allTextContents(), ['0', '0', '0', '0'])
       assert.deepEqual(await page.locator('.role-dashboard-chart-y-axis span').allTextContents(), ['3', '2', '1', '0'])
+      await page.getByRole('button', { name: 'Sütun qrafiki' }).click()
       assert.equal(await page.locator('.role-dashboard-chart-column').count(), 7)
       assert.equal(await page.locator('.role-dashboard-chart-bar').nth(1).evaluate((element) => element.getBoundingClientRect().height), 0)
       const firstBar = page.locator('.role-dashboard-chart-column').first()
@@ -367,10 +437,19 @@ try {
       await page.getByText('Bu dövr üçün diaqram məlumatı yoxdur.', { exact: true }).waitFor()
       assert.equal(await page.locator('.role-dashboard-chart-column').count(), 0)
       await page.getByRole('button', { name: 'Bu gün' }).click()
-      await page.locator('.role-dashboard-chart-column').first().waitFor()
+      await page.locator('.role-dashboard-chart-point-control').first().waitFor()
     } else await page.getByText('Aktiv', { exact: true }).waitFor()
     if (view === 'platform') {
       await assertContractStatuses(page, 0)
+      await page.setViewportSize({ width: 1440, height: 900 })
+      await page.screenshot({ path: path.join(dist, 'dashboard-trend-platform-1440.png'), fullPage: true })
+      await page.locator('.theme-toggle').click()
+      await page.screenshot({ path: path.join(dist, 'dashboard-trend-platform-1440-dark.png'), fullPage: true })
+      await page.locator('.theme-toggle').click()
+      await page.setViewportSize({ width: 320, height: 844 })
+      await assertTouchChart(page)
+      await page.setViewportSize({ width: 1365, height: 900 })
+      await assertChartMotion(page)
       await page.locator('.language-switcher-trigger').click()
       await page.locator('.language-switcher-option[lang="en"]').click()
       await page.getByRole('heading', { name: 'ECafe at a glance' }).waitFor()
@@ -387,7 +466,7 @@ try {
       await page.waitForFunction(() => document.querySelector('.role-dashboard-chart-y-axis span')?.textContent === '12')
       await assertIntegerChartAxis(page)
       await page.getByRole('button', { name: 'Bu gün' }).click()
-      await page.waitForFunction(() => document.querySelectorAll('.role-dashboard-chart-column')[4]?.getAttribute('aria-label')?.includes('12'))
+      await page.waitForFunction(() => document.querySelectorAll('.role-dashboard-chart-point-control')[4]?.getAttribute('aria-label')?.includes('12'))
       await assertIntegerChartAxis(page)
       await page.getByRole('button', { name: '7 gün' }).click()
       await page.waitForFunction(() => document.querySelector('.role-dashboard-chart-y-axis span')?.textContent === '80')
@@ -413,6 +492,9 @@ try {
     for (const width of [390, 320]) {
       await page.setViewportSize({ width, height: 844 })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+      if (await points.count() <= 7) {
+        assert.equal(await page.locator('.role-dashboard-chart-scroll').evaluate((element) => element.scrollWidth <= element.clientWidth), true)
+      }
       await page.screenshot({ path: path.join(dist, `role-dashboard-${view}-line-${width}.png`), fullPage: true })
     }
     await page.setViewportSize({ width: 1365, height: 900 })

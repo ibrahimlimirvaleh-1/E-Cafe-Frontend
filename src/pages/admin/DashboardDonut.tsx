@@ -24,8 +24,9 @@ export function DashboardDonut({ title, total, totalLabel, totalFormatted, parts
   return <figure className="role-dashboard-donut">
     <figcaption>{title}</figcaption>
     {total > 0 ? <div className="role-dashboard-donut-content">
-      <div className="role-dashboard-donut-ring" style={{ background: `conic-gradient(${segments.join(', ')})` }}
-        role="img" aria-label={`${title}: ${parts.map((part) => `${part.label} ${part.formatted}`).join(', ')}`}>
+      <div className="role-dashboard-donut-ring"
+        role="img" aria-label={`${title}: ${totalLabel} ${totalFormatted}. ${parts.map((part) => `${part.label} ${part.formatted}`).join(', ')}`}>
+        <span className="role-dashboard-donut-segments" aria-hidden="true" style={{ background: `conic-gradient(${segments.join(', ')})` }} />
         <div className="role-dashboard-donut-center"><strong>{totalFormatted}</strong><span>{totalLabel}</span></div>
       </div>
       <ul>{parts.map((part) => <li key={part.label}>
