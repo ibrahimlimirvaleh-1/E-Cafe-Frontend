@@ -9,6 +9,8 @@ type Props = {
   t: DashboardTranslate
 }
 
+const productCostColumns = new Set(['ingredientCost', 'grossProfit', 'averageIngredientCost'])
+
 function cellValue(
   cell: DashboardReportDetail['rows'][number]['cells'][number] | undefined,
   format: DashboardReportDetail['columns'][number]['format'],
@@ -27,15 +29,21 @@ function cellValue(
 
 export function OperationalReportTable(props: Props) {
   const { detail, t } = props
+  const soldIndex = detail.columns.findIndex(({ key }) => key === 'sold')
+  const hasProductCosts = soldIndex >= 0 && detail.columns.some(({ key }) => key === 'ingredientCost')
+  const label = (key: string) => t(`operationalReports.column.${hasProductCosts && key === 'deliveredAmount' ? 'servedSalesAmount' : key}`, { defaultValue: key })
   return <div className="role-dashboard-report-table-scroll"><table>
     <thead><tr>{detail.columns.map((column) => <th key={column.key} scope="col"
       className={['number', 'currency', 'minutes', 'percent'].includes(column.format) ? 'is-numeric' : undefined}>
-      {t(`operationalReports.column.${column.key}`, { defaultValue: column.key })}
+      {label(column.key)}
     </th>)}</tr></thead>
     <tbody>{detail.rows.map((row) => <tr key={row.id}>
-      {detail.columns.map((column, index) => <td key={column.key} data-label={t(`operationalReports.column.${column.key}`, { defaultValue: column.key })}
+      {detail.columns.map((column, index) => <td key={column.key} data-label={label(column.key)}
         className={['number', 'currency', 'minutes', 'percent'].includes(column.format) ? 'is-numeric' : undefined}>
-        {cellValue(row.cells[index], column.format, props)}
+        {hasProductCosts && productCostColumns.has(column.key)
+          && (row.cells[soldIndex]?.number ?? 0) > 0 && row.cells[index]?.number == null
+          ? <span className="role-dashboard-report-cost-unknown">{t('operationalReports.productCostUnknown')}</span>
+          : cellValue(row.cells[index], column.format, props)}
       </td>)}
     </tr>)}</tbody>
   </table></div>

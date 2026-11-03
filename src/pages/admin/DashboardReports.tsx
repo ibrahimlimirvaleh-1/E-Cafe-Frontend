@@ -150,6 +150,7 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
   const pendingOrders = orderMetric('pendingOrders')
   const cancelledOrders = orderMetric('cancelledOrders')
   const showOrderStages = kind === 'orders' && totalOrders !== undefined && pendingOrders !== undefined && cancelledOrders !== undefined
+  const showProductProfitNote = view === 'owner' && kind === 'products' && data?.detail?.columns.some(({ key }) => key === 'grossProfit')
 
   return <section className="role-dashboard-reports" aria-label={t('dashboardReports.title')}>
     <div className="role-dashboard-report-toolbar">
@@ -231,7 +232,7 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
       {kind === 'orders' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.originalSubtotalNote')}</p> : null}
       {kind === 'reservations' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.depositNote')}</p> : null}
       {kind === 'payments' ? <p className="role-dashboard-report-footnote">{t('dashboardReports.paymentNote')}</p> : null}
-      {operationalKinds.includes(kind) ? <p className="role-dashboard-report-footnote">{t(`operationalReports.note.${kind}`)}</p> : null}
+      {operationalKinds.includes(kind) ? <p className="role-dashboard-report-footnote">{t(showProductProfitNote ? 'operationalReports.note.productProfit' : `operationalReports.note.${kind}`)}</p> : null}
       <p className="role-dashboard-report-updated">{t('dashboard.updated')}: {formatDashboardMoment(data.generatedAtUtc, locale, data.timeZone)}</p>
     </> : null}
   </section>
