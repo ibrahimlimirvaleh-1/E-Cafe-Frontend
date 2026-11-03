@@ -154,7 +154,9 @@ try {
   for (const [roleId, view] of [[1, 'platform'], [2, 'owner'], [3, 'manager']]) {
     const { context, page, errors } = await openPage(browser, roleId, view)
     assert.equal(await page.locator('.role-dashboard-metric').count(), 4)
+    assert.equal(await page.locator('.role-dashboard-metric-sparkline').count(), 0)
     await page.screenshot({ path: path.join(dist, `dashboard-overview-${view}-1440.png`), fullPage: true })
+    await page.screenshot({ path: path.join(dist, `dashboard-overview-${view}-1440-viewport.png`) })
     await page.setViewportSize({ width: 390, height: 844 })
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     await page.screenshot({ path: path.join(dist, `dashboard-overview-${view}-390.png`), fullPage: true })
@@ -171,6 +173,7 @@ try {
     assert.equal(await page.getByRole('group', { name: 'Ödəniş rejimi' }).count(), 0)
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     await page.screenshot({ path: path.join(dist, `dashboard-reports-${view}-1440.png`), fullPage: true })
+    await page.screenshot({ path: path.join(dist, `dashboard-reports-${view}-1440-viewport.png`) })
     for (const width of [390, 320]) {
       await page.setViewportSize({ width, height: 844 })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
@@ -183,6 +186,7 @@ try {
     if (view === 'platform') {
       await page.locator('.theme-toggle').click()
       await page.screenshot({ path: path.join(dist, 'dashboard-reports-platform-320-dark.png'), fullPage: true })
+      await page.screenshot({ path: path.join(dist, 'dashboard-reports-platform-320-dark-viewport.png') })
       await page.locator('.theme-toggle').click()
     }
     await page.setViewportSize({ width: 1440, height: 900 })

@@ -149,6 +149,7 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
   const totalOrders = orderMetric('totalOrders')
   const pendingOrders = orderMetric('pendingOrders')
   const cancelledOrders = orderMetric('cancelledOrders')
+  const showOrderStages = kind === 'orders' && totalOrders !== undefined && pendingOrders !== undefined && cancelledOrders !== undefined
 
   return <section className="role-dashboard-reports" aria-label={t('dashboardReports.title')}>
     <div className="role-dashboard-report-toolbar">
@@ -196,8 +197,9 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
         {financialKinds.includes(kind) ? <span>{t(`dashboard.mode.${data.paymentMode}`)}</span> : null}
         {report.loading ? <span role="status"><RefreshCw size={13} aria-hidden="true" />{t('dashboard.refreshing')}</span> : null}
       </div>
+      <div className={`role-dashboard-report-summary${showOrderStages ? ' has-order-stages' : ''}`}>
       <ReportMetrics data={data} t={t} formatters={formatters} />
-      {kind === 'orders' && totalOrders !== undefined && pendingOrders !== undefined && cancelledOrders !== undefined ? (
+      {showOrderStages ? (
         <DashboardDonut title={t('dashboardReports.orderStages')} total={totalOrders}
           totalLabel={t('dashboardReports.ordersTotal')} totalFormatted={formatters.number.format(totalOrders)}
           emptyLabel={t('dashboardReports.noOrders')} note={t('dashboardReports.orderStagesNote')}
@@ -207,6 +209,7 @@ export function DashboardReports({ state, view, userId, kind, onKindChange, relo
             { label: t('dashboardReports.otherStages'), value: totalOrders - pendingOrders - cancelledOrders, formatted: formatters.number.format(totalOrders - pendingOrders - cancelledOrders), color: 'var(--dashboard-teal)' },
           ]} />
       ) : null}
+      </div>
       <div className="role-dashboard-report-head">
         <div><h2>{reportLabel(kind, t)}</h2><p>{t(operationalKinds.includes(kind) ? `operationalReports.caption.${kind}` : `dashboardReports.caption.${kind}`)}</p></div>
         <span>{t('dashboard.totalRows', { count: data.totalRows })}</span>

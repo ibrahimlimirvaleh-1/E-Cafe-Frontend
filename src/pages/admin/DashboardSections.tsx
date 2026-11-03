@@ -3,7 +3,7 @@ import {
   CreditCard, FileClock, FileText, ListFilter, ReceiptText, ShoppingBag,
   LineChart, Store, Table2, Users, Wallet, type LucideIcon,
 } from 'lucide-react'
-import { useState, type KeyboardEvent } from 'react'
+import { useId, useState, type KeyboardEvent } from 'react'
 import type { DashboardResponse, DashboardView } from '../../shared/api/dashboardApi'
 import { mapContractStatus } from '../../shared/api/mappers'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
@@ -43,6 +43,12 @@ const alertIcons: Record<string, LucideIcon> = {
   closeReview: Table2,
 }
 
+const leadingMetric: Record<DashboardView, string> = {
+  platform: 'reservationCount',
+  owner: 'orderAmount',
+  manager: 'todayReservations',
+}
+
 function chartScale(values: number[], unit: string) {
   const maximum = Math.max(0, ...values)
   const magnitude = 10 ** Math.floor(Math.log10(maximum / 4))
@@ -55,7 +61,26 @@ function chartScale(values: number[], unit: string) {
   return { maximum: segments * step, ticks: Array.from({ length: segments + 1 }, (_, index) => (segments - index) * step) }
 }
 
+function MetricSparkline({ points }: { points: DashboardResponse['chart']['points'] }) {
+  const maximum = Math.max(0, ...points.map((point) => point.value))
+  if (points.length < 2 || maximum <= 0 || points.some((point) => !Number.isFinite(point.value) || point.value < 0)) return null
+  const coordinates = points.map((point, index) => ({
+    x: 3 + index / (points.length - 1) * 84,
+    y: 25 - point.value / maximum * 21,
+  }))
+  const path = coordinates.map(({ x, y }, index) => `${index ? 'L' : 'M'} ${x} ${y}`).join(' ')
+  return (
+    <svg className="role-dashboard-metric-sparkline" viewBox="0 0 90 30" aria-hidden="true" focusable="false">
+      <path d={`${path} V 29 H 3 Z`} fill="currentColor" opacity=".15" />
+      <path d={path} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="87" cy={coordinates[coordinates.length - 1].y} r="2.5" fill="currentColor" />
+    </svg>
+  )
+}
+
 export function DashboardMetrics({ data, view, t, formatters }: CommonProps & { data: DashboardResponse; view: DashboardView }) {
+  const primary = data.metrics.find((metric) => metric.key === leadingMetric[view])
+  const metrics = primary ? [primary, ...data.metrics.filter((metric) => metric !== primary)] : data.metrics
   function context(metric: DashboardResponse['metrics'][number]) {
     if (metric.previousValue != null && metric.changePercent != null) {
       const sign = metric.changePercent > 0 ? '+' : ''
@@ -70,16 +95,20 @@ export function DashboardMetrics({ data, view, t, formatters }: CommonProps & { 
 
   return (
     <section className="role-dashboard-metrics" aria-label={t('dashboard.metrics')}>
-      {data.metrics.map((metric) => {
+      {metrics.map((metric) => {
         const Icon = metricAppearance[metric.key]?.icon ?? ClipboardList
         return (
-        <div className={`role-dashboard-metric is-${metricAppearance[metric.key]?.tone ?? 'blue'}`} key={metric.key}>
+        <div className={`role-dashboard-metric is-${metricAppearance[metric.key]?.tone ?? 'blue'}${metric === primary ? ' is-leading' : ''}`} key={metric.key}>
           <div className="role-dashboard-metric-head">
             <span>{t(`dashboard.metric.${metric.key}`, { defaultValue: metric.key })}</span>
             <span className="role-dashboard-metric-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.8} /></span>
           </div>
           <strong>{formatters.value(metric.value, metric.unit)}</strong>
-          <small>{context(metric)}</small>
+          <div className="role-dashboard-metric-foot">
+            <small>{context(metric)}</small>
+            {metric === primary && metric.key === data.chart.key && metric.unit === data.chart.unit
+              ? <MetricSparkline points={data.chart.points} /> : null}
+          </div>
         </div>
         )
       })}
@@ -88,8 +117,13 @@ export function DashboardMetrics({ data, view, t, formatters }: CommonProps & { 
 }
 
 export function DashboardChart({ data, t, locale, formatters }: CommonProps & { data: DashboardResponse }) {
-  const [mode, setMode] = useState<'bar' | 'line'>('bar')
+  const [mode, setMode] = useState<'bar' | 'line'>('line')
+  const [selection, setSelection] = useState<{ scope: string; bucket: string } | null>(null)
+  const areaGradient = useId()
   const { chart, timeZone } = data
+  const scope = JSON.stringify([chart.key, chart.unit, chart.granularity, data.from, data.to, data.paymentMode])
+  const activeIndex = selection?.scope === scope ? chart.points.findIndex((point) => point.bucketStartUtc === selection.bucket) : -1
+  const visiblePoint = chart.points[activeIndex] ?? chart.points.at(-1)
   const hasActivity = chart.points.some((point) => point.value > 0)
   const scale = hasActivity ? chartScale(chart.points.map((point) => point.value), chart.unit) : null
   const linePoints = scale ? chart.points.map((point, index) => ({
@@ -99,7 +133,22 @@ export function DashboardChart({ data, t, locale, formatters }: CommonProps & { 
   const linePath = linePoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
   const areaPath = linePoints.length ? `${linePath} L ${linePoints.at(-1)!.x} 220 L ${linePoints[0].x} 220 Z` : ''
 
+  function pointControl(point: DashboardResponse['chart']['points'][number], index: number) {
+    const detail = `${formatDashboardMoment(point.bucketStartUtc, locale, timeZone)} · ${formatters.value(point.value, chart.unit)}`
+    return {
+      'aria-label': detail,
+      'aria-pressed': index === activeIndex,
+      'data-tooltip': detail,
+      onClick: () => setSelection(index === activeIndex ? null : { scope, bucket: point.bucketStartUtc }),
+      onKeyDown: focusPoint,
+    }
+  }
+
   function focusPoint(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === 'Escape') {
+      setSelection(null)
+      return
+    }
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
     const points = Array.from(event.currentTarget.closest('.role-dashboard-chart-body')?.querySelectorAll<HTMLElement>('.role-dashboard-chart-point-control') ?? [])
     const current = points.indexOf(event.currentTarget)
@@ -129,9 +178,14 @@ export function DashboardChart({ data, t, locale, formatters }: CommonProps & { 
         </div>
       </div>
 
+      {scale && visiblePoint ? <div className="role-dashboard-chart-reading" role="status">
+        <div><span>{t('dashboard.chart.date')}</span><time dateTime={visiblePoint.bucketStartUtc}>{formatDashboardMoment(visiblePoint.bucketStartUtc, locale, timeZone)}</time></div>
+        <div><span>{t('dashboard.chart.value')}</span><strong>{formatters.value(visiblePoint.value, chart.unit)}</strong></div>
+      </div> : null}
+
       {scale ? (
         <div className="role-dashboard-chart-scroll">
-          <div className="role-dashboard-chart-plot" style={{ minWidth: `${Math.max(320, chart.points.length * 52)}px` }}>
+          <div className="role-dashboard-chart-plot" style={{ minWidth: `${chart.points.length <= 7 ? 270 : chart.points.length * 52}px` }}>
             <div className="role-dashboard-chart-y-axis" aria-hidden="true">
               {scale.ticks.map((tick) => <span key={tick}>{formatters.number.format(tick)}</span>)}
             </div>
@@ -140,29 +194,30 @@ export function DashboardChart({ data, t, locale, formatters }: CommonProps & { 
                 {scale.ticks.map((tick) => <span key={tick} />)}
               </div>
               {mode === 'bar' ? <div className="role-dashboard-chart-bars" style={{ gridTemplateColumns: `repeat(${chart.points.length}, minmax(0, 1fr))` }}>
-                {chart.points.map((point) => {
-                  const detail = `${formatDashboardMoment(point.bucketStartUtc, locale, timeZone)} · ${formatters.value(point.value, chart.unit)}`
-                  return (
-                    <div className="role-dashboard-chart-column role-dashboard-chart-point-control" key={point.bucketStartUtc} role="img" tabIndex={0} aria-label={detail} data-tooltip={detail} onKeyDown={focusPoint}>
-                      <div className="role-dashboard-chart-bar" style={{ height: `${point.value > 0 ? Math.max(1.5, point.value / scale.maximum * 100) : 0}%` }} />
-                    </div>
-                  )
-                })}
+                {chart.points.map((point, index) => (
+                  <button type="button" className="role-dashboard-chart-column role-dashboard-chart-point-control" key={point.bucketStartUtc} {...pointControl(point, index)}>
+                    <span className="role-dashboard-chart-bar" style={{ height: `${point.value > 0 ? Math.max(1.5, point.value / scale.maximum * 100) : 0}%` }} />
+                  </button>
+                ))}
               </div> : <div className="role-dashboard-chart-line-plot">
                 <svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-                  <path className="role-dashboard-chart-area" d={areaPath} />
-                  <path className="role-dashboard-chart-line" d={linePath} />
+                  <defs><linearGradient id={areaGradient} x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="currentColor" stopOpacity=".24" />
+                    <stop offset="100%" stopColor="currentColor" stopOpacity=".025" />
+                  </linearGradient></defs>
+                  <path className="role-dashboard-chart-area" d={areaPath} fill={`url(#${areaGradient})`} />
+                  {activeIndex >= 0 ? <line className="role-dashboard-chart-guide" x1={linePoints[activeIndex].x} x2={linePoints[activeIndex].x} y1="0" y2="220" /> : null}
+                  <path className="role-dashboard-chart-line" d={linePath} pathLength={1} />
                 </svg>
-                {chart.points.map((point, index) => {
-                  const detail = `${formatDashboardMoment(point.bucketStartUtc, locale, timeZone)} · ${formatters.value(point.value, chart.unit)}`
-                  return <div className={`role-dashboard-chart-point role-dashboard-chart-point-control${linePoints[index].y < 52 ? ' is-high' : ''}`} key={point.bucketStartUtc}
-                    role="img" tabIndex={0} aria-label={detail} data-tooltip={detail} onKeyDown={focusPoint}
-                    style={{ left: `${linePoints[index].x / 10}%`, top: `${linePoints[index].y}px` }} />
-                })}
+                {chart.points.map((point, index) => (
+                  <button type="button" className={`role-dashboard-chart-point role-dashboard-chart-point-control${linePoints[index].y < 52 ? ' is-high' : ''}`} key={point.bucketStartUtc}
+                    {...pointControl(point, index)}
+                    style={{ left: `${linePoints[index].x / 10}%`, top: `${linePoints[index].y}px`, width: `min(44px, ${100 / chart.points.length}%)` }} />
+                ))}
               </div>}
               <div className="role-dashboard-chart-labels" style={{ gridTemplateColumns: `repeat(${chart.points.length}, minmax(0, 1fr))` }}>
-                {chart.points.map((point) => (
-                  <time key={point.bucketStartUtc} dateTime={point.bucketStartUtc}>{formatDashboardMoment(point.bucketStartUtc, locale, timeZone, chart.granularity)}</time>
+                {chart.points.map((point, index) => (
+                  <time key={point.bucketStartUtc} dateTime={point.bucketStartUtc} className={index === activeIndex ? 'is-active' : undefined}>{formatDashboardMoment(point.bucketStartUtc, locale, timeZone, chart.granularity)}</time>
                 ))}
               </div>
             </div>
@@ -200,7 +255,7 @@ export function DashboardAlerts({ data, t }: { data: DashboardResponse; t: Dashb
           <h2 id="role-dashboard-alert-title">{t('dashboard.attention')}</h2>
           <p>{t('dashboard.liveState')}</p>
         </div>
-        <span className="role-dashboard-alert-count">{alerts.length}</span>
+        <span className="role-dashboard-alert-count" aria-hidden="true"><BellRing size={15} /></span>
       </div>
       {alerts.length ? (
         <ul>
@@ -229,12 +284,14 @@ export function DashboardAlerts({ data, t }: { data: DashboardResponse; t: Dashb
 export function DashboardFinancials({ data, t, formatters }: CommonProps & { data: DashboardResponse }) {
   if (!data.financials) return null
   const financials = data.financials
-  const keys = ['collectedAmount', 'refundedAmount', 'netCollectedAmount', 'depositCollectedAmount', 'sessionCollectedAmount'] as const
   const amounts = [financials.collectedAmount, financials.depositCollectedAmount, financials.sessionCollectedAmount]
   const cents = amounts.map((value) => Math.round(value * 100))
   const otherCents = cents[0] - cents[1] - cents[2]
   const other = otherCents / 100
   const showComposition = amounts.every((value, index) => Number.isFinite(value) && value >= 0 && Number.isSafeInteger(cents[index])) && otherCents >= 0
+  const keys = showComposition && cents[0] > 0
+    ? (['netCollectedAmount', 'refundedAmount'] as const)
+    : (['netCollectedAmount', 'refundedAmount', 'collectedAmount', 'depositCollectedAmount', 'sessionCollectedAmount'] as const)
 
   return (
     <section className="role-dashboard-financials" aria-label={t('dashboard.financials')}>
@@ -255,7 +312,7 @@ export function DashboardFinancials({ data, t, formatters }: CommonProps & { dat
         ]} /> : null}
       <dl>
         {keys.map((key) => (
-          <div key={key}>
+          <div key={key} className={key === 'netCollectedAmount' ? 'is-net' : key === 'refundedAmount' ? 'is-refund' : undefined}>
             <dt>{t(`dashboard.financial.${key}`)}</dt>
             <dd>{formatters.money.format(financials[key])}</dd>
           </div>
