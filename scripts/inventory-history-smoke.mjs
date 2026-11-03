@@ -51,7 +51,7 @@ try {
     if (pathname === '/api/v1/restaurants/getAll') return json(route, [{ id: 1, name: 'QA Restaurant', location: 'Baku', timeZone: 'Asia/Baku', hasActiveContract: true, isActive: true }])
     if (pathname === '/api/v1/lookups/units') return json(route, [{ id: 1, code: 'kg', name: 'Kiloqram' }, { id: 2, code: 'g', name: 'Qram' }])
     if (pathname === '/api/v1/lookups/inventory-movement-types') return json(route, [{ id: 1, code: 'Purchase', name: 'Alış' }, { id: 2, code: 'ManualIncrease', name: 'Əl ilə artım' }])
-    if (pathname === '/api/v1/restaurants/1/inventory') return json(route, { items: [item], pageIndex: 1, totalPages: 1, totalCount: 1, hasPreviousPage: false, hasNextPage: false })
+    if (pathname === '/api/v1/restaurants/1/inventory') return json(route, { items: [item, { ...item, id: 23, name: 'Uzunadlıstokelementininmobilgörünüşüyoxlanılır' }], pageIndex: 1, totalPages: 1, totalCount: 2, hasPreviousPage: false, hasNextPage: false })
     if (pathname === '/api/v1/restaurants/1/inventory/22') return json(route, { ...item, quantityOnHand: currentQuantity, hasUnknownStockCost })
     if (pathname === '/api/v1/restaurants/1/inventory/22/movements') {
       if (route.request().method() === 'POST') {
@@ -130,6 +130,26 @@ try {
   assert.equal(await sidebar.locator('nav a[aria-current="page"]').getAttribute('href'), '/admin/inventory/movements')
   assert.equal(historyRequests, 0, 'history must not preload')
   assert.equal(await page.locator('.admin-sidebar nav a.active').count(), 1)
+  const tableShell = page.locator('.inventory-table-shell')
+  for (const [width, height, rowDisplay] of [[390, 844, 'grid'], [844, 390, 'table-row'], [667, 375, 'table-row'], [320, 740, 'grid']]) {
+    await page.setViewportSize({ width, height })
+    const layout = await tableShell.evaluate((shell) => {
+      const bounds = shell.getBoundingClientRect()
+      return {
+        pageFits: document.documentElement.scrollWidth <= innerWidth,
+        tableFits: shell.scrollWidth <= shell.clientWidth + 1,
+        rowDisplay: getComputedStyle(shell.querySelector('tbody tr')).display,
+        actionsFit: [...shell.querySelectorAll('.inventory-table-actions button')].every((button) => {
+          const box = button.getBoundingClientRect()
+          return box.width >= 44 && box.height >= 44 && box.left >= bounds.left && box.right <= bounds.right
+        }),
+      }
+    })
+    assert.deepEqual(layout, { pageFits: true, tableFits: true, rowDisplay, actionsFit: true }, `${width}x${height}`)
+    await opener.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: path.join(dist, `inventory-movements-${width}x${height}.png`) })
+  }
+  await page.setViewportSize({ width: 844, height: 390 })
   await opener.click()
   const dialog = page.getByRole('dialog', { name: 'Espresso' })
   await dialog.waitFor()

@@ -81,6 +81,8 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     title: i18n.t(`ui.inventory.page.${mode}.title`, { defaultValue: pageCopy[mode].title }),
   }
 
+  const quantityLabel = i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')
+  const thresholdLabel = i18n.t('ui.pages.admin.inventory_management_page.limit_674b0e')
   const [selectedInventoryId, setSelectedInventoryId] = useState('')
   const [selectedMenuItemId, setSelectedMenuItemId] = useState('')
   const [onlyLowStock, setOnlyLowStock] = useState(false)
@@ -645,30 +647,30 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                 </label>
               </div>
               <div className="inventory-table-shell">
-                <table className="inventory-table">
-                  <thead>
-                    <tr>
-                      <th>{i18n.t('ui.pages.admin.inventory_management_page.element_4e5b54')}</th>
-                      <th>{i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')}</th>
-                      <th>{i18n.t('ui.pages.admin.inventory_management_page.limit_674b0e')}</th>
-                      <th>{i18n.t('ui.pages.admin.inventory_management_page.status_920e41')}</th>
-                      <th>{i18n.t('ui.pages.admin.inventory_management_page.emeliyyat_fc71e9')}</th>
+                <table className="inventory-table" role="table">
+                  <thead role="rowgroup">
+                    <tr role="row">
+                      <th scope="col" role="columnheader">{i18n.t('ui.pages.admin.inventory_management_page.element_4e5b54')}</th>
+                      <th scope="col" role="columnheader">{quantityLabel}</th>
+                      <th scope="col" role="columnheader">{thresholdLabel}</th>
+                      <th scope="col" role="columnheader">{i18n.t('ui.pages.admin.inventory_management_page.status_920e41')}</th>
+                      <th scope="col" role="columnheader">{i18n.t('ui.pages.admin.inventory_management_page.emeliyyat_fc71e9')}</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody role="rowgroup">
                     {movementInventoryPage.items.map((item) => (
-                      <tr className={item.id === inventoryItem?.id ? 'selected' : ''} key={item.id}>
-                        <td>
+                      <tr className={item.id === inventoryItem?.id ? 'selected' : ''} key={item.id} role="row">
+                        <td role="cell">
                           <strong>{item.name}</strong>
                         </td>
-                        <td>{stockAmount(item)}</td>
-                        <td>{formatInventoryQuantity(item.lowStockThreshold)} {inventoryUnitLabel(item.unitCode, item.unitName)}</td>
-                        <td>
+                        <td role="cell"><span className="inventory-table-mobile-label" aria-hidden="true">{quantityLabel}</span>{stockAmount(item)}</td>
+                        <td role="cell"><span className="inventory-table-mobile-label" aria-hidden="true">{thresholdLabel}</span>{formatInventoryQuantity(item.lowStockThreshold)} {inventoryUnitLabel(item.unitCode, item.unitName)}</td>
+                        <td role="cell">
                           <Badge tone={item.isLowStock ? 'warning' : item.isActive ? 'success' : 'neutral'}>
                             {item.isLowStock ?i18n.t('ui.pages.admin.inventory_management_page.az_qalir_0cc343') : item.isActive ?i18n.t('ui.pages.admin.inventory_management_page.normal_a7248e') :i18n.t('ui.pages.admin.inventory_management_page.deaktiv_477e77')}
                           </Badge>
                         </td>
-                        <td>
+                        <td role="cell">
                           <div className="inline-actions inventory-table-actions">
                             <ActionIconButton
                               label={i18n.t('ui.inventoryHistory.open', { name: item.name })}

@@ -5182,8 +5182,13 @@ img {
 
 .inventory-table {
   width: 100%;
-  min-width: 760px;
+  table-layout: fixed;
   border-collapse: collapse;
+}
+
+.inventory-page-grid-movements .inventory-table-shell {
+  container: inventory-movements / inline-size;
+  overflow-x: auto;
 }
 
 .inventory-table th,
@@ -5192,6 +5197,7 @@ img {
   border-bottom: 1px solid var(--outline-variant);
   text-align: left;
   vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 
 .inventory-table th {
@@ -5206,6 +5212,13 @@ img {
 .inventory-table td {
   color: var(--on-surface);
 }
+.inventory-table th:nth-child(2),
+.inventory-table th:nth-child(3),
+.inventory-table th:nth-child(4) { width: 17%; }
+.inventory-table th:last-child { width: 132px; text-align: end; }
+.inventory-table td:nth-child(2),
+.inventory-table td:nth-child(3) { font-variant-numeric: tabular-nums; }
+.inventory-table .ui-badge { max-width: 100%; white-space: normal; }
 
 .inventory-table tbody tr:last-child td {
   border-bottom: 0;
@@ -5218,14 +5231,52 @@ img {
 .inventory-table strong {
   display: block;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.inventory-table-actions {
+.inventory-table .inventory-table-actions {
   justify-content: flex-end;
   flex-wrap: nowrap;
+  overflow: visible;
+}
+.inventory-table .inventory-table-actions .action-icon-button {
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
+}
+.inventory-table-mobile-label { display: none; }
+
+@container inventory-movements (max-width: 760px) {
+  .inventory-table th, .inventory-table td { padding-inline: 8px; }
+  .inventory-table th:last-child { width: 116px; }
+}
+
+@container inventory-movements (max-width: 560px) {
+  .inventory-table, .inventory-table tbody { display: block; }
+  .inventory-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .inventory-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(100px, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px;
+    border-bottom: 1px solid var(--outline-variant);
+  }
+  .inventory-table tbody tr:last-child { border-bottom: 0; }
+  .inventory-table tbody td { display: block; min-width: 0; padding: 0; border: 0; }
+  .inventory-table tbody td:first-child { grid-column: 1 / -1; }
+  .inventory-table-mobile-label {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--on-surface-variant);
+    font-size: 12px;
+  }
 }
 
 .inventory-history-modal {
