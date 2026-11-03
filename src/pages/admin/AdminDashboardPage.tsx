@@ -92,7 +92,7 @@ export function AdminDashboardPage() {
           </div>
 
           {view !== 'manager' ? (
-            <DashboardFinancials data={data} t={t} locale={locale} formatters={formatters} />
+            <DashboardFinancials data={data} t={t} locale={locale} formatters={formatters} restaurantId={state.filters.restaurantId} />
           ) : null}
 
           <DashboardTable

@@ -43,7 +43,8 @@ async function assertIntegerChartAxis(page) {
 
 async function assertChartMotion(page) {
   const bar = page.locator('.role-dashboard-chart-bar').first()
-  const donut = page.locator('.role-dashboard-donut-segments')
+  const ring = page.locator('.role-dashboard-donut-ring')
+  const arcs = ring.locator('.role-dashboard-donut-arc')
   const center = page.locator('.role-dashboard-donut-center')
   const line = page.locator('.role-dashboard-chart-line')
   const area = page.locator('.role-dashboard-chart-area')
@@ -53,48 +54,51 @@ async function assertChartMotion(page) {
   assert.equal(await animation(line), 'none')
   await page.getByRole('button', { name: 'Sütun qrafiki' }).click()
   assert.equal(await animation(bar), 'none')
-  assert.equal(await animation(donut), 'none')
-  const originalRing = await donut.evaluate((element) => {
-    const style = getComputedStyle(element)
-    return { mask: style.maskImage, segments: style.backgroundImage }
-  })
-  assert.equal(originalRing.mask, 'none')
+  const original = await arcs.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).strokeDasharray))
+  assert.equal(original.length, 2)
+  assert.equal(await animation(arcs.first()), 'none')
+  const totalText = await center.innerText()
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   assert.equal(await animation(bar), 'dashboard-bar-enter')
-  const sweep = await donut.evaluate((element) => {
-    const motion = element.getAnimations().find((item) => item.animationName === 'dashboard-donut-enter')
-    if (!motion) throw new Error('Donut sweep did not start')
-    motion.pause()
-    const duration = motion.effect.getTiming().duration
-    motion.currentTime = 0
-    const start = parseFloat(getComputedStyle(element).getPropertyValue('--dashboard-donut-sweep'))
-    motion.currentTime = duration / 2
-    const middle = parseFloat(getComputedStyle(element).getPropertyValue('--dashboard-donut-sweep'))
-    const mask = getComputedStyle(element).maskImage
-    motion.currentTime = duration * .95
-    const end = parseFloat(getComputedStyle(element).getPropertyValue('--dashboard-donut-sweep'))
-    motion.currentTime = duration / 2
-    return { start, middle, end, mask }
+  const sequence = await arcs.evaluateAll((elements) => {
+    const motions = elements.map((element) => element.getAnimations().find((motion) => motion.animationName === 'dashboard-donut-draw'))
+    if (motions.some((motion) => !motion)) throw new Error('Donut animation did not start')
+    motions.forEach((motion) => motion.pause())
+    function frame(time) {
+      motions.forEach((motion) => { motion.currentTime = time })
+      return elements.map((element) => parseFloat(getComputedStyle(element).strokeDasharray))
+    }
+    return { start: frame(0), first: frame(200), overlap: frame(365) }
   })
-  assert.equal(sweep.start, 0)
-  assert.ok(sweep.middle > 0 && sweep.middle < sweep.end && sweep.end < 360)
-  assert.match(sweep.mask, /conic-gradient/)
-  const ring = page.locator('.role-dashboard-donut-ring')
-  await ring.screenshot({ path: path.join(dist, 'dashboard-donut-mid-sweep.png') })
-  const finalRing = await donut.evaluate((element) => {
-    element.getAnimations().forEach((motion) => motion.finish())
-    const style = getComputedStyle(element)
-    return { angle: parseFloat(style.getPropertyValue('--dashboard-donut-sweep')), mask: style.maskImage, segments: style.backgroundImage }
-  })
-  assert.equal(finalRing.angle, 360)
-  assert.notEqual(finalRing.mask, sweep.mask)
-  assert.equal(finalRing.segments, originalRing.segments)
-  await ring.screenshot({ path: path.join(dist, 'dashboard-donut-complete.png') })
+  assert.deepEqual(sequence.start, [0, 0])
+  assert.ok(sequence.first[0] > 0 && sequence.first[0] < parseFloat(original[0]))
+  assert.equal(sequence.first[1], 0)
+  assert.ok(sequence.overlap[0] > sequence.first[0] && sequence.overlap[0] < parseFloat(original[0]) && sequence.overlap[1] > 0)
+  assert.equal(await center.innerText(), totalText)
+  await ring.screenshot({ path: path.join(dist, 'dashboard-donut-sequence.png') })
+  await arcs.evaluateAll((elements) => elements.forEach((element) => element.getAnimations().forEach((motion) => motion.finish())))
+  assert.deepEqual(await arcs.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).strokeDasharray)), original)
   assert.equal(await animation(center), 'none')
   assert.equal(await animation(page.locator('.role-dashboard-donut ul')), 'none')
-  assert.deepEqual(await donut.evaluate((element) => [element.offsetWidth, element.offsetHeight]), [128, 128])
-  await center.hover()
-  assert.equal(await donut.evaluate((element) => element.getAnimations().length), 0)
+  const choices = page.locator('.role-dashboard-financials .role-dashboard-donut-option')
+  await choices.first().press('Enter')
+  assert.equal(await choices.first().getAttribute('aria-pressed'), 'true')
+  assert.match(await center.locator('strong').innerText(), /2,120\.00/)
+  assert.match(await center.locator('.role-dashboard-donut-share').innerText(), /34[.,]6\s*%/)
+  assert.equal(await ring.locator('.is-muted').count(), 1)
+  await choices.first().press('Escape')
+  assert.equal(await center.innerText(), totalText)
+  await ring.scrollIntoViewIfNeeded()
+  const box = await ring.boundingBox()
+  for (const [index, degrees] of [60, 240].entries()) {
+    const angle = degrees * Math.PI / 180
+    await page.mouse.click(box.x + box.width * (.5 + 67 / 160 * Math.sin(angle)), box.y + box.height * (.5 - 67 / 160 * Math.cos(angle)))
+    assert.equal(await choices.nth(index).getAttribute('aria-pressed'), 'true')
+  }
+  await page.locator('.role-dashboard-financials .role-dashboard-donut').screenshot({ path: path.join(dist, 'dashboard-donut-financial-selected.png') })
+  await choices.nth(1).press('Enter')
+  assert.equal(await center.innerText(), totalText)
+  assert.equal(await arcs.evaluateAll((elements) => elements.flatMap((element) => element.getAnimations()).filter((motion) => motion.animationName === 'dashboard-donut-draw').length), 0)
   await page.getByRole('button', { name: 'Xətt və sahə qrafiki' }).click()
   assert.equal(await line.getAttribute('pathLength'), '1')
   assert.equal(await animation(line), 'dashboard-line-enter')
@@ -544,9 +548,13 @@ try {
     await page.setViewportSize({ width: 390, height: 844 })
     if (view === 'owner') {
       assert.match(await page.locator('.role-dashboard-metric strong').first().innerText(), /₼/)
+      const choices = page.locator('.role-dashboard-financials .role-dashboard-donut-option')
+      await choices.first().click()
+      assert.equal(await choices.first().getAttribute('aria-pressed'), 'true')
       await page.getByRole('button', { name: 'Test', exact: true }).click()
       await page.getByText('Yalnız test ödənişləri').waitFor()
       assert.equal(await page.locator('.role-dashboard-financials .role-dashboard-donut-ring').count(), 1)
+      assert.equal(await page.locator('.role-dashboard-financials .role-dashboard-donut-option[aria-pressed="true"]').count(), 0)
       assert.match(requests.at(-1).search, /paymentMode=test/)
       await page.getByRole('button', { name: '2', exact: true }).click()
       await page.getByText('Buta Baku', { exact: true }).waitFor()
@@ -589,11 +597,20 @@ try {
         await page.screenshot({ path: path.join(dist, `role-dashboard-chart-${length}-320-dark.png`), fullPage: true })
       }
       chartOverride = null
-      for (const [total, deposit, session, expected] of [[0, 0, 0, 1], [0.3, 0.1, 0.2, 1], [10, 5, 5.01, 0], [10, -1, 11, 0]]) {
+      for (const [total, deposit, session, expected] of [[0, 0, 0, 1], [0.3, 0.1, 0.2, 1], [10, 5, 5.01, 0], [10, -1, 11, 0], [123456789.99, 123456789.98, 0.01, 1]]) {
         financialOverride = { collectedAmount: total, depositCollectedAmount: deposit, sessionCollectedAmount: session, refundedAmount: 0, netCollectedAmount: total }
         await page.reload()
         await page.locator('.role-dashboard-metric').first().waitFor()
         assert.equal(await page.locator('.role-dashboard-financials .role-dashboard-donut').count(), expected)
+        if (total > 100_000_000) {
+          const donut = page.locator('.role-dashboard-financials .role-dashboard-donut')
+          await donut.locator('.role-dashboard-donut-option').first().click()
+          const amount = donut.locator('.role-dashboard-donut-center strong')
+          assert.match(await amount.innerText(), /123,456,789\.98/)
+          assert.equal(await amount.evaluate((element) => element.scrollWidth <= element.clientWidth && element.offsetHeight <= 14), true)
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+          await donut.screenshot({ path: path.join(dist, 'dashboard-donut-financial-long-320.png') })
+        }
       }
       financialOverride = null
     }
