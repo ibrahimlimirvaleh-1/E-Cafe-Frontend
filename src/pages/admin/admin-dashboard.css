@@ -684,6 +684,7 @@
 .role-dashboard-report-table-scroll td small { margin-top: 3px; color: var(--on-surface-variant); font-size: 11px; }
 .role-dashboard-report-table-scroll td small:empty { display: none; }
 .role-dashboard-report-table-scroll td.is-numeric { text-align: right; white-space: nowrap; }
+.role-dashboard-report-cost-unknown { color: var(--on-surface-variant); white-space: normal; }
 .role-dashboard-report-table-scroll td.is-cancelled-quote { color: var(--on-surface-variant); }
 .role-dashboard-report-table-scroll td.is-cancelled-quote small { color: var(--dashboard-red); font-weight: 650; }
 .role-dashboard-report-table-scroll tbody tr:hover { background: var(--surface-low); }

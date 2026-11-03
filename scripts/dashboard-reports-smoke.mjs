@@ -35,18 +35,31 @@ const operationalMetrics = {
   stock: ['stockItems', 'lowStock', 'outOfStock'],
 }
 
-function detail(kind) {
+function detail(kind, view) {
   if (!operationalColumns[kind]) return null
-  const columns = operationalColumns[kind].map((entry) => {
+  const ownerProductCosts = kind === 'products' && view === 'owner'
+  const columns = [...operationalColumns[kind], ...(ownerProductCosts ? ['ingredientCost:currency', 'grossProfit:currency', 'averageIngredientCost:number'] : [])].map((entry) => {
     const [key, format = 'text'] = entry.split(':')
     return { key, format }
   })
-  return { columns, rows: [{ id: `${kind}-1`, cells: columns.map(({ key, format }) => ({
+  const rows = [{ id: `${kind}-1`, cells: columns.map(({ key, format }) => ({
     text: format === 'code' ? key === 'status' ? kind === 'settlements' ? 'refund.8004' : 'order.2005' : key === 'stage' ? 'afterPreparation' : key === 'event' ? 'refund' : key === 'stockState' ? 'low' : key === 'arrivalDay' ? 'day.1' : 'yes'
       : format === 'text' ? key === 'restaurant' ? 'Dolce Vita' : key === 'product' ? 'Espresso' : key === 'ingredient' ? 'Qəhvə' : key === 'unit' ? 'g' : key === 'table' ? 'Masa-1' : key === 'arrivalHour' ? '19:00' : 'Qeyd' : null,
-    number: ['number', 'currency', 'minutes', 'percent'].includes(format) ? key === 'preparationMinutes' && kind === 'kitchen' ? null : key === 'currentStock' ? 0.000125 : 12.5 : null,
+    number: ['number', 'currency', 'minutes', 'percent'].includes(format) ? key === 'preparationMinutes' && kind === 'kitchen' ? null : key === 'currentStock' ? 0.000125 : key === 'ingredientCost' ? 5.254321 : key === 'grossProfit' ? 7.245679 : key === 'averageIngredientCost' ? 0.420346 : 12.5 : null,
     utc: format === 'datetime' ? '2026-11-02T08:00:00Z' : null,
-  })) }] }
+  })) }]
+  if (ownerProductCosts) {
+    for (const [product, sold] of [['Latte', 2], ['Mocha', 0]]) {
+      rows.push({ id: product, cells: rows[0].cells.map((cell, index) => {
+        const key = columns[index].key
+        if (key === 'product') return { ...cell, text: product }
+        if (key === 'sold') return { ...cell, number: sold }
+        if (['ingredientCost', 'grossProfit', 'averageIngredientCost'].includes(key)) return { ...cell, number: null }
+        return cell
+      }) })
+    }
+  }
+  return { columns, rows }
 }
 
 function token(roleId) {
@@ -82,8 +95,9 @@ function report(view, params) {
   const kind = params.get('kind') || 'orders'
   const pageIndex = Number(params.get('pageIndex') || 1)
   const list = Array.from({ length: pageIndex === 1 ? 20 : 5 }, (_, index) => (pageIndex - 1) * 20 + index + 1)
+  const reportDetail = detail(kind, view)
   return {
-    kind, dayStartHour: Number(params.get('dayStartHour') || 0), detail: detail(kind), generatedAtUtc: '2026-11-02T10:00:00Z', timeZone: 'Asia/Baku', from: '2026-10-27', to: '2026-11-02', paymentMode: params.get('paymentMode') || 'real',
+    kind, dayStartHour: Number(params.get('dayStartHour') || 0), detail: reportDetail, generatedAtUtc: '2026-11-02T10:00:00Z', timeZone: 'Asia/Baku', from: '2026-10-27', to: '2026-11-02', paymentMode: params.get('paymentMode') || 'real',
     metrics: operationalMetrics[kind] ? operationalMetrics[kind].map((key) => ({ key, value: key.startsWith('average') ? 12.5 : ['cancelledUnits', 'cancelledOrders', 'cancelledReservations', 'noShow', 'lowStock', 'outOfStock', 'refundIssues'].includes(key) ? 1 : 12, unit: key.startsWith('average') ? 'minutes' : 'count', previousValue: null, changePercent: null })) : kind === 'orders' ? [
       { key: 'totalOrders', value: 25, unit: 'count', previousValue: null, changePercent: null },
       { key: 'pendingOrders', value: 2, unit: 'count', previousValue: null, changePercent: null },
@@ -95,7 +109,7 @@ function report(view, params) {
     orders: kind === 'orders' ? list.map((id) => ({ id, restaurantId: 1, restaurantName: 'Dolce Vita', tableName: 'Masa-1', tableSessionId: 21, sourceId: 1, statusId: id === 1 ? 2009 : id === 2 ? 2007 : 2005, openedAtUtc: '2026-11-02T08:00:00Z', sentToKitchenAtUtc: id === 1 ? null : '2026-11-02T08:01:00Z', servedAtUtc: id < 3 ? null : '2026-11-02T08:20:00Z', itemQuantity: 2, itemSubtotal: 15, confirmedAmount: id < 3 ? 0 : 15 })) : [],
     reservations: kind === 'reservations' ? list.map((id) => ({ id, restaurantId: 1, restaurantName: 'Dolce Vita', tableName: 'Masa-1', statusId: id === 1 ? 1002 : 1005, reservedAtUtc: '2026-11-02T13:00:00Z', peopleCount: 2, depositAmount: 20, arrivedAtUtc: id === 1 ? '2026-11-02T12:55:00Z' : null, seatedAtUtc: id === 1 ? '2026-11-02T13:00:00Z' : null })) : [],
     payments: kind === 'payments' ? [{ id: 1, event: 'receipt', restaurantId: 1, restaurantName: 'Dolce Vita', occurredAtUtc: '2026-11-02T08:00:00Z', amount: 40, purpose: 'deposit', reservationId: 1, tableSessionId: null, statusId: 3002, isTest: params.get('paymentMode') === 'test' }, { id: 1, event: 'refund', restaurantId: 1, restaurantName: 'Dolce Vita', occurredAtUtc: '2026-11-02T09:00:00Z', amount: 5, purpose: 'deposit', reservationId: 1, tableSessionId: null, statusId: 8005, isTest: params.get('paymentMode') === 'test' }] : [],
-    pageIndex, pageSize: 20, totalRows: operationalColumns[kind] ? 1 : kind === 'payments' ? 2 : 25,
+    pageIndex, pageSize: 20, totalRows: reportDetail?.rows.length ?? (kind === 'payments' ? 2 : 25),
   }
 }
 
@@ -306,7 +320,22 @@ try {
       await page.locator('.role-dashboard-report-kind-select select').selectOption(operationalKind)
       await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
       assert.equal(requests.at(-1).params.get('kind'), operationalKind)
-      assert.equal(await page.locator('.role-dashboard-report-table-scroll th').count(), operationalColumns[operationalKind].length)
+      const hasProductCosts = operationalKind === 'products' && view === 'owner'
+      assert.equal(await page.locator('.role-dashboard-report-table-scroll th').count(), operationalColumns[operationalKind].length + (hasProductCosts ? 3 : 0))
+      if (operationalKind === 'products') {
+        const profit = page.getByRole('columnheader', { name: 'Brüt mənfəət' })
+        assert.equal(await profit.count(), hasProductCosts ? 1 : 0)
+        if (hasProductCosts) {
+          const rows = page.locator('.role-dashboard-report-table-scroll tbody tr')
+          assert.match(await rows.first().locator('td').nth(6).innerText(), /5[.,]25/)
+          assert.match(await rows.first().locator('td').nth(7).innerText(), /7[.,]25/)
+          assert.match(await rows.first().locator('td').last().innerText(), /0[.,]420346/)
+          assert.equal(await rows.nth(1).getByText('Maya məlum deyil', { exact: true }).count(), 3)
+          assert.equal(await rows.nth(2).locator('td').last().innerText(), '—')
+          await page.getByText(/faktiki alınan ödəniş deyil.*əməliyyat xərcləri nəzərə alınmır/).waitFor()
+          await page.screenshot({ path: path.join(dist, 'dashboard-products-owner-profit-1440.png'), fullPage: true })
+        }
+      }
       assert.equal(await page.locator('.role-dashboard-report-metric').count(), operationalMetrics[operationalKind].length)
       assert.equal(await page.locator('.role-dashboard-report-status-filter').count(), 0)
       assert.equal(await page.getByRole('group', { name: 'Ödəniş rejimi' }).count(), ['settlements', 'branches'].includes(operationalKind) ? 1 : 0)

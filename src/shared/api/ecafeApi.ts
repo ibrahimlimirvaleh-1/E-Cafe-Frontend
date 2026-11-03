@@ -893,6 +893,7 @@ type CreateInventoryMovementRequest = {
   quantity: number
   unitId: number
   movementTypeId: number
+  purchaseUnitPrice?: number | null
   reason?: string | null
 }
 

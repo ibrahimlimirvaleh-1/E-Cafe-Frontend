@@ -29,6 +29,15 @@ import { formatInventoryQuantity, inventoryUnitLabel } from '../../shared/lib/in
 
 type InventoryPageMode = 'items' | 'create' | 'movements' | 'movement-create' | 'recipes' | 'recipe-create'
 type PendingDelete = { id: string; label: string; type: 'inventory' | 'recipe' } | null
+const purchaseMovementTypeId = 1
+const maxPurchaseUnitPrice = 1_000_000
+
+function parsePurchaseUnitPrice(input: string) {
+  const value = input.trim()
+  if (!/^(?:\d+(?:[.,]\d{1,6})?|[.,]\d{1,6})$/.test(value)) return null
+  const price = Number(value.replace(',', '.'))
+  return price <= maxPurchaseUnitPrice ? price : null
+}
 
 const pageCopy: Record<InventoryPageMode, { eyebrow: string; title: string }> = {
   items: { eyebrow: 'Stok', title: 'Stok elementleri' },
@@ -99,6 +108,9 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     unitId: '2',
     reason: '',
   })
+  const [purchasePrice, setPurchasePrice] = useState('')
+  const [purchasePriceInvalid, setPurchasePriceInvalid] = useState(false)
+  const isPurchaseMovement = Number(movementForm.movementTypeId) === purchaseMovementTypeId
   const [recipeForm, setRecipeForm] = useState({
     inventoryItemId: '',
     quantity: '',
@@ -174,6 +186,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     () => inventorySelectionItems.find((item) => item.id === selectedInventoryId) ?? inventorySelectionItems[0],
     [inventorySelectionItems, selectedInventoryId],
   )
+  useEffect(() => {
+    setPurchasePrice('')
+    setPurchasePriceInvalid(false)
+  }, [mode, restaurantId, inventoryItem?.id, movementForm.unitId, movementForm.movementTypeId])
   const menuItem = useMemo(
     () => menuItems.find((item) => item.id === selectedMenuItemId) ?? menuItems[0],
     [menuItems, selectedMenuItemId],
@@ -339,13 +355,22 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
     }
 
     clearFeedback()
+    const purchaseUnitPrice = isPurchaseMovement ? parsePurchaseUnitPrice(purchasePrice) : null
+    if (isPurchaseMovement && purchaseUnitPrice === null) {
+      setPurchasePriceInvalid(true)
+      event.currentTarget.querySelector<HTMLInputElement>('[name="purchaseUnitPrice"]')?.focus()
+      return
+    }
     try {
       await ecafeApi.inventory.createMovement(restaurantId, inventoryItem.id, {
         movementTypeId: Number(movementForm.movementTypeId),
         quantity: Number(movementForm.quantity),
         unitId: Number(movementForm.unitId),
         reason: movementForm.reason.trim() || null,
+        ...(purchaseUnitPrice !== null ? { purchaseUnitPrice } : {}),
       })
+      setPurchasePrice('')
+      setPurchasePriceInvalid(false)
       setMovementForm({ movementTypeId: String(movementTypes[0]?.id ?? ''), quantity: '', unitId: inventoryItem.unitId ? String(inventoryItem.unitId) : '2', reason: '' })
       setSuccess(i18n.t('ui.adminNotice.movementAdded'))
       setReloadKey((value) => value + 1)
@@ -728,7 +753,13 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
                       ))}
                     </SelectField>
                   </div>
-                  <TextField label={i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')} min={0} required step="0.001" type="number" value={movementForm.quantity} onChange={(event) => setMovementForm({ ...movementForm, quantity: event.target.value })} />
+                  <div className={isPurchaseMovement ? 'form-grid two' : undefined}>
+                    <TextField label={i18n.t('ui.pages.admin.inventory_management_page.miqdar_77c299')} min={0} required step="0.001" type="number" value={movementForm.quantity} onChange={(event) => setMovementForm({ ...movementForm, quantity: event.target.value })} />
+                    {isPurchaseMovement ? <TextField name="purchaseUnitPrice" label={i18n.t('ui.inventory.purchase.unitPrice')} required inputMode="decimal"
+                      value={purchasePrice} onChange={(event) => { setPurchasePrice(event.target.value); setPurchasePriceInvalid(false) }}
+                      hint={i18n.t('ui.inventory.purchase.selectedUnit', { unit: unitLabel(units, Number(movementForm.unitId)) })}
+                      error={purchasePriceInvalid ? i18n.t('ui.inventory.purchase.invalidUnitPrice') : undefined} /> : null}
+                  </div>
                   <TextareaField label={i18n.t('ui.pages.admin.inventory_management_page.sebeb_a661b8')} value={movementForm.reason} onChange={(event) => setMovementForm({ ...movementForm, reason: event.target.value })} />
                   <Button disabled={!inventoryItem} type="submit">{i18n.t('ui.pages.admin.inventory_management_page.hereket_elave_et_89d71c')}</Button>
                 </form>
