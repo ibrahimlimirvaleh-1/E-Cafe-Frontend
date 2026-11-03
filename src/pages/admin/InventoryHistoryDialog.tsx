@@ -6,7 +6,7 @@ import type { InventoryItem, InventoryMovement } from '../../entities/types'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
 import { i18n } from '../../shared/i18n/i18n'
-import { formatInventoryQuantity, inventoryUnitLabel } from '../../shared/lib/inventoryFormatting'
+import { formatInventoryCost, formatInventoryQuantity, inventoryUnitLabel } from '../../shared/lib/inventoryFormatting'
 import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
 import { Button } from '../../shared/ui/Button'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
@@ -17,6 +17,7 @@ type Props = {
   restaurantId: string
   item: InventoryItem
   restaurantTimeZone?: string | null
+  showPurchaseCosts: boolean
   onClose: () => void
 }
 
@@ -40,11 +41,14 @@ function movementTitle(movement: InventoryMovement) {
   return name ? i18n.t(`ui.inventoryHistory.type.${name}`) : movement.movementType || movement.movementTypeCode || i18n.t('ui.inventoryHistory.type.other')
 }
 
-function MovementRow({ movement, restaurantTimeZone }: { movement: InventoryMovement; restaurantTimeZone?: string | null }) {
+function MovementRow({ movement, restaurantTimeZone, showPurchaseCosts }: { movement: InventoryMovement; restaurantTimeZone?: string | null; showPurchaseCosts: boolean }) {
   const isSystemMovement = movement.movementTypeId === 4 || movement.movementTypeId === 6 && movement.reversedMovementId !== null
   const timeZone = movement.timeZone || restaurantTimeZone || 'Asia/Baku'
   const createdAt = utcInstant(movement.createdAt)
   const reason = movement.reason?.trim()
+  const unit = inventoryUnitLabel(movement.unitCode, movement.unitName)
+  const { purchaseCostAmount, purchaseUnitPrice } = movement
+  const unknownCost = i18n.t('ui.inventoryHistory.costUnknown')
   return <li className="inventory-history-row">
     <div className="inventory-history-row-main">
       <strong>{movementTitle(movement)}</strong>
@@ -54,16 +58,28 @@ function MovementRow({ movement, restaurantTimeZone }: { movement: InventoryMove
         {movement.orderItemName ? <span>{movement.orderItemQuantity === null ? movement.orderItemName : i18n.t('ui.inventoryHistory.orderItem', { quantity: movement.orderItemQuantity, name: movement.orderItemName })}</span> : null}
       </div> : null}
       {!isSystemMovement && reason ? <p className="inventory-history-reason">{reason}</p> : null}
+      {showPurchaseCosts && movement.movementTypeId === 1 ? purchaseUnitPrice == null && purchaseCostAmount == null
+        ? <span className="inventory-history-cost-unknown">{unknownCost}</span>
+        : <dl className="inventory-history-cost">
+          <div>
+            <dt>{i18n.t('ui.inventoryHistory.purchaseUnitPrice')}</dt>
+            <dd>{purchaseUnitPrice == null ? unknownCost : `${formatInventoryCost(purchaseUnitPrice)}${unit ? `/${unit}` : ''}`}</dd>
+          </div>
+          <div>
+            <dt>{i18n.t('ui.inventoryHistory.purchaseTotal')}</dt>
+            <dd>{purchaseCostAmount == null ? unknownCost : formatInventoryCost(purchaseCostAmount)}</dd>
+          </div>
+        </dl> : null}
     </div>
     <strong className={`inventory-history-quantity ${movement.quantityChange >= 0 ? 'is-increase' : 'is-decrease'}`}>
       {movement.quantityChange >= 0 ? <ArrowDownLeft size={16} aria-hidden="true" /> : <ArrowUpRight size={16} aria-hidden="true" />}
-      {formatInventoryQuantity(movement.quantityChange, true)} {inventoryUnitLabel(movement.unitCode, movement.unitName)}
+      {formatInventoryQuantity(movement.quantityChange, true)} {unit}
     </strong>
     <time dateTime={createdAt}>{formatReservationDateTime(createdAt, timeZone)}</time>
   </li>
 }
 
-export function InventoryHistoryDialog({ restaurantId, item, restaurantTimeZone, onClose }: Props) {
+export function InventoryHistoryDialog({ restaurantId, item, restaurantTimeZone, showPurchaseCosts, onClose }: Props) {
   const { i18n: activeI18n } = useTranslation()
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -128,13 +144,17 @@ export function InventoryHistoryDialog({ restaurantId, item, restaurantTimeZone,
         <div className="inventory-history-balance"><span>{i18n.t('ui.inventoryHistory.currentStock')}</span>
           {detail.isLoading ? <span role="status">{i18n.t('ui.inventoryHistory.loading')}</span>
             : detail.error || !detail.data ? <span className="inventory-history-balance-unavailable">{i18n.t('ui.inventoryHistory.currentUnavailable')}</span>
-              : <strong>{formatInventoryQuantity(detail.data.quantityOnHand)} {inventoryUnitLabel(detail.data.unitCode, detail.data.unitName)}</strong>}
+              : <div className="inventory-history-balance-value">
+                <strong>{formatInventoryQuantity(detail.data.quantityOnHand)} {inventoryUnitLabel(detail.data.unitCode, detail.data.unitName)}</strong>
+                {showPurchaseCosts && detail.data.quantityOnHand > 0 && detail.data.hasUnknownStockCost
+                  ? <span className="inventory-history-cost-unknown">{i18n.t('ui.inventoryHistory.costUnknown')}</span> : null}
+              </div>}
         </div>
         {detail.error ? <StatusMessage tone="warning" autoHideMs={false}>{detail.error}</StatusMessage> : null}
         {history.isLoading ? <p role="status" className="inventory-history-state">{i18n.t('ui.inventoryHistory.loading')}</p> : null}
         {history.error ? <div className="inventory-history-state"><StatusMessage tone="danger" autoHideMs={false}>{history.error === 'Məlumat yüklənmədi.' ? i18n.t('ui.inventoryHistory.loadFailed') : history.error}</StatusMessage><Button type="button" variant="secondary" onClick={() => setRetry((value) => value + 1)}><RefreshCw size={16} />{i18n.t('ui.inventoryHistory.retry')}</Button></div> : null}
         {history.hasData && !history.error && history.data.items.length === 0 ? <p className="inventory-history-state">{i18n.t('ui.inventoryHistory.empty')}</p> : null}
-        {history.hasData && !history.error && history.data.items.length > 0 ? <ol className="inventory-history-list">{history.data.items.map((movement) => <MovementRow key={movement.id} movement={movement} restaurantTimeZone={restaurantTimeZone} />)}</ol> : null}
+        {history.hasData && !history.error && history.data.items.length > 0 ? <ol className="inventory-history-list">{history.data.items.map((movement) => <MovementRow key={movement.id} movement={movement} restaurantTimeZone={restaurantTimeZone} showPurchaseCosts={showPurchaseCosts} />)}</ol> : null}
       </div>
       <footer className="inventory-history-footer">
         {history.hasData && !history.error ? <><span>{i18n.t('ui.inventoryHistory.totalCount', { total: history.data.totalCount })}</span><PaginationControls ariaLabel={i18n.t('ui.inventoryHistory.pages')} pageIndex={history.data.pageIndex} pageSize={pageSize} totalCount={history.data.totalCount} totalPages={history.data.totalPages} hasPreviousPage={history.data.hasPreviousPage} hasNextPage={history.data.hasNextPage} onPageChange={setPageNumber} onPageSizeChange={(size) => { setPageSize(size); setPageNumber(1) }} /></> : null}

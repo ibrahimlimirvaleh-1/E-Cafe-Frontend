@@ -51,6 +51,8 @@
 .inventory-history-balance span { color: var(--on-surface-variant); font-size: 13px; }
 .inventory-history-balance strong { font-size: 20px; font-variant-numeric: tabular-nums; }
 .inventory-history-balance .inventory-history-balance-unavailable { color: var(--warning); }
+.inventory-history-balance-value { display: grid; justify-items: end; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.inventory-history-cost-unknown, .inventory-history-balance .inventory-history-cost-unknown { color: var(--warning); font-size: 12px; }
 .inventory-history-state { display: grid; justify-items: start; gap: 12px; margin: 18px 0 0; color: var(--on-surface-variant); }
 .inventory-history-state .form-message { margin: 0; }
 .inventory-history-state .ui-button { min-height: 44px; }
@@ -62,6 +64,10 @@
 .inventory-history-row-main > strong { font-size: 14px; line-height: 1.35; }
 .inventory-history-context { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--on-surface-variant); font-size: 12px; }
 .inventory-history-reason { margin: 2px 0 0; color: var(--on-surface-variant); font-size: 12px; line-height: 1.45; }
+.inventory-history-cost { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 2px 0 0; }
+.inventory-history-cost div { min-width: 0; }
+.inventory-history-cost dt { color: var(--on-surface-variant); font-size: 11px; }
+.inventory-history-cost dd { margin: 2px 0 0; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .inventory-history-quantity { display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; white-space: nowrap; font-size: 14px; font-variant-numeric: tabular-nums; }
 .inventory-history-quantity.is-increase { color: var(--success); }
 .inventory-history-quantity.is-decrease { color: var(--danger); }

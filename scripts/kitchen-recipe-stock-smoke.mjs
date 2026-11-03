@@ -11,6 +11,7 @@ const token = `header.${Buffer.from(JSON.stringify({ userId: '42', name: 'QA', s
 const startedAt = '2026-10-21T09:00:00Z'
 const postCounts = new Map()
 const statuses = new Map([[10, 2002], [11, 2002], [12, 2002], [13, 2002], [14, 2002], [15, 2002]])
+const stockItem = { id: 22, restaurantId: 1, name: 'Espresso', unitId: 2, unitCode: 'g', quantityOnHand: 12, lowStockThreshold: 2, isActive: true, hasUnknownStockCost: true }
 
 function order(id) {
   const statusId = statuses.get(id)
@@ -41,6 +42,16 @@ try {
       if (pathname === '/api/v1/profile') return json(route, { userId: '42', name: 'QA', surname: 'Chef', roleId: 6, isActive: true, profiles: [{ restaurantId: 1, restaurantName: 'Test Restaurant', roleId: 6, roleName: 'Kitchen', isActive: true }] })
       if (pathname === '/api/v1/localization/preference') return json(route, { language: 'az' })
       if (/^\/api\/v1\/localization\/dictionaries\//.test(pathname)) return json(route, { language: pathname.split('/').at(-1), version: 'v1', fallbackLanguage: 'az', messages: {} })
+      if (pathname === '/api/v1/restaurants/getAll') return json(route, [{ id: 1, name: 'Test Restaurant', location: 'Baku', timeZone: 'Asia/Baku', hasActiveContract: true, isActive: true }])
+      if (pathname === '/api/v1/restaurants/1/inventory') return json(route, { items: [stockItem], pageIndex: 1, totalPages: 1, totalCount: 1 })
+      if (pathname === '/api/v1/restaurants/1/inventory/22') return json(route, stockItem)
+      if (pathname === '/api/v1/restaurants/1/inventory/22/movements') {
+        const purchase = { restaurantId: 1, inventoryItemId: 22, quantityChange: 10, unitId: 2, unitCode: 'g', movementTypeId: 1, createdAt: startedAt, reason: 'Təchizatçıdan alındı' }
+        return json(route, {
+          items: [{ ...purchase, id: 1, purchaseCostAmount: null, purchaseUnitPrice: null }, { ...purchase, id: 2, purchaseCostAmount: 0.05, purchaseUnitPrice: 0.005 }],
+          pageIndex: 1, totalPages: 1, totalCount: 2,
+        })
+      }
       if (pathname === '/api/v1/restaurants/1/kitchen/orders' && route.request().method() === 'GET') {
         return json(route, { items: [10, 11, 12, 13, 14, 15].map(order), pageIndex: 1, totalPages: 1, totalCount: 6 })
       }
@@ -123,6 +134,17 @@ try {
   await row(10).getByRole('button', { name: 'Hazırdır' }).waitFor()
   assert.equal(await row(10).getByText('Tomat çatışmır: 2 kq tələb olunur.').count(), 0)
   assert.equal(postCounts.get(10), 2)
+
+  await page.goto(`${origin}/kitchen/inventory/movements?restaurantId=1`)
+  await page.getByRole('button', { name: 'Espresso tarixçəsinə bax' }).click()
+  const history = page.getByRole('dialog', { name: 'Espresso' })
+  await history.locator('.inventory-history-row').nth(1).waitFor()
+  await history.locator('.inventory-history-balance strong').waitFor()
+  assert.equal(await history.getByText('Alış', { exact: true }).count(), 2)
+  assert.equal(await history.getByText('Təchizatçıdan alındı', { exact: true }).count(), 2)
+  assert.match(await history.locator('.inventory-history-quantity').first().innerText(), /\+10 g/)
+  assert.equal(await history.locator('.inventory-history-cost, .inventory-history-cost-unknown').count(), 0)
+  assert.doesNotMatch(await history.innerText(), /Maya məlum deyil|alış qiyməti|₼/)
   assert.deepEqual(pageErrors, [])
   console.log('Kitchen recipe stock smoke passed')
 } finally {

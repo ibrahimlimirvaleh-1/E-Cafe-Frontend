@@ -11,3 +11,12 @@ export function formatInventoryQuantity(value: number, signed = false) {
   }).format(Math.abs(value))
   return signed ? `${value > 0 ? '+' : value < 0 ? '\u2212' : ''}${amount}` : amount
 }
+
+export function formatInventoryCost(value: number) {
+  return new Intl.NumberFormat(getIntlLocale(getCurrentLanguage()), {
+    style: 'currency',
+    currency: 'AZN',
+    currencyDisplay: 'narrowSymbol',
+    ...(value > 0 && value < 0.000001 ? { maximumSignificantDigits: 6 } : { maximumFractionDigits: 6 }),
+  }).format(value)
+}

@@ -150,9 +150,10 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
   )
   const { data: movementTypes } = useAsyncData(() => mode === 'movement-create' ? ecafeApi.lookups.inventoryMovementTypes() : Promise.resolve([]), [], [mode])
   const { data: units } = useAsyncData(() => ['create', 'movement-create', 'recipe-create'].includes(mode) ? ecafeApi.lookups.units() : Promise.resolve([]), [], [mode, activeI18n.resolvedLanguage])
-  const inventoryRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory' : '/admin/inventory'
-  const movementRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/inventory/movements' : '/admin/inventory/movements'
-  const recipeRouteBase = location.pathname.startsWith('/kitchen') ? '/kitchen/recipes' : '/admin/recipes'
+  const isKitchenWorkspace = location.pathname.startsWith('/kitchen')
+  const inventoryRouteBase = isKitchenWorkspace ? '/kitchen/inventory' : '/admin/inventory'
+  const movementRouteBase = `${inventoryRouteBase}/movements`
+  const recipeRouteBase = isKitchenWorkspace ? '/kitchen/recipes' : '/admin/recipes'
   const editingInventoryItemId = mode === 'create' ? searchParams.get('inventoryItemId') ?? '' : ''
   const { data: editMetadata, error: editMetadataError, isLoading: editMetadataLoading } = useKeyedAsyncData(
     () => editingInventoryItemId ? ecafeApi.contentTranslations.detail('inventory-items', editingInventoryItemId) : Promise.resolve(null),
@@ -885,7 +886,7 @@ export function InventoryManagementPage({ mode = 'items' }: { mode?: InventoryPa
         onConfirm={confirmPendingDelete}
         title={i18n.t('ui.pages.admin.inventory_management_page.silmeni_tesdiqle_33a429')}
       />
-      {historySelection ? <InventoryHistoryDialog key={`${historySelection.restaurantId}:${historySelection.item.id}`} restaurantId={historySelection.restaurantId} item={historySelection.item} restaurantTimeZone={selectedRestaurant?.timeZone} onClose={() => setHistorySelection(null)} /> : null}
+      {historySelection ? <InventoryHistoryDialog key={`${historySelection.restaurantId}:${historySelection.item.id}`} restaurantId={historySelection.restaurantId} item={historySelection.item} restaurantTimeZone={selectedRestaurant?.timeZone} showPurchaseCosts={!isKitchenWorkspace} onClose={() => setHistorySelection(null)} /> : null}
     </main>
   )
 }
