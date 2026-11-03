@@ -167,6 +167,7 @@ export type InventoryItem = {
   unitName: string
   unitCode: string
   quantityOnHand: number
+  hasUnknownStockCost?: boolean
   lowStockThreshold: number
   isLowStock: boolean
   isActive: boolean
@@ -177,6 +178,8 @@ export type InventoryMovement = {
   restaurantId: string
   inventoryItemId: string
   quantityChange: number
+  purchaseCostAmount?: number | null
+  purchaseUnitPrice?: number | null
   unitId: number
   unitName: string
   unitCode: string

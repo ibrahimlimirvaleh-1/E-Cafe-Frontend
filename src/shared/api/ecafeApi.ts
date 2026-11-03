@@ -1522,10 +1522,15 @@ function mapInventoryItem(record: AnyRecord, restaurantId: string): InventoryIte
     unitName: str(record.unitName),
     unitCode: str(record.unitCode || record.unit),
     quantityOnHand: num(record.quantityOnHand),
+    hasUnknownStockCost: typeof record.hasUnknownStockCost === 'boolean' ? record.hasUnknownStockCost : undefined,
     lowStockThreshold: num(record.lowStockThreshold),
     isLowStock: bool(record.isLowStock),
     isActive: bool(record.isActive, true),
   }
+}
+
+function readInventoryPurchaseCost(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
 }
 
 function mapInventoryMovement(record: AnyRecord, restaurantId: string, inventoryItemId: string): InventoryMovement {
@@ -1534,6 +1539,8 @@ function mapInventoryMovement(record: AnyRecord, restaurantId: string, inventory
     restaurantId: str(record.restaurantId, restaurantId),
     inventoryItemId: str(record.inventoryItemId, inventoryItemId),
     quantityChange: num(record.quantityChange),
+    purchaseCostAmount: readInventoryPurchaseCost(record.purchaseCostAmount),
+    purchaseUnitPrice: readInventoryPurchaseCost(record.purchaseUnitPrice),
     unitId: num(record.unitId),
     unitName: str(record.unitName),
     unitCode: str(record.unitCode),

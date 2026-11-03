@@ -11,6 +11,8 @@ const token = `header.${Buffer.from(JSON.stringify({ userId: '42', name: 'QA', s
 const item = { id: 22, restaurantId: 1, name: 'Espresso', unitId: 2, unitName: 'Piece', unitCode: 'pcs', quantityOnHand: 12.123456, lowStockThreshold: 2, isActive: true }
 let historyRequests = 0
 let failHistory = false
+let hasUnknownStockCost = true
+let currentQuantity = 13.123456
 
 function json(route, data, status = 200) {
   return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ data }) })
@@ -50,7 +52,7 @@ try {
     if (pathname === '/api/v1/lookups/units') return json(route, [{ id: 1, code: 'kg', name: 'Kiloqram' }, { id: 2, code: 'g', name: 'Qram' }])
     if (pathname === '/api/v1/lookups/inventory-movement-types') return json(route, [{ id: 1, code: 'Purchase', name: 'Alış' }, { id: 2, code: 'ManualIncrease', name: 'Əl ilə artım' }])
     if (pathname === '/api/v1/restaurants/1/inventory') return json(route, { items: [item], pageIndex: 1, totalPages: 1, totalCount: 1, hasPreviousPage: false, hasNextPage: false })
-    if (pathname === '/api/v1/restaurants/1/inventory/22') return json(route, { ...item, quantityOnHand: 13.123456 })
+    if (pathname === '/api/v1/restaurants/1/inventory/22') return json(route, { ...item, quantityOnHand: currentQuantity, hasUnknownStockCost })
     if (pathname === '/api/v1/restaurants/1/inventory/22/movements') {
       if (route.request().method() === 'POST') {
         createdMovements.push(route.request().postDataJSON())
@@ -60,11 +62,14 @@ try {
       if (failHistory) return json(route, { message: 'History unavailable' }, 503)
       const pageNumber = Number(url.searchParams.get('PageNumber') || url.searchParams.get('pageNumber') || 1)
       const all = [
-        movement(1, 1, 10, { reason: 'Təchizatçıdan alındı' }),
-        movement(2, 4, -0.123456, { relatedOrderId: 'ABC-42', relatedOrderItemId: 99, orderItemName: 'Uzun espresso sifarişi', orderItemQuantity: 2, tableNo: 12, reason: 'Internal processing' }),
+        movement(1, 1, 10, { unitCode: 'ml', reason: 'Təchizatçıdan alındı', purchaseUnitPrice: 0.005, purchaseCostAmount: 0.05 }),
+        movement(2, 4, -0.123456, { relatedOrderId: 'ABC-42', relatedOrderItemId: 99, orderItemName: 'Uzun espresso sifarişi', orderItemQuantity: 2, tableNo: 12, reason: 'Internal processing', purchaseUnitPrice: 1, purchaseCostAmount: 2 }),
         movement(3, 6, 0.123456, { reversedMovementId: 2, relatedOrderId: 'ABC-42', orderItemName: 'Uzun espresso sifarişi', orderItemQuantity: 2, tableNo: 12 }),
         movement(4, 6, 1, { reason: 'Manual return', reversedMovementId: null }),
-        ...Array.from({ length: 7 }, (_, index) => movement(index + 5, 2, 1)),
+        movement(5, 1, 1, { purchaseUnitPrice: 0, purchaseCostAmount: 0 }),
+        movement(6, 1, 1),
+        movement(7, 1, 1, { purchaseUnitPrice: 0.00000005, purchaseCostAmount: 0.00000005 }),
+        ...Array.from({ length: 4 }, (_, index) => movement(index + 8, 2, 1)),
       ]
       return json(route, { items: pageNumber === 1 ? all.slice(0, 10) : all.slice(10), pageIndex: pageNumber, totalPages: 2, totalCount: 11, hasPreviousPage: pageNumber > 1, hasNextPage: pageNumber < 2 })
     }
@@ -134,6 +139,15 @@ try {
   assert.match(await dialog.locator('.inventory-history-row time').first().innerText(), /14:00/)
   assert.equal(await dialog.getByText('Cari stok').count(), 1)
   assert.match(await dialog.locator('.inventory-history-balance').innerText(), /13[,.]123456/)
+  const costRows = dialog.locator('.inventory-history-row')
+  await dialog.locator('.inventory-history-balance').getByText('Maya məlum deyil').waitFor()
+  assert.match(await costRows.nth(0).locator('dd').first().innerText(), /0[.,]005.*\/ml$/)
+  assert.match(await costRows.nth(0).locator('dd').last().innerText(), /0[.,]05/)
+  assert.equal(await costRows.nth(1).locator('.inventory-history-cost').count(), 0)
+  assert.match(await costRows.nth(4).locator('dd').last().innerText(), /0[.,]00/)
+  assert.equal(await costRows.nth(4).getByText('Maya məlum deyil').count(), 0)
+  await costRows.nth(5).getByText('Maya məlum deyil').waitFor()
+  assert.match(await costRows.nth(6).locator('dd').first().innerText(), /0[.,]00000005/)
   assert.equal(await dialog.getByText('Son miqdar').count(), 0)
   assert.equal(await dialog.getByText('Internal processing').count(), 0)
   assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Tarixçəni bağla')
@@ -177,14 +191,24 @@ try {
   await page.getByRole('button', { name: 'View Espresso history' }).click()
   await dialog.getByText('Returned after cancellation').waitFor()
   assert.match(await dialog.locator('.inventory-history-balance').innerText(), /13[,.]123456 pcs/)
+  assert.equal(await dialog.getByText('Total purchase amount', { exact: true }).count(), 3)
   await dialog.getByRole('button', { name: 'Close history' }).click()
+  hasUnknownStockCost = undefined
   await page.getByRole('button', { name: /Language: English/ }).click()
   await page.getByRole('button', { name: 'Русский' }).click()
   await page.getByRole('button', { name: 'История движения Espresso' }).click()
   await dialog.getByText('Возвращено после отмены').waitFor()
   assert.match(await dialog.locator('.inventory-history-balance').innerText(), /13[,.]123456 шт\./)
+  assert.equal(await dialog.locator('.inventory-history-balance .inventory-history-cost-unknown').count(), 0)
+  await dialog.getByText('Общая сумма закупки', { exact: true }).first().waitFor()
+  await page.keyboard.press('Escape')
+  hasUnknownStockCost = true
+  currentQuantity = 0
+  await page.getByRole('button', { name: 'История движения Espresso' }).click()
+  await dialog.locator('.inventory-history-balance strong').waitFor()
+  assert.equal(await dialog.locator('.inventory-history-balance .inventory-history-cost-unknown').count(), 0)
   assert.deepEqual(pageErrors, [])
-  console.log('PASS inventory history: lazy load, current stock, semantics, 3 viewports x 2 themes, pagination, focus, error retry')
+  console.log('PASS inventory history: purchase costs, current stock, 3 locales, 3 viewports x 2 themes, pagination, focus, error retry')
 } finally {
   await browser.close()
 }
