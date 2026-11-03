@@ -528,6 +528,12 @@
 .role-dashboard-donut-note, .role-dashboard-donut-empty { margin: 13px 0 0; color: var(--on-surface-variant); font-size: 11px; line-height: 1.45; }
 .role-dashboard-donut-empty { margin: 0; }
 
+@property --dashboard-donut-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 1turn;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .role-dashboard-chart-bar {
     transform-origin: center bottom;
@@ -538,7 +544,12 @@
   }
   .role-dashboard-chart-area { animation: dashboard-chart-fade 300ms ease-out 100ms backwards; }
   .role-dashboard-chart-point::before { animation: dashboard-chart-fade 200ms ease-out 200ms backwards; }
-  .role-dashboard-donut-segments { animation: dashboard-donut-enter 400ms ease-out; }
+  @supports (mask-image: conic-gradient(black, transparent)) {
+    .role-dashboard-donut-segments {
+      mask-image: conic-gradient(black 0deg var(--dashboard-donut-sweep, 1turn), transparent var(--dashboard-donut-sweep, 1turn) 1turn);
+      animation: dashboard-donut-enter 650ms ease-out;
+    }
+  }
 }
 
 @keyframes dashboard-bar-enter {
@@ -552,7 +563,8 @@
   from { opacity: 0; }
 }
 @keyframes dashboard-donut-enter {
-  from { opacity: 0; transform: scale(.94); }
+  from { --dashboard-donut-sweep: 0deg; }
+  to { --dashboard-donut-sweep: 1turn; }
 }
 @media (max-width: 420px) {
   .role-dashboard-donut-content { gap: 12px; }

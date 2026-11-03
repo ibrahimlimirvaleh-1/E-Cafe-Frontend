@@ -54,11 +54,47 @@ async function assertChartMotion(page) {
   await page.getByRole('button', { name: 'Sütun qrafiki' }).click()
   assert.equal(await animation(bar), 'none')
   assert.equal(await animation(donut), 'none')
+  const originalRing = await donut.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return { mask: style.maskImage, segments: style.backgroundImage }
+  })
+  assert.equal(originalRing.mask, 'none')
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   assert.equal(await animation(bar), 'dashboard-bar-enter')
-  assert.equal(await animation(donut), 'dashboard-donut-enter')
+  const sweep = await donut.evaluate((element) => {
+    const motion = element.getAnimations().find((item) => item.animationName === 'dashboard-donut-enter')
+    if (!motion) throw new Error('Donut sweep did not start')
+    motion.pause()
+    const duration = motion.effect.getTiming().duration
+    motion.currentTime = 0
+    const start = parseFloat(getComputedStyle(element).getPropertyValue('--dashboard-donut-sweep'))
+    motion.currentTime = duration / 2
+    const middle = parseFloat(getComputedStyle(element).getPropertyValue('--dashboard-donut-sweep'))
+    const mask = getComputedStyle(element).maskImage
+    motion.currentTime = duration * .95
+    const end = parseFloat(getComputedStyle(element).getPropertyValue('--dashboard-donut-sweep'))
+    motion.currentTime = duration / 2
+    return { start, middle, end, mask }
+  })
+  assert.equal(sweep.start, 0)
+  assert.ok(sweep.middle > 0 && sweep.middle < sweep.end && sweep.end < 360)
+  assert.match(sweep.mask, /conic-gradient/)
+  const ring = page.locator('.role-dashboard-donut-ring')
+  await ring.screenshot({ path: path.join(dist, 'dashboard-donut-mid-sweep.png') })
+  const finalRing = await donut.evaluate((element) => {
+    element.getAnimations().forEach((motion) => motion.finish())
+    const style = getComputedStyle(element)
+    return { angle: parseFloat(style.getPropertyValue('--dashboard-donut-sweep')), mask: style.maskImage, segments: style.backgroundImage }
+  })
+  assert.equal(finalRing.angle, 360)
+  assert.notEqual(finalRing.mask, sweep.mask)
+  assert.equal(finalRing.segments, originalRing.segments)
+  await ring.screenshot({ path: path.join(dist, 'dashboard-donut-complete.png') })
   assert.equal(await animation(center), 'none')
+  assert.equal(await animation(page.locator('.role-dashboard-donut ul')), 'none')
   assert.deepEqual(await donut.evaluate((element) => [element.offsetWidth, element.offsetHeight]), [128, 128])
+  await center.hover()
+  assert.equal(await donut.evaluate((element) => element.getAnimations().length), 0)
   await page.getByRole('button', { name: 'Xətt və sahə qrafiki' }).click()
   assert.equal(await line.getAttribute('pathLength'), '1')
   assert.equal(await animation(line), 'dashboard-line-enter')
