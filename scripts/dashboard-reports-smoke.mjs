@@ -13,6 +13,7 @@ let slowNextReport = false
 let emptyNextReport = false
 let failNextReport = false
 let slowNextExport = false
+let zeroOrders = false
 const operationalColumns = {
   products: ['restaurant', 'product', 'sold:number', 'cancelled:number', 'deliveredAmount:currency', 'averagePrice:currency'],
   kitchen: ['orderId:number', 'restaurant', 'table', 'status:code', 'sentAt:datetime', 'acceptanceMinutes:minutes', 'preparationMinutes:minutes', 'servingMinutes:minutes', 'totalMinutes:minutes'],
@@ -121,6 +122,10 @@ async function openPage(browser, roleId, view) {
       }
       if (name === `/api/v1/dashboard/${view}/reports`) {
         requests.push({ view, type: 'report', params: url.searchParams })
+        if (zeroOrders) {
+          const result = report(view, url.searchParams)
+          return json(route, { ...result, orders: [], totalRows: 0, metrics: result.metrics.map((metric) => ({ ...metric, value: 0 })) })
+        }
         if (slowNextReport) { slowNextReport = false; await new Promise((resolve) => setTimeout(resolve, 500)) }
         if (failNextReport) {
           failNextReport = false
@@ -159,7 +164,10 @@ try {
     assert.equal(await page.locator('.role-dashboard-report-table-scroll tbody tr').count(), 20)
     assert.equal(await page.locator('.role-dashboard-report-metric').count(), view === 'manager' ? 4 : 5)
     assert.equal(await page.locator('.role-dashboard-report-kind-select option[value="payments"]').count(), view === 'manager' ? 0 : 1)
-    assert.equal(await page.getByText('Təsdiqlənmiş sifariş məbləği').count(), view === 'manager' ? 0 : 1)
+    assert.equal(await page.locator('.role-dashboard-report-metric').getByText('Təsdiqlənmiş sifariş məbləği', { exact: true }).count(), view === 'manager' ? 0 : 1)
+    const partition = await page.locator('.role-dashboard-reports .role-dashboard-donut').innerText()
+    assert.match(partition, /25/)
+    assert.equal(await page.locator('.role-dashboard-report-table-scroll th.is-numeric').evaluateAll((cells) => cells.every((cell) => getComputedStyle(cell).textAlign === 'right')), true)
     assert.equal(await page.getByRole('group', { name: 'Ödəniş rejimi' }).count(), 0)
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     await page.screenshot({ path: path.join(dist, `dashboard-reports-${view}-1440.png`), fullPage: true })
@@ -180,11 +188,17 @@ try {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.getByRole('button', { name: '2', exact: true }).click()
     await page.getByText('#21', { exact: true }).first().waitFor()
+    assert.equal(await page.locator('.role-dashboard-reports .role-dashboard-donut').innerText(), partition)
     assert.equal(requests.at(-1).params.get('pageIndex'), '2')
     await page.locator('.role-dashboard-report-status-filter select').selectOption('2009')
     await page.getByText('#1', { exact: true }).first().waitFor()
     assert.equal(requests.at(-1).params.get('statusId'), '2009')
     assert.equal(requests.at(-1).params.get('pageIndex'), '1')
+    zeroOrders = true
+    await page.getByRole('button', { name: 'Yenilə', exact: true }).click()
+    await page.locator('.role-dashboard-reports .role-dashboard-donut-empty').waitFor()
+    assert.equal(await page.locator('.role-dashboard-reports .role-dashboard-donut-ring').count(), 0)
+    zeroOrders = false
     await page.locator('.role-dashboard-report-kind-select select').selectOption('reservations')
     await page.locator('.role-dashboard-report-table-scroll tbody tr').first().waitFor()
     assert.equal(await page.locator('.role-dashboard-report-metric').count(), 4)
