@@ -153,6 +153,7 @@
   "ui.nav.tracking": "Отслеживание",
   "ui.nav.orders": "Заказы",
   "ui.nav.stock": "Склад",
+  "ui.nav.inventoryGroup": "Склад и рецепты",
   "ui.nav.recipes": "Рецепты",
   "ui.nav.panel": "Панель",
   "ui.nav.dashboard": "Панель управления",

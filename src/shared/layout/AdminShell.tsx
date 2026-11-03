@@ -1,5 +1,5 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Languages, LayoutDashboard, MailWarning, Menu, X } from 'lucide-react'
+import { matchPath, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Boxes, ChevronDown, ChevronLeft, ChevronRight, Languages, LayoutDashboard, MailWarning, Menu, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminModules, localizeAdminModule } from '../../entities/mockData'
 import { useAuth } from '../auth/AuthContext'
@@ -21,6 +21,7 @@ const outboxAdminModule = {
 } as const
 
 const sidebarPreferenceKey = 'ecafe.admin.sidebar.collapsed'
+const inventoryModuleKeys = new Set(['inventory', 'inventory-movements', 'recipes'])
 
 function readSidebarPreference() {
   try {
@@ -40,11 +41,16 @@ export function AdminShell() {
   const [collapsed, setCollapsed] = useState(readSidebarPreference)
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 1080px)').matches)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [inventoryDisclosure, setInventoryDisclosure] = useState<{ pathname: string; open: boolean }>()
   const configuredModules = [
     ...adminModules.map((module) => ({ ...localizeAdminModule(module), permissionKey: module.key })),
     outboxAdminModule,
   ]
   const modules = configuredModules.filter((module) => canAccessAdminModule(user, module.permissionKey))
+  const inventoryModules = modules.filter((module) => inventoryModuleKeys.has(module.permissionKey))
+  const inventoryActive = inventoryModules.some(({ route }) => matchPath(`${route}/*`, location.pathname))
+  const inventoryOpen = inventoryDisclosure?.pathname === location.pathname ? inventoryDisclosure.open : inventoryActive
+  const inventoryLabel = t('ui.nav.inventoryGroup')
   const isPlatformAdmin = isInRole(user, [RoleIds.PlatformAdmin])
   const closeDrawer = useCallback((restoreFocus = true) => {
     setDrawerOpen(false)
@@ -63,6 +69,7 @@ export function AdminShell() {
 
   useEffect(() => {
     setDrawerOpen(false)
+    setInventoryDisclosure(undefined)
   }, [location.pathname])
 
   useEffect(() => {
@@ -118,6 +125,17 @@ export function AdminShell() {
     }
   }
 
+  function renderModule({ icon: Icon, permissionKey, route, title }: (typeof modules)[number]) {
+    const label = permissionKey === 'restaurants' && !isPlatformAdmin ? t('ui.nav.restaurant') : route === '/admin/outbox' ? t('ui.nav.outbox') : title
+    const isMovementRoute = permissionKey === 'inventory' && Boolean(matchPath('/admin/inventory/movements/*', location.pathname))
+    return <NavLink key={route} to={route}
+      aria-current={isMovementRoute ? false : 'page'}
+      className={({ isActive }) => isActive && !isMovementRoute ? 'active' : undefined}
+      {...navLabel(label)}>
+      <Icon size={18} aria-hidden="true" /><span className="admin-nav-label">{label}</span>
+    </NavLink>
+  }
+
   return (
     <div className={`admin-shell${collapsed ? ' is-collapsed' : ''}${drawerOpen ? ' is-drawer-open' : ''}`}>
       {mobile && drawerOpen ? <div className="admin-sidebar-backdrop" onClick={() => closeDrawer()} aria-hidden="true" /> : null}
@@ -149,9 +167,21 @@ export function AdminShell() {
             <LayoutDashboard size={18} aria-hidden="true" />
             <span className="admin-nav-label">{t('ui.nav.dashboard')}</span>
           </NavLink>
-          {modules.map(({ icon: Icon, permissionKey, route, title }) => {
-            const label = permissionKey === 'restaurants' && !isPlatformAdmin ? t('ui.nav.restaurant') : permissionKey === 'audit-logs' && route === '/admin/outbox' ? t('ui.nav.outbox') : title
-            return <NavLink key={route} to={route} className={({ isActive }) => isActive && !(route === '/admin/inventory' && location.pathname.startsWith('/admin/inventory/movements')) ? 'active' : undefined} {...navLabel(label)}><Icon size={18} aria-hidden="true" /><span className="admin-nav-label">{label}</span></NavLink>
+          {modules.map((module) => {
+            if (inventoryModules.length < 2 || !inventoryModuleKeys.has(module.permissionKey)) return renderModule(module)
+            if (module !== inventoryModules[0]) return null
+            return <div key="inventory-group" className="admin-nav-group">
+              <button type="button" className={`admin-nav-group-toggle${inventoryActive && !inventoryOpen ? ' is-current' : ''}`}
+                aria-label={!mobile && collapsed ? inventoryLabel : undefined} title={!mobile && collapsed ? inventoryLabel : undefined}
+                aria-expanded={inventoryOpen} aria-controls="admin-nav-inventory"
+                onClick={() => setInventoryDisclosure({ pathname: location.pathname, open: !inventoryOpen })}>
+                <Boxes size={18} aria-hidden="true" /><span className="admin-nav-label">{inventoryLabel}</span>
+                <ChevronDown size={14} className="admin-nav-group-chevron" aria-hidden="true" />
+              </button>
+              <div id="admin-nav-inventory" className="admin-nav-group-links" hidden={!inventoryOpen}>
+                {inventoryModules.map(renderModule)}
+              </div>
+            </div>
           })}
           {isPlatformAdmin ? <NavLink to="/admin/localization" {...navLabel(t('ui.localization.title'))}><Languages size={18} aria-hidden="true" /><span className="admin-nav-label">{t('ui.localization.title')}</span></NavLink> : null}
         </nav>
