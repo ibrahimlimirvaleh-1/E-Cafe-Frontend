@@ -171,6 +171,8 @@
   "ui.restaurant.depositToday": "{{amount}} AZN deposit for today",
   "ui.restaurant.map": "Map of {{name}}",
   "ui.workingHours.notSet": "Opening hours not set",
+  "ui.restaurantProfile.nextDay": "next day",
+  "ui.restaurantProfile.noDescription": "No ingredients listed",
   "ui.workingHours.closedToday": "Closed today",
   "ui.workingHours.open": "Open",
   "ui.workingHours.closed": "Closed",

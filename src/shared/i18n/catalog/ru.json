@@ -171,6 +171,8 @@
   "ui.restaurant.depositToday": "Депозит на сегодня: {{amount}} AZN",
   "ui.restaurant.map": "Карта ресторана {{name}}",
   "ui.workingHours.notSet": "Часы работы не указаны",
+  "ui.restaurantProfile.nextDay": "на следующий день",
+  "ui.restaurantProfile.noDescription": "Состав не указан",
   "ui.workingHours.closedToday": "Сегодня закрыто",
   "ui.workingHours.open": "Открыто",
   "ui.workingHours.closed": "Закрыто",

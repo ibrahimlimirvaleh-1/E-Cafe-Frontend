@@ -171,6 +171,8 @@
   "ui.restaurant.depositToday": "Bu gün üçün {{amount}} AZN depozit",
   "ui.restaurant.map": "{{name}} xəritəsi",
   "ui.workingHours.notSet": "İş saatı qeyd edilməyib",
+  "ui.restaurantProfile.nextDay": "növbəti gün",
+  "ui.restaurantProfile.noDescription": "Tərkib qeyd edilməyib",
   "ui.workingHours.closedToday": "Bu gün bağlıdır",
   "ui.workingHours.open": "Açıqdır",
   "ui.workingHours.closed": "Bağlıdır",
