@@ -68,9 +68,9 @@ try {
   })
 
   await page.goto(`${origin}/restaurants/1`)
-  await page.getByText('Table 1 · 1 guest', { exact: true }).waitFor()
-  await page.getByText('Table 2 · 2 guests', { exact: true }).waitFor()
-  await page.getByText('Table 3 · 5 guests', { exact: true }).waitFor()
+  await page.locator('.choice-card').filter({ hasText: 'Table-1' }).getByText('1 guest', { exact: true }).waitFor()
+  await page.locator('.choice-card').filter({ hasText: 'Masa-2' }).getByText('2 guests', { exact: true }).waitFor()
+  await page.locator('.choice-card').filter({ hasText: 'Custom corner' }).getByText('5 guests', { exact: true }).waitFor()
   await page.getByText('Masa-2', { exact: true }).waitFor()
   assert.deepEqual(tableRequests, ['en'])
   await page.screenshot({ path: path.join(dist, 'localization-display-desktop.png'), fullPage: true })
