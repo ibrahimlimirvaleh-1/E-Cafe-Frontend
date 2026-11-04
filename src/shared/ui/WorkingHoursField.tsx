@@ -16,23 +16,23 @@ function dayLabel(dayOfWeek: number, language: string, compact = false) {
     .format(new Date(Date.UTC(2026, 0, 4 + dayOfWeek)))
 }
 
-export function WorkingHoursList({ workingHours }: { workingHours: RestaurantWorkingHour[] }) {
+export function WorkingHoursList({ workingHours, variant = 'compact' }: { workingHours: RestaurantWorkingHour[]; variant?: 'compact' | 'profile' }) {
   useTranslation()
   const language = getCurrentLanguage()
   return (
-    <div className="working-hours-display">
+    <div className={`working-hours-display${variant === 'profile' ? ' working-hours-display-profile' : ''}`}>
       {normalizeWorkingHours(workingHours).map((hour) => (
         <div className="working-hours-display-item" key={hour.dayOfWeek}>
-          <strong className="working-hours-day">{dayLabel(hour.dayOfWeek, language, true)}</strong>
+          <strong className="working-hours-day">{dayLabel(hour.dayOfWeek, language, variant === 'compact')}</strong>
           {hour.isClosed ? (
             <em className="working-hours-closed">{i18n.t('ui.shared.ui.working_hours_field.baglidir_208993')}</em>
           ) : (
             <div className="working-hours-display-values"><time className="working-hours-time">
               {hour.opensAt} - {hour.closesAt}
-              {hour.closeDayOffset === 1 ? <span className="working-hours-next-day" title={i18n.t('ui.shared.ui.working_hours_field.baglanma_novbeti_gune_kecir_287b0e')}>+1</span> : null}
-            </time><small>{i18n.t('ui.arrival.lastReservationArrival')}: {hour.lastReservationArrivalAt
-              ? <><strong>{hour.lastReservationArrivalAt}</strong>{hour.lastReservationArrivalDayOffset === 1 ? <span className="working-hours-next-day">+1</span> : null}</>
-              : i18n.t('ui.arrival.noSeparateLimit')}</small></div>
+              {hour.closeDayOffset === 1 ? <span className="working-hours-next-day" title={i18n.t('ui.shared.ui.working_hours_field.baglanma_novbeti_gune_kecir_287b0e')}>{variant === 'profile' ? i18n.t('ui.restaurantProfile.nextDay') : '+1'}</span> : null}
+            </time>{variant === 'compact' || hour.lastReservationArrivalAt ? <small>{i18n.t('ui.arrival.lastReservationArrival')}: {hour.lastReservationArrivalAt
+              ? <><strong>{hour.lastReservationArrivalAt}</strong>{hour.lastReservationArrivalDayOffset === 1 ? <span className="working-hours-next-day">{variant === 'profile' ? i18n.t('ui.restaurantProfile.nextDay') : '+1'}</span> : null}</>
+              : i18n.t('ui.arrival.noSeparateLimit')}</small> : null}</div>
           )}
         </div>
       ))}

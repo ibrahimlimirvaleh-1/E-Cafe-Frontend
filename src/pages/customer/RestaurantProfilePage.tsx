@@ -1,6 +1,6 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { useTranslation } from 'react-i18next'
-import { BookOpen, Clock, MapPin, Phone, Star, Table2 } from 'lucide-react'
+import { BookOpen, CalendarCheck, ChevronDown, Clock, MapPin, Phone, Star, Table2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
@@ -8,11 +8,11 @@ import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { RoleIds, isInRole } from '../../shared/auth/authz'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
-import { Button } from '../../shared/ui/Button'
 import { ContractGuardNotice } from '../../shared/ui/GuardNotice'
 import { SafeImage } from '../../shared/ui/SafeImage'
 import { WorkingHoursList } from '../../shared/ui/WorkingHoursField'
 import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
+import './restaurant-profile.css'
 
 type ProfilePanel = 'tables' | 'menu'
 
@@ -56,54 +56,43 @@ export function RestaurantProfilePage() {
   const tableLabel = i18n.t('ui.pages.customer.table_selection_page.masa_058c4c')
 
   return (
-    <main className="page">
-      <section className="profile-layout">
-        <SafeImage src={restaurant.image} alt={restaurant.name} />
-        <article className="profile-panel">
-          <span className="eyebrow">{i18n.t('ui.pages.customer.restaurant_profile_page.restoran_profili_76281b')}</span>
-          <h1>{restaurant.name}</h1>
-          <p>{restaurant.cuisine}</p>
-          <div className="profile-facts">
-            <span>
-              <Star size={18} fill="currentColor" />
-              {restaurant.rating} {i18n.t('ui.pages.customer.restaurant_profile_page.reytinq_ad3719')}
-            </span>
-            <span>
-              <MapPin size={18} />
-              {restaurant.address}
-            </span>
-            <span>
-              <Phone size={18} />
-              {restaurant.phone}
-            </span>
-            <span>
-              <Clock size={18} />
-              {formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone, restaurant.todayWorkingHours)}
-            </span>
-            <span className={openState.isOpen ? 'restaurant-open-status open' : 'restaurant-open-status closed'}>
-              <Clock size={18} />
-              {openState.label}
-            </span>
+    <main className="page restaurant-profile-page">
+      <section className="restaurant-profile-cover" aria-labelledby="restaurant-profile-title">
+        <SafeImage src={restaurant.image} alt={restaurant.name} fetchPriority="high" />
+        <div className="restaurant-profile-cover-caption">
+          <div>
+            <h1 id="restaurant-profile-title">{restaurant.name}</h1>
+            {restaurant.cuisine ? <p>{restaurant.cuisine}</p> : null}
           </div>
-          <WorkingHoursList workingHours={restaurant.workingHours} />
-          <ContractGuardNotice active={restaurant.hasActiveContract} />
-          <div className="action-row profile-actions">
-            {isCustomer ? (
-              <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve${reservationDate ? `?reservationDate=${encodeURIComponent(reservationDate)}` : ''}`}>{i18n.t('ui.pages.customer.restaurant_profile_page.rezervasiyaya_basla_64753c')}</Link>
-            ) : null}
-            <Button variant={activePanel === 'tables' ? 'primary' : 'secondary'} type="button" onClick={() => setActivePanel('tables')}>
-              <Table2 size={18} />
-              {i18n.t('ui.pages.customer.restaurant_profile_page.stollar_7880ee')}
-            </Button>
-            <Button variant={activePanel === 'menu' ? 'primary' : 'secondary'} type="button" onClick={() => setActivePanel('menu')}>
-              <BookOpen size={18} />
-              {i18n.t('ui.pages.customer.restaurant_profile_page.menyu_da3241')}
-            </Button>
-          </div>
-        </article>
+          {restaurant.rating > 0 ? <span className="restaurant-profile-rating"><Star size={16} fill="currentColor" aria-hidden="true" />{restaurant.rating} {i18n.t('ui.pages.customer.restaurant_profile_page.reytinq_ad3719')}</span> : null}
+        </div>
       </section>
+      <section className="restaurant-profile-information" aria-label={i18n.t('ui.pages.customer.restaurant_profile_page.restoran_profili_76281b')}>
+        <div className="restaurant-profile-contact">
+          <div className="restaurant-profile-address" title={restaurant.address}><MapPin size={18} aria-hidden="true" /><span>{restaurant.address}</span></div>
+          {restaurant.phone ? <a href={`tel:${restaurant.phone}`}><Phone size={18} aria-hidden="true" />{restaurant.phone}</a> : null}
+          <span className={`restaurant-profile-status${openState.isOpen ? ' is-open' : ''}`}><span aria-hidden="true" />{openState.label}</span>
+        </div>
+        <details className="restaurant-profile-hours">
+          <summary>
+            <Clock size={18} aria-hidden="true" />
+            <span>{i18n.t('ui.workingHours.editor.hours')}</span>
+            <strong>{formatWorkingHoursSummary(restaurant.workingHours, restaurant.timeZone, restaurant.todayWorkingHours)}</strong>
+            <ChevronDown className="restaurant-profile-hours-chevron" size={18} aria-hidden="true" />
+          </summary>
+          <WorkingHoursList workingHours={restaurant.workingHours} variant="profile" />
+        </details>
+        <div className="restaurant-profile-booking">
+          <ContractGuardNotice active={restaurant.hasActiveContract} />
+          {isCustomer ? <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve${reservationDate ? `?reservationDate=${encodeURIComponent(reservationDate)}` : ''}`}><CalendarCheck size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.rezervasiyaya_basla_64753c')}</Link> : null}
+        </div>
+      </section>
+      <div className="restaurant-profile-navigation" role="group" aria-label={i18n.t('ui.pages.customer.restaurant_profile_page.restoran_profili_76281b')}>
+        <button aria-pressed={activePanel === 'tables'} aria-controls="restaurant-profile-content" type="button" onClick={() => setActivePanel('tables')}><Table2 size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.stollar_7880ee')}</button>
+        <button aria-pressed={activePanel === 'menu'} aria-controls="restaurant-profile-content" type="button" onClick={() => setActivePanel('menu')}><BookOpen size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.menyu_da3241')}</button>
+      </div>
 
-      <section className="public-profile-section">
+      <section className="public-profile-section" id="restaurant-profile-content">
         {activePanel === 'tables' ? (
           <>
             <div className="section-heading">
@@ -139,6 +128,7 @@ export function RestaurantProfilePage() {
                   {menuItemsByCategory.map(({ category, items }) => (
                     <button
                       className={category.id === selectedCategory?.category.id ? 'active' : ''}
+                      aria-pressed={category.id === selectedCategory?.category.id}
                       key={category.id}
                       onClick={() => setActiveCategoryId(category.id)}
                       type="button"
@@ -154,7 +144,7 @@ export function RestaurantProfilePage() {
                       <SafeImage src={item.image} alt={item.name} />
                       <div>
                         <strong>{item.name}</strong>
-                        <small>{item.description || 'Tərkib qeyd edilməyib'}</small>
+                        <small>{item.description || i18n.t('ui.restaurantProfile.noDescription')}</small>
                       </div>
                       <span>{i18n.t('ui.count.sales', { count: item.salesCount ?? 0 })}</span>
                       <b>{item.price.toFixed(2)} ₼</b>
