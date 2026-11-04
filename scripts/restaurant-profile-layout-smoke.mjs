@@ -20,6 +20,8 @@ try {
     const token = `header.${Buffer.from(JSON.stringify({ userId: '42', name: 'Test', surname: 'User', roleId: String(roleId), restaurantId: roleId === 3 ? '1' : null })).toString('base64url')}.signature`
     let rating = 0
     let hasActiveContract = true
+    let restaurantName = 'Dolce Vita Port Baku'
+    let phone = '+994559999999'
     await context.addInitScript(({ language }) => localStorage.setItem('ecafe.language', language), { language })
     page.on('pageerror', error => errors.push(error.message))
     await page.route(`${origin}/**`, async route => {
@@ -29,8 +31,8 @@ try {
         if (pathname === '/api/v1/profile') return json(route, { userId: '42', name: 'Test', surname: 'User', roleId, restaurantId: roleId === 3 ? 1 : null, isActive: true })
         if (pathname === '/api/v1/localization/preference') return json(route, { language })
         if (pathname.includes('/localization/dictionaries/')) return json(route, { language, version: 'v1', fallbackLanguage: 'az', messages: {} })
-        if (pathname === '/api/v1/public/restaurants/1') return json(route, { id: 1, name: 'Dolce Vita Port Baku', cuisine: 'Dolce Vita', location: 'Port Baku, 153 Neftchilar Avenue, Nasimi district, Baku, Azerbaijan', phone: '+994559999999', rating, ratingAverage: rating, imageUrl: `${origin}/profile-photo.jpg`, timeZone: 'Asia/Baku', workingHours: hours, isOpen: true, hasActiveContract })
-        if (pathname === '/api/v1/public/restaurants/1/tables') return json(route, Array.from({ length: 4 }, (_, i) => ({ id: i + 1, tableNo: i + 1, name: `Masa-${i + 1}`, capacity: 2, isEmpty: true })))
+        if (pathname === '/api/v1/public/restaurants/1') return json(route, { id: 1, name: restaurantName, cuisine: 'Dolce Vita', location: 'Port Baku, 153 Neftchilar Avenue, Nasimi district, Baku, Azerbaijan', phone, rating, ratingAverage: rating, imageUrl: `${origin}/profile-photo.jpg`, timeZone: 'Asia/Baku', workingHours: hours, isOpen: true, hasActiveContract })
+        if (pathname === '/api/v1/public/restaurants/1/tables') return json(route, Array.from({ length: 4 }, (_, i) => ({ id: i + 1, tableNo: i + 1, name: `Masa-${i + 1}`, capacity: 2, isEmpty: i !== 3 })))
         if (pathname === '/api/v1/public/restaurants/1/menu') return json(route, [{ id: 1, name: 'Coffee', isActive: true, items: [{ id: 11, name: 'Double espresso', description: 'Freshly roasted coffee', price: 6, isActive: true, imageUrl: `${origin}/profile-photo.jpg` }] }, { id: 2, name: 'Desserts', isActive: true, items: [{ id: 12, name: 'Chocolate cake', price: 12, isActive: true, imageUrl: `${origin}/profile-photo.jpg` }] }])
         if (pathname.endsWith('/notifications')) return json(route, { items: [], totalCount: 0 })
         if (pathname.endsWith('/unread-count')) return json(route, { count: 0 })
@@ -46,6 +48,9 @@ try {
     await page.waitForFunction(() => document.querySelector('.restaurant-profile-cover img')?.naturalWidth > 0)
     await page.locator('.public-profile-grid .choice-card').first().waitFor()
     assert.equal(await page.locator('.restaurant-profile-rating').count(), 0)
+    assert.equal(await page.locator('.restaurant-profile-table-status.is-available').count(), 3)
+    assert.equal(await page.locator('.restaurant-profile-navigation button > span').first().innerText(), '4')
+    assert.equal(await page.locator('.restaurant-profile-navigation button > span').last().innerText(), '2')
     const booking = page.locator('.restaurant-profile-booking a')
     assert.equal(await booking.count(), roleId === 5 ? 1 : 0)
     if (roleId === 5) assert.match(await booking.getAttribute('href'), /reserve\?reservationDate=2026-11-10$/)
@@ -60,6 +65,19 @@ try {
         assert.ok(section.y < viewport.height, 'The next section should remain visible')
       }
       await page.screenshot({ path: path.join(dist, `restaurant-profile-${language}-${viewport.width}.png`), fullPage: true })
+      const photoButton = page.locator('.restaurant-profile-photo-open')
+      await photoButton.click()
+      const photoDialog = page.getByRole('dialog', { name: 'Dolce Vita Port Baku' })
+      await photoDialog.waitFor()
+      assert.equal(await photoDialog.evaluate(node => node.matches(':modal')), true)
+      assert.equal(await photoDialog.locator('img').evaluate(node => getComputedStyle(node).objectFit), 'contain')
+      await page.keyboard.press('Tab')
+      assert.equal(await photoDialog.evaluate(node => node.contains(document.activeElement)), true)
+      if (viewport.width === 320) await page.screenshot({ path: path.join(dist, `restaurant-photo-${language}-320.png`) })
+      await page.keyboard.press('Escape')
+      assert.equal(await photoDialog.count(), 0)
+      assert.equal(await photoButton.evaluate(node => node === document.activeElement), true)
+      assert.notEqual(await page.evaluate(() => document.body.style.overflow), 'hidden')
       await page.locator('.restaurant-profile-hours summary').click()
       assert.equal(await page.locator('.working-hours-day').count(), 7)
       assert.equal(await page.locator('.working-hours-display-profile .working-hours-display-values small').count(), 1)
@@ -88,6 +106,19 @@ try {
     assert.match(await page.locator('.restaurant-profile-rating').innerText(), /4.6/)
     await page.locator('.contract-guard-blocked').waitFor()
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+    restaurantName = 'Dolce Vita Port Baku Neftchilar Avenue Private Dining and Restaurant'
+    phone = ''
+    await page.setViewportSize({ width: 320, height: 740 })
+    await page.reload()
+    await page.getByRole('heading', { name: restaurantName, exact: true }).waitFor()
+    assert.equal(await page.locator('.restaurant-profile-contact a').count(), 0)
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+    const toolbarBox = await page.locator('.restaurant-profile-cover-toolbar').boundingBox()
+    const captionBox = await page.locator('.restaurant-profile-cover-caption').boundingBox()
+    assert.ok(captionBox.y >= toolbarBox.y + toolbarBox.height, 'Long names must not overlap the cover controls')
+    await page.locator('.restaurant-profile-photo-open').click()
+    await page.getByRole('dialog', { name: restaurantName }).getByRole('button').click()
+    assert.equal(await page.getByRole('dialog').count(), 0)
     await context.close()
   }
   assert.deepEqual(errors, [])

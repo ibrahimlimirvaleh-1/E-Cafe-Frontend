@@ -1,6 +1,6 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { useTranslation } from 'react-i18next'
-import { BookOpen, CalendarCheck, ChevronDown, Clock, MapPin, Phone, Star, Table2 } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, BookOpen, CalendarCheck, ChevronDown, Clock, Maximize2, MapPin, Phone, Star, Table2, UsersRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Restaurant } from '../../entities/types'
@@ -13,6 +13,7 @@ import { SafeImage } from '../../shared/ui/SafeImage'
 import { WorkingHoursList } from '../../shared/ui/WorkingHoursField'
 import { formatWorkingHoursSummary, getRestaurantOpenState } from '../../shared/lib/workingHours'
 import './restaurant-profile.css'
+import { RestaurantPhotoDialog } from './RestaurantPhotoDialog'
 
 type ProfilePanel = 'tables' | 'menu'
 
@@ -26,6 +27,7 @@ export function RestaurantProfilePage() {
   const isCustomer = isInRole(user, [RoleIds.Customer])
   const [activePanel, setActivePanel] = useState<ProfilePanel>('tables')
   const [activeCategoryId, setActiveCategoryId] = useState('')
+  const [photoOpen, setPhotoOpen] = useState(false)
   const { data: restaurant } = useAsyncData<Restaurant | null>(() => ecafeApi.restaurants.detail(restaurantId), null, [restaurantId, language])
   const { data: tables, isLoading: tablesLoading } = useAsyncData(() => ecafeApi.tables.listPublic(restaurantId), [], [restaurantId, language])
   const { data: menuData, isLoading: menuLoading } = useAsyncData(
@@ -59,19 +61,23 @@ export function RestaurantProfilePage() {
     <main className="page restaurant-profile-page">
       <section className="restaurant-profile-cover" aria-labelledby="restaurant-profile-title">
         <SafeImage src={restaurant.image} alt={restaurant.name} fetchPriority="high" />
+        <div className="restaurant-profile-cover-toolbar">
+          <Link to="/" className="restaurant-profile-back" title={i18n.t('ui.nav.restaurants')}><ArrowLeft size={17} aria-hidden="true" />{i18n.t('ui.nav.restaurants')}</Link>
+          <button type="button" className="restaurant-profile-photo-open" onClick={() => setPhotoOpen(true)} aria-label={i18n.t('ui.restaurantProfile.viewPhoto')} title={i18n.t('ui.restaurantProfile.viewPhoto')}><Maximize2 size={18} aria-hidden="true" /></button>
+        </div>
         <div className="restaurant-profile-cover-caption">
           <div>
-            <h1 id="restaurant-profile-title">{restaurant.name}</h1>
+            <span className={`restaurant-profile-status${openState.isOpen ? ' is-open' : ''}`}><span aria-hidden="true" />{openState.label}</span>
             {restaurant.cuisine ? <p>{restaurant.cuisine}</p> : null}
+            <h1 id="restaurant-profile-title">{restaurant.name}</h1>
           </div>
           {restaurant.rating > 0 ? <span className="restaurant-profile-rating"><Star size={16} fill="currentColor" aria-hidden="true" />{restaurant.rating} {i18n.t('ui.pages.customer.restaurant_profile_page.reytinq_ad3719')}</span> : null}
         </div>
       </section>
       <section className="restaurant-profile-information" aria-label={i18n.t('ui.pages.customer.restaurant_profile_page.restoran_profili_76281b')}>
         <div className="restaurant-profile-contact">
-          <div className="restaurant-profile-address" title={restaurant.address}><MapPin size={18} aria-hidden="true" /><span>{restaurant.address}</span></div>
-          {restaurant.phone ? <a href={`tel:${restaurant.phone}`}><Phone size={18} aria-hidden="true" />{restaurant.phone}</a> : null}
-          <span className={`restaurant-profile-status${openState.isOpen ? ' is-open' : ''}`}><span aria-hidden="true" />{openState.label}</span>
+          <div className="restaurant-profile-address" title={restaurant.address}><MapPin size={19} aria-hidden="true" /><div><small>{i18n.t('ui.restaurantProfile.address')}</small><span>{restaurant.address}</span></div></div>
+          {restaurant.phone ? <a href={`tel:${restaurant.phone}`}><Phone size={19} aria-hidden="true" /><div><small>{i18n.t('ui.restaurantProfile.phone')}</small><span>{restaurant.phone}</span></div><ArrowUpRight size={15} aria-hidden="true" /></a> : null}
         </div>
         <details className="restaurant-profile-hours">
           <summary>
@@ -84,12 +90,12 @@ export function RestaurantProfilePage() {
         </details>
         <div className="restaurant-profile-booking">
           <ContractGuardNotice active={restaurant.hasActiveContract} />
-          {isCustomer ? <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve${reservationDate ? `?reservationDate=${encodeURIComponent(reservationDate)}` : ''}`}><CalendarCheck size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.rezervasiyaya_basla_64753c')}</Link> : null}
+          {isCustomer ? <Link className="ui-button ui-button-primary" to={`/restaurants/${restaurant.id}/reserve${reservationDate ? `?reservationDate=${encodeURIComponent(reservationDate)}` : ''}`}><CalendarCheck size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.rezervasiyaya_basla_64753c')}<ArrowUpRight size={18} aria-hidden="true" /></Link> : null}
         </div>
       </section>
       <div className="restaurant-profile-navigation" role="group" aria-label={i18n.t('ui.pages.customer.restaurant_profile_page.restoran_profili_76281b')}>
-        <button aria-pressed={activePanel === 'tables'} aria-controls="restaurant-profile-content" type="button" onClick={() => setActivePanel('tables')}><Table2 size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.stollar_7880ee')}</button>
-        <button aria-pressed={activePanel === 'menu'} aria-controls="restaurant-profile-content" type="button" onClick={() => setActivePanel('menu')}><BookOpen size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.menyu_da3241')}</button>
+        <button aria-pressed={activePanel === 'tables'} aria-controls="restaurant-profile-content" type="button" onClick={() => setActivePanel('tables')}><Table2 size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.stollar_7880ee')}<span>{tablesLoading ? '\u2014' : tables.length}</span></button>
+        <button aria-pressed={activePanel === 'menu'} aria-controls="restaurant-profile-content" type="button" onClick={() => setActivePanel('menu')}><BookOpen size={18} aria-hidden="true" />{i18n.t('ui.pages.customer.restaurant_profile_page.menyu_da3241')}<span>{menuLoading ? '\u2014' : menuData.items.length}</span></button>
       </div>
 
       <section className="public-profile-section" id="restaurant-profile-content">
@@ -104,10 +110,9 @@ export function RestaurantProfilePage() {
             <div className="choice-grid public-profile-grid">
               {tables.map((table) => (
                 <article className="choice-card" key={table.id}>
-                  <Table2 size={26} />
+                  <div className="restaurant-profile-table-top"><Table2 size={28} strokeWidth={1.5} aria-hidden="true" /><small className={`restaurant-profile-table-status${table.status === 'Available' ? ' is-available' : ''}`}>{i18n.t(`ui.adminFlow.tableStatus.${table.status}`, { defaultValue: table.status })}</small></div>
                   <strong>{table.name || `${tableLabel} ${table.number}`}</strong>
-                  <span>{table.number ? `${tableLabel} ${table.number} · ` : ''}{i18n.t('ui.count.guests', { count: table.capacity })}</span>
-                  <small>{i18n.t(`ui.adminFlow.tableStatus.${table.status}`, { defaultValue: table.status })}</small>
+                  <span><UsersRound size={14} aria-hidden="true" />{i18n.t('ui.count.guests', { count: table.capacity })}</span>
                 </article>
               ))}
             </div>
@@ -159,6 +164,7 @@ export function RestaurantProfilePage() {
           </>
         ) : null}
       </section>
+      {photoOpen ? <RestaurantPhotoDialog src={restaurant.image} name={restaurant.name} onClose={() => setPhotoOpen(false)} /> : null}
     </main>
   )
 }
