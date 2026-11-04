@@ -1,6 +1,11 @@
 import type { StatusTone } from '../../entities/types'
 import { i18n } from '../i18n/i18n'
 
+function normalizeStatus(status: string) {
+  // API enum names use ASCII casing; Azerbaijani labels need locale-aware casing.
+  return /^[\x00-\x7f]*$/.test(status) ? status.toLowerCase() : status.toLocaleLowerCase('az-AZ')
+}
+
 function statusLabel(normalized: string, original: string) {
   if (normalized.includes('awaitingpaymentinstruction') || normalized.includes('restoran cavabı')) return i18n.t('ui.status.restaurantResponse')
   if (normalized.includes('paymentsubmitted') || normalized.includes('çek göndərilib')) return i18n.t('ui.status.paymentSubmitted')
@@ -17,7 +22,7 @@ function statusLabel(normalized: string, original: string) {
 
 export function getReservationStatusPresentation(status: string): { label: string; tone: StatusTone } {
   const rawLabel = status?.trim() || 'Gözləmədə'
-  const normalized = rawLabel.toLocaleLowerCase('az-AZ')
+  const normalized = normalizeStatus(rawLabel)
   const displayLabel = rawLabel === 'Gözləmədə' ? i18n.t('ui.status.pending') : statusLabel(normalized, rawLabel)
 
   if (normalized.includes('awaitingpaymentinstruction') || normalized.includes('restoran cavabı')) {
@@ -58,13 +63,13 @@ export function getReservationStatusPresentation(status: string): { label: strin
 }
 
 export function isReservationAwaitingPayment(status: string) {
-  const normalized = status.toLocaleLowerCase('az-AZ')
+  const normalized = normalizeStatus(status)
 
   return normalized.includes('pending') || normalized.includes('ödəniş gözlənilir')
 }
 
 export function isReservationConfirmed(status: string) {
-  const normalized = status.toLocaleLowerCase('az-AZ')
+  const normalized = normalizeStatus(status)
   return normalized.includes('confirmed') || normalized.includes('təsdiqlənib')
 }
 

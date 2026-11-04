@@ -1,18 +1,19 @@
 import { i18n } from '../../shared/i18n/i18n'
-import { ArrowRight, CalendarDays, Clock3, MapPin, Search, Users, X } from 'lucide-react'
+import { CalendarDays, Plus, RefreshCw, Search, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReservationResponse } from '../../shared/api/ecafeApi'
 import { ecafeApi } from '../../shared/api/ecafeApi'
 import { useAuth } from '../../shared/auth/AuthContext'
 import type { PaginatedResponse } from '../../shared/api/responseUtils'
 import { useKeyedAsyncData } from '../../shared/hooks/useAsyncData'
-import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PaginationControls } from '../../shared/ui/PaginationControls'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
-import { formatReservationDateTime } from '../../shared/lib/dateFormatting'
-import { getReservationStatusPresentation, isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
+import { isReservationAwaitingPayment } from '../../shared/lib/reservationStatus'
+import { CustomerReservationListItem } from './CustomerReservationListItem'
+import './my-reservations.css'
 import {
   ReservationDateFilter,
 } from '../../features/reservations/ReservationDateFilter'
@@ -27,6 +28,7 @@ const emptyPage: PaginatedResponse<ReservationResponse> = {
 }
 
 export function MyReservationsPage() {
+  useTranslation()
   const { user } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
   const [selectedDate, setSelectedDate] = useState('')
@@ -51,29 +53,21 @@ export function MyReservationsPage() {
     [pageNumber, pageSize, selectedDate, restaurantName],
   )
   const listScope = JSON.stringify([user?.userId, query])
-  const { data, error, hasData, isLoading } = useKeyedAsyncData(
+  const { data, error, hasData, isLoading: listLoading, isRefreshing } = useKeyedAsyncData(
     () => ecafeApi.reservations.listMine(query),
     emptyPage,
     listScope,
     [user?.userId, query, reloadKey],
   )
+  const isLoading = listLoading || (!hasData && !error)
 
   useEffect(() => {
-    if (!isLoading && !error && data.totalPages > 0 && pageNumber > data.totalPages) {
+    if (hasData && !isLoading && !error && data.totalPages > 0 && pageNumber > data.totalPages) {
       setPageNumber(data.totalPages)
     }
-  }, [data.totalPages, error, isLoading, pageNumber])
+  }, [data.totalPages, error, hasData, isLoading, pageNumber])
 
-  const reservationSummary = useMemo(() => {
-    const activeCount = data.items.filter((reservation) => getReservationStatusPresentation(reservation.status).tone !== 'danger').length
-    const awaitingPaymentCount = data.items.filter((reservation) => isReservationAwaitingPayment(reservation.status)).length
-
-    return {
-      activeCount,
-      awaitingPaymentCount,
-      totalCount: data.totalCount,
-    }
-  }, [data.items, data.totalCount])
+  const awaitingPaymentCount = data.items.filter((reservation) => isReservationAwaitingPayment(reservation.status)).length
 
   const hasFilters = Boolean(selectedDate || restaurantName)
 
@@ -85,11 +79,11 @@ export function MyReservationsPage() {
   }
 
   return (
-    <main className="page reservations-page">
+    <main className="page reservations-page my-reservations-page">
       <PageHeader
         eyebrow={i18n.t('ui.pages.customer.my_reservations_page.hesab_18adfa')}
         title={i18n.t('ui.pages.customer.my_reservations_page.rezervasiyalarim_52105e')}
-        description={i18n.t('ui.pages.customer.my_reservations_page.rezervasiyalarinizi_ve_odenis_merhelel_3fca85')}
+        action={<ButtonLink to="/" variant="secondary"><Plus size={17} aria-hidden="true" />{i18n.t('ui.myReservations.new')}</ButtonLink>}
       />
 
       <section className="reservation-list-toolbar" aria-label={i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_filterleri_4fafc3')}>
@@ -132,27 +126,17 @@ export function MyReservationsPage() {
       </section>
 
       {error ? <StatusMessage tone="danger" autoHideMs={false}>{error}</StatusMessage> : null}
-      {isLoading ? <p className="online-only">{i18n.t('ui.pages.customer.my_reservations_page.rezervasiyalar_yuklenir_248f13')}</p> : null}
-
-      {!isLoading && (!error || hasData) && data.items.length > 0 ? (
-        <section className="reservation-overview" aria-label={i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_xulasesi_4567e2')}>
-          <div>
-            <span>{i18n.t('ui.pages.customer.my_reservations_page.bu_sehifede_aktiv_85a4e5')}</span>
-            <strong>{reservationSummary.activeCount}</strong>
-            <small>{i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_22f559')}</small>
-          </div>
-          <div>
-            <span>{i18n.t('ui.pages.customer.my_reservations_page.bu_sehifede_odenis_gozleyir_9bd337')}</span>
-            <strong>{reservationSummary.awaitingPaymentCount}</strong>
-            <small>{i18n.t('ui.pages.customer.my_reservations_page.novbeti_addim_e43c8c')}</small>
-          </div>
-          <div>
-            <span>{i18n.t('ui.pages.customer.my_reservations_page.tapilan_f1ac75')}</span>
-            <strong>{reservationSummary.totalCount}</strong>
-            <small>{i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_22f559')}</small>
-          </div>
-        </section>
-      ) : null}
+      <div className="my-reservations-results">
+        <div>
+          <strong>{hasData ? i18n.t('ui.count.reservations', { count: data.totalCount }) : '\u2014'}</strong>
+          {awaitingPaymentCount > 0 ? <span className="my-reservations-payment-count">{i18n.t('ui.myReservations.pendingOnPage', { count: awaitingPaymentCount })}</span> : null}
+        </div>
+        <div className="my-reservations-result-actions">
+          {hasFilters ? <button type="button" className="my-reservations-clear" onClick={clearFilters}><X size={14} aria-hidden="true" />{i18n.t('ui.pages.customer.my_reservations_page.filtrleri_temizle_dea7b6')}</button> : null}
+          <button className="my-reservations-refresh" type="button" title={i18n.t('ui.myReservations.refresh')} aria-label={i18n.t('ui.myReservations.refresh')} disabled={isLoading || isRefreshing} onClick={() => setReloadKey(value => value + 1)}><RefreshCw size={17} className={isRefreshing ? 'is-refreshing' : ''} aria-hidden="true" /></button>
+        </div>
+      </div>
+      {isLoading ? <div className="my-reservations-loading" role="status" aria-label={i18n.t('ui.pages.customer.my_reservations_page.rezervasiyalar_yuklenir_248f13')}><div aria-hidden="true" /><div aria-hidden="true" /><div aria-hidden="true" /></div> : null}
 
       {!isLoading && (!error || hasData) && data.items.length === 0 ? (
         <section className="reservation-empty-state">
@@ -163,52 +147,8 @@ export function MyReservationsPage() {
         </section>
       ) : null}
 
-      <section className="customer-reservation-list" aria-label={i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_siyahisi_0ae0f1')}>
-        {data.items.map((reservation) => {
-          const presentation = getReservationStatusPresentation(reservation.status)
-
-          return (
-            <article className="customer-reservation-card" key={reservation.id}>
-              <div className="customer-reservation-card-header">
-                <div>
-                  <span className="reservation-card-kicker">{i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_0a8e06')}{reservation.id}</span>
-                  <h2>{reservation.restaurantName || 'Restoran rezervasiyası'}</h2>
-                </div>
-                <div className="reservation-card-status">
-                  <Badge tone={presentation.tone}>{presentation.label}</Badge>
-                  <span>{reservation.expectedArrivalAt ?i18n.t('ui.pages.customer.my_reservations_page.yeni_gelis_fda112') : ''}{formatReservationDateTime(reservation.expectedArrivalAt || reservation.reservedAt)}</span>
-                </div>
-              </div>
-
-              <div className="customer-reservation-meta">
-                <span className="reservation-meta-item"><CalendarDays size={17} /><span><small>{i18n.t('ui.pages.customer.my_reservations_page.gelis_vaxti_449387')}</small><b>{formatReservationDateTime(reservation.reservedAt)}</b></span></span>
-                <span className="reservation-meta-item"><MapPin size={17} /><span><small>{i18n.t('ui.pages.customer.my_reservations_page.masa_058c4c')}</small><b>{reservation.tableName || `Masa ${reservation.tableId}`}</b></span></span>
-                <span className="reservation-meta-item"><Users size={17} /><span><small>{i18n.t('ui.pages.customer.my_reservations_page.qonaq_sayi_012aa3')}</small><b>{i18n.t('ui.count.guests', { count: reservation.peopleCount })}</b></span></span>
-                <span className="reservation-meta-item"><Clock3 size={17} /><span><small>{i18n.t('ui.pages.customer.my_reservations_page.depozit_4a14b8')}</small><b>{reservation.depositAmount > 0 ? `${reservation.depositAmount.toFixed(2)} AZN` :i18n.t('ui.pages.customer.my_reservations_page.teleb_olunmur_46f021')}</b></span></span>
-              </div>
-
-              {reservation.depositAmount > 0 ? (
-                <div className="reservation-payment-note">
-                  <strong>{i18n.t('ui.pages.customer.my_reservations_page.depozit_26e67c')} {reservation.depositAmount.toFixed(2)} AZN</strong>
-                  <p>{i18n.t('ui.pages.customer.my_reservations_page.odenis_veziyyetini_ve_novbeti_addimi_r_5bc9bf')}</p>
-                </div>
-              ) : null}
-
-              <div className="customer-reservation-card-footer">
-                <span className="reservation-card-deadline">
-                  {reservation.holdExpiresAt
-                    ? `Ödəniş üçün son vaxt: ${formatReservationDateTime(reservation.holdExpiresAt)}`
-                    : reservation.restaurantResponseExpiresAt
-                      ? `Cavab üçün son vaxt: ${formatReservationDateTime(reservation.restaurantResponseExpiresAt)}`
-                      :i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_melumatlari_yenilenir_e4d5e6')}
-                </span>
-                <ButtonLink variant="secondary" to={`/confirmation?reservationId=${reservation.id}`}>
-                  {i18n.t('ui.pages.customer.my_reservations_page.detallara_bax_38343d')} <ArrowRight size={16} />
-                </ButtonLink>
-              </div>
-            </article>
-          )
-        })}
+      <section className="customer-reservation-list" aria-busy={isLoading || isRefreshing} aria-label={i18n.t('ui.pages.customer.my_reservations_page.rezervasiya_siyahisi_0ae0f1')}>
+        {data.items.map(reservation => <CustomerReservationListItem key={reservation.id} reservation={reservation} />)}
       </section>
       {!isLoading && (!error || hasData) ? (
         <PaginationControls
