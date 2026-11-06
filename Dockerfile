@@ -11,6 +11,7 @@ RUN npm run build
 FROM nginx:1.27-alpine AS runtime
 
 ARG NGINX_CONF=nginx.conf
+COPY nginx-caddy-trusted-proxies.geo /etc/nginx/caddy-trusted-proxies.geo
 COPY ${NGINX_CONF} /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
