@@ -1,0 +1,48 @@
+name: Frontend Nginx Ingress
+
+on:
+  pull_request:
+    branches: [dev, test, preprod, main]
+    paths:
+      - 'nginx*.conf'
+      - 'nginx-caddy-trusted-proxies.geo'
+      - 'Dockerfile'
+      - 'scripts/nginx-forwarded-proto-smoke.mjs'
+      - '.github/workflows/nginx-ingress.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  linux-candidate:
+    name: Verify Linux Nginx candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate both shipped configurations and isolated transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          fixture="$RUNNER_TEMP/ecafe-trusted-caddy.geo"
+          printf '127.0.0.1/32 1;\n' > "$fixture"
+          for conf in nginx.conf nginx.prod.conf; do
+            image="ecafe-ingress-candidate:${conf}"
+            docker build --build-arg "NGINX_CONF=$conf" -t "$image" .
+            docker run --rm --network none --add-host ecafe-api:127.0.0.1 "$image" nginx -t
+            docker run --rm --network none --add-host ecafe-api:127.0.0.1 \
+              --mount "type=bind,source=$fixture,target=/etc/nginx/caddy-trusted-proxies.geo,readonly" "$image" nginx -t
+          done
+
+          checks="$RUNNER_TEMP/ecafe-ingress-checks"
+          mkdir -p "$checks/scripts"
+          cp Dockerfile nginx.conf nginx.prod.conf nginx-caddy-trusted-proxies.geo "$checks/"
+          cp scripts/nginx-forwarded-proto-smoke.mjs "$checks/scripts/"
+          docker build -t ecafe-ingress-transport -f - "$checks" <<'DOCKERFILE'
+          FROM ecafe-ingress-candidate:nginx.prod.conf
+          RUN apk add --no-cache nodejs
+          WORKDIR /checks
+          COPY . .
+          ENTRYPOINT ["node", "scripts/nginx-forwarded-proto-smoke.mjs"]
+          DOCKERFILE
+          docker run --rm --network none ecafe-ingress-transport
