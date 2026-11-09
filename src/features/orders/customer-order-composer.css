@@ -37,6 +37,7 @@
 .customer-order-compose-footer span { display: grid; gap: 3px; color: var(--on-surface-variant); font-size: 12px; }
 .customer-order-compose-footer strong { color: var(--on-surface); font-size: 17px; }
 .customer-order-compose-footer .ui-button { min-height: 44px; }
+.customer-order-compose-footer .ui-button:disabled { opacity: .48; cursor: not-allowed; box-shadow: none; transform: none; }
 .customer-order-pending, .customer-order-price-review { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; border-left: 4px solid var(--warning); padding: 12px 14px; background: var(--warning-bg); }
 .customer-order-pending p { margin: 4px 0; color: var(--on-surface-variant); font-size: 13px; }
 .customer-order-pending ul { margin: 8px 0 0; padding-left: 18px; font-size: 12px; }
