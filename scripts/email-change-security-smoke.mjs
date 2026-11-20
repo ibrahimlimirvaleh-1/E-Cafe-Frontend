@@ -21,7 +21,7 @@ async function setup(language = 'en', options = {}) {
   const roleId = options.roleId || 5
   const state = { requests: [], mode: 'accepted', confirmCode: options.confirmCode, delay: 0, signedIn: options.signedIn !== false }
   const accessToken = `header.${Buffer.from(JSON.stringify({ userId: '42', name: 'Test', surname: 'Customer', email: 'old@example.com', roleId: String(roleId), restaurantId: '1', restaurantIds: ['1'], restaurantRoles: roleId === 5 ? [] : [`1:${roleId}`] })).toString('base64url')}.signature`
-  const profile = { userId: '42', name: 'Test', surname: 'Customer', email: 'old@example.com', phone: '+994501234567', roleId, isActive: true }
+  const profile = { userId: '42', name: 'Test', surname: 'Customer', email: 'old@example.com', phone: '+994501234567', roleId, isActive: true, profiles: [1, 5].includes(roleId) ? [] : [{ restaurantId: 1, restaurantName: 'Test Restaurant', roleId, roleName: 'Staff', isActive: true }] }
   const member = { id: 7, userId: 7, name: 'Staff', surname: 'Member', email: 'staff@example.com', phone: '+994501234567', roleId: 4, role: 'Waiter', isActive: true }
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
   await context.addInitScript(language => {

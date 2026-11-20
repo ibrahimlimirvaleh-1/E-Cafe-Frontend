@@ -1,0 +1,14 @@
+.session-termination-notice.session-profile-notice {
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  border: 1px solid var(--outline-variant);
+  border-left: 4px solid var(--info);
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  overflow-wrap: anywhere;
+}
+.session-termination-notice.session-profile-notice span { color: var(--on-surface-variant); }
+:root[data-theme='dark'] .session-termination-notice.session-profile-notice {
+  border-left-color: var(--info);
+  background: var(--surface-lowest);
+}

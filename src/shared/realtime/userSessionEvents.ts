@@ -22,6 +22,7 @@ export type RestaurantAccessChangedPayload = {
   restaurantId?: number
   reason?: string
   message?: string
+  occurredAtUtc?: string
 }
 
 const USER_EVENTS_HUB_PATH = '/hubs/user-events'
@@ -32,7 +33,6 @@ const NOTIFICATIONS_CHANGED_EVENT = 'NotificationsChanged'
 const ORDER_CHANGED_HUB_EVENT = 'OrderChanged'
 const DEFAULT_DEACTIVATION_MESSAGE = 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.'
 const DEFAULT_ROLE_CHANGED_MESSAGE = 'Rolunuz dəyişdirildi. Sessiya məlumatları yenilənir.'
-const DEFAULT_RESTAURANT_ACCESS_CHANGED_MESSAGE = 'Restoran üzrə icazələr yeniləndi. Səhifə yenilənir.'
 
 export function createUserSessionEventsConnection({
   onUserDeactivated,
@@ -75,7 +75,7 @@ export function createUserSessionEventsConnection({
   connection.on(RESTAURANT_ACCESS_CHANGED_EVENT, (payload?: RestaurantAccessChangedPayload) => {
     onRestaurantAccessChanged({
       ...payload,
-      message: payload?.message?.trim() || DEFAULT_RESTAURANT_ACCESS_CHANGED_MESSAGE,
+      message: payload?.message?.trim(),
     })
   })
 

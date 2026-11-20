@@ -60,7 +60,8 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const [fileId, setFileId] = useState<number | null>(null)
-  const [message, setMessage] = useState('')
+  const [message, setMessageValue] = useState('')
+  const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success')
   const [messageDetails, setMessageDetails] = useState<ApiErrorDetail[]>([])
   const [roleSelections, setRoleSelections] = useState<Record<string, string>>({})
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState('')
@@ -161,12 +162,12 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   }
 
   function setOwnerRestrictionMessage() {
-    setMessage('Yalnız platform administratoru sahibkar hesablarını idarə edə bilər.')
+    setMessage(i18n.t('ui.profiles.ownerRestriction'), 'danger')
     setMessageDetails([])
   }
 
   function setRoleRestrictionMessage() {
-    setMessage('Bu rol restoran personalı üçün seçilə bilməz.')
+    setMessage('Bu rol restoran personalı üçün seçilə bilməz.', 'danger')
     setMessageDetails([])
   }
 
@@ -180,12 +181,17 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     return detail?.message
   }
 
+  function setMessage(value: string, tone: 'success' | 'danger' = 'success') {
+    setMessageValue(value)
+    setMessageTone(tone)
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const validationDetails = validateStaffForm(form, restaurantId, mode)
 
     if (validationDetails.length > 0) {
-      setMessage('Əməkdaş məlumatlarında düzəldilməli sahələr var.')
+      setMessage('Əməkdaş məlumatlarında düzəldilməli sahələr var.', 'danger')
       setMessageDetails(validationDetails)
       return
     }
@@ -234,7 +240,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       setReloadKey((value) => value + 1)
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, mode === 'edit' ? 'Əməkdaş yenilənmədi.' : 'Əməkdaş yaradılmadı.')
-      setMessage(feedback.message)
+      setMessage(feedback.message, 'danger')
       setMessageDetails(feedback.details)
     }
   }
@@ -252,14 +258,14 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
 
     const roleId = Number(selectedRoleId(member))
     if (!roleId) {
-      setMessage('Rol seçilməlidir.')
+      setMessage('Rol seçilməlidir.', 'danger')
       setMessageDetails([])
       return
     }
 
     const targetRestaurantId = Number(restaurantId)
     if (!Number.isSafeInteger(targetRestaurantId) || targetRestaurantId <= 0 || member.restaurantId !== restaurantId) {
-      setMessage('Rol dəyişikliyi üçün düzgün restoran seçilməlidir.')
+      setMessage('Rol dəyişikliyi üçün düzgün restoran seçilməlidir.', 'danger')
       setMessageDetails([])
       return
     }
@@ -282,7 +288,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       setReloadKey((value) => value + 1)
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, 'Rol yenilənmədi.')
-      setMessage(feedback.message)
+      setMessage(feedback.message, 'danger')
       setMessageDetails(feedback.details)
     } finally {
       setUpdatingRoleUserId('')
@@ -296,7 +302,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     }
 
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage('Restoran seçilməlidir.', 'danger')
       setMessageDetails([])
       return
     }
@@ -306,12 +312,12 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     setDeactivatingStaffId(member.id)
     try {
       await ecafeApi.staff.deactivate(restaurantId, member.id)
-      setMessage('Əməkdaş deaktiv edildi.')
+      setMessage(i18n.t('ui.profiles.deactivated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Əməkdaş deaktiv edilmədi.')
-      setMessage(feedback.message)
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.profiles.deactivationFailed'))
+      setMessage(feedback.message, 'danger')
       setMessageDetails(feedback.details)
     } finally {
       setDeactivatingStaffId('')
@@ -325,7 +331,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     }
 
     if (!restaurantId) {
-      setMessage('Restoran seçilməlidir.')
+      setMessage('Restoran seçilməlidir.', 'danger')
       setMessageDetails([])
       return
     }
@@ -335,12 +341,12 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     setDeactivatingStaffId(member.id)
     try {
       await ecafeApi.staff.activate(restaurantId, member.id)
-      setMessage('Əməkdaş aktiv edildi.')
+      setMessage(i18n.t('ui.profiles.activated'))
       setMessageDetails([])
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Əməkdaş aktiv edilmədi.')
-      setMessage(feedback.message)
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.profiles.activationFailed'))
+      setMessage(feedback.message, 'danger')
       setMessageDetails(feedback.details)
     } finally {
       setDeactivatingStaffId('')
@@ -361,7 +367,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
       setReloadKey((value) => value + 1)
     } catch (err) {
       const feedback = normalizeCaughtApiError(err, 'Əməkdaş silinmədi.')
-      setMessage(feedback.message)
+      setMessage(feedback.message, 'danger')
       setMessageDetails(feedback.details)
     }
   }
@@ -382,7 +388,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
               <span className="eyebrow">{i18n.t('ui.pages.admin.staff_management_page.icaze_616fbf')}</span>
               <h2>{i18n.t('ui.pages.admin.staff_management_page.bu_emekdasi_yalniz_platform_administra_f25a64')}</h2>
             </div>
-            <StatusMessage tone="danger">{i18n.t('ui.pages.admin.staff_management_page.sahibkar_hesabinin_redaktesi_deaktiv_e_514ab4')}</StatusMessage>
+            <StatusMessage tone="danger">{i18n.t('ui.profiles.ownerRestriction')}</StatusMessage>
             <ButtonLink to={staffListPath} variant="secondary">{i18n.t('ui.pages.admin.staff_management_page.siyahiya_qayit_f779ce')}</ButtonLink>
           </section>
           ) : (
@@ -471,12 +477,13 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             <div className="form-grid two">
               <SelectField
                 error={fieldError('IsActive')}
-                label={i18n.t('ui.pages.admin.staff_management_page.status_920e41')}
+                label={i18n.t('ui.profiles.staffStatus')}
+                hint={i18n.t('ui.profiles.statusHint')}
                 value={form.isActive}
                 onChange={(event) => setForm({ ...form, isActive: event.target.value })}
               >
-                <option value="true">{i18n.t('ui.pages.admin.staff_management_page.aktiv_816345')}</option>
-                <option value="false">{i18n.t('ui.pages.admin.staff_management_page.deaktiv_477e77')}</option>
+                <option value="true">{i18n.t('ui.profiles.staffActive')}</option>
+                <option value="false">{i18n.t('ui.profiles.staffInactive')}</option>
               </SelectField>
               <TextField
                 error={fieldError('ServiceFeePercent')}
@@ -491,7 +498,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             </div>
             <FileUploadField label={i18n.t('ui.pages.admin.staff_management_page.profil_sekli_dba45b')} accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
             <Button type="submit">{mode === 'edit' ?i18n.t('ui.pages.admin.staff_management_page.yadda_saxla_78db97') :i18n.t('ui.pages.admin.staff_management_page.emekdas_yarat_8d233e')}</Button>
-            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
+            {message ? <StatusMessage details={messageDetails} tone={messageTone}>{message}</StatusMessage> : null}
           </form>
           )
         ) : (
@@ -507,7 +514,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             ) : (
               <EmptyState title={i18n.t('ui.pages.admin.staff_management_page.restoran_secilmeyib_63199c')} message={i18n.t('ui.pages.admin.staff_management_page.personal_siyahisini_gormek_ucun_evvelc_861069')} />
             )}
-            {message ? <StatusMessage details={messageDetails}>{message}</StatusMessage> : null}
+            {message ? <StatusMessage details={messageDetails} tone={messageTone}>{message}</StatusMessage> : null}
             <div className="compact-list">
               {staff.map((member) => (
                 <article className="staff-member-row" key={member.id}>
@@ -519,7 +526,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                     </small>
                   </div>
                   <div className="staff-badges">
-                    <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{member.status === 'Active' ?i18n.t('ui.pages.admin.staff_management_page.aktiv_816345') :i18n.t('ui.pages.admin.staff_management_page.deaktiv_477e77')}</Badge>
+                    <Badge tone={member.status === 'Active' ? 'success' : 'neutral'}>{i18n.t(member.status === 'Active' ? 'ui.profiles.staffActive' : 'ui.profiles.staffInactive')}</Badge>
                     <Badge tone="info">{roleLabel(currentRoleId(member), member.role)}</Badge>
                   </div>
                   {canManageStaffMember(member) ? (
@@ -562,9 +569,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                       {member.status === 'Active' ? (
                         <ActionIconButton
                           disabled={deactivatingStaffId === member.id}
-                          label={`${member.name} əməkdaşını deaktiv et`}
+                          label={`${member.name}: ${i18n.t('ui.profiles.deactivate')}`}
                           onClick={() => void handleDeactivate(member)}
-                          title={deactivatingStaffId === member.id ?i18n.t('ui.pages.admin.staff_management_page.deaktiv_edilir_3b3fc2') :i18n.t('ui.pages.admin.staff_management_page.deaktiv_et_925033')}
+                          title={i18n.t(deactivatingStaffId === member.id ? 'ui.profiles.deactivating' : 'ui.profiles.deactivate')}
                           tone="danger"
                         >
                           <Ban size={18} />
@@ -572,9 +579,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                       ) : (
                         <ActionIconButton
                           disabled={deactivatingStaffId === member.id}
-                          label={`${member.name} əməkdaşını aktiv et`}
+                          label={`${member.name}: ${i18n.t('ui.profiles.activate')}`}
                           onClick={() => void handleActivate(member)}
-                          title={deactivatingStaffId === member.id ?i18n.t('ui.pages.admin.staff_management_page.aktiv_edilir_3db6b8') :i18n.t('ui.pages.admin.staff_management_page.aktiv_et_3570b7')}
+                          title={i18n.t(deactivatingStaffId === member.id ? 'ui.profiles.activating' : 'ui.profiles.activate')}
                         >
                           <CheckCircle2 size={18} />
                         </ActionIconButton>

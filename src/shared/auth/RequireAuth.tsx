@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
+import { profileScope } from './accessProfiles'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { canAccess, getHomePathForUser } from './authz'
@@ -10,7 +11,7 @@ type RequireAuthProps = {
 }
 
 export function RequireAuth({ children, allowedRoleIds, anyPermission }: RequireAuthProps) {
-  const { isAuthenticated, isAuthReady, user } = useAuth()
+  const { isAuthenticated, isAuthReady, scopeRevision, user } = useAuth()
   const location = useLocation()
 
   if (!isAuthReady) {
@@ -25,5 +26,5 @@ export function RequireAuth({ children, allowedRoleIds, anyPermission }: Require
     return <Navigate to={getHomePathForUser(user)} replace />
   }
 
-  return children
+  return <Fragment key={`${profileScope(user)}:${scopeRevision}`}>{children}</Fragment>
 }

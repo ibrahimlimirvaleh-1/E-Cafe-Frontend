@@ -171,9 +171,7 @@ export function ProfilePage() {
     )
   }
 
-  const accessProfiles = profile.profiles.length > 0
-    ? profile.profiles
-    : user?.profiles.map((item) => ({
+  const accessProfiles = user?.profiles.map((item) => ({
         restaurantId: item.restaurantId,
         restaurantName: item.restaurantName || `Restoran #${item.restaurantId}`,
         roleId: Number(item.roleId),
