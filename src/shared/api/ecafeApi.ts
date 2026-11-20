@@ -1681,6 +1681,16 @@ export const ecafeApi = {
   },
 
   profile: {
+    requestEmailChange: (request: { newEmail: string; currentPassword: string }, signal?: AbortSignal) =>
+      httpClient<void>(endpoints.profile.requestEmailChange, {
+        method: 'POST', body: JSON.stringify(request), signal,
+        skipAuthRefresh: true, suppressAuthExpiredEvent: true,
+      }),
+    confirmEmailChange: (token: string, signal?: AbortSignal) =>
+      httpClient<void>(endpoints.profile.confirmEmailChange, {
+        method: 'POST', body: JSON.stringify({ token }), signal,
+        skipAuthRefresh: true, suppressAuthExpiredEvent: true,
+      }),
     get: () =>
       safe(async () => {
         const result = await httpClient<unknown>(endpoints.profile.get)

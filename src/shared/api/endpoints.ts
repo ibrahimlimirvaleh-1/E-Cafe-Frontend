@@ -247,6 +247,8 @@ export const endpoints = {
   profile: {
     get: '/profile',
     update: '/profile',
+    requestEmailChange: '/profile/email-change/request',
+    confirmEmailChange: '/profile/email-change/confirm',
   },
   userSessions: {
     list: '/user/sessions',

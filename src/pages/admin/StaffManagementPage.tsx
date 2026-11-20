@@ -202,7 +202,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
         await ecafeApi.staff.update(restaurantId, staffId, {
           name: form.name.trim(),
           surname: form.surname.trim(),
-          email: form.email.trim().toLowerCase(),
+          email: editingStaff?.email || '',
           phone: form.phone.trim(),
           isActive: form.isActive === 'true',
           serviceFeePercent: form.serviceFeePercent ? Number(form.serviceFeePercent) : null,
@@ -435,10 +435,11 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
             </div>
             <TextField
               error={fieldError('Email')}
-              hint={i18n.t('ui.pages.admin.staff_management_page.aktiv_emekdaslarda_tekrar_email_qebul__cf6fe1')}
+              hint={mode === 'edit' ? i18n.t('ui.emailChange.staffReadonly') : i18n.t('ui.pages.admin.staff_management_page.aktiv_emekdaslarda_tekrar_email_qebul__cf6fe1')}
               label={i18n.t('ui.pages.admin.staff_management_page.email_969ccb')}
               required
               type="email"
+              readOnly={mode === 'edit'}
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
             />
