@@ -48,6 +48,7 @@ type AuthContextValue = {
   selectProfileForRestaurant: (restaurantId: string) => void
   logout: () => Promise<void>
   logoutAll: () => Promise<void>
+  clearSession: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -239,6 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     function handleAuthExpired(event: Event) {
+      if (hasManualLogoutMarker()) return
       const message = event instanceof CustomEvent && typeof event.detail?.message === 'string'
         ? event.detail.message
         : SESSION_TERMINATED_MESSAGE
@@ -512,6 +514,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       realtimeStatus,
       isAuthReady,
       isAuthenticated: user !== null,
+      clearSession: () => {
+        markManualLogout()
+        clearAuthTokens()
+        setUser(null)
+        setSessionNotice(null)
+        setRestoreError('')
+        setIsProfilePromptOpen(false)
+        setIsAuthReady(true)
+      },
       setSession: (tokens) => {
         saveAuthTokens(tokens)
         const nextUser = withSelectedProfile(getUserFromToken(tokens.accessToken))

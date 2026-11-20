@@ -1,6 +1,6 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { useTranslation } from 'react-i18next'
-import { LogOut, MonitorSmartphone, Save } from 'lucide-react'
+import { LogOut, Mail, MonitorSmartphone, Save } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { UserSession } from '../../entities/types'
@@ -18,6 +18,7 @@ import { TextField } from '../../shared/ui/FormField'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
+import { EmailChangeDialog } from '../../features/emailChange/EmailChangeDialog'
 
 export function ProfilePage() {
   useTranslation()
@@ -32,6 +33,8 @@ export function ProfilePage() {
   const [formError, setFormError] = useState('')
   const [formErrorDetails, setFormErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [isEmailChangeOpen, setIsEmailChangeOpen] = useState(false)
+  const [emailRetryAt, setEmailRetryAt] = useState(0)
   const [isSessionsLoading, setIsSessionsLoading] = useState(true)
   const [isLogoutAllConfirmOpen, setIsLogoutAllConfirmOpen] = useState(false)
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false)
@@ -88,11 +91,12 @@ export function ProfilePage() {
     setIsSaving(true)
 
     try {
-      await ecafeApi.profile.update({ ...form, fileId })
+      if (!profile) return
+      await ecafeApi.profile.update({ ...form, email: profile.email, fileId })
       updateUser({
         name: form.name,
         surname: form.surname,
-        email: form.email,
+        email: profile.email,
       })
       setStatusMessage('Profil məlumatları yeniləndi.')
     } catch (err) {
@@ -213,7 +217,10 @@ export function ProfilePage() {
             <TextField label={i18n.t('ui.pages.customer.profile_page.ad_1d97c9')} required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             <TextField label={i18n.t('ui.pages.customer.profile_page.soyad_3d89d4')} required value={form.surname} onChange={(event) => setForm({ ...form, surname: event.target.value })} />
           </div>
-          <TextField label={i18n.t('ui.pages.customer.profile_page.email_969ccb')} required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+          <TextField label={i18n.t('ui.pages.customer.profile_page.email_969ccb')} readOnly type="email" value={profile.email} />
+          <Button variant="secondary" type="button" onClick={() => setIsEmailChangeOpen(true)}>
+            <Mail size={18} aria-hidden="true" />{i18n.t('ui.emailChange.change')}
+          </Button>
           <PhoneField label={i18n.t('ui.pages.customer.profile_page.telefon_fa6906')} value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           <FileUploadField label={i18n.t('ui.pages.customer.profile_page.profil_sekli_dba45b')} accept="image/jpeg,image/png,image/webp,image/avif" onUploaded={setFileId} />
 
@@ -295,6 +302,7 @@ export function ProfilePage() {
         </section>
       </div>
 
+      {isEmailChangeOpen && user ? <EmailChangeDialog key={user.userId} retryAt={emailRetryAt} onRetryAt={setEmailRetryAt} onClose={() => setIsEmailChangeOpen(false)} /> : null}
       {statusMessage ? <StatusMessage>{statusMessage}</StatusMessage> : null}
       {formError ? <StatusMessage details={formErrorDetails} tone="danger">{formError}</StatusMessage> : null}
       <ConfirmDialog

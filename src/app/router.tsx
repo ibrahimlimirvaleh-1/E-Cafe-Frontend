@@ -34,6 +34,7 @@ import { LocalizationPage } from '../pages/admin/LocalizationPage'
 import { StaffCreatePage, StaffManagementPage } from '../pages/admin/StaffManagementPage'
 import { TableCreatePage, TablesManagementPage } from '../pages/admin/TablesManagementPage'
 import { AuthPage } from '../pages/auth/AuthPage'
+import { ConfirmEmailChangePage } from '../pages/auth/ConfirmEmailChangePage'
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
 import { SetPasswordPage } from '../pages/auth/SetPasswordPage'
@@ -158,6 +159,7 @@ export function AppRouter() {
       </Route>
 
       <Route element={<AuthShell />}>
+        <Route path="confirm-email-change" element={<ConfirmEmailChangePage />} />
         <Route path="login" element={<AuthPage mode="login" />} />
         <Route path="register" element={<AuthPage mode="register" />} />
         <Route path="set-password" element={<SetPasswordPage />} />

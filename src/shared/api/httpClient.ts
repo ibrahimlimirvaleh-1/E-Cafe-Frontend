@@ -1,4 +1,4 @@
-import { clearAuthTokens, getAccessToken, hasManualLogoutMarker, saveAuthTokens } from '../auth/tokenStorage'
+import { clearAuthTokens, getAccessToken, getAuthRevision, hasManualLogoutMarker, saveAuthTokens } from '../auth/tokenStorage'
 import type { AuthTokens } from '../auth/tokenStorage'
 import { getActiveProfileContext } from '../auth/activeProfileStorage'
 import { endpoints } from './endpoints'
@@ -41,7 +41,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN
 const AUTH_EXPIRED_NOTIFICATION_THROTTLE_MS = 2000
 
-let refreshRequestPromise: Promise<AuthTokens | null> | null = null
+type RefreshResult = { tokens: AuthTokens | null; revision: number }
+let pendingRefresh: { revision: number; promise: Promise<RefreshResult | null> } | null = null
 let lastAuthExpiredNotificationAt = 0
 
 type RequestOptions = RequestInit & {
@@ -51,22 +52,24 @@ type RequestOptions = RequestInit & {
 }
 
 export async function httpClient<T>(path: string, init?: RequestOptions): Promise<ApiResult<T>> {
+  const revision = getAuthRevision()
   const response = await sendRequest(path, init)
 
-  if (response.status === 401 && !init?.skipAuthRefresh) {
+  if (response.status === 401 && !init?.skipAuthRefresh && revision === getAuthRevision()) {
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       return httpClient<T>(path, { ...init, skipAuthRefresh: true })
     }
   }
 
-  return parseResponse<T>(response, init)
+  return parseResponse<T>(response, init, revision)
 }
 
 export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOptions): Promise<Blob> {
+  const revision = getAuthRevision()
   const response = await sendBlobRequest(pathOrUrl, init)
 
-  if (response.status === 401 && !init?.skipAuthRefresh) {
+  if (response.status === 401 && !init?.skipAuthRefresh && revision === getAuthRevision()) {
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       return fetchProtectedBlob(pathOrUrl, { ...init, skipAuthRefresh: true })
@@ -76,7 +79,7 @@ export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOption
   if (!response.ok) {
     const payload = await response.json().catch(() => null)
     const result = normalizeApiResult<unknown>(payload, response.status, response.ok)
-    throw buildApiError(result, response.status, !init?.suppressAuthExpiredEvent, init?.authErrorMessage)
+    throw buildApiError(result, response.status, !init?.suppressAuthExpiredEvent && revision === getAuthRevision(), init?.authErrorMessage)
   }
 
   return response.blob()
@@ -161,7 +164,7 @@ function getApiOrigin() {
   return ''
 }
 
-async function parseResponse<T>(response: Response, init?: RequestOptions): Promise<ApiResult<T>> {
+async function parseResponse<T>(response: Response, init?: RequestOptions, revision = getAuthRevision()): Promise<ApiResult<T>> {
   if (response.status === 204) {
     return {
       success: response.ok,
@@ -175,7 +178,7 @@ async function parseResponse<T>(response: Response, init?: RequestOptions): Prom
   const result = normalizeApiResult<T>(payload, response.status, response.ok)
 
   if (!response.ok) {
-    throw buildApiError(result, response.status, !init?.suppressAuthExpiredEvent, init?.authErrorMessage)
+    throw buildApiError(result, response.status, !init?.suppressAuthExpiredEvent && revision === getAuthRevision(), init?.authErrorMessage)
   }
 
   return result
@@ -187,21 +190,34 @@ export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }
   }
 
   const shouldNotify = options?.notifyOnFailure ?? true
+  const revision = getAuthRevision()
+  if (!pendingRefresh || pendingRefresh.revision !== revision) {
+    const request = { revision, promise: requestRefreshAccessToken(revision) }
+    pendingRefresh = request
+    request.promise = request.promise.finally(() => {
+      if (pendingRefresh === request) pendingRefresh = null
+    })
+  }
 
-  refreshRequestPromise ??= requestRefreshAccessToken().finally(() => {
-    refreshRequestPromise = null
-  })
+  let result: RefreshResult | null
+  try {
+    result = await pendingRefresh.promise
+  } catch (error) {
+    if (revision !== getAuthRevision()) return null
+    throw error
+  }
 
-  const tokens = await refreshRequestPromise
+  // A response from an earlier login must not mutate or expire the current one.
+  if (!result || result.revision !== getAuthRevision()) return null
 
-  if (!tokens && shouldNotify) {
+  if (!result.tokens && shouldNotify && !hasManualLogoutMarker()) {
     notifyAuthExpiredOnce('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
   }
 
-  return tokens
+  return result.tokens
 }
 
-async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
+async function requestRefreshAccessToken(revision: number): Promise<RefreshResult | null> {
   let response: Response
   try {
     response = await fetch(`${API_BASE_URL}${endpoints.auth.refresh}`, {
@@ -213,12 +229,15 @@ async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
       credentials: 'include',
     })
   } catch {
+    if (revision !== getAuthRevision()) return null
     throw new ApiError(i18n.t('ui.http.network'), 0)
   }
 
+  if (revision !== getAuthRevision() || hasManualLogoutMarker()) return null
+
   if (response.status === 401 || response.status === 403) {
     clearAuthTokens()
-    return null
+    return { tokens: null, revision: getAuthRevision() }
   }
 
   if (!response.ok) {
@@ -226,6 +245,7 @@ async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
   }
 
   const payload = await response.json().catch(() => null)
+  if (revision !== getAuthRevision() || hasManualLogoutMarker()) return null
   const result = normalizeApiResult<{ accessToken: string }>(payload, response.status, response.ok)
 
   if (!result.data?.accessToken) {
@@ -233,7 +253,7 @@ async function requestRefreshAccessToken(): Promise<AuthTokens | null> {
   }
 
   saveAuthTokens(result.data)
-  return result.data
+  return { tokens: result.data, revision: getAuthRevision() }
 }
 
 export function normalizeCaughtApiError(error: unknown, fallbackMessage = i18n.t('ui.http.requestFailed')) {
@@ -281,6 +301,7 @@ function buildApiError(result: ApiResult<unknown>, statusCode: number, shouldNot
 }
 
 function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, details: ApiErrorDetail[], authErrorMessage?: string) {
+  if (result.code === 'EmailChangeRequiresVerification') return i18n.t('ui.emailChange.requiresVerification')
   if (details.length > 0) {
     return result.message?.trim() || i18n.t('ui.http.validation')
   }

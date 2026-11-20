@@ -1,0 +1,30 @@
+.email-change-dialog {
+  width: min(480px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  color: var(--on-surface);
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-lg);
+  overflow: auto;
+}
+.email-change-dialog::backdrop { background: rgb(0 0 0 / 48%); }
+.email-change-dialog form { display: grid; gap: 18px; min-width: 0; }
+.email-change-dialog header { display: flex; justify-content: space-between; align-items: center; }
+.email-change-dialog header > button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; background: var(--surface-low); color: var(--on-surface-variant); border: 1px solid var(--outline-variant); border-radius: 8px; }
+.email-change-dialog h2 { margin: 0; font-size: 22px; }
+.email-change-dialog p { margin: 0; color: var(--on-surface-variant); line-height: 1.55; }
+.email-change-dialog footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.email-change-dialog .form-message, .email-change-confirm .form-message { position: static; width: 100%; max-width: 100%; margin: 0; overflow-wrap: anywhere; }
+.email-change-dialog .form-message-title, .email-change-confirm .form-message-title { text-align: left; font-weight: 600; }
+.email-change-dialog button, .email-change-confirm button { min-height: 44px; white-space: normal; }
+.email-change-confirm { border-radius: 8px; max-width: 480px; min-width: 0; }
+.email-change-confirm h1 { font-size: 26px; line-height: 1.2; }
+.email-change-symbol { color: var(--success); }
+.email-change-account { overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .email-change-dialog { padding: 20px; }
+  .email-change-dialog footer > * { flex: 1 1 100%; }
+  .email-change-confirm { padding: 24px; }
+}

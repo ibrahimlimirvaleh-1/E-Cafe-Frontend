@@ -7,6 +7,7 @@ const REFRESH_TOKEN_STORAGE_KEY = 'ecafe.refreshToken'
 const MANUAL_LOGOUT_STORAGE_KEY = 'ecafe.manualLogoutAt'
 
 let accessTokenInMemory = ''
+let authRevision = 0
 
 export type AuthTokens = {
   accessToken: string
@@ -17,13 +18,19 @@ export function getAccessToken() {
   return accessTokenInMemory
 }
 
+export function getAuthRevision() {
+  return authRevision
+}
+
 export function saveAuthTokens(tokens: AuthTokens) {
+  authRevision += 1
   clearManualLogoutMarker()
   clearLegacyAuthState()
   accessTokenInMemory = tokens.accessToken
 }
 
 export function clearAuthTokens() {
+  authRevision += 1
   accessTokenInMemory = ''
   clearLegacyAuthState()
 }
