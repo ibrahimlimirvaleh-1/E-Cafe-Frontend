@@ -4,7 +4,7 @@ import { roleLabel } from '../i18n/roleLabel'
 import { useTranslation } from 'react-i18next'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { getUserFromToken } from './jwt'
 import type { CurrentUser, UserAccessProfile } from './jwt'
 import { clearAuthTokens, getAccessToken, hasManualLogoutMarker, markManualLogout, saveAuthTokens } from './tokenStorage'
@@ -14,12 +14,12 @@ import { refreshAccessToken } from '../api/httpClient'
 import { createUserSessionEventsConnection, type RealtimeConnectionStatus } from '../realtime/userSessionEvents'
 import { dispatchOrderSync } from '../realtime/orderEvents'
 import { getHomePathForUser } from './authz'
-import { profileKey, readStoredProfileKey, writeStoredProfileKey } from './activeProfileStorage'
+import { clearVerifiedProfiles, profileKey, readStoredProfileKey, syncVerifiedProfiles } from './activeProfileStorage'
+import { assignmentSignature, mergeProfileDetails, profileScope, profileSignature, sameAccessState, withSelectedProfile } from './accessProfiles'
 import { Button } from '../ui/Button'
+import './profile-access.css'
 
 const SESSION_TERMINATED_MESSAGE = 'Hesabınız deaktiv edilib. Sistemə girişiniz dayandırıldı.'
-const ROLE_CHANGED_MESSAGE = 'Rolunuz dəyişdirildi. Sessiya məlumatları yenilənir.'
-const RESTAURANT_ACCESS_CHANGED_MESSAGE = 'Restoran üzrə icazələr yeniləndi. Səhifə yenilənir.'
 const SESSION_NOTICE_STORAGE_KEY = 'ecafe.sessionNotice'
 const SESSION_RECONCILE_INTERVAL_MS = 60_000
 
@@ -35,6 +35,7 @@ const roleNamesById: Record<string, string> = {
 type SessionNotice = {
   title: string
   message: string
+  tone?: 'info'
 }
 
 type AuthContextValue = {
@@ -49,6 +50,7 @@ type AuthContextValue = {
   logout: () => Promise<void>
   logoutAll: () => Promise<void>
   clearSession: () => void
+  scopeRevision: string
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -58,78 +60,21 @@ function hasStoredProfile(user: CurrentUser) {
   return Boolean(storedProfileKey && user.profiles.some((profile) => profileKey(profile) === storedProfileKey))
 }
 
-function withSelectedProfile(user: CurrentUser | null, preferredProfile?: Pick<UserAccessProfile, 'restaurantId' | 'roleId'> | null) {
-  if (!user) {
-    return null
-  }
-
-  const profiles: UserAccessProfile[] = user.profiles.length > 0
-    ? user.profiles
-    : user.restaurantRoles.map((assignment) => ({ ...assignment }))
-
-  if (profiles.length === 0) {
-    return user
-  }
-
-  const storedProfileKey = readStoredProfileKey(user.userId)
-  const selectedProfile =
-    (preferredProfile
-      ? profiles.find((profile) => profile.restaurantId === preferredProfile.restaurantId && profile.roleId === preferredProfile.roleId)
-      : null) ||
-    profiles.find((profile) => profileKey(profile) === storedProfileKey) ||
-    profiles.find((profile) => profile.restaurantId === user.restaurantId && profile.roleId === user.roleId) ||
-    profiles[0]
-
-  return {
-    ...user,
-    restaurantId: selectedProfile.restaurantId,
-    roleId: selectedProfile.roleId,
-    roleName: selectedProfile.roleName || roleNamesById[selectedProfile.roleId] || user.roleName,
-    profiles,
-  }
-}
-
-function profileSignature(profiles: UserAccessProfile[]) {
-  return profiles
-    .map((profile) => `${profile.restaurantId}:${profile.roleId}:${profile.restaurantName || ''}:${profile.roleName || ''}:${profile.isActive !== false}`)
-    .sort()
-    .join('|')
-}
-
-function mergeProfileDetails(
-  user: CurrentUser,
-  profileDetails: {
-    fileUrl?: string
-    profiles?: Array<{ restaurantId: string; restaurantName: string; roleId: number; roleName: string; isActive: boolean }>
-  },
-) {
-  const detailedProfiles = (profileDetails.profiles || [])
-    .filter((profile) => profile.isActive && profile.restaurantId && profile.roleId)
-    .map((profile) => ({
-      restaurantId: String(profile.restaurantId),
-      restaurantName: profile.restaurantName,
-      roleId: String(profile.roleId),
-      roleName: profile.roleName,
-      isActive: profile.isActive,
-    }))
-
-  if (detailedProfiles.length === 0) {
-    return user
-  }
-
-  const nextUser = withSelectedProfile({ ...user, fileUrl: profileDetails.fileUrl || user.fileUrl, profiles: detailedProfiles })
-  return nextUser ?? user
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
+  const navigateRef = useRef(navigate)
+  navigateRef.current = navigate
+  const location = useLocation()
+  const locationKeyRef = useRef(location.key)
+  locationKeyRef.current = location.key
+  const selectionIntentRef = useRef<string | null>(null)
   const didBootstrapSessionRef = useRef(false)
   const noticeTimerRef = useRef<number | undefined>(undefined)
   const profilePromptUserIdRef = useRef('')
   const [sessionNotice, setSessionNotice] = useState<SessionNotice | null>(null)
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeConnectionStatus>('connecting')
   const [isProfilePromptOpen, setIsProfilePromptOpen] = useState(false)
-  const [user, setUser] = useState<CurrentUser | null>(() => {
+  const [user, setUserState] = useState<CurrentUser | null>(() => {
     const token = getAccessToken()
     return token ? withSelectedProfile(getUserFromToken(token)) : null
   })
@@ -137,6 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [restoreRetry, setRestoreRetry] = useState(0)
   const [restoreError, setRestoreError] = useState('')
   const [isRestoring, setIsRestoring] = useState(false)
+  const userRef = useRef(user)
+  const sessionEpochRef = useRef(0)
+  const reconcileIdRef = useRef(0)
+  const [sessionEpoch, setSessionEpoch] = useState(0)
+  const [scopeRevision, setScopeRevision] = useState(0)
+  const setUser = useCallback((update: CurrentUser | null | ((current: CurrentUser | null) => CurrentUser | null)) => {
+    const next = typeof update === 'function' ? update(userRef.current) : update
+    userRef.current = next
+    setUserState(next)
+  }, [])
+  const invalidateSessionWork = useCallback(() => {
+    clearVerifiedProfiles()
+    selectionIntentRef.current = null
+    reconcileIdRef.current += 1
+    sessionEpochRef.current += 1
+    setSessionEpoch(sessionEpochRef.current)
+  }, [])
 
   const showSessionNotice = useCallback((notice: SessionNotice, autoHideMs: number | false = 2000) => {
     window.clearTimeout(noticeTimerRef.current)
@@ -149,10 +111,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const showPersistentSessionNotice = useCallback((notice: SessionNotice, autoHideMs: number | false = 2000) => {
-    window.sessionStorage.setItem(SESSION_NOTICE_STORAGE_KEY, JSON.stringify(notice))
-    showSessionNotice(notice, autoHideMs)
-  }, [showSessionNotice])
+  const terminateSession = useCallback((message = SESSION_TERMINATED_MESSAGE) => {
+    invalidateSessionWork()
+    markManualLogout()
+    clearAuthTokens()
+    setUser(null)
+    setRestoreError('')
+    setIsAuthReady(true)
+    setIsProfilePromptOpen(false)
+    showSessionNotice({ title: i18n.t('ui.profiles.sessionEnded'), message }, false)
+    navigateRef.current('/login', { replace: true })
+  }, [invalidateSessionWork, setUser, showSessionNotice])
+
+  const reconcileProfiles = useCallback(async ({ refresh = false, reason, restaurantId, resetScope = false }: { refresh?: boolean; reason?: string; restaurantId?: number; resetScope?: boolean } = {}) => {
+    const owner = userRef.current
+    if (!owner || !getAccessToken()) return
+    const epoch = sessionEpochRef.current
+    const requestId = ++reconcileIdRef.current
+    const hadStoredProfile = hasStoredProfile(owner)
+    let didResetScope = false
+    const isCurrent = () => requestId === reconcileIdRef.current && epoch === sessionEpochRef.current && userRef.current?.userId === owner.userId && Boolean(getAccessToken())
+    try {
+      const details = await ecafeApi.profile.get()
+      if (!isCurrent() || !details) return
+      if (!details.isActive) { terminateSession(); return }
+      const apply = (base: CurrentUser) => {
+        const current = userRef.current!
+        const next = mergeProfileDetails(base, details, current)
+        syncVerifiedProfiles(next)
+        const changedScope = profileScope(next) !== profileScope(current)
+        const changedProfiles = profileSignature(next.profiles) !== profileSignature(current.profiles)
+        setUser(sameAccessState(current, next) ? current : next)
+        if (changedScope) {
+          setIsProfilePromptOpen(false)
+          showSessionNotice({ tone: 'info', title: i18n.t('ui.profiles.accessUpdated'), message: i18n.t(next.profiles.length ? 'ui.profiles.switched' : 'ui.profiles.personal') }, 5000)
+          navigateRef.current(getHomePathForUser(next), { replace: true })
+        } else if (changedProfiles && (reason === 'staff_activated' || reason === 'staff_deactivated')) {
+          showSessionNotice({ tone: 'info', title: i18n.t('ui.profiles.accessUpdated'), message: i18n.t(reason === 'staff_activated' ? 'ui.profiles.activated' : 'ui.profiles.deactivated') }, 5000)
+        }
+        if (!changedScope && !didResetScope && resetScope && (restaurantId === undefined || String(restaurantId) === current.restaurantId || current.roleId === '1')) {
+          didResetScope = true
+          setScopeRevision(value => value + 1)
+        }
+      }
+      const tokenUser = getUserFromToken(getAccessToken())
+      apply(userRef.current!)
+      const current = userRef.current!
+      if (profilePromptUserIdRef.current !== owner.userId) {
+        profilePromptUserIdRef.current = owner.userId
+        setIsProfilePromptOpen(current.profiles.length > 1 && !hadStoredProfile)
+      }
+      if (!refresh && assignmentSignature(current.restaurantRoles) === assignmentSignature(tokenUser?.restaurantRoles || []) && (current.profiles.length > 0 || current.roleId === tokenUser?.roleId)) return
+      const tokens = await refreshAccessToken({ notifyOnFailure: false })
+      if (!isCurrent()) return
+      const refreshed = tokens ? getUserFromToken(tokens.accessToken) : null
+      if (refreshed?.userId === owner.userId) apply(refreshed)
+    } catch {
+      // Retain the current safe scope on transient failure; focus/reconnect/poll retries.
+    }
+  }, [setUser, showSessionNotice, terminateSession])
+
+  const selectAccessProfile = useCallback((profile: Pick<UserAccessProfile, 'restaurantId' | 'roleId'>) => {
+    const current = userRef.current
+    if (!current || !current.profiles.some(item => profileKey(item) === profileKey(profile))) return
+    const next = withSelectedProfile(current, profile)!
+    setIsProfilePromptOpen(false)
+    if (profileScope(current) === profileScope(next)) return
+    reconcileIdRef.current += 1
+    syncVerifiedProfiles(next)
+    setUser(next)
+    void reconcileProfiles()
+  }, [reconcileProfiles, setUser])
 
   useEffect(() => {
     return () => window.clearTimeout(noticeTimerRef.current)
@@ -191,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     didBootstrapSessionRef.current = true
+    const epoch = sessionEpochRef.current
     let isCurrent = true
     setIsRestoring(true)
 
@@ -199,18 +229,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const tokens = await refreshAccessToken({ notifyOnFailure: false })
         const restoredUser = tokens ? getUserFromToken(tokens.accessToken) : null
 
-        if (isCurrent) {
+        if (isCurrent && epoch === sessionEpochRef.current) {
           if (restoredUser) setUser(withSelectedProfile(restoredUser))
           setRestoreError('')
           setIsAuthReady(true)
         }
       } catch {
-        if (isCurrent) {
+        if (isCurrent && epoch === sessionEpochRef.current) {
           setRestoreError('Sessiyanı yoxlamaq mümkün olmadı. Bağlantını yoxlayıb yenidən cəhd edin.')
           setIsAuthReady(false)
         }
       } finally {
-        if (isCurrent) setIsRestoring(false)
+        if (isCurrent && epoch === sessionEpochRef.current) setIsRestoring(false)
       }
     }
 
@@ -223,131 +253,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, restoreRetry])
 
   useEffect(() => {
-    function terminateSession(message = SESSION_TERMINATED_MESSAGE) {
-      showSessionNotice({
-        title: 'Giriş dayandırıldı',
-        message,
-      }, false)
-      clearAuthTokens()
-      setUser(null)
-      setRestoreError('')
-
-      window.setTimeout(() => {
-        if (window.location.pathname !== '/') {
-          window.location.assign('/')
-        }
-      }, 1200)
-    }
-
     function handleAuthExpired(event: Event) {
       if (hasManualLogoutMarker()) return
       const message = event instanceof CustomEvent && typeof event.detail?.message === 'string'
-        ? event.detail.message
-        : SESSION_TERMINATED_MESSAGE
-
+        ? event.detail.message : SESSION_TERMINATED_MESSAGE
       terminateSession(message)
     }
-
     window.addEventListener('ecafe:auth-expired', handleAuthExpired)
     return () => window.removeEventListener('ecafe:auth-expired', handleAuthExpired)
-  }, [showSessionNotice])
+  }, [terminateSession])
 
   useEffect(() => {
-    if (!user || !getAccessToken()) {
-      return
+    if (!user?.userId || !getAccessToken()) return
+    const reconcileWhenVisible = () => {
+      if (document.visibilityState === 'visible') void reconcileProfiles()
     }
-
-    let isCurrent = true
-    const currentUser = user
-
-    async function reconcileStoredSession(showChangeNotice = false) {
-      const profile = await ecafeApi.profile.get()
-
-      if (!isCurrent || !getAccessToken()) {
-        return
-      }
-
-      if (!profile) {
-        return
-      }
-
-      if (profile?.isActive === false) {
-        showSessionNotice({
-          title: 'Giriş dayandırıldı',
-          message: SESSION_TERMINATED_MESSAGE,
-        }, false)
-        clearAuthTokens()
-        setUser(null)
-        window.setTimeout(() => window.location.assign('/'), 1200)
-        return
-      }
-
-      setUser((current) => {
-        if (!current) {
-          return current
-        }
-
-        const nextUser = mergeProfileDetails(current, profile)
-        return profileSignature(nextUser.profiles) === profileSignature(current.profiles) &&
-          nextUser.restaurantId === current.restaurantId &&
-          nextUser.roleId === current.roleId
-          ? current
-          : nextUser
-      })
-
-      const profileRestaurantRoles = profile.profiles.map((item) => `${item.restaurantId}:${item.roleId}`).sort().join(',')
-      const tokenRestaurantRoles = currentUser.restaurantRoles.map((item) => `${item.restaurantId}:${item.roleId}`).sort().join(',')
-      const sessionChanged =
-        profile.profiles.length > 0
-          ? profileRestaurantRoles !== tokenRestaurantRoles
-          : false
-
-      if (!sessionChanged) {
-        return
-      }
-
-      let refreshedTokens: AuthTokens | null
-      try {
-        refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
-      } catch {
-        return
-      }
-      const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
-
-      if (!isCurrent || !refreshedUser) {
-        return
-      }
-
-      setUser(withSelectedProfile(refreshedUser))
-
-      if (showChangeNotice) {
-        showPersistentSessionNotice({
-          title: 'Sessiya yeniləndi',
-          message: 'İcazə və rol məlumatlarınız yeniləndi.',
-        }, 2000)
-      }
-    }
-
-    function reconcileWhenVisible() {
-      if (document.visibilityState === 'visible') {
-        void reconcileStoredSession(true)
-      }
-    }
-
-    void reconcileStoredSession()
+    void reconcileProfiles()
     window.addEventListener('focus', reconcileWhenVisible)
     document.addEventListener('visibilitychange', reconcileWhenVisible)
-    const intervalId = window.setInterval(() => {
-      void reconcileStoredSession()
-    }, SESSION_RECONCILE_INTERVAL_MS)
-
+    const timer = window.setInterval(() => { void reconcileProfiles() }, SESSION_RECONCILE_INTERVAL_MS)
     return () => {
-      isCurrent = false
       window.removeEventListener('focus', reconcileWhenVisible)
       document.removeEventListener('visibilitychange', reconcileWhenVisible)
-      window.clearInterval(intervalId)
+      window.clearInterval(timer)
     }
-  }, [showPersistentSessionNotice, showSessionNotice, user?.restaurantId, user?.roleId, user?.userId])
+  }, [reconcileProfiles, user?.userId, sessionEpoch])
 
   useEffect(() => {
     if (!user || !getAccessToken()) {
@@ -355,97 +285,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    let logoutTimerId: number | undefined
     let disposed = false
+    const ownerId = user.userId
+    const epoch = sessionEpochRef.current
+    const isCurrentConnection = () => !disposed && epoch === sessionEpochRef.current && userRef.current?.userId === ownerId && Boolean(getAccessToken())
     let retryId: number | undefined
     let starting = false
     setRealtimeStatus('connecting')
     const connection = createUserSessionEventsConnection({
       onConnectionStatusChange: (status) => {
-        if (disposed) return
+        if (!isCurrentConnection()) return
         setRealtimeStatus(status)
         if (status === 'offline') scheduleRetry()
       },
       onUserDeactivated: (message) => {
-        showPersistentSessionNotice({
-          title: 'Giriş dayandırıldı',
-          message: message || SESSION_TERMINATED_MESSAGE,
-        }, false)
-
-        window.clearTimeout(logoutTimerId)
-        logoutTimerId = window.setTimeout(() => {
-          clearAuthTokens()
-          setUser(null)
-          window.location.assign('/')
-        }, 2500)
+        if (isCurrentConnection()) terminateSession(message)
       },
-      onUserRoleChanged: async (message) => {
-        const notice = {
-          title: 'Rol yeniləndi',
-          message: message || ROLE_CHANGED_MESSAGE,
-        }
-
-        showPersistentSessionNotice(notice, 2000)
-
-        window.clearTimeout(logoutTimerId)
-        let refreshedTokens: AuthTokens | null
-        try {
-          refreshedTokens = await refreshAccessToken()
-        } catch {
-          showSessionNotice({
-            title: 'Sessiya yenilənmədi',
-            message: 'Bağlantı problemi səbəbindən yeni rol hələ yüklənmədi. Yenidən cəhd edin.',
-          }, false)
-          return
-        }
-        const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
-
-        if (!refreshedUser) {
-          showSessionNotice({
-            title: 'Sessiya yenilənmədi',
-            message: 'Rolunuz dəyişdirildi, amma sessiya avtomatik yenilənmədi. Zəhmət olmasa yenidən daxil olun.',
-          }, false)
-
-          logoutTimerId = window.setTimeout(() => {
-            clearAuthTokens()
-            setUser(null)
-            window.location.assign('/')
-          }, 2500)
-          return
-        }
-
-        const selectedUser = withSelectedProfile(refreshedUser)
-        setUser(selectedUser)
-        logoutTimerId = window.setTimeout(() => {
-          window.sessionStorage.setItem(SESSION_NOTICE_STORAGE_KEY, JSON.stringify(notice))
-          navigate(getHomePathForUser(selectedUser), { replace: true })
-        }, 1200)
+      onUserRoleChanged: () => {
+        if (isCurrentConnection()) void reconcileProfiles({ refresh: true, resetScope: true })
       },
       onRestaurantAccessChanged: (payload) => {
-        showPersistentSessionNotice({
-          title: 'Restoran icazələri yeniləndi',
-          message: payload.message || RESTAURANT_ACCESS_CHANGED_MESSAGE,
-        }, 2000)
-
-        window.setTimeout(() => {
-          window.location.reload()
-        }, 1800)
+        if (isCurrentConnection()) void reconcileProfiles({ refresh: true, reason: payload.reason, restaurantId: payload.restaurantId, resetScope: payload.reason !== 'staff_activated' && payload.reason !== 'staff_deactivated' })
       },
       onNotificationsChanged: () => {
-        window.dispatchEvent(new Event('ecafe:notifications-refresh'))
+        if (isCurrentConnection()) window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       },
-      onConnectionRestored: async () => {
+      onConnectionRestored: () => {
+        if (!isCurrentConnection()) return
         dispatchOrderSync()
-        try {
-          const refreshedTokens = await refreshAccessToken({ notifyOnFailure: false })
-          const refreshedUser = refreshedTokens ? getUserFromToken(refreshedTokens.accessToken) : null
-
-          if (refreshedUser) {
-            setUser(withSelectedProfile(refreshedUser))
-          }
-        } catch {
-          // The next session reconciliation can retry after a transient failure.
-        }
+        void reconcileProfiles({ refresh: true })
       },
     })
 
@@ -466,7 +334,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       starting = true
       try {
         await connection.start()
-        if (!disposed) {
+        if (isCurrentConnection()) {
           setRealtimeStatus('connected')
           dispatchOrderSync()
           window.dispatchEvent(new Event('ecafe:notifications-refresh'))
@@ -475,7 +343,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (import.meta.env.DEV) {
           console.error('Realtime session connection failed.', error)
         }
-        if (!disposed) {
+        if (isCurrentConnection()) {
           setRealtimeStatus('offline')
           scheduleRetry()
         }
@@ -485,14 +353,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     function onOnline() {
+      if (!isCurrentConnection()) return
       window.clearTimeout(retryId)
       retryId = undefined
       dispatchOrderSync()
       window.dispatchEvent(new Event('ecafe:notifications-refresh'))
       void startConnection()
+      void reconcileProfiles({ refresh: true })
     }
     function onVisible() {
-      if (document.visibilityState === 'visible') dispatchOrderSync()
+      if (isCurrentConnection() && document.visibilityState === 'visible') dispatchOrderSync()
     }
     window.addEventListener('online', onOnline)
     document.addEventListener('visibilitychange', onVisible)
@@ -503,10 +373,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('online', onOnline)
       document.removeEventListener('visibilitychange', onVisible)
       window.clearTimeout(retryId)
-      window.clearTimeout(logoutTimerId)
       void connection.stop()
     }
-  }, [navigate, showPersistentSessionNotice, showSessionNotice, user?.userId])
+  }, [reconcileProfiles, terminateSession, user?.userId, sessionEpoch])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -514,7 +383,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       realtimeStatus,
       isAuthReady,
       isAuthenticated: user !== null,
+      scopeRevision: `${sessionEpoch}:${scopeRevision}`,
       clearSession: () => {
+        invalidateSessionWork()
         markManualLogout()
         clearAuthTokens()
         setUser(null)
@@ -524,123 +395,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAuthReady(true)
       },
       setSession: (tokens) => {
+        invalidateSessionWork()
         saveAuthTokens(tokens)
         const nextUser = withSelectedProfile(getUserFromToken(tokens.accessToken))
         profilePromptUserIdRef.current = ''
         setUser(nextUser)
         setRestoreError('')
         setIsAuthReady(true)
+        setSessionNotice(null)
       },
       updateUser: (patch) => {
         setUser((currentUser) => (currentUser ? { ...currentUser, ...patch } : currentUser))
       },
       selectProfile: (profile) => {
-        setUser((currentUser) => {
-          const nextUser = withSelectedProfile(currentUser, profile)
-          if (nextUser) {
-            writeStoredProfileKey(nextUser.userId, profile)
-          }
-
-          return nextUser
-        })
-        setIsProfilePromptOpen(false)
+        selectionIntentRef.current = locationKeyRef.current
+        selectAccessProfile(profile)
       },
       selectProfileForRestaurant: (restaurantId) => {
-        setUser((currentUser) => {
-          if (!currentUser) {
-            return currentUser
-          }
-
-          const profile = currentUser.profiles.find((item) => item.restaurantId === restaurantId)
-          if (!profile) {
-            return currentUser
-          }
-
-          writeStoredProfileKey(currentUser.userId, profile)
-          return withSelectedProfile(currentUser, profile)
-        })
-        setIsProfilePromptOpen(false)
+        // An old route's effect must not undo the user's explicit profile switch.
+        if (selectionIntentRef.current === locationKeyRef.current) return
+        const profile = userRef.current?.profiles.find(item => item.restaurantId === restaurantId)
+        if (profile) selectAccessProfile(profile)
       },
       logout: async () => {
+        const epoch = sessionEpochRef.current
         markManualLogout()
         try {
           await ecafeApi.auth.logout()
         } finally {
-          clearAuthTokens()
-          setUser(null)
-          setIsProfilePromptOpen(false)
-          setIsAuthReady(true)
+          if (epoch === sessionEpochRef.current) {
+            invalidateSessionWork()
+            clearAuthTokens()
+            setUser(null)
+            setIsProfilePromptOpen(false)
+            setIsAuthReady(true)
+          }
         }
       },
       logoutAll: async () => {
+        const epoch = sessionEpochRef.current
         markManualLogout()
         try {
           await ecafeApi.auth.logoutAll()
         } finally {
-          clearAuthTokens()
-          setUser(null)
-          setIsProfilePromptOpen(false)
-          setIsAuthReady(true)
+          if (epoch === sessionEpochRef.current) {
+            invalidateSessionWork()
+            clearAuthTokens()
+            setUser(null)
+            setIsProfilePromptOpen(false)
+            setIsAuthReady(true)
+          }
         }
       },
     }),
-    [isAuthReady, realtimeStatus, user],
+    [invalidateSessionWork, isAuthReady, realtimeStatus, scopeRevision, sessionEpoch, selectAccessProfile, setUser, user],
   )
 
-  useEffect(() => {
-    if (!user || !getAccessToken()) {
-      profilePromptUserIdRef.current = ''
-      setIsProfilePromptOpen(false)
-      return
-    }
-
-    let isCurrent = true
-    const authenticatedUser = user
-
-    async function prepareProfileSelection() {
-      let currentUser: CurrentUser = authenticatedUser
-
-      try {
-        const profile = await ecafeApi.profile.get()
-        if (isCurrent && profile) {
-          setUser((storedUser) => {
-            if (!storedUser) {
-              return storedUser
-            }
-
-            const nextUser = mergeProfileDetails(storedUser, profile)
-            currentUser = nextUser
-            return profileSignature(nextUser.profiles) === profileSignature(storedUser.profiles) &&
-              nextUser.restaurantId === storedUser.restaurantId &&
-              nextUser.roleId === storedUser.roleId
-              ? storedUser
-              : nextUser
-          })
-        }
-      } catch {
-        // Profile selection can still fall back to JWT claims when profile refresh is unavailable.
-      }
-
-      if (!isCurrent || profilePromptUserIdRef.current === currentUser.userId) {
-        return
-      }
-
-      profilePromptUserIdRef.current = currentUser.userId
-
-      if (currentUser.profiles.length <= 1 || hasStoredProfile(currentUser)) {
-        setIsProfilePromptOpen(false)
-        return
-      }
-
-      setIsProfilePromptOpen(true)
-    }
-
-    void prepareProfileSelection()
-
-    return () => {
-      isCurrent = false
-    }
-  }, [user?.userId])
 
   return (
     <AuthContext.Provider value={value}>
@@ -666,7 +476,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         />
       ) : null}
       {sessionNotice ? (
-        <div className="session-termination-notice" role="alert">
+        <div className={`session-termination-notice${sessionNotice.tone === 'info' ? ' session-profile-notice' : ''}`} role={sessionNotice.tone === 'info' ? 'status' : 'alert'}>
           <strong>{sessionNotice.title}</strong>
           <span>{sessionNotice.message}</span>
         </div>

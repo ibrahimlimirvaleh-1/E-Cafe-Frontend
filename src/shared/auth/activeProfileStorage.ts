@@ -3,6 +3,16 @@ import { getAccessToken } from './tokenStorage'
 import type { UserAccessProfile } from './jwt'
 
 const ACTIVE_PROFILE_STORAGE_KEY = 'ecafe.activeProfile'
+let verifiedProfiles: { userId: string; profiles: UserAccessProfile[]; selectedKey?: string } | null = null
+
+export function clearVerifiedProfiles() { verifiedProfiles = null }
+
+export function syncVerifiedProfiles(user: { userId: string; restaurantId?: string; roleId: string; profiles: UserAccessProfile[] }) {
+  const selected = user.profiles.find(profile => profile.restaurantId === user.restaurantId && profile.roleId === user.roleId)
+  verifiedProfiles = { userId: user.userId, profiles: user.profiles, selectedKey: selected ? profileKey(selected) : undefined }
+  if (selected) writeStoredProfileKey(user.userId, selected)
+  else window.localStorage.removeItem(`${ACTIVE_PROFILE_STORAGE_KEY}.${user.userId}`)
+}
 
 function profileKey(profile: Pick<UserAccessProfile, 'restaurantId' | 'roleId'>) {
   return `${profile.restaurantId}:${profile.roleId}`
@@ -33,10 +43,12 @@ export function getActiveProfileContext() {
   }
 
   const storedProfileKey = readStoredProfileKey(user.userId)
-  const profiles = user.profiles.length > 0
+  const verified = verifiedProfiles?.userId === user.userId ? verifiedProfiles : null
+  const profiles = verified ? verified.profiles : user.profiles.length > 0
     ? user.profiles
     : user.restaurantRoles.map((assignment) => ({ ...assignment }))
   const selectedProfile =
+    (verified ? profiles.find(profile => profileKey(profile) === verified.selectedKey) : undefined) ||
     profiles.find((profile) => profileKey(profile) === storedProfileKey) ||
     profiles.find((profile) => profile.restaurantId === user.restaurantId && profile.roleId === user.roleId) ||
     profiles[0]

@@ -301,6 +301,7 @@ function buildApiError(result: ApiResult<unknown>, statusCode: number, shouldNot
 }
 
 function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, details: ApiErrorDetail[], authErrorMessage?: string) {
+  if (result.code === 'StaffAccountInactive' || result.code === '1140') return i18n.t('ui.profiles.accountInactive')
   if (result.code === 'EmailChangeRequiresVerification') return i18n.t('ui.emailChange.requiresVerification')
   if (details.length > 0) {
     return result.message?.trim() || i18n.t('ui.http.validation')
