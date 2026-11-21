@@ -1,0 +1,17 @@
+{
+  "az": {
+    "ui.staffAccess.inactive": "Aktiv işçi profiliniz yoxdur. Giriş üçün restoran məsulu ilə əlaqə saxlayın.",
+    "ui.profiles.statusHint": "Status bu restoranın işçi profilinə aiddir. Son aktiv işçi profili bağlanarsa, sistemə giriş dayandırılır.",
+    "ui.profiles.deactivated": "Restoran profili deaktiv edildi."
+  },
+  "en": {
+    "ui.staffAccess.inactive": "You have no active staff profile. Contact your restaurant administrator to sign in.",
+    "ui.profiles.statusHint": "This status applies to the restaurant staff profile. Deactivating the last active staff profile disables sign-in.",
+    "ui.profiles.deactivated": "Restaurant profile deactivated."
+  },
+  "ru": {
+    "ui.staffAccess.inactive": "У вас нет активного рабочего профиля. Для входа обратитесь к ответственному за ресторан.",
+    "ui.profiles.statusHint": "Статус относится к рабочему профилю ресторана. После отключения последнего активного рабочего профиля вход блокируется.",
+    "ui.profiles.deactivated": "Профиль ресторана деактивирован."
+  }
+}

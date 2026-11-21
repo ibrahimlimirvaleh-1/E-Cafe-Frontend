@@ -49,6 +49,7 @@ async function setup(language = 'en', options = {}) {
         if (state.mode === 'password') return error(route, 'InvalidCredentials', 400)
         if (state.mode === 'limited') return error(route, 'TooManyRequests', 429)
         if (state.mode === 'session') return error(route, 'SessionInvalid', 401)
+        if (state.mode === 'staff') return error(route, 'StaffProfileInactive', 401)
         return route.fulfill({ status: 202 })
       }
       if (p === `${security}confirm`) {
@@ -207,6 +208,27 @@ try {
     assert.equal(state.requests.filter(r => r.path === `${security}request`).length, 1)
     await context.close()
   }
+  for (const operation of ['request', 'confirm']) {
+    const { page, context, state, t } = await setup('en', { roleId: 3, ...(operation === 'confirm' ? { confirmCode: 'StaffProfileInactive' } : {}) })
+    if (operation === 'request') {
+      state.mode = 'staff'
+      await page.goto(`${origin}/account`)
+      await page.getByRole('button', { name: t('change'), exact: true }).click()
+      const modal = page.locator('dialog')
+      await modal.locator('input[type=email]').fill('new@example.com')
+      await modal.locator('input[type=password]').fill('CurrentPassword1!')
+      await modal.locator('button[type=submit]').click()
+    } else {
+      await page.goto(`${origin}/confirm-email-change#token=${secret}`)
+      await page.getByRole('button', { name: t('confirm'), exact: true }).click()
+    }
+    await page.waitForURL(`${origin}/login`)
+    await page.locator('.auth-card .form-message-danger').filter({ hasText: catalogs.en['ui.staffAccess.inactive'] }).waitFor()
+    assert.equal(state.requests.filter(r => r.path === `${security}${operation}`).length, 1)
+    assert.equal(state.requests.filter(r => r.path === '/api/v1/user/refresh').length, 1, 'Terminal staff denial never replays a protected security operation')
+    await noLeaks(page)
+    await context.close()
+  }
   for (const roleId of [1, 2, 3]) {
     const { page, context, state } = await setup('en', { roleId })
     await page.goto(`${origin}/admin/staff/7/edit?restaurantId=1`)
@@ -224,5 +246,5 @@ try {
     await context.close()
   }
   assert.deepEqual(pageErrors, [])
-  console.log('PASS email-change: AZ/EN/RU, desktop/mobile/light/dark, readonly profile/staff roles, generic request, cooldown, double click, token scrub/no storage, explicit confirm, wrong account/expired/rate limit/session errors, local logout')
+  console.log('PASS 22 email-change scenarios: AZ/EN/RU, desktop/mobile/light/dark, readonly profile/staff roles, generic request, cooldown, double click, token scrub/no storage, explicit confirm, wrong account/expired/rate limit/session errors, terminal staff denial for request/confirm, local logout')
 } finally { await browser.close() }

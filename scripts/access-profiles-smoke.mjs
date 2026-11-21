@@ -30,11 +30,21 @@ assert.equal(api.getRestaurantRoleId(otherRemoved, '1'), undefined)
 assert.equal(otherRemoved.restaurantRoles.length, 1); cases += 1
 const currentRemoved = api.mergeProfileDetails(user, details([profiles[1]]))
 assert.equal(currentRemoved.restaurantId, '2'); assert.equal(currentRemoved.roleId, '3'); cases += 1
-const empty = api.mergeProfileDetails(user, details([]))
+const customer = { ...user, roleId: '5', profiles: [], restaurantRoles: [], restaurantIds: [], restaurantId: undefined, permissions: [] }
+const empty = api.mergeProfileDetails(customer, details([]))
 assert.equal(empty.roleId, '5'); assert.equal(empty.restaurantId, undefined)
 assert.equal(empty.restaurantRoles.length, 0); assert.equal(empty.restaurantIds.length, 0)
 assert.equal(empty.profiles.length, 0); assert.equal(empty.permissions.length, 0)
 assert.equal(api.hasPermission(empty, 'ManageStaff'), false); cases += 1
+assert.equal(api.hasNoActiveStaffProfile(customer, details([])), false)
+for (const roleId of ['2', '3', '4', '6']) {
+  const inactiveDetails = { roleId: Number(roleId), profiles: [] }
+  const inactive = api.mergeProfileDetails({ ...user, roleId }, inactiveDetails)
+  assert.equal(inactive.roleId, roleId, 'Staff is never downgraded to Customer to bypass login restrictions')
+  assert.equal(api.hasNoActiveStaffProfile(inactive, inactiveDetails), true)
+  assert.equal(inactive.permissions.length, 0)
+  cases += 1
+}
 
 api.saveAuthTokens({ accessToken: token(user) })
 api.syncVerifiedProfiles(empty)
@@ -55,6 +65,7 @@ assert.equal(reactivated.restaurantId, '1'); assert.equal(reactivated.roleId, '2
 const admin = { ...user, roleId: '1', profiles: [], restaurantRoles: [], permissions: ['ManageStaff'] }
 const adminResult = api.mergeProfileDetails(admin, { roleId: 1, profiles: [] })
 assert.equal(adminResult.roleId, '1'); assert.equal(api.profileScope(adminResult), api.profileScope(admin)); cases += 1
+assert.equal(api.hasNoActiveStaffProfile(admin, { roleId: 1, profiles: [] }), false)
 const demoted = api.mergeProfileDetails(admin, details([profiles[1]]))
 assert.equal(demoted.roleId, '3'); assert.equal(demoted.restaurantId, '2')
 assert.equal(api.hasPermission(demoted, 'ManageUsers'), false); assert.equal(demoted.permissions.length, 0); cases += 1

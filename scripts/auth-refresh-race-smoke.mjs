@@ -213,4 +213,77 @@ for (const blob of [false, true]) {
   cases += 1
 }
 
-console.log(`PASS ${cases} deterministic auth-race cases: delayed refresh -> clear -> fresh login; stale success/401/403/500/network/body, per-revision deduplication, JSON/blob 401 fallback and valid retry, valid bootstrap and expiry`)
+const staffDenial = (status = 401, code = 'StaffProfileInactive') => new Response(JSON.stringify({ code, message: '' }), { status, headers: { 'Content-Type': 'application/json' } })
+for (const status of [401, 403]) for (const code of ['StaffProfileInactive', '1141']) for (const blob of [false, true]) {
+  const test = setup()
+  test.api.saveAuthTokens({ accessToken: 'staff-login' })
+  const pending = test.queue()
+  const request = blob ? test.api.fetchProtectedBlob('/protected-file') : test.api.httpClient('/profile')
+  const rejected = assert.rejects(request, error => error.code === code && /Aktiv işçi profiliniz yoxdur/.test(error.message))
+  pending.resolve(staffDenial(status, code))
+  await rejected
+  assert.equal(test.requests.length, 1, 'Staff denial never enters a refresh loop')
+  assert.equal(test.api.getAccessToken(), '')
+  assert.equal(test.expired(), 1)
+  cases += 1
+}
+for (const status of [401, 403]) for (const blob of [false, true]) {
+  const test = setup()
+  test.api.saveAuthTokens({ accessToken: 'old-staff-login' })
+  const pending = test.queue()
+  const request = blob ? test.api.fetchProtectedBlob('/protected-file') : test.api.httpClient('/profile')
+  const rejected = assert.rejects(request, error => error.code === 'StaffProfileInactive')
+  test.freshLogin()
+  pending.resolve(staffDenial(status))
+  await rejected
+  assert.equal(test.api.getAccessToken(), 'fresh-login')
+  assert.equal(test.expired(), 0, 'Old staff-denial response cannot sign out a fresh login')
+  cases += 1
+}
+for (const code of ['StaffProfileInactive', '1141']) for (const notifyOnFailure of [false, true]) {
+  const test = setup(), pending = test.queue()
+  const refresh = test.api.refreshAccessToken({ notifyOnFailure })
+  const rejected = assert.rejects(refresh, error => error.code === code && /Aktiv işçi profiliniz yoxdur/.test(error.message))
+  pending.resolve(staffDenial(401, code))
+  await rejected
+  assert.equal(test.expired(), notifyOnFailure ? 1 : 0)
+  assert.equal(test.api.getAccessToken(), '')
+  cases += 1
+}
+for (const status of [401, 403]) {
+  const test = setup(), pending = test.queue(), body = deferred(), parsing = deferred()
+  test.api.saveAuthTokens({ accessToken: 'old-staff-login' })
+  const refresh = test.api.refreshAccessToken()
+  pending.resolve({ status, ok: false, json() { parsing.resolve(); return body.promise } })
+  await parsing.promise
+  test.freshLogin()
+  body.resolve({ code: 'StaffProfileInactive' })
+  assert.equal(await refresh, null)
+  assert.equal(test.api.getAccessToken(), 'fresh-login')
+  assert.equal(test.expired(), 0)
+  cases += 1
+}
+{
+  const test = setup(), pending = test.queue()
+  test.api.saveAuthTokens({ accessToken: 'ordinary-customer-login' })
+  const request = test.api.httpClient('/user/login', { isAuthenticationAttempt: true, skipAuthRefresh: true, suppressAuthExpiredEvent: true })
+  const rejected = assert.rejects(request, error => error.code === 'StaffProfileInactive')
+  pending.resolve(staffDenial())
+  await rejected
+  assert.equal(test.api.getAccessToken(), 'ordinary-customer-login', 'Failed staff login cannot clear an existing unrelated session')
+  assert.equal(test.expired(), 0)
+  cases += 1
+}
+{
+  const test = setup(), pending = test.queue()
+  test.api.saveAuthTokens({ accessToken: `header.${Buffer.from(JSON.stringify({ userId: '42', roleId: '5' })).toString('base64url')}.signature` })
+  const request = test.api.httpClient('/profile')
+  const rejected = assert.rejects(request, error => String(error.code) === '1141')
+  pending.resolve(new Response(JSON.stringify({ success: false, code: 1141, data: null }), { status: 401 }))
+  await rejected
+  assert.equal(test.requests.length, 1, 'Numeric enveloped denial also blocks legacy Customer fallback JWTs')
+  assert.equal(test.api.getAccessToken(), '')
+  assert.equal(test.expired(), 1)
+  cases += 1
+}
+console.log(`PASS ${cases} deterministic auth cases: original 16 refresh races plus staff-profile denial/no-loop, JSON/blob 401/403/name/1141, bootstrap reason, stale denial/body and login isolation`)
