@@ -1,5 +1,7 @@
 # Restaurant Profile Deactivation UI
 
+> Historical November 21 contract. The empty-staff-profile Customer fallback below was superseded on November 22 by [Staff Profile Required For Login](staff-profile-required-login-ui.md). Staff accounts now require an active staff profile; genuine Customer/Admin accounts remain exempt. Partial-profile reconciliation and the historical test results below remain recorded as implemented at that time.
+
 Branch: `fix/restaurant-profile-deactivation-ui`, based on frontend `origin/dev` at `bff545a`. Repository changes only; merge, deployment, APK publication, production data and live account changes are separate operations.
 
 ## Contract

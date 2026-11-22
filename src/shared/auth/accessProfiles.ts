@@ -7,6 +7,11 @@ type ProfileDetails = {
   profiles: Array<{ restaurantId: string; restaurantName: string; roleId: number; roleName: string; isActive: boolean }>
 }
 
+export function hasNoActiveStaffProfile(user: CurrentUser, details: ProfileDetails) {
+  const role = String(details.roleId || user.roleId)
+  return ['2', '3', '4', '6'].includes(role) && !details.profiles.some(profile => profile.isActive && ['2', '3', '4', '6'].includes(String(profile.roleId)))
+}
+
 export function profileSignature(profiles: UserAccessProfile[]) {
   return profiles.map(profile => `${profileKey(profile)}:${profile.restaurantName || ''}:${profile.roleName || ''}:${profile.isActive !== false}`).sort().join('|')
 }
@@ -45,7 +50,9 @@ export function mergeProfileDetails(user: CurrentUser, details: ProfileDetails, 
   if (details.roleId === 1 && preferred.roleId === '1') return { ...next, roleId: '1', restaurantId: undefined }
   if (!profiles.length) {
     const platformAdmin = details.roleId === 1 || (!details.roleId && user.roleId === '1')
-    return { ...next, restaurantId: undefined, roleId: platformAdmin ? '1' : '5', roleName: platformAdmin ? 'PlatformAdmin' : 'Customer', permissions: platformAdmin ? user.permissions : [] }
+    const roleId = String(details.roleId || user.roleId)
+    const staff = ['2', '3', '4', '6'].includes(roleId)
+    return { ...next, restaurantId: undefined, roleId: platformAdmin ? '1' : staff ? roleId : '5', roleName: platformAdmin ? 'PlatformAdmin' : staff ? user.roleName : 'Customer', permissions: platformAdmin ? user.permissions : [] }
   }
   // Preserve the tab's current selection; a JWT's default restaurant is not a navigation request.
   return withSelectedProfile(next, { restaurantId: preferred.restaurantId || '', roleId: preferred.roleId })!

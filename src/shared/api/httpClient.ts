@@ -41,11 +41,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 const API_PUBLIC_ORIGIN = import.meta.env.VITE_PUBLIC_API_ORIGIN
 const AUTH_EXPIRED_NOTIFICATION_THROTTLE_MS = 2000
 
-type RefreshResult = { tokens: AuthTokens | null; revision: number }
+type RefreshResult = { tokens: AuthTokens | null; revision: number; code?: string }
 let pendingRefresh: { revision: number; promise: Promise<RefreshResult | null> } | null = null
 let lastAuthExpiredNotificationAt = 0
 
 type RequestOptions = RequestInit & {
+  isAuthenticationAttempt?: boolean
   authErrorMessage?: string
   skipAuthRefresh?: boolean
   suppressAuthExpiredEvent?: boolean
@@ -55,7 +56,7 @@ export async function httpClient<T>(path: string, init?: RequestOptions): Promis
   const revision = getAuthRevision()
   const response = await sendRequest(path, init)
 
-  if (response.status === 401 && !init?.skipAuthRefresh && revision === getAuthRevision()) {
+  if (response.status === 401 && !init?.skipAuthRefresh && !(await isStaffProfileDenial(response)) && revision === getAuthRevision()) {
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       return httpClient<T>(path, { ...init, skipAuthRefresh: true })
@@ -69,7 +70,7 @@ export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOption
   const revision = getAuthRevision()
   const response = await sendBlobRequest(pathOrUrl, init)
 
-  if (response.status === 401 && !init?.skipAuthRefresh && revision === getAuthRevision()) {
+  if (response.status === 401 && !init?.skipAuthRefresh && !(await isStaffProfileDenial(response)) && revision === getAuthRevision()) {
     const refreshed = await refreshAccessToken()
     if (refreshed) {
       return fetchProtectedBlob(pathOrUrl, { ...init, skipAuthRefresh: true })
@@ -79,7 +80,8 @@ export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOption
   if (!response.ok) {
     const payload = await response.json().catch(() => null)
     const result = normalizeApiResult<unknown>(payload, response.status, response.ok)
-    throw buildApiError(result, response.status, !init?.suppressAuthExpiredEvent && revision === getAuthRevision(), init?.authErrorMessage)
+    const shouldExpire = !init?.suppressAuthExpiredEvent || (isStaffProfileInactiveCode(result.code) && !init?.isAuthenticationAttempt)
+    throw buildApiError(result, response.status, shouldExpire && revision === getAuthRevision(), init?.authErrorMessage)
   }
 
   return response.blob()
@@ -95,6 +97,7 @@ async function sendBlobRequest(pathOrUrl: string, init?: RequestOptions) {
 
 async function sendApiRequest(url: string, init?: RequestOptions) {
   const {
+    isAuthenticationAttempt: _isAuthenticationAttempt,
     authErrorMessage: _authErrorMessage,
     skipAuthRefresh: _skipAuthRefresh,
     suppressAuthExpiredEvent: _suppressAuthExpiredEvent,
@@ -178,7 +181,8 @@ async function parseResponse<T>(response: Response, init?: RequestOptions, revis
   const result = normalizeApiResult<T>(payload, response.status, response.ok)
 
   if (!response.ok) {
-    throw buildApiError(result, response.status, !init?.suppressAuthExpiredEvent && revision === getAuthRevision(), init?.authErrorMessage)
+    const shouldExpire = !init?.suppressAuthExpiredEvent || (isStaffProfileInactiveCode(result.code) && !init?.isAuthenticationAttempt)
+    throw buildApiError(result, response.status, shouldExpire && revision === getAuthRevision(), init?.authErrorMessage)
   }
 
   return result
@@ -210,6 +214,12 @@ export async function refreshAccessToken(options?: { notifyOnFailure?: boolean }
   // A response from an earlier login must not mutate or expire the current one.
   if (!result || result.revision !== getAuthRevision()) return null
 
+  if (!result.tokens && isStaffProfileInactiveCode(result.code)) {
+    const message = i18n.t('ui.staffAccess.inactive')
+    if (shouldNotify && !hasManualLogoutMarker()) notifyAuthExpired(message)
+    throw new ApiError(message, 401, [], result.code)
+  }
+
   if (!result.tokens && shouldNotify && !hasManualLogoutMarker()) {
     notifyAuthExpiredOnce('Sessiya etibarsızdır və ya hesabınız deaktiv edilib. Zəhmət olmasa yenidən daxil olun.')
   }
@@ -236,8 +246,11 @@ async function requestRefreshAccessToken(revision: number): Promise<RefreshResul
   if (revision !== getAuthRevision() || hasManualLogoutMarker()) return null
 
   if (response.status === 401 || response.status === 403) {
+    const payload = await response.json().catch(() => null)
+    if (revision !== getAuthRevision() || hasManualLogoutMarker()) return null
+    const result = normalizeApiResult<unknown>(payload, response.status, false)
     clearAuthTokens()
-    return { tokens: null, revision: getAuthRevision() }
+    return { tokens: null, revision: getAuthRevision(), code: result.code }
   }
 
   if (!response.ok) {
@@ -288,11 +301,24 @@ export function normalizeCaughtApiError(error: unknown, fallbackMessage = i18n.t
   }
 }
 
+export function isStaffProfileInactiveCode(code: string | undefined) {
+  return code === 'StaffProfileInactive' || String(code) === '1141'
+}
+
+export function isStaffProfileInactiveError(error: unknown): error is ApiError {
+  return error instanceof ApiError && isStaffProfileInactiveCode(error.code)
+}
+
+async function isStaffProfileDenial(response: Response) {
+  const payload = await response.clone().json().catch(() => null)
+  return isStaffProfileInactiveCode(normalizeApiResult<unknown>(payload, response.status, false).code)
+}
+
 function buildApiError(result: ApiResult<unknown>, statusCode: number, shouldNotifyAuthExpired = true, authErrorMessage?: string) {
   const details = extractErrorDetails(result.errors)
   const message = resolveApiErrorMessage(result, statusCode, details, authErrorMessage)
 
-  if (statusCode === 401 && shouldNotifyAuthExpired) {
+  if ((statusCode === 401 || isStaffProfileInactiveCode(result.code)) && shouldNotifyAuthExpired) {
     clearAuthTokens()
     notifyAuthExpired(message)
   }
@@ -301,6 +327,7 @@ function buildApiError(result: ApiResult<unknown>, statusCode: number, shouldNot
 }
 
 function resolveApiErrorMessage(result: ApiResult<unknown>, statusCode: number, details: ApiErrorDetail[], authErrorMessage?: string) {
+  if (isStaffProfileInactiveCode(result.code)) return i18n.t('ui.staffAccess.inactive')
   if (result.code === 'StaffAccountInactive' || result.code === '1140') return i18n.t('ui.profiles.accountInactive')
   if (result.code === 'EmailChangeRequiresVerification') return i18n.t('ui.emailChange.requiresVerification')
   if (details.length > 0) {

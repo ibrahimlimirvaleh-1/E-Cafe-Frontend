@@ -10,12 +10,12 @@ import type { CurrentUser, UserAccessProfile } from './jwt'
 import { clearAuthTokens, getAccessToken, hasManualLogoutMarker, markManualLogout, saveAuthTokens } from './tokenStorage'
 import type { AuthTokens } from './tokenStorage'
 import { ecafeApi } from '../api/ecafeApi'
-import { refreshAccessToken } from '../api/httpClient'
+import { isStaffProfileInactiveError, refreshAccessToken } from '../api/httpClient'
 import { createUserSessionEventsConnection, type RealtimeConnectionStatus } from '../realtime/userSessionEvents'
 import { dispatchOrderSync } from '../realtime/orderEvents'
 import { getHomePathForUser } from './authz'
 import { clearVerifiedProfiles, profileKey, readStoredProfileKey, syncVerifiedProfiles } from './activeProfileStorage'
-import { assignmentSignature, mergeProfileDetails, profileScope, profileSignature, sameAccessState, withSelectedProfile } from './accessProfiles'
+import { assignmentSignature, hasNoActiveStaffProfile, mergeProfileDetails, profileScope, profileSignature, sameAccessState, withSelectedProfile } from './accessProfiles'
 import { Button } from '../ui/Button'
 import './profile-access.css'
 
@@ -36,6 +36,7 @@ type SessionNotice = {
   title: string
   message: string
   tone?: 'info'
+  translationKey?: string
 }
 
 type AuthContextValue = {
@@ -51,6 +52,7 @@ type AuthContextValue = {
   logoutAll: () => Promise<void>
   clearSession: () => void
   scopeRevision: string
+  sessionNotice: SessionNotice | null
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -117,9 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuthTokens()
     setUser(null)
     setRestoreError('')
+    setIsRestoring(false)
     setIsAuthReady(true)
     setIsProfilePromptOpen(false)
-    showSessionNotice({ title: i18n.t('ui.profiles.sessionEnded'), message }, false)
+    showSessionNotice({ title: i18n.t('ui.profiles.sessionEnded'), message, translationKey: message === i18n.t('ui.staffAccess.inactive') ? 'ui.staffAccess.inactive' : undefined }, false)
     navigateRef.current('/login', { replace: true })
   }, [invalidateSessionWork, setUser, showSessionNotice])
 
@@ -130,11 +133,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const requestId = ++reconcileIdRef.current
     const hadStoredProfile = hasStoredProfile(owner)
     let didResetScope = false
-    const isCurrent = () => requestId === reconcileIdRef.current && epoch === sessionEpochRef.current && userRef.current?.userId === owner.userId && Boolean(getAccessToken())
+    const isCurrentOwner = () => requestId === reconcileIdRef.current && epoch === sessionEpochRef.current && userRef.current?.userId === owner.userId
+    const isCurrent = () => isCurrentOwner() && Boolean(getAccessToken())
     try {
       const details = await ecafeApi.profile.get()
       if (!isCurrent() || !details) return
       if (!details.isActive) { terminateSession(); return }
+      if (hasNoActiveStaffProfile(userRef.current!, details)) { terminateSession(i18n.t('ui.staffAccess.inactive')); return }
       const apply = (base: CurrentUser) => {
         const current = userRef.current!
         const next = mergeProfileDetails(base, details, current)
@@ -166,7 +171,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!isCurrent()) return
       const refreshed = tokens ? getUserFromToken(tokens.accessToken) : null
       if (refreshed?.userId === owner.userId) apply(refreshed)
-    } catch {
+    } catch (error) {
+      if (isCurrentOwner() && isStaffProfileInactiveError(error)) terminateSession(error.message)
       // Retain the current safe scope on transient failure; focus/reconnect/poll retries.
     }
   }, [setUser, showSessionNotice, terminateSession])
@@ -234,8 +240,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRestoreError('')
           setIsAuthReady(true)
         }
-      } catch {
+      } catch (error) {
         if (isCurrent && epoch === sessionEpochRef.current) {
+          if (isStaffProfileInactiveError(error)) { terminateSession(error.message); return }
           setRestoreError('Sessiyanı yoxlamaq mümkün olmadı. Bağlantını yoxlayıb yenidən cəhd edin.')
           setIsAuthReady(false)
         }
@@ -296,6 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       onConnectionStatusChange: (status) => {
         if (!isCurrentConnection()) return
         setRealtimeStatus(status)
+        if (status === 'reconnecting') void reconcileProfiles()
         if (status === 'offline') scheduleRetry()
       },
       onUserDeactivated: (message) => {
@@ -305,7 +313,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (isCurrentConnection()) void reconcileProfiles({ refresh: true, resetScope: true })
       },
       onRestaurantAccessChanged: (payload) => {
-        if (isCurrentConnection()) void reconcileProfiles({ refresh: true, reason: payload.reason, restaurantId: payload.restaurantId, resetScope: payload.reason !== 'staff_activated' && payload.reason !== 'staff_deactivated' })
+        if (isCurrentConnection()) void reconcileProfiles({ refresh: payload.reason !== 'staff_access_revoked', reason: payload.reason, restaurantId: payload.restaurantId, resetScope: !['staff_activated', 'staff_deactivated', 'staff_access_revoked'].includes(payload.reason || '') })
       },
       onNotificationsChanged: () => {
         if (isCurrentConnection()) window.dispatchEvent(new Event('ecafe:notifications-refresh'))
@@ -384,6 +392,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthReady,
       isAuthenticated: user !== null,
       scopeRevision: `${sessionEpoch}:${scopeRevision}`,
+      sessionNotice,
       clearSession: () => {
         invalidateSessionWork()
         markManualLogout()
@@ -448,7 +457,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [invalidateSessionWork, isAuthReady, realtimeStatus, scopeRevision, sessionEpoch, selectAccessProfile, setUser, user],
+    [invalidateSessionWork, isAuthReady, realtimeStatus, scopeRevision, sessionEpoch, sessionNotice, selectAccessProfile, setUser, user],
   )
 
 
@@ -475,7 +484,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }}
         />
       ) : null}
-      {sessionNotice ? (
+      {sessionNotice && location.pathname.replace(/\/+$/, '').toLowerCase() !== '/login' ? (
         <div className={`session-termination-notice${sessionNotice.tone === 'info' ? ' session-profile-notice' : ''}`} role={sessionNotice.tone === 'info' ? 'status' : 'alert'}>
           <strong>{sessionNotice.title}</strong>
           <span>{sessionNotice.message}</span>

@@ -1,12 +1,14 @@
 import { i18n } from '../../shared/i18n/i18n'
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { ecafeApi } from '../../shared/api/ecafeApi'
-import { normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
+import { isStaffProfileInactiveError, normalizeCaughtApiError, type ApiErrorDetail } from '../../shared/api/httpClient'
 import { useAuth } from '../../shared/auth/AuthContext'
 import { getHomePathForUser } from '../../shared/auth/authz'
 import { getUserFromToken } from '../../shared/auth/jwt'
+import { getAuthRevision } from '../../shared/auth/tokenStorage'
 import { Brand } from '../../shared/layout/Brand'
 import { Button } from '../../shared/ui/Button'
 import { TextField } from '../../shared/ui/FormField'
@@ -18,21 +20,33 @@ type AuthPageProps = {
 }
 
 export function AuthPage({ mode }: AuthPageProps) {
+  useTranslation()
   const isLogin = mode === 'login'
   const navigate = useNavigate()
-  const { setSession } = useAuth()
+  const { setSession, sessionNotice } = useAuth()
   const [name, setName] = useState('')
   const [surname, setSurname] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [staffDenied, setStaffDenied] = useState(false)
   const [errorDetails, setErrorDetails] = useState<ApiErrorDetail[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const attemptRef = useRef(0)
+  const activeAttemptRef = useRef(false)
+
+  useEffect(() => {
+    setIsSubmitting(false)
+    activeAttemptRef.current = false
+    return () => { attemptRef.current += 1; activeAttemptRef.current = false }
+  }, [mode])
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (activeAttemptRef.current) return
     setError('')
+    setStaffDenied(false)
     setErrorDetails([])
     const validationDetails = validateAuthForm({ email, isLogin, name, password, phone, surname })
 
@@ -43,6 +57,10 @@ export function AuthPage({ mode }: AuthPageProps) {
     }
 
     setIsSubmitting(true)
+    activeAttemptRef.current = true
+    const attempt = ++attemptRef.current
+    const revision = getAuthRevision()
+    const isCurrentAttempt = () => attempt === attemptRef.current && revision === getAuthRevision()
 
     try {
       const tokens = isLogin
@@ -55,6 +73,7 @@ export function AuthPage({ mode }: AuthPageProps) {
             password,
           })
 
+      if (!isCurrentAttempt()) return
       if (!tokens.accessToken) {
         throw new Error('Token məlumatı geri qayıtmadı.')
       }
@@ -64,13 +83,21 @@ export function AuthPage({ mode }: AuthPageProps) {
       const redirectTo = getHomePathForUser(user)
       navigate(redirectTo, { replace: true })
     } catch (err) {
+      if (!isCurrentAttempt()) return
       const feedback = normalizeCaughtApiError(err, isLogin ? 'Giriş mümkün olmadı.' : 'Qeydiyyat tamamlanmadı.')
       setError(feedback.message)
+      setStaffDenied(isStaffProfileInactiveError(err))
       setErrorDetails(feedback.details)
     } finally {
-      setIsSubmitting(false)
+      if (attempt === attemptRef.current) {
+        activeAttemptRef.current = false
+        setIsSubmitting(false)
+      }
     }
   }
+
+  const sessionMessage = isLogin && sessionNotice ? sessionNotice.translationKey ? i18n.t(sessionNotice.translationKey) : sessionNotice.message : ''
+  const feedbackMessage = staffDenied ? i18n.t('ui.staffAccess.inactive') : error || sessionMessage
 
   return (
     <main className="auth-page">
@@ -89,7 +116,7 @@ export function AuthPage({ mode }: AuthPageProps) {
         ) : null}
         <TextField label={i18n.t('ui.pages.auth.auth_page.email_969ccb')} placeholder={i18n.t('ui.pages.auth.auth_page.name_example_com_7b17fb')} type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
         <TextField label={i18n.t('ui.pages.auth.auth_page.sifre_bc0691')} placeholder={i18n.t('ui.pages.auth.auth_page.en_azi_8_simvol_24a804')} type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-        {error ? <StatusMessage details={errorDetails} tone="danger">{error}</StatusMessage> : null}
+        {feedbackMessage ? <StatusMessage key={error ? `attempt-${attemptRef.current}` : 'session'} details={error ? errorDetails : []} tone="danger" autoHideMs={false}>{feedbackMessage}</StatusMessage> : null}
         <Button disabled={isSubmitting} type="submit">{isSubmitting ?i18n.t('ui.pages.auth.auth_page.gonderilir_e1bb27') : isLogin ?i18n.t('ui.pages.auth.auth_page.daxil_ol_2e157a') :i18n.t('ui.pages.auth.auth_page.hesab_yarat_54e62f')}</Button>
         <div className="auth-links">
           {isLogin ? <Link to="/forgot-password">{i18n.t('ui.pages.auth.auth_page.sifreni_unutmusunuz_b8c2d0')}</Link> : null}

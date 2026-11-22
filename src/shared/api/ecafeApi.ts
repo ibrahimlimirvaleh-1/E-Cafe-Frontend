@@ -1620,6 +1620,7 @@ export const ecafeApi = {
   auth: {
     login: async (request: LoginRequest) => {
       const result = await httpClient<unknown>(endpoints.auth.login, {
+        isAuthenticationAttempt: true,
         method: 'POST',
         body: JSON.stringify(request),
         authErrorMessage: 'Email və ya parol yanlışdır.',
@@ -1637,6 +1638,7 @@ export const ecafeApi = {
       formData.set('Password', request.password)
 
       const result = await httpClient<unknown>(endpoints.auth.register, {
+        isAuthenticationAttempt: true,
         method: 'POST',
         body: formData,
         skipAuthRefresh: true,

@@ -21,20 +21,21 @@ const json = (route, data) => route.fulfill({ status: 200, contentType: 'applica
 const problem = (route, code, status) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ code, message: '' }) })
 const waitFor = async condition => { const until = Date.now() + 10000; while (!condition()) { assert.ok(Date.now() < until, 'Mock event did not arrive'); await new Promise(resolve => setTimeout(resolve, 10)) } }
 
-function backend() { return { profiles: [...profiles], accountActive: true, expired: false, blockedTarget: false, targetActive: true, contracts: { 1: true, 2: true } } }
+function backend() { return { profiles: [...profiles], accountActive: true, expired: false, blockedTarget: false, targetActive: true, contracts: { 1: true, 2: true }, sessionVersion: 0, denialStatus: 401, legacyProfileResponse: false } }
 function account(server, id = '42') {
-  const assignments = id === '1' ? [] : id === '84' ? [profiles[1]] : server.profiles
-  return { userId: id, name: id === '84' ? 'Fresh' : 'Shared', surname: id === '1' ? 'Admin' : 'Person', email: `user${id}@example.com`, phone: '+994501234567', roleId: id === '1' ? 1 : assignments[0]?.roleId || 5, isActive: server.accountActive, profiles: assignments.map(item => ({ ...item })) }
+  const assignments = ['1', '5'].includes(id) ? [] : id === '84' ? [profiles[1]] : server.profiles
+  return { userId: id, name: id === '84' ? 'Fresh' : 'Shared', surname: id === '1' ? 'Admin' : 'Person', email: `user${id}@example.com`, phone: '+994501234567', roleId: id === '1' ? 1 : id === '5' ? 5 : assignments[0]?.roleId || 2, isActive: server.accountActive, profiles: assignments.map(item => ({ ...item })) }
 }
 function jwt(server, id = '42') {
   const user = account(server, id)
-  return `header.${Buffer.from(JSON.stringify({ ...user, roleId: String(user.roleId), restaurantId: user.profiles[0]?.restaurantId, restaurantRoles: user.profiles.map(item => `${item.restaurantId}:${item.roleId}`), restaurantIds: user.profiles.map(item => String(item.restaurantId)), permissions: user.profiles.length ? ['ManageStaff', 'ManageOrders'] : [] })).toString('base64url')}.signature`
+  return `header.${Buffer.from(JSON.stringify({ ...user, sessionVersion: server.sessionVersion, roleId: String(user.roleId), restaurantId: user.profiles[0]?.restaurantId, restaurantRoles: user.profiles.map(item => `${item.restaurantId}:${item.roleId}`), restaurantIds: user.profiles.map(item => String(item.restaurantId)), permissions: user.profiles.length ? ['ManageStaff', 'ManageOrders'] : [] })).toString('base64url')}.signature`
 }
 function requestUser(request) {
   try { return String(JSON.parse(Buffer.from(request.headers().authorization.split('.')[1], 'base64url').toString()).userId) } catch { return '42' }
 }
+const missingStaff = (server, id) => !['1', '5'].includes(id) && account(server, id).profiles.length === 0
 
-async function setup(server, { selected = 1, language = 'en', actor = '42', width = 1440 } = {}) {
+async function setup(server, { selected = 1, language = 'en', actor = '42', width = 1440, legacyCustomerToken = false } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' })
   await context.addInitScript(({ language, selected, actor }) => {
     localStorage.setItem('ecafe.language', language)
@@ -50,7 +51,7 @@ async function setup(server, { selected = 1, language = 'en', actor = '42', widt
     window.clearInterval = id => { window.__minuteTicks.delete(id); return clearInterval(id) }
   }, { language, selected, actor })
   const page = await context.newPage()
-  const state = { requests: [], sockets: [], logs: [], holdProfile: null, holdRefresh: null, cookieUser: actor }
+  const state = { requests: [], sockets: [], logs: [], holdProfile: null, holdRefresh: null, holdLogin: null, cookieUser: actor, cookieVersion: server.sessionVersion, loginUser: '84', legacyCustomerToken }
   page.on('console', message => { if (message.type() === 'error' || message.type() === 'warning') state.logs.push(message.text()) })
   page.on('pageerror', error => errors.push(error.message))
   await page.routeWebSocket('**/hubs/user-events*', socket => {
@@ -68,22 +69,40 @@ async function setup(server, { selected = 1, language = 'en', actor = '42', widt
   await page.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url()), p = url.pathname
     if (url.origin !== origin) return route.abort()
-    if (p === '/hubs/user-events/negotiate') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ negotiateVersion: 1, connectionId: 'test', connectionToken: 'test', availableTransports: [{ transport: 'WebSockets', transferFormats: ['Text', 'Binary'] }] }) })
+    if (p === '/hubs/user-events/negotiate') {
+      if (server.rejectHub) return problem(route, 'StaffProfileInactive', 401)
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ negotiateVersion: 1, connectionId: 'test', connectionToken: 'test', availableTransports: [{ transport: 'WebSockets', transferFormats: ['Text', 'Binary'] }] }) })
+    }
     if (p.startsWith('/api/v1/')) {
       state.requests.push({ path: p, method: request.method(), headers: request.headers(), body: request.postData() })
-      if (p === '/api/v1/user/login') { state.cookieUser = '84'; return json(route, { accessToken: jwt(server, '84') }) }
+      if (p === '/api/v1/user/login') {
+        const id = state.loginUser, denied = missingStaff(server, id), token = jwt(server, id), held = state.holdLogin
+        state.holdLogin = null
+        if (!denied) { state.cookieUser = id; state.cookieVersion = server.sessionVersion }
+        if (held) { held.started.resolve(); await held.release.promise }
+        return denied ? problem(route, 'StaffProfileInactive', server.denialStatus) : json(route, { accessToken: token })
+      }
       if (p === '/api/v1/user/logout' || p === '/api/v1/user/logout-all') return route.fulfill({ status: 204 })
       if (p === '/api/v1/user/refresh') {
-        const token = jwt(server, state.cookieUser), held = state.holdRefresh
+        if (state.legacyCustomerToken) {
+          state.legacyCustomerToken = false
+          const legacy = { userId: actor, name: 'Legacy', surname: 'Staff', roleId: '5', sessionVersion: server.sessionVersion, restaurantRoles: [], restaurantIds: [], permissions: [] }
+          return json(route, { accessToken: `header.${Buffer.from(JSON.stringify(legacy)).toString('base64url')}.signature` })
+        }
+        const token = jwt(server, state.cookieUser), held = state.holdRefresh, denied = missingStaff(server, state.cookieUser)
+        const revoked = state.cookieVersion !== server.sessionVersion && !['1', '5'].includes(state.cookieUser)
         state.holdRefresh = null
         if (held) { held.started.resolve(); await held.release.promise }
-        return server.expired ? problem(route, 'SessionInvalid', 401) : json(route, { accessToken: token })
+        return denied ? problem(route, 'StaffProfileInactive', server.denialStatus) : server.expired || revoked ? problem(route, 'SessionInvalid', 401) : json(route, { accessToken: token })
       }
       if (p === '/api/v1/profile') {
-        const payload = account(server, requestUser(request)), held = state.holdProfile
+        const id = requestUser(request), payload = account(server, id), held = state.holdProfile
+        const denied = missingStaff(server, id) && !server.legacyProfileResponse
+        const claims = JSON.parse(Buffer.from(request.headers().authorization.split('.')[1], 'base64url').toString())
+        const revoked = Number(claims.sessionVersion) !== server.sessionVersion && !['1', '5'].includes(id)
         state.holdProfile = null
         if (held) { held.started.resolve(); await held.release.promise }
-        return server.expired ? problem(route, 'SessionInvalid', 401) : json(route, payload)
+        return denied ? problem(route, 'StaffProfileInactive', server.denialStatus) : server.expired || revoked ? problem(route, 'SessionInvalid', 401) : json(route, payload)
       }
       if (p === '/api/v1/localization/preference') return json(route, { language })
       if (p.includes('/localization/dictionaries/')) return json(route, { language, version: 'test', fallbackLanguage: 'az', messages: {} })
@@ -134,6 +153,12 @@ const notLoggedOut = async client => {
   assert.equal(await client.page.locator('.logout-action').count() > 0, true)
   assert.equal(await client.page.evaluate(() => localStorage.getItem('ecafe.manualLogoutAt')), null)
 }
+const submitLogin = async (client, email = 'user42@example.com') => {
+  await client.page.locator('input[type=email]').fill(email)
+  await client.page.locator('input[type=password]').fill('FreshPassword1!')
+  await client.page.locator('button[type=submit]').click()
+}
+const loginInSameDocument = async client => client.page.evaluate(() => { history.pushState({}, '', '/login'); dispatchEvent(new PopStateEvent('popstate')) })
 
 try {
   const shared = backend(), first = await setup(shared), second = await setup(shared, { selected: 2 })
@@ -160,28 +185,38 @@ try {
     await first.page.screenshot({ animations: 'disabled', path: path.join(dist, `profile-fallback-en-${width}-dark.png`) })
   }
 
+  const oldAuthorization = first.state.requests.find(request => request.path === '/api/v1/profile').headers.authorization
+  const refreshCount = first.state.requests.filter(request => request.path === '/api/v1/user/refresh').length
   shared.profiles = []
-  first.event('RestaurantAccessChanged', { restaurantId: 2, reason: 'staff_deactivated', message: '' })
-  second.event('RestaurantAccessChanged', { restaurantId: 2, reason: 'staff_deactivated', message: '' })
-  await first.page.waitForURL(origin + '/'); await second.page.waitForURL(origin + '/')
+  shared.sessionVersion += 1
+  first.event('RestaurantAccessChanged', { restaurantId: 2, reason: 'staff_access_revoked', message: '' })
+  second.event('RestaurantAccessChanged', { restaurantId: 2, reason: 'staff_access_revoked', message: '' })
+  await first.page.waitForURL(origin + '/login'); await second.page.waitForURL(origin + '/login')
   assert.equal(await first.page.locator('.staff-member-row').count(), 0)
-  assert.equal(await first.page.locator('.admin-sidebar').count(), 0)
-  await notLoggedOut(first); await notLoggedOut(second); cases += 1
+  assert.equal(await first.page.locator('.logout-action').count(), 0)
+  assert.equal(first.state.requests.filter(request => request.path === '/api/v1/user/refresh').length, refreshCount, '1141 does not refresh/replay')
+  await first.page.getByText(catalogs.en['ui.staffAccess.inactive'], { exact: true }).waitFor()
+  cases += 1
   for (const width of [1440, 390]) {
     await first.page.setViewportSize({ width, height: 900 })
     await first.page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'))
-    await first.page.screenshot({ animations: 'disabled', path: path.join(dist, `profile-personal-en-${width}-light.png`) })
+    await first.page.screenshot({ animations: 'disabled', path: path.join(dist, `staff-profile-login-en-${width}-light.png`) })
   }
-  const seen = first.state.requests.length
-  await first.page.evaluate(() => window.dispatchEvent(new Event('focus')))
-  await waitFor(() => first.state.requests.length > seen)
-  assert.equal(new URL(first.page.url()).pathname, '/', 'Empty authoritative list does not resurrect old JWT profiles')
-  const publicRequests = first.state.requests.slice(seen).filter(request => request.path === '/api/v1/profile')
-  assert.ok(publicRequests.every(request => !request.headers['x-active-restaurant-id']), 'No revoked scope header')
-  cases += 1
   shared.profiles = [profiles[0]]
-  first.event('RestaurantAccessChanged', { restaurantId: 1, reason: 'staff_activated', message: '' })
+  shared.sessionVersion += 1
+  const oldStatus = await first.page.evaluate(async authorization => (await fetch('/api/v1/profile', { headers: { Authorization: authorization } })).status, oldAuthorization)
+  assert.equal(oldStatus, 401, 'Reactivation does not restore revoked tokens')
+  first.state.loginUser = '42'
+  await first.page.locator('input[type=email]').fill('user42@example.com')
+  await first.page.locator('input[type=password]').fill('FreshPassword1!')
+  await first.page.locator('button[type=submit]').click()
   await activeLabel(first, 'R1 Restaurant')
+  await notLoggedOut(first); cases += 1
+  // A stale revoke event received on a fresh connection is revalidated, not blindly trusted.
+  const checked = first.page.waitForResponse(response => response.url().endsWith('/api/v1/profile'))
+  first.event('RestaurantAccessChanged', { restaurantId: 2, reason: 'staff_access_revoked', message: '' })
+  await checked
+  await first.page.evaluate(() => new Promise(requestAnimationFrame))
   await notLoggedOut(first); cases += 1
   // A missed event is recovered by the actual SignalR reconnect callback.
   const oldCount = first.state.sockets.length
@@ -281,6 +316,130 @@ try {
   await notLoggedOut(contract); cases += 1
   await contract.close()
 
+  for (const mode of ['focus', 'poll', 'reconnect', 'legacy200', '403']) {
+    const server = backend(), client = await setup(server)
+    await client.open()
+    server.profiles = []
+    if (mode === 'legacy200') server.legacyProfileResponse = true
+    else server.sessionVersion += 1
+    if (mode === '403') server.denialStatus = 403
+    const beforeRefresh = client.state.requests.filter(request => request.path === '/api/v1/user/refresh').length
+    if (mode === 'poll') await client.page.evaluate(() => { for (const tick of window.__minuteTicks.values()) tick() })
+    else if (mode === 'reconnect') {
+      server.rejectHub = true
+      client.state.sockets.at(-1).closed = true
+      await client.state.sockets.at(-1).socket.close({ code: 1012, reason: 'missed staff revoke event' })
+    } else await client.page.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await client.page.waitForURL(origin + '/login')
+    await client.page.locator('.auth-card .form-message-danger').filter({ hasText: catalogs.en['ui.staffAccess.inactive'] }).waitFor()
+    assert.equal(client.state.requests.filter(request => request.path === '/api/v1/user/refresh').length, beforeRefresh, 'No refresh replay for terminal staff denial')
+    assert.equal(await client.page.locator('.logout-action').count(), 0)
+    await client.close(); cases += 1
+  }
+  for (const actor of ['5', '1']) {
+    const server = backend(); server.profiles = []
+    const client = await setup(server, { actor })
+    await client.open('/account')
+    const checked = client.page.waitForResponse(response => response.url().endsWith('/api/v1/profile'))
+    client.event('RestaurantAccessChanged', { restaurantId: 1, reason: 'staff_access_revoked', message: '' })
+    await checked
+    await client.page.evaluate(() => new Promise(requestAnimationFrame))
+    await notLoggedOut(client)
+    await client.page.locator('.profile-account-form input[type=email]').waitFor()
+    await loginInSameDocument(client)
+    client.state.loginUser = actor
+    await submitLogin(client, `user${actor}@example.com`)
+    await client.page.locator('.user-pill strong').waitFor()
+    await notLoggedOut(client); cases += 1
+    if (actor === '5') {
+      const beforeRefresh = client.state.requests.filter(request => request.path === '/api/v1/user/refresh').length
+      await loginInSameDocument(client)
+      client.state.loginUser = '42'
+      await submitLogin(client)
+      await client.page.locator('.auth-card .form-message-danger').filter({ hasText: catalogs.en['ui.staffAccess.inactive'] }).waitFor()
+      await client.page.locator('a.brand').click()
+      await client.page.locator('.user-pill strong').waitFor()
+      await notLoggedOut(client)
+      assert.equal(client.state.requests.filter(request => request.path === '/api/v1/user/refresh').length, beforeRefresh, 'Denied staff login does not clear an unrelated healthy Customer session')
+      cases += 1
+    }
+    await client.close(); cases += 1
+  }
+  {
+    const server = backend(); server.profiles = []
+    const client = await setup(server, { legacyCustomerToken: true })
+    await client.page.goto(origin + '/account')
+    await client.page.waitForURL(origin + '/login')
+    await client.page.locator('.auth-card .form-message-danger').filter({ hasText: catalogs.en['ui.staffAccess.inactive'] }).waitFor()
+    assert.equal(client.state.requests.filter(request => request.path === '/api/v1/user/refresh').length, 1, 'Legacy Customer JWT cannot bypass the canonical staff denial')
+    await client.close(); cases += 1
+  }
+  {
+    const server = backend(), client = await setup(server)
+    await client.open()
+    await loginInSameDocument(client)
+    client.state.loginUser = '42'
+    const heldLogin = client.hold('holdLogin')
+    await submitLogin(client)
+    await heldLogin.started.promise
+    await client.page.locator('form').evaluate(form => form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })))
+    assert.equal(client.state.requests.filter(request => request.path === '/api/v1/user/login').length, 1, 'Double submit is ignored')
+    await client.page.locator('a.brand').click()
+    await client.page.locator('.auth-card').waitFor({ state: 'detached' })
+    await loginInSameDocument(client)
+    client.state.loginUser = '84'
+    await submitLogin(client, 'fresh@example.com')
+    await client.page.locator('.user-pill strong').filter({ hasText: 'Fresh' }).waitFor()
+    const oldResponse = client.page.waitForResponse(response => response.url().endsWith('/api/v1/user/login'))
+    heldLogin.release.resolve()
+    await oldResponse
+    await client.page.evaluate(() => new Promise(requestAnimationFrame))
+    assert.match(await client.page.locator('.user-pill strong').innerText(), /Fresh/, 'Stale login success cannot overwrite a fresh session')
+    await notLoggedOut(client)
+    await client.close(); cases += 1
+  }
+  {
+    const server = backend(), client = await setup(server)
+    await client.open()
+    server.profiles = []; server.sessionVersion += 1
+    const heldDenial = client.hold('holdProfile')
+    client.event('RestaurantAccessChanged', { restaurantId: 1, reason: 'staff_access_revoked', message: '' })
+    await heldDenial.started.promise
+    server.profiles = [profiles[0]]; server.sessionVersion += 1
+    await loginInSameDocument(client)
+    client.state.loginUser = '42'
+    await submitLogin(client)
+    await activeLabel(client, 'R1 Restaurant')
+    const oldResponse = client.page.waitForResponse(response => response.url().endsWith('/api/v1/profile'))
+    heldDenial.release.resolve()
+    await oldResponse
+    await client.page.evaluate(() => new Promise(requestAnimationFrame))
+    await notLoggedOut(client)
+    await client.close(); cases += 1
+  }
+  for (const language of ['az', 'en', 'ru']) {
+    const server = backend(); server.profiles = []
+    const client = await setup(server, { language })
+    await client.page.goto(origin + '/login')
+    const feedback = client.page.locator('.auth-card .form-message-danger')
+    await feedback.filter({ hasText: catalogs[language]['ui.staffAccess.inactive'] }).waitFor()
+    assert.equal(client.state.requests.filter(request => request.path === '/api/v1/user/refresh').length, 1)
+    assert.equal(await client.page.locator('.session-termination-notice').count(), 0, 'Login reason is inline, not covering form controls')
+    client.state.loginUser = '42'
+    await submitLogin(client)
+    await feedback.filter({ hasText: catalogs[language]['ui.staffAccess.inactive'] }).waitFor()
+    assert.equal(client.state.requests.filter(request => request.path === '/api/v1/user/refresh').length, 1)
+    for (const width of [1440, 390, 320]) {
+      await client.page.setViewportSize({ width, height: 900 })
+      for (const theme of ['light', 'dark']) {
+        await client.page.evaluate(theme => document.documentElement.setAttribute('data-theme', theme), theme)
+        assert.equal(await client.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+        await client.page.screenshot({ animations: 'disabled', path: path.join(dist, `staff-required-login-${language}-${width}-${theme}.png`), fullPage: true })
+      }
+    }
+    await client.close(); cases += 2
+  }
+
   for (const globalMethod of ['event', 'profile', 'expired']) {
     const server = backend(), client = await setup(server)
     await client.open()
@@ -346,5 +505,5 @@ try {
     await admin.close()
   }
   assert.deepEqual(errors, [])
-  console.log(`PASS ${cases} profile deactivation browser scenarios: real SignalR mock transport, two restaurants/two browsers, scoped fallback, empty profiles, reactivation, lost-event reconnect, selection/login races, true global blocks/expiry, localized 409, AZ/EN/RU desktop/mobile/dark/light screenshots`)
+  console.log(`PASS ${cases} staff-profile browser scenarios: real SignalR mock transport, two restaurants/two browsers, scoped fallback, required staff profile, Customer/Admin login, reactivation, lost-event reconnect, selection/login races, true global blocks/expiry, localized 409, AZ/EN/RU desktop/mobile/dark/light screenshots`)
 } finally { await browser.close() }
