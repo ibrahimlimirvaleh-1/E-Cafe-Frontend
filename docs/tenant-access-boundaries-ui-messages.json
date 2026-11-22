@@ -1,0 +1,29 @@
+{
+  "az": {
+    "ui.tenantAccess.accountDeleteTitle": "Ümumi istifadəçi hesabı silinsin?",
+    "ui.tenantAccess.accountDeleteMessage": "{{name}} istifadəçisinin ümumi hesabı və bütün restoranlardakı girişi silinəcək. Yalnız bu restoran profilini bağlamaq üçün profili deaktiv edin.",
+    "ui.tenantAccess.accountDeleteAction": "Hesabı sil",
+    "ui.tenantAccess.accountDeleteSuccess": "İstifadəçi hesabı silindi.",
+    "ui.tenantAccess.accountDeleteFailed": "İstifadəçi hesabı silinmədi.",
+    "ui.tenantAccess.notificationsDenied": "Bu restoranın bildirişlərinə girişiniz yoxdur. Aktiv restoran profilinə keçin.",
+    "ui.tenantAccess.notificationsFailed": "Bildiriş əməliyyatı tamamlanmadı. Yenidən cəhd edin."
+  },
+  "en": {
+    "ui.tenantAccess.accountDeleteTitle": "Delete the user account?",
+    "ui.tenantAccess.accountDeleteMessage": "This will delete the account for {{name}} and their access to all restaurants. To remove only this restaurant profile, deactivate the profile instead.",
+    "ui.tenantAccess.accountDeleteAction": "Delete account",
+    "ui.tenantAccess.accountDeleteSuccess": "User account deleted.",
+    "ui.tenantAccess.accountDeleteFailed": "The user account could not be deleted.",
+    "ui.tenantAccess.notificationsDenied": "You cannot access notifications for this restaurant. Switch to an active restaurant profile.",
+    "ui.tenantAccess.notificationsFailed": "The notification action could not be completed. Please try again."
+  },
+  "ru": {
+    "ui.tenantAccess.accountDeleteTitle": "Удалить учётную запись?",
+    "ui.tenantAccess.accountDeleteMessage": "Учётная запись пользователя {{name}} и доступ ко всем ресторанам будут удалены. Чтобы закрыть только профиль этого ресторана, деактивируйте профиль.",
+    "ui.tenantAccess.accountDeleteAction": "Удалить аккаунт",
+    "ui.tenantAccess.accountDeleteSuccess": "Учётная запись удалена.",
+    "ui.tenantAccess.accountDeleteFailed": "Не удалось удалить учётную запись.",
+    "ui.tenantAccess.notificationsDenied": "У вас нет доступа к уведомлениям этого ресторана. Переключитесь на активный профиль ресторана.",
+    "ui.tenantAccess.notificationsFailed": "Не удалось выполнить действие с уведомлением. Попробуйте ещё раз."
+  }
+}

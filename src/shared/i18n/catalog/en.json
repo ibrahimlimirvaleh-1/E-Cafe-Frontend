@@ -1,4 +1,11 @@
 {
+  "ui.tenantAccess.accountDeleteTitle": "Delete the user account?",
+  "ui.tenantAccess.accountDeleteMessage": "This will delete the account for {{name}} and their access to all restaurants. To remove only this restaurant profile, deactivate the profile instead.",
+  "ui.tenantAccess.accountDeleteAction": "Delete account",
+  "ui.tenantAccess.accountDeleteSuccess": "User account deleted.",
+  "ui.tenantAccess.accountDeleteFailed": "The user account could not be deleted.",
+  "ui.tenantAccess.notificationsDenied": "You cannot access notifications for this restaurant. Switch to an active restaurant profile.",
+  "ui.tenantAccess.notificationsFailed": "The notification action could not be completed. Please try again.",
   "ui.staffAccess.inactive": "You have no active staff profile. Contact your restaurant administrator to sign in.",
   "ui.profiles.sessionEnded": "Session ended",
   "ui.profiles.accessUpdated": "Restaurant profile updated",
