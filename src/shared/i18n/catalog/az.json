@@ -1,4 +1,11 @@
 {
+  "ui.tenantAccess.accountDeleteTitle": "Ümumi istifadəçi hesabı silinsin?",
+  "ui.tenantAccess.accountDeleteMessage": "{{name}} istifadəçisinin ümumi hesabı və bütün restoranlardakı girişi silinəcək. Yalnız bu restoran profilini bağlamaq üçün profili deaktiv edin.",
+  "ui.tenantAccess.accountDeleteAction": "Hesabı sil",
+  "ui.tenantAccess.accountDeleteSuccess": "İstifadəçi hesabı silindi.",
+  "ui.tenantAccess.accountDeleteFailed": "İstifadəçi hesabı silinmədi.",
+  "ui.tenantAccess.notificationsDenied": "Bu restoranın bildirişlərinə girişiniz yoxdur. Aktiv restoran profilinə keçin.",
+  "ui.tenantAccess.notificationsFailed": "Bildiriş əməliyyatı tamamlanmadı. Yenidən cəhd edin.",
   "ui.staffAccess.inactive": "Aktiv işçi profiliniz yoxdur. Giriş üçün restoran məsulu ilə əlaqə saxlayın.",
   "ui.profiles.sessionEnded": "Sessiya bağlandı",
   "ui.profiles.accessUpdated": "Restoran profili yeniləndi",

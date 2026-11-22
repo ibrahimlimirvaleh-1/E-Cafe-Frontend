@@ -165,9 +165,14 @@ export function RestaurantManagementPage({ mode = 'list' }: { mode?: RestaurantP
     hasPreviousPage: false,
     hasNextPage: false,
   }, query, [query, reloadKey, activeI18n.resolvedLanguage])
-  const { data: groups } = useKeyedAsyncData(() => ecafeApi.restaurantGroups.list(), [], 'groups', [reloadKey, activeI18n.resolvedLanguage])
   const canCreateRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
   const canSearchRestaurants = isInRole(user, [RoleIds.PlatformAdmin])
+  const { data: groups } = useKeyedAsyncData(
+    () => canCreateRestaurants ? ecafeApi.restaurantGroups.list() : Promise.resolve([]),
+    [],
+    `groups:${canCreateRestaurants}`,
+    [canCreateRestaurants, reloadKey, activeI18n.resolvedLanguage],
+  )
   const { data: users } = useKeyedAsyncData(
     () => (mode === 'create' && canCreateRestaurants ? ecafeApi.users.list() : Promise.resolve([])),
     [],

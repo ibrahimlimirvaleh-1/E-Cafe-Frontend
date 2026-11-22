@@ -1,4 +1,11 @@
 {
+  "ui.tenantAccess.accountDeleteTitle": "Удалить учётную запись?",
+  "ui.tenantAccess.accountDeleteMessage": "Учётная запись пользователя {{name}} и доступ ко всем ресторанам будут удалены. Чтобы закрыть только профиль этого ресторана, деактивируйте профиль.",
+  "ui.tenantAccess.accountDeleteAction": "Удалить аккаунт",
+  "ui.tenantAccess.accountDeleteSuccess": "Учётная запись удалена.",
+  "ui.tenantAccess.accountDeleteFailed": "Не удалось удалить учётную запись.",
+  "ui.tenantAccess.notificationsDenied": "У вас нет доступа к уведомлениям этого ресторана. Переключитесь на активный профиль ресторана.",
+  "ui.tenantAccess.notificationsFailed": "Не удалось выполнить действие с уведомлением. Попробуйте ещё раз.",
   "ui.staffAccess.inactive": "У вас нет активного рабочего профиля. Для входа обратитесь к ответственному за ресторан.",
   "ui.profiles.sessionEnded": "Сеанс завершён",
   "ui.profiles.accessUpdated": "Профиль ресторана обновлён",

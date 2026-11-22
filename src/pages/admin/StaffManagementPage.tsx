@@ -1,7 +1,7 @@
 import { i18n } from '../../shared/i18n/i18n'
 import { roleLabel } from '../../shared/i18n/roleLabel'
 import { useTranslation } from 'react-i18next'
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { Ban, CheckCircle2, Info, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import type { Role, StaffMember } from '../../entities/types'
@@ -14,6 +14,7 @@ import { useAsyncData, useKeyedAsyncData } from '../../shared/hooks/useAsyncData
 import { ActionIconButton, ActionIconLink } from '../../shared/ui/ActionIconButton'
 import { Badge } from '../../shared/ui/Badge'
 import { Button, ButtonLink } from '../../shared/ui/Button'
+import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { EmptyState } from '../../shared/ui/EmptyState'
 import { FileUploadField } from '../../shared/ui/FileUploadField'
 import { SelectField, TextField } from '../../shared/ui/FormField'
@@ -66,6 +67,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   const [roleSelections, setRoleSelections] = useState<Record<string, string>>({})
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState('')
   const [deactivatingStaffId, setDeactivatingStaffId] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<StaffMember | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const deletingRef = useRef(false)
   const [form, setForm] = useState(initialForm)
 
   const { data: restaurants } = useAsyncData(() => ecafeApi.restaurants.list(), [], [])
@@ -94,6 +98,7 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
     [roles],
   )
   const isPlatformAdmin = isInRole(user, [RoleIds.PlatformAdmin])
+  const canDeleteAccount = isPlatformAdmin && hasPermission(user, 'ManageUsers')
   const visibleRoleOptions = useMemo(
     () => (isPlatformAdmin ? roleOptions : roleOptions.filter((role) => String(role.id) !== RoleIds.Owner)),
     [isPlatformAdmin, roleOptions],
@@ -354,21 +359,24 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
   }
 
   async function handleDelete(member: StaffMember) {
-    if (!canManageStaffMember(member)) {
-      setOwnerRestrictionMessage()
-      return
-    }
+    if (!canDeleteAccount || deletingRef.current) return
 
+    deletingRef.current = true
+    setIsDeleting(true)
     setMessage('')
     setMessageDetails([])
     try {
-      await ecafeApi.staff.delete(member.id)
-      setMessage('Əməkdaş silindi.')
+      await ecafeApi.users.delete(member.id)
+      setDeleteTarget(null)
+      setMessage(i18n.t('ui.tenantAccess.accountDeleteSuccess'))
       setReloadKey((value) => value + 1)
     } catch (err) {
-      const feedback = normalizeCaughtApiError(err, 'Əməkdaş silinmədi.')
+      const feedback = normalizeCaughtApiError(err, i18n.t('ui.tenantAccess.accountDeleteFailed'))
       setMessage(feedback.message, 'danger')
       setMessageDetails(feedback.details)
+    } finally {
+      deletingRef.current = false
+      setIsDeleting(false)
     }
   }
 
@@ -586,9 +594,9 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
                           <CheckCircle2 size={18} />
                         </ActionIconButton>
                       )}
-                      <ActionIconButton label={`${member.name} əməkdaşını sil`} onClick={() => void handleDelete(member)} tone="danger">
+                      {canDeleteAccount ? <ActionIconButton label={`${member.name}: ${i18n.t('ui.tenantAccess.accountDeleteAction')}`} onClick={() => setDeleteTarget(member)} tone="danger">
                         <Trash2 size={18} />
-                      </ActionIconButton>
+                      </ActionIconButton> : null}
                     </div>
                   ) : null}
                 </article>
@@ -600,6 +608,15 @@ export function StaffManagementPage({ mode = 'list' }: { mode?: StaffPageMode })
           </section>
         )}
       </section>
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget) && canDeleteAccount}
+        title={i18n.t('ui.tenantAccess.accountDeleteTitle')}
+        message={i18n.t('ui.tenantAccess.accountDeleteMessage', { name: deleteTarget?.name || '' })}
+        confirmLabel={i18n.t('ui.tenantAccess.accountDeleteAction')}
+        confirmDisabled={isDeleting}
+        onCancel={() => { if (!deletingRef.current) setDeleteTarget(null) }}
+        onConfirm={() => { if (deleteTarget) void handleDelete(deleteTarget) }}
+      />
     </main>
   )
 }

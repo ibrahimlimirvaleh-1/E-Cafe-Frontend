@@ -1726,23 +1726,24 @@ export const ecafeApi = {
   },
 
   notifications: {
-    list: () =>
-      safe(async () => {
-        const result = await httpClient<unknown>(endpoints.notifications.list)
-        return asArray<AnyRecord>(result.data).map(mapNotification)
-      }, [] as NotificationItem[]),
+    list: async () => {
+      const result = await httpClient<unknown>(endpoints.notifications.list)
+      return asArray<AnyRecord>(result.data).map(mapNotification)
+    },
     unreadCount: async () => {
       const result = await httpClient<unknown>(endpoints.notifications.unreadCount)
       const record = (result.data && typeof result.data === 'object' ? result.data : {}) as AnyRecord
       return num(record.count)
     },
-    markAsRead: (notificationId: string) =>
+    markAsRead: (notificationId: string, signal?: AbortSignal) =>
       httpClient<unknown>(endpoints.notifications.markAsRead(notificationId), {
         method: 'POST',
+        signal,
       }),
-    markAllAsRead: () =>
+    markAllAsRead: (signal?: AbortSignal) =>
       httpClient<unknown>(endpoints.notifications.markAllAsRead, {
         method: 'POST',
+        signal,
       }),
   },
 
