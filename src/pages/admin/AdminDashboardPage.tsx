@@ -1,5 +1,6 @@
 import { CalendarDays, RefreshCw } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { DashboardReportKind } from '../../shared/api/dashboardApi'
 import { useAuth } from '../../shared/auth/AuthContext'
@@ -19,7 +20,11 @@ export function AdminDashboardPage() {
     [translate],
   )
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState<'overview' | 'reports'>('overview')
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const requestedView = searchParams.get('view')
+  const firstScope = useRef(true)
+  const [activeTab, setActiveTab] = useState<'overview' | 'reports'>(() => requestedView === 'reports' ? 'reports' : 'overview')
   const [reportKind, setReportKind] = useState<DashboardReportKind>('orders')
   const [reportReloadKey, setReportReloadKey] = useState(0)
   const state = useDashboardData(user, t, activeTab === 'overview')
@@ -28,7 +33,14 @@ export function AdminDashboardPage() {
   const { view, data } = state
   const effectiveReportKind = view === 'manager' && ['payments', 'settlements', 'branches'].includes(reportKind) ? 'orders' : reportKind
 
-  useEffect(() => { setActiveTab('overview'); setReportKind('orders') }, [user?.userId, user?.roleId, user?.restaurantId])
+  useEffect(() => {
+    setActiveTab(firstScope.current && requestedView === 'reports' ? 'reports' : 'overview')
+    firstScope.current = false
+    setReportKind('orders')
+    // Scope transitions reset local report state; only a fresh route intent can reopen it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userId, user?.roleId, user?.restaurantId])
+  useEffect(() => { setActiveTab(requestedView === 'reports' ? 'reports' : 'overview') }, [requestedView, location.key])
 
   function onTabKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return

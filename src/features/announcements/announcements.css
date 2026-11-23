@@ -1,0 +1,33 @@
+.announcement-panel { position: fixed; z-index: 45; right: 24px; bottom: 24px; width: min(380px, calc(100% - 32px)); max-height: min(480px, calc(100dvh - 32px)); overflow: auto; padding: 18px; border: 1px solid var(--outline-variant); border-top: 3px solid var(--secondary-container); border-radius: 8px; background: var(--surface-lowest); color: var(--on-surface); box-shadow: var(--shadow-lg); }
+.announcement-panel header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.announcement-panel header span { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--on-surface-variant); }
+.announcement-panel button { min-height: 44px; padding: 8px 10px; border: 1px solid var(--outline-variant); border-radius: 6px; background: var(--surface-low); color: var(--on-surface); display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; white-space: normal; }
+.announcement-panel header button { width: 36px; min-height: 36px; flex-shrink: 0; padding: 0; }
+.announcement-panel h2 { font-size: 18px; line-height: 1.35; margin: 12px 0 8px; overflow-wrap: anywhere; }
+.announcement-panel p { font-size: 14px; line-height: 1.55; margin: 0; color: var(--on-surface-variant); white-space: pre-wrap; overflow-wrap: anywhere; }
+.announcement-panel footer { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 16px; }
+.announcement-panel .announcement-open { color: var(--secondary); background: var(--warning-bg); }
+.announcement-panel button:disabled { opacity: .6; cursor: default; }
+.announcement-spinner { animation: announcement-spin 1s linear infinite; }
+@keyframes announcement-spin { to { transform: rotate(360deg); } }
+.announcement-admin-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.announcement-admin-list { display: grid; gap: 12px; }
+.announcement-admin-item { border: 1px solid var(--outline-variant); border-radius: 8px; padding: 16px; background: var(--surface-lowest); display: grid; gap: 12px; min-width: 0; }
+.announcement-admin-item header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.announcement-admin-item h2 { font-size: 17px; line-height: 1.35; margin: 0; overflow-wrap: anywhere; }
+.announcement-admin-item p { color: var(--on-surface-variant); margin: 0; overflow-wrap: anywhere; }
+.announcement-admin-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.announcement-editor { display: grid; gap: 20px; max-width: 900px; }
+.announcement-editor .announcement-audience { display: flex; gap: 16px; flex-wrap: wrap; border: 0; padding: 0; margin: 0; }
+.announcement-audience legend { margin-bottom: 10px; font-weight: 600; }
+.announcement-audience label { display: flex; gap: 8px; align-items: center; min-height: 44px; }
+.announcement-audience input { width: 18px; height: 18px; accent-color: var(--primary); }
+.announcement-language-tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-low); border-radius: 6px; width: fit-content; }
+.announcement-language-tabs button { border: 0; background: transparent; color: var(--on-surface-variant); min-width: 48px; min-height: 40px; border-radius: 4px; }
+.announcement-language-tabs button[aria-selected="true"] { background: var(--surface-lowest); color: var(--on-surface); box-shadow: var(--shadow-sm); }
+.announcement-preview { padding: 16px 0; border-top: 2px solid var(--secondary-container); border-bottom: 1px solid var(--outline-variant); }
+.announcement-admin > .form-message, .announcement-editor .form-message { position: static; width: 100%; max-width: 100%; margin: 0; overflow-wrap: anywhere; }
+.announcement-preview h3 { font-size: 18px; margin: 0 0 8px; overflow-wrap: anywhere; }
+.announcement-preview p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--on-surface-variant); }
+@media (max-width: 480px) { .announcement-panel { left: 16px; right: 16px; bottom: 16px; } .announcement-panel footer button { flex: 1 1 auto; } }
+@media (prefers-reduced-motion: reduce) { .announcement-spinner { animation: none; } }

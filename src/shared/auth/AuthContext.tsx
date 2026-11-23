@@ -43,6 +43,8 @@ type AuthContextValue = {
   user: CurrentUser | null
   realtimeStatus: RealtimeConnectionStatus
   isAuthReady: boolean
+  isProfileVerified: boolean
+  isCurrentSession: (ownerId: string, expectedEpoch: string, roleId?: string, restaurantId?: string) => boolean
   isAuthenticated: boolean
   setSession: (tokens: AuthTokens) => void
   updateUser: (patch: Partial<CurrentUser>) => void
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const reconcileIdRef = useRef(0)
   const [sessionEpoch, setSessionEpoch] = useState(0)
   const [scopeRevision, setScopeRevision] = useState(0)
+  const [verifiedScope, setVerifiedScope] = useState('')
   const setUser = useCallback((update: CurrentUser | null | ((current: CurrentUser | null) => CurrentUser | null)) => {
     const next = typeof update === 'function' ? update(userRef.current) : update
     userRef.current = next
@@ -96,11 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
   const invalidateSessionWork = useCallback(() => {
     clearVerifiedProfiles()
+    setVerifiedScope('')
     selectionIntentRef.current = null
     reconcileIdRef.current += 1
     sessionEpochRef.current += 1
     setSessionEpoch(sessionEpochRef.current)
   }, [])
+  const isCurrentSession = useCallback((ownerId: string, expectedEpoch: string, roleId?: string, restaurantId?: string) =>
+    userRef.current?.userId === ownerId && String(sessionEpochRef.current) === expectedEpoch &&
+    (roleId === undefined || (userRef.current?.roleId === roleId && (userRef.current.restaurantId || '') === (restaurantId || ''))), [])
 
   const showSessionNotice = useCallback((notice: SessionNotice, autoHideMs: number | false = 2000) => {
     window.clearTimeout(noticeTimerRef.current)
@@ -144,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const current = userRef.current!
         const next = mergeProfileDetails(base, details, current)
         syncVerifiedProfiles(next)
+        setVerifiedScope(`${epoch}:${profileScope(next)}`)
         const changedScope = profileScope(next) !== profileScope(current)
         const changedProfiles = profileSignature(next.profiles) !== profileSignature(current.profiles)
         setUser(sameAccessState(current, next) ? current : next)
@@ -184,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsProfilePromptOpen(false)
     if (profileScope(current) === profileScope(next)) return
     reconcileIdRef.current += 1
+    setVerifiedScope('')
     syncVerifiedProfiles(next)
     setUser(next)
     void reconcileProfiles()
@@ -390,6 +399,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       realtimeStatus,
       isAuthReady,
+      isProfileVerified: Boolean(user && verifiedScope === `${sessionEpoch}:${profileScope(user)}` && !isProfilePromptOpen),
+      isCurrentSession,
       isAuthenticated: user !== null,
       scopeRevision: `${sessionEpoch}:${scopeRevision}`,
       sessionNotice,
@@ -457,7 +468,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [invalidateSessionWork, isAuthReady, realtimeStatus, scopeRevision, sessionEpoch, sessionNotice, selectAccessProfile, setUser, user],
+    [invalidateSessionWork, isAuthReady, isCurrentSession, isProfilePromptOpen, realtimeStatus, scopeRevision, sessionEpoch, sessionNotice, selectAccessProfile, setUser, user, verifiedScope],
   )
 
 

@@ -123,7 +123,7 @@ async function openPage(browser, roleId, view) {
     const name = url.pathname
     if (name.startsWith('/api/v1/')) {
       if (name === '/api/v1/user/refresh') return json(route, { accessToken: token(roleId) })
-      if (name === '/api/v1/profile') return json(route, { userId: `user-${roleId}`, name: 'Test', surname: 'User', roleId, restaurantId: roleId === 3 ? 1 : null, isActive: true, profiles: roleId === 3 ? [{ restaurantId: 1, restaurantName: 'Dolce Vita', roleId, roleName: 'Manager', isActive: true }] : [] })
+      if (name === '/api/v1/profile') return json(route, { userId: `user-${roleId}`, name: 'Test', surname: 'User', roleId, restaurantId: roleId === 3 ? 1 : null, isActive: true, profiles: [2, 3].includes(roleId) ? [{ restaurantId: 1, restaurantName: 'Dolce Vita', roleId, roleName: roleId === 2 ? 'Owner' : 'Manager', isActive: true }] : [] })
       if (name === '/api/v1/localization/preference') return json(route, { language: 'az' })
       if (name.startsWith('/api/v1/localization/dictionaries/')) return json(route, { language: 'az', version: 'v1', fallbackLanguage: 'az', messages: {} })
       if (name.endsWith('/notifications')) return json(route, { items: [], pageIndex: 1, totalPages: 1, totalCount: 0 })
@@ -159,7 +159,8 @@ async function openPage(browser, roleId, view) {
     return route.fulfill({ status: 200, body: fs.readFileSync(file), contentType: { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }[path.extname(file)] || 'application/octet-stream' })
   })
   await page.goto(`${origin}/admin`)
-  await page.locator('.role-dashboard-metric').first().waitFor()
+  try { await page.locator('.role-dashboard-metric').first().waitFor() }
+  catch (error) { console.error({ view, url: page.url(), errors, body: await page.locator('body').innerText() }); throw error }
   return { context, page, errors }
 }
 
