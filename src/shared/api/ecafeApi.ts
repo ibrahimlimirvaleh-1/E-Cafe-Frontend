@@ -33,6 +33,7 @@ import type {
 import { endpoints, type KitchenProgressAction } from './endpoints'
 import { workingHoursRequest } from '../lib/workingHours'
 import { ApiError, fetchProtectedBlob, getApiOrigin, httpClient } from './httpClient'
+import { i18n } from '../i18n/i18n'
 import type { ContentEntityType, ContentTranslationResponse, TranslationPayload } from '../i18n/contentTranslations'
 
 import {
@@ -1683,6 +1684,22 @@ export const ecafeApi = {
   },
 
   profile: {
+    accountDeletionEligibility: async (signal?: AbortSignal) => {
+      const result = await httpClient<unknown>(endpoints.profile.accountDeletion, { signal })
+      const record = result.data as AnyRecord | null
+      if (!record || typeof record.canDelete !== 'boolean' || !Array.isArray(record.blockers) || !record.blockers.every(item => typeof item === 'string')) {
+        throw new Error(i18n.t('ui.accountDeletion.checkFailed'))
+      }
+      return { canDelete: record.canDelete, blockers: record.blockers as string[] }
+    },
+    deleteOwnAccount: async (request: { currentPassword: string; confirm: boolean }, signal?: AbortSignal) => {
+      const result = await httpClient<void>(endpoints.profile.accountDeletion, {
+        method: 'POST', body: JSON.stringify(request), signal,
+        skipAuthRefresh: true, suppressAuthExpiredEvent: true,
+      })
+      if (result.statusCode !== 204) throw new Error(i18n.t('ui.accountDeletion.failed'))
+      return result
+    },
     requestEmailChange: (request: { newEmail: string; currentPassword: string }, signal?: AbortSignal) =>
       httpClient<void>(endpoints.profile.requestEmailChange, {
         method: 'POST', body: JSON.stringify(request), signal,

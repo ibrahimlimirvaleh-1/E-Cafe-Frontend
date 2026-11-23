@@ -1,5 +1,7 @@
 # Role Targeted Announcements UI
 
+Integration update: this historical isolated-feature report is superseded by `customer-account-announcements-integration.md`. Both pending features are now combined on `feat/customer-account-announcements-ui`; the original feature commit is preserved.
+
 Branch `feat/role-targeted-announcements-ui`, base `origin/dev` at `f484d92`.
 Separate worktree: `frontend-role-announcements`. The thirteen uncommitted customer-account-deletion files remain untouched in `frontend-inventory-layout`; neither stash nor temporary commit was used. No production `.env.local` was copied.
 

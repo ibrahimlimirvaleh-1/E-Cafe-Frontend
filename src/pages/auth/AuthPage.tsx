@@ -116,7 +116,7 @@ export function AuthPage({ mode }: AuthPageProps) {
         ) : null}
         <TextField label={i18n.t('ui.pages.auth.auth_page.email_969ccb')} placeholder={i18n.t('ui.pages.auth.auth_page.name_example_com_7b17fb')} type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
         <TextField label={i18n.t('ui.pages.auth.auth_page.sifre_bc0691')} placeholder={i18n.t('ui.pages.auth.auth_page.en_azi_8_simvol_24a804')} type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-        {feedbackMessage ? <StatusMessage key={error ? `attempt-${attemptRef.current}` : 'session'} details={error ? errorDetails : []} tone="danger" autoHideMs={false}>{feedbackMessage}</StatusMessage> : null}
+        {feedbackMessage ? <StatusMessage key={error ? `attempt-${attemptRef.current}` : 'session'} details={error ? errorDetails : []} tone={error ? 'danger' : sessionNotice?.tone || 'danger'} autoHideMs={false}>{feedbackMessage}</StatusMessage> : null}
         <Button disabled={isSubmitting} type="submit">{isSubmitting ?i18n.t('ui.pages.auth.auth_page.gonderilir_e1bb27') : isLogin ?i18n.t('ui.pages.auth.auth_page.daxil_ol_2e157a') :i18n.t('ui.pages.auth.auth_page.hesab_yarat_54e62f')}</Button>
         <div className="auth-links">
           {isLogin ? <Link to="/forgot-password">{i18n.t('ui.pages.auth.auth_page.sifreni_unutmusunuz_b8c2d0')}</Link> : null}

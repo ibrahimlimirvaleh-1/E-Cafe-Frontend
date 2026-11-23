@@ -20,7 +20,7 @@ const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_P
 let cases = 0
 const errors = []
 async function setup({ role = 5, language = 'en', profiles = [1, 5].includes(role) ? [] : [{ restaurantId: 1, restaurantName: 'Restaurant A', roleId: role, isActive: true }], selected, chooser = false, shared = { seen: new Set() } } = {}) {
-  const state = { requests: [], sockets: [], holds: [], feed: null, pendingError: null, ackError: null, ackStatus: 204, loginUser: '84', user: '42', rows: shared.catalog || [adminItem()], adminError: null, capabilities: Object.entries(destinations).map(([key, roleIds]) => ({ key, roleIds })), next: null, hasMore: false }
+  const state = { requests: [], sockets: [], holds: [], feed: null, pendingError: null, ackError: null, ackStatus: 204, loginUser: '84', user: '42', rows: shared.catalog || [adminItem()], adminError: null, capabilities: Object.entries(destinations).map(([key, roleIds]) => ({ key, roleIds })), next: null, hasMore: false, closed: false }
   const profile = id => ({ userId: id, name: id === '84' ? 'Fresh' : 'Current', surname: 'User', email: `user${id}@example.com`, phone: '+994501234567', roleId: id === '84' ? 5 : role, isActive: true, profiles: id === '84' ? [] : profiles })
   const jwt = id => `header.${Buffer.from(JSON.stringify({ ...profile(id), roleId: String(id === '84' ? 5 : role), restaurantId: profiles[0]?.restaurantId, restaurantIds: profiles.map(p => String(p.restaurantId)), restaurantRoles: profiles.map(p => `${p.restaurantId}:${p.roleId}`), permissions: [] })).toString('base64url')}.signature`
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
@@ -51,9 +51,15 @@ async function setup({ role = 5, language = 'en', profiles = [1, 5].includes(rol
       const feed = structuredClone(state.feed || { roleId: activeRole, restaurantId: activeRole === 5 ? null : restaurantId, items: (catalogItems || [item(activeRole), item(activeRole, 2), item(activeRole, 3)]).filter(i => !shared.seen.has(`${uid}:${activeRole}:${i.id}:${i.version}`)).slice(0, 3), hasMore: !catalogItems })
       const pe = state.pendingError, ae = state.ackError
       if (h) { h.used = true; h.started.resolve(); await h.release.promise; h.released.resolve() }
-      if (p === '/api/v1/user/refresh') return json(route, { accessToken: jwt(state.user) })
+      if (p === '/api/v1/user/refresh') return state.closed && state.user === '42' ? problem(route, 'SessionInvalid', 401) : json(route, { accessToken: jwt(state.user) })
       if (p === '/api/v1/user/login') { state.user = state.loginUser; return json(route, { accessToken: jwt(state.user) }) }
       if (p === '/api/v1/profile') return json(route, snapshot)
+      if (p === '/api/v1/profile/account-deletion') {
+        if (req.method() === 'GET') return json(route, { canDelete: true, blockers: [] })
+        assert.deepEqual(JSON.parse(record.body), { currentPassword: 'CombinedPassword1!', confirm: true })
+        state.closed = true
+        return route.fulfill({ status: 204 })
+      }
       if (p === '/api/v1/announcements/pending') return pe ? problem(route, pe.code, pe.status) : json(route, feed)
       if (/\/announcements\/\d+\/acknowledge$/.test(p)) {
         if (ae) return problem(route, ae.code, ae.status)
@@ -97,6 +103,7 @@ async function setup({ role = 5, language = 'en', profiles = [1, 5].includes(rol
     async open(route = '/notifications') { await page.goto(origin + route); await page.locator('.user-pill').waitFor(); await waitFor(() => state.sockets.some(s => s.ready)) },
     async go(route) { await page.evaluate(route => { history.pushState({ key: String(Math.random()) }, '', route); dispatchEvent(new PopStateEvent('popstate')) }, route) },
     async switchTo(name) { await page.locator('.user-profile-switcher summary').click(); await page.locator('.user-profile-option').filter({ hasText: name }).click() },
+    event(target, payload) { state.sockets.filter(c => c.ready && !c.closed).at(-1).socket.send(JSON.stringify({ type: 1, target, arguments: [payload] }) + '\x1e') },
     async close() { assert.deepEqual(await page.evaluate(() => window.__unhandled), []); clearInterval(ping); await context.close() },
   }
 }
@@ -329,6 +336,48 @@ try {
     await unpublish(); await admin.page.locator('.announcement-editor input[maxlength="120"]').fill('New version AZ'); await admin.page.getByRole('button', { name: admin.t('saveDraft'), exact: true }).click(); await admin.page.getByText(admin.t('version').replace('{{version}}', '2'), { exact: true }).waitFor(); await publish()
     const second = await setup({ shared }); await second.open(); await panel(second).waitFor(); assert.equal(shared.catalog[0].version, 2)
     await second.close(); await admin.close(); cases += 1
+  }
+  for (const language of ['az', 'en', 'ru']) {
+    const c = await setup({ language }); await c.open(); await panel(c).waitFor()
+    await panel(c).getByRole('button', { name: c.t('open'), exact: true }).click()
+    await c.page.waitForURL(origin + '/account')
+    assert.equal(c.state.requests.filter(r => r.path.endsWith('/profile/account-deletion')).length, 0, 'Profile CTA never starts deletion')
+    await c.page.locator('.account-deletion-section button').click()
+    const dialog = c.page.locator('dialog.account-deletion-dialog'); await dialog.locator('input[type=password]').waitFor()
+    assert.equal(await panel(c).count(), 0, 'Sensitive deletion flow remains unobstructed')
+    await dialog.locator('input[type=password]').fill('CombinedPassword1!'); await dialog.locator('input[type=checkbox]').check(); await dialog.locator('button[type=submit]').click()
+    await c.page.waitForURL(origin + '/login')
+    await c.page.getByText(catalogs[language]['ui.accountDeletion.completed'], { exact: true }).waitFor()
+    await tick(c); assert.equal(await panel(c).count(), 0); assert.equal(await c.page.locator('.logout-action').count(), 0)
+    assert.equal(receipts(c).length, 1, 'Unseen cards remain unacknowledged when account closes')
+    await c.close(); cases += 1
+  }
+  {
+    const c = await setup(); c.state.pendingError = { code: 'StaffProfileInactive', status: 401 }
+    const get = c.hold(r => r.path.endsWith('/announcements/pending'))
+    await c.open('/account'); await get.started.promise
+    await c.page.locator('.account-deletion-section button').click()
+    const dialog = c.page.locator('dialog.account-deletion-dialog'); await dialog.locator('input[type=password]').waitFor()
+    const post = c.hold(r => r.path.endsWith('/profile/account-deletion') && r.method === 'POST')
+    await dialog.locator('input[type=password]').fill('CombinedPassword1!'); await dialog.locator('input[type=checkbox]').check(); await dialog.locator('button[type=submit]').click(); await post.started.promise
+    c.event('UserDeactivated', { message: catalogs.en['ui.accountDeletion.completed'] }); await c.page.waitForURL(origin + '/login')
+    c.state.pendingError = null
+    await c.page.locator('input[type=email]').fill('fresh@example.com'); await c.page.locator('input[type=password]').fill('FreshPassword1!'); await c.page.locator('.auth-card button[type=submit]').click()
+    await c.page.locator('.user-pill strong').filter({ hasText: 'Fresh' }).waitFor(); await c.go('/notifications'); await panel(c).waitFor()
+    get.release.resolve(); post.release.resolve(); await get.released.promise; await post.released.promise; await tick(c)
+    assert.ok(await panel(c).count()); assert.ok(await c.page.locator('.logout-action').count()); assert.ok(!c.page.url().endsWith('/login'))
+    await c.close(); cases += 1
+  }
+  {
+    const c = await setup(); await c.open(); await panel(c).waitFor()
+    const ack = c.hold(r => r.path.endsWith('/acknowledge'))
+    await panel(c).getByRole('button', { name: c.t('open'), exact: true }).click(); await ack.started.promise
+    await c.go('/account'); await c.page.locator('.account-deletion-section button').click()
+    const dialog = c.page.locator('dialog.account-deletion-dialog'); await dialog.locator('input[type=password]').waitFor()
+    await dialog.locator('input[type=password]').fill('CombinedPassword1!'); await dialog.locator('input[type=checkbox]').check(); await dialog.locator('button[type=submit]').click()
+    await c.page.waitForURL(origin + '/login'); ack.release.resolve(); await ack.released.promise; await tick(c)
+    assert.equal(c.page.url(), origin + '/login'); assert.equal(await panel(c).count(), 0); assert.equal(await c.page.locator('.logout-action').count(), 0)
+    await c.close(); cases += 1
   }
   assert.deepEqual(errors, [])
   console.log(`PASS ${cases} announcement browser scenarios: roles1-6, actual header role, verified/profile chooser gating, nonmodal/deferral, 3-card receipts, mixed rollout/errors, scope races, cross-device seen, admin guards/drafts/publish/version conflicts and AZ/EN/RU desktop/mobile/light/dark`)

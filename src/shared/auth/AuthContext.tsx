@@ -35,7 +35,7 @@ const roleNamesById: Record<string, string> = {
 type SessionNotice = {
   title: string
   message: string
-  tone?: 'info'
+  tone?: 'info' | 'success'
   translationKey?: string
 }
 
@@ -53,6 +53,7 @@ type AuthContextValue = {
   logout: () => Promise<void>
   logoutAll: () => Promise<void>
   clearSession: () => void
+  completeAccountDeletion: (ownerId: string, expectedEpoch: string) => boolean
   scopeRevision: string
   sessionNotice: SessionNotice | null
 }
@@ -120,6 +121,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const clearLocalSession = useCallback(() => {
+    invalidateSessionWork()
+    markManualLogout()
+    clearAuthTokens()
+    setUser(null)
+    setSessionNotice(null)
+    setRestoreError('')
+    setIsProfilePromptOpen(false)
+    setIsAuthReady(true)
+  }, [invalidateSessionWork, setUser])
   const terminateSession = useCallback((message = SESSION_TERMINATED_MESSAGE) => {
     invalidateSessionWork()
     markManualLogout()
@@ -129,7 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsRestoring(false)
     setIsAuthReady(true)
     setIsProfilePromptOpen(false)
-    showSessionNotice({ title: i18n.t('ui.profiles.sessionEnded'), message, translationKey: message === i18n.t('ui.staffAccess.inactive') ? 'ui.staffAccess.inactive' : undefined }, false)
+    const accountClosed = ['az', 'en', 'ru'].some(lng => message === i18n.t('ui.accountDeletion.completed', { lng }))
+    showSessionNotice({ title: i18n.t('ui.profiles.sessionEnded'), message, tone: accountClosed ? 'success' : undefined, translationKey: accountClosed ? 'ui.accountDeletion.completed' : message === i18n.t('ui.staffAccess.inactive') ? 'ui.staffAccess.inactive' : undefined }, false)
     navigateRef.current('/login', { replace: true })
   }, [invalidateSessionWork, setUser, showSessionNotice])
 
@@ -404,15 +416,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: user !== null,
       scopeRevision: `${sessionEpoch}:${scopeRevision}`,
       sessionNotice,
-      clearSession: () => {
-        invalidateSessionWork()
-        markManualLogout()
-        clearAuthTokens()
-        setUser(null)
-        setSessionNotice(null)
-        setRestoreError('')
-        setIsProfilePromptOpen(false)
-        setIsAuthReady(true)
+      clearSession: clearLocalSession,
+      completeAccountDeletion: (ownerId, expectedEpoch) => {
+        if (!isCurrentSession(ownerId, expectedEpoch)) return false
+        clearLocalSession()
+        showSessionNotice({ title: i18n.t('ui.accountDeletion.title'), message: i18n.t('ui.accountDeletion.completed'), translationKey: 'ui.accountDeletion.completed', tone: 'success' }, false)
+        navigateRef.current('/login', { replace: true })
+        return true
       },
       setSession: (tokens) => {
         invalidateSessionWork()
@@ -468,7 +478,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [invalidateSessionWork, isAuthReady, isCurrentSession, isProfilePromptOpen, realtimeStatus, scopeRevision, sessionEpoch, sessionNotice, selectAccessProfile, setUser, user, verifiedScope],
+    [clearLocalSession, invalidateSessionWork, isAuthReady, isCurrentSession, isProfilePromptOpen, realtimeStatus, scopeRevision, sessionEpoch, sessionNotice, selectAccessProfile, setUser, showSessionNotice, user, verifiedScope],
   )
 
 
@@ -496,7 +506,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         />
       ) : null}
       {sessionNotice && location.pathname.replace(/\/+$/, '').toLowerCase() !== '/login' ? (
-        <div className={`session-termination-notice${sessionNotice.tone === 'info' ? ' session-profile-notice' : ''}`} role={sessionNotice.tone === 'info' ? 'status' : 'alert'}>
+        <div className={`session-termination-notice${sessionNotice.tone ? ' session-profile-notice' : ''}`} role={sessionNotice.tone ? 'status' : 'alert'}>
           <strong>{sessionNotice.title}</strong>
           <span>{sessionNotice.message}</span>
         </div>
