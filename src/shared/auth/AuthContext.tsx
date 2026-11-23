@@ -35,7 +35,7 @@ const roleNamesById: Record<string, string> = {
 type SessionNotice = {
   title: string
   message: string
-  tone?: 'info'
+  tone?: 'info' | 'success'
   translationKey?: string
 }
 
@@ -43,6 +43,8 @@ type AuthContextValue = {
   user: CurrentUser | null
   realtimeStatus: RealtimeConnectionStatus
   isAuthReady: boolean
+  isProfileVerified: boolean
+  isCurrentSession: (ownerId: string, expectedEpoch: string, roleId?: string, restaurantId?: string) => boolean
   isAuthenticated: boolean
   setSession: (tokens: AuthTokens) => void
   updateUser: (patch: Partial<CurrentUser>) => void
@@ -51,6 +53,7 @@ type AuthContextValue = {
   logout: () => Promise<void>
   logoutAll: () => Promise<void>
   clearSession: () => void
+  completeAccountDeletion: (ownerId: string, expectedEpoch: string) => boolean
   scopeRevision: string
   sessionNotice: SessionNotice | null
 }
@@ -89,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const reconcileIdRef = useRef(0)
   const [sessionEpoch, setSessionEpoch] = useState(0)
   const [scopeRevision, setScopeRevision] = useState(0)
+  const [verifiedScope, setVerifiedScope] = useState('')
   const setUser = useCallback((update: CurrentUser | null | ((current: CurrentUser | null) => CurrentUser | null)) => {
     const next = typeof update === 'function' ? update(userRef.current) : update
     userRef.current = next
@@ -96,11 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
   const invalidateSessionWork = useCallback(() => {
     clearVerifiedProfiles()
+    setVerifiedScope('')
     selectionIntentRef.current = null
     reconcileIdRef.current += 1
     sessionEpochRef.current += 1
     setSessionEpoch(sessionEpochRef.current)
   }, [])
+  const isCurrentSession = useCallback((ownerId: string, expectedEpoch: string, roleId?: string, restaurantId?: string) =>
+    userRef.current?.userId === ownerId && String(sessionEpochRef.current) === expectedEpoch &&
+    (roleId === undefined || (userRef.current?.roleId === roleId && (userRef.current.restaurantId || '') === (restaurantId || ''))), [])
 
   const showSessionNotice = useCallback((notice: SessionNotice, autoHideMs: number | false = 2000) => {
     window.clearTimeout(noticeTimerRef.current)
@@ -113,6 +121,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const clearLocalSession = useCallback(() => {
+    invalidateSessionWork()
+    markManualLogout()
+    clearAuthTokens()
+    setUser(null)
+    setSessionNotice(null)
+    setRestoreError('')
+    setIsProfilePromptOpen(false)
+    setIsAuthReady(true)
+  }, [invalidateSessionWork, setUser])
   const terminateSession = useCallback((message = SESSION_TERMINATED_MESSAGE) => {
     invalidateSessionWork()
     markManualLogout()
@@ -122,7 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsRestoring(false)
     setIsAuthReady(true)
     setIsProfilePromptOpen(false)
-    showSessionNotice({ title: i18n.t('ui.profiles.sessionEnded'), message, translationKey: message === i18n.t('ui.staffAccess.inactive') ? 'ui.staffAccess.inactive' : undefined }, false)
+    const accountClosed = ['az', 'en', 'ru'].some(lng => message === i18n.t('ui.accountDeletion.completed', { lng }))
+    showSessionNotice({ title: i18n.t('ui.profiles.sessionEnded'), message, tone: accountClosed ? 'success' : undefined, translationKey: accountClosed ? 'ui.accountDeletion.completed' : message === i18n.t('ui.staffAccess.inactive') ? 'ui.staffAccess.inactive' : undefined }, false)
     navigateRef.current('/login', { replace: true })
   }, [invalidateSessionWork, setUser, showSessionNotice])
 
@@ -144,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const current = userRef.current!
         const next = mergeProfileDetails(base, details, current)
         syncVerifiedProfiles(next)
+        setVerifiedScope(`${epoch}:${profileScope(next)}`)
         const changedScope = profileScope(next) !== profileScope(current)
         const changedProfiles = profileSignature(next.profiles) !== profileSignature(current.profiles)
         setUser(sameAccessState(current, next) ? current : next)
@@ -184,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsProfilePromptOpen(false)
     if (profileScope(current) === profileScope(next)) return
     reconcileIdRef.current += 1
+    setVerifiedScope('')
     syncVerifiedProfiles(next)
     setUser(next)
     void reconcileProfiles()
@@ -390,18 +411,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       realtimeStatus,
       isAuthReady,
+      isProfileVerified: Boolean(user && verifiedScope === `${sessionEpoch}:${profileScope(user)}` && !isProfilePromptOpen),
+      isCurrentSession,
       isAuthenticated: user !== null,
       scopeRevision: `${sessionEpoch}:${scopeRevision}`,
       sessionNotice,
-      clearSession: () => {
-        invalidateSessionWork()
-        markManualLogout()
-        clearAuthTokens()
-        setUser(null)
-        setSessionNotice(null)
-        setRestoreError('')
-        setIsProfilePromptOpen(false)
-        setIsAuthReady(true)
+      clearSession: clearLocalSession,
+      completeAccountDeletion: (ownerId, expectedEpoch) => {
+        if (!isCurrentSession(ownerId, expectedEpoch)) return false
+        clearLocalSession()
+        showSessionNotice({ title: i18n.t('ui.accountDeletion.title'), message: i18n.t('ui.accountDeletion.completed'), translationKey: 'ui.accountDeletion.completed', tone: 'success' }, false)
+        navigateRef.current('/login', { replace: true })
+        return true
       },
       setSession: (tokens) => {
         invalidateSessionWork()
@@ -457,7 +478,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [invalidateSessionWork, isAuthReady, realtimeStatus, scopeRevision, sessionEpoch, sessionNotice, selectAccessProfile, setUser, user],
+    [clearLocalSession, invalidateSessionWork, isAuthReady, isCurrentSession, isProfilePromptOpen, realtimeStatus, scopeRevision, sessionEpoch, sessionNotice, selectAccessProfile, setUser, showSessionNotice, user, verifiedScope],
   )
 
 
@@ -485,7 +506,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         />
       ) : null}
       {sessionNotice && location.pathname.replace(/\/+$/, '').toLowerCase() !== '/login' ? (
-        <div className={`session-termination-notice${sessionNotice.tone === 'info' ? ' session-profile-notice' : ''}`} role={sessionNotice.tone === 'info' ? 'status' : 'alert'}>
+        <div className={`session-termination-notice${sessionNotice.tone ? ' session-profile-notice' : ''}`} role={sessionNotice.tone ? 'status' : 'alert'}>
           <strong>{sessionNotice.title}</strong>
           <span>{sessionNotice.message}</span>
         </div>

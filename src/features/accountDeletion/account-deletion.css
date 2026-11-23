@@ -1,0 +1,22 @@
+.account-deletion-section { display: grid; gap: 12px; border-top: 1px solid var(--outline-variant); padding-top: 20px; margin-top: 4px; min-width: 0; }
+.account-deletion-section h3 { margin: 0; font-size: 17px; }
+.account-deletion-section p { margin: 0; color: var(--on-surface-variant); line-height: 1.55; }
+.account-deletion-dialog { width: min(520px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 24px; border: 1px solid var(--outline-variant); border-radius: 8px; color: var(--on-surface); background: var(--surface-lowest); box-shadow: var(--shadow-lg); overflow: auto; }
+.account-deletion-dialog::backdrop { background: rgb(0 0 0 / 48%); }
+.account-deletion-dialog form { display: grid; gap: 16px; min-width: 0; }
+.account-deletion-dialog header { display: flex; justify-content: space-between; align-items: center; color: var(--danger); }
+.account-deletion-dialog header button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; background: var(--surface-low); color: var(--on-surface-variant); border: 1px solid var(--outline-variant); border-radius: 8px; }
+.account-deletion-dialog h2 { margin: 0; font-size: 22px; line-height: 1.25; }
+.account-deletion-dialog p { margin: 0; color: var(--on-surface-variant); line-height: 1.55; }
+.account-deletion-owner { overflow-wrap: anywhere; }
+.account-deletion-confirm { display: flex; align-items: flex-start; gap: 12px; line-height: 1.5; cursor: pointer; min-height: 44px; }
+.account-deletion-confirm input { flex: 0 0 20px; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--danger); }
+.account-deletion-blockers { border-left: 3px solid var(--danger); padding-left: 14px; }
+.account-deletion-blockers h3 { margin: 0 0 8px; font-size: 16px; }
+.account-deletion-blockers ul { margin: 0; padding-left: 18px; color: var(--on-surface-variant); line-height: 1.5; }
+.account-deletion-blockers li + li { margin-top: 6px; }
+.account-deletion-dialog .form-message { position: static; width: 100%; max-width: 100%; margin: 0; overflow-wrap: anywhere; }
+.account-deletion-dialog .form-message-title { text-align: left; }
+.account-deletion-dialog button { min-height: 44px; white-space: normal; }
+.account-deletion-dialog footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+@media (max-width: 480px) { .account-deletion-dialog { padding: 20px; } .account-deletion-dialog footer > * { flex: 1 1 100%; } }

@@ -1,5 +1,5 @@
 import { matchPath, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Boxes, ChevronDown, ChevronLeft, ChevronRight, Languages, LayoutDashboard, MailWarning, Menu, X } from 'lucide-react'
+import { Boxes, ChevronDown, ChevronLeft, ChevronRight, Languages, LayoutDashboard, MailWarning, Megaphone, Menu, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminModules, localizeAdminModule } from '../../entities/mockData'
 import { useAuth } from '../auth/AuthContext'
@@ -184,6 +184,7 @@ export function AdminShell() {
             </div>
           })}
           {isPlatformAdmin ? <NavLink to="/admin/localization" {...navLabel(t('ui.localization.title'))}><Languages size={18} aria-hidden="true" /><span className="admin-nav-label">{t('ui.localization.title')}</span></NavLink> : null}
+          {isPlatformAdmin ? <NavLink to="/admin/announcements" {...navLabel(t('ui.announcements.management'))}><Megaphone size={18} aria-hidden="true" /><span className="admin-nav-label">{t('ui.announcements.management')}</span></NavLink> : null}
         </nav>
         <button
           type="button"

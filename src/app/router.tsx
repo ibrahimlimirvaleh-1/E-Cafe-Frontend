@@ -31,6 +31,7 @@ import { RestaurantEditPage } from '../pages/admin/RestaurantEditPage'
 import { RestaurantCreatePage, RestaurantManagementPage } from '../pages/admin/RestaurantManagementPage'
 import { OutboxPage } from '../pages/admin/OutboxPage'
 import { LocalizationPage } from '../pages/admin/LocalizationPage'
+import { AnnouncementsPage } from '../pages/admin/AnnouncementsPage'
 import { StaffCreatePage, StaffManagementPage } from '../pages/admin/StaffManagementPage'
 import { TableCreatePage, TablesManagementPage } from '../pages/admin/TablesManagementPage'
 import { AuthPage } from '../pages/auth/AuthPage'
@@ -176,6 +177,7 @@ export function AppRouter() {
         }
       >
         <Route index element={<AdminDashboardEntry />} />
+        <Route path="announcements" element={<RequireAuth allowedRoleIds={[RoleIds.PlatformAdmin]}><AnnouncementsPage /></RequireAuth>} />
         <Route path="localization" element={<RequireAuth allowedRoleIds={[RoleIds.PlatformAdmin]}><LocalizationPage /></RequireAuth>} />
         <Route path="contracts">
           <Route index element={<AdminProtected moduleKey="contracts"><ContractListPage /></AdminProtected>} />

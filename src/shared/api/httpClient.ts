@@ -46,6 +46,7 @@ let pendingRefresh: { revision: number; promise: Promise<RefreshResult | null> }
 let lastAuthExpiredNotificationAt = 0
 
 type RequestOptions = RequestInit & {
+  sessionEffects?: 'none'
   isAuthenticationAttempt?: boolean
   authErrorMessage?: string
   skipAuthRefresh?: boolean
@@ -80,7 +81,7 @@ export async function fetchProtectedBlob(pathOrUrl: string, init?: RequestOption
   if (!response.ok) {
     const payload = await response.json().catch(() => null)
     const result = normalizeApiResult<unknown>(payload, response.status, response.ok)
-    const shouldExpire = !init?.suppressAuthExpiredEvent || (isStaffProfileInactiveCode(result.code) && !init?.isAuthenticationAttempt)
+    const shouldExpire = init?.sessionEffects !== 'none' && (!init?.suppressAuthExpiredEvent || (isStaffProfileInactiveCode(result.code) && !init?.isAuthenticationAttempt))
     throw buildApiError(result, response.status, shouldExpire && revision === getAuthRevision(), init?.authErrorMessage)
   }
 
@@ -97,6 +98,7 @@ async function sendBlobRequest(pathOrUrl: string, init?: RequestOptions) {
 
 async function sendApiRequest(url: string, init?: RequestOptions) {
   const {
+    sessionEffects: _sessionEffects,
     isAuthenticationAttempt: _isAuthenticationAttempt,
     authErrorMessage: _authErrorMessage,
     skipAuthRefresh: _skipAuthRefresh,
@@ -181,7 +183,7 @@ async function parseResponse<T>(response: Response, init?: RequestOptions, revis
   const result = normalizeApiResult<T>(payload, response.status, response.ok)
 
   if (!response.ok) {
-    const shouldExpire = !init?.suppressAuthExpiredEvent || (isStaffProfileInactiveCode(result.code) && !init?.isAuthenticationAttempt)
+    const shouldExpire = init?.sessionEffects !== 'none' && (!init?.suppressAuthExpiredEvent || (isStaffProfileInactiveCode(result.code) && !init?.isAuthenticationAttempt))
     throw buildApiError(result, response.status, shouldExpire && revision === getAuthRevision(), init?.authErrorMessage)
   }
 
