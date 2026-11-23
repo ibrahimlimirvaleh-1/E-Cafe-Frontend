@@ -249,6 +249,7 @@ export const endpoints = {
     update: '/profile',
     requestEmailChange: '/profile/email-change/request',
     confirmEmailChange: '/profile/email-change/confirm',
+    accountDeletion: '/profile/account-deletion',
   },
   userSessions: {
     list: '/user/sessions',

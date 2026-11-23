@@ -19,6 +19,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { PhoneField } from '../../shared/ui/PhoneField'
 import { StatusMessage } from '../../shared/ui/StatusMessage'
 import { EmailChangeDialog } from '../../features/emailChange/EmailChangeDialog'
+import { AccountDeletionSection } from '../../features/accountDeletion/AccountDeletionSection'
 
 export function ProfilePage() {
   useTranslation()
@@ -179,6 +180,8 @@ export function ProfilePage() {
         isActive: item.isActive !== false,
       })) ?? []
   const activeProfile = accessProfiles.find((item) => String(item.restaurantId) === user?.restaurantId && String(item.roleId) === user?.roleId)
+  const hasActiveStaffProfile = [...(profile.profiles || []), ...accessProfiles].some(item => item.isActive && [2, 3, 4, 6].includes(item.roleId))
+  const canRequestAccountDeletion = profile.roleId === 5 && user?.roleId === '5' && !hasActiveStaffProfile
 
   return (
     <main className="page">
@@ -297,6 +300,7 @@ export function ProfilePage() {
             <LogOut size={18} />
             {isLoggingOutAll ?i18n.t('ui.pages.customer.profile_page.baglanir_6fd246') :i18n.t('ui.pages.customer.profile_page.butun_cihazlardan_cixis_et_32d8ca')}
           </Button>
+          {canRequestAccountDeletion ? <AccountDeletionSection key={`${user.userId}:${user.roleId}`} /> : null}
         </section>
       </div>
 
