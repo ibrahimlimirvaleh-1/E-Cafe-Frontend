@@ -15,6 +15,7 @@ const temporaryParent = fs.realpathSync.native(os.tmpdir())
 const temporaryRoot = fs.mkdtempSync(path.join(temporaryParent, 'ecafe-nginx-proto-'))
 const normalizePath = value => value.replaceAll('\\', '/')
 const backend = http.createServer(async (request, response) => {
+  if (request.url.startsWith('/api/v1/log-test-failure')) { request.socket.destroy(); return }
   let body = ''
   for await (const chunk of request) body += chunk
   response.setHeader('Content-Type', 'application/json')
@@ -31,23 +32,32 @@ const completed = []
 let currentProcess
 let currentPrefix
 
-function request(port, route, { peer = '127.0.0.1', headers = {}, upgrade = false } = {}) {
+function request(port, route, { peer = '127.0.0.1', headers = {}, upgrade = false, jsonResponse = true, expectedStatus = 200, method: requestedMethod, body: requestedBody } = {}) {
   return new Promise((resolve, reject) => {
-    const method = route.startsWith('/api/v1/mobile/auth/') ? 'POST' : 'GET'
-    const body = method === 'POST' ? '{"refreshToken":"fixture-only-not-a-real-token"}' : ''
+    const method = requestedMethod || (route.startsWith('/api/v1/mobile/auth/') ? 'POST' : 'GET')
+    const body = requestedBody || (method === 'POST' ? '{"refreshToken":"fixture-only-not-a-real-token"}' : '')
     const req = http.request({ hostname: '127.0.0.1', port, localAddress: peer, path: route, method, agent: false,
       headers: { Host: 'ecafe.test', Forwarded: 'for=127.0.0.1;proto=https', ...(body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {}), ...headers } }, response => {
       let content = ''
       response.setEncoding('utf8')
       response.on('data', chunk => { content += chunk })
       response.on('end', () => {
-        try { assert.equal(response.statusCode, 200, content); resolve(JSON.parse(content)) } catch (error) { reject(error) }
+        try { assert.equal(response.statusCode, expectedStatus, content); resolve(jsonResponse ? JSON.parse(content) : { body: content, headers: response.headers }) } catch (error) { reject(error) }
       })
     })
     req.on('error', reject)
     req.setTimeout(3000, () => req.destroy(new Error(`Timed out: ${route}`)))
     if (upgrade) req.on('upgrade', (response, socket) => { socket.destroy(); resolve(response.statusCode) })
     req.end(body)
+  })
+}
+
+function malformedRequest(port, target, extraHeader) {
+  return new Promise((resolve, reject) => {
+    const socket = net.connect(port, '127.0.0.1', () => socket.end(`GET ${target} HTTP/1.1\r\nHost: ecafe.test\r\n${extraHeader}\r\nConnection: close\r\n\r\n`))
+    let result = ''
+    socket.on('data', data => { result += data }); socket.on('error', reject); socket.on('end', () => resolve(result))
+    socket.setTimeout(3000, () => socket.destroy(new Error('Malformed fixture timeout')))
   })
 }
 
@@ -94,6 +104,8 @@ try {
       fs.writeFileSync(allowlist, mode === 'empty-allowlist' ? trustedFile : '127.0.0.1/32 1;\n')
       const port = await freePort()
       const config = source.replace('listen 80;', `listen 127.0.0.1:${port};`)
+        .replaceAll('/var/log/nginx/access.log', normalizePath(path.join(directory, 'logs', 'access.log')))
+        .replaceAll('/dev/null', process.platform === 'win32' ? 'NUL' : '/dev/null')
         .replace('/etc/nginx/caddy-trusted-proxies.geo', allowlist)
         .replaceAll('http://ecafe-api:8080', `http://127.0.0.1:${backendPort}`)
         .replace('/usr/share/nginx/html', normalizePath(path.join(directory, 'html')))
@@ -150,10 +162,48 @@ try {
         assert.equal(upgradedRequest.headers.forwarded, undefined)
         completed.push(`${filename} ${mode} websocket-upgrade ${test.name}`)
       }
+      const marker = 'ECAFE-SYNTHETIC-NONSECRET', authorization = `Bearer ${marker}-AUTH`, cookie = `fixture=${marker}-COOKIE`
+      const sensitiveHeaders = { Referer: `https://fixture.test/reset-password?token=${marker}-REFERER`, Authorization: authorization, Cookie: cookie, 'User-Agent': `${marker}-AGENT` }
+      for (const route of [`/hubs/user-events?access_token=${marker}-JWT&token=second`, `/hubs/user-events/negotiate?access_token=${marker}-NEGOTIATE`, `/api/v1/mobile/auth/refresh?token=${marker}-QUERY`]) {
+        const result = await request(port, route, { headers: sensitiveHeaders })
+        assert.equal(result.path, route, 'Logging must not rewrite the forwarded URI')
+        assert.equal(result.headers.authorization, authorization); assert.equal(result.headers.cookie, cookie)
+        assert.equal(result.headers.referer, sensitiveHeaders.Referer)
+        completed.push(`${filename} ${mode} safe-log-query-forwarding`)
+      }
+      const pushBody = JSON.stringify({ token: `${marker}-PUSH` })
+      const push = await request(port, '/api/v1/mobile/push-tokens?token=fixture', { method: 'POST', body: pushBody, headers: sensitiveHeaders })
+      assert.equal(push.body, pushBody); assert.equal(push.method, 'POST')
+      completed.push(`${filename} ${mode} push-body-unchanged`)
+      for (const route of [`/reset-password?token=${marker}-RESET`, `/set-password?token=${marker}-SET`, `/restaurants/1?token=${marker}-SPA`, `/tracking/${marker}-PATH?token=${marker}-QUERY`, `/Tracking/${marker}-PATH`]) {
+        const result = await request(port, route, { headers: sensitiveHeaders, jsonResponse: false })
+        assert.equal(result.body, 'SPA fixture'); assert.equal(result.headers['referrer-policy'], 'no-referrer')
+        completed.push(`${filename} ${mode} safe-log-spa-path`)
+      }
+      const wsPath = `/hubs/user-events?access_token=${marker}-WS`
+      assert.equal(await request(port, wsPath, { headers: { ...sensitiveHeaders, Upgrade: 'websocket', Connection: 'Upgrade' }, upgrade: true }), 101)
+      assert.equal(upgradedRequest.path, wsPath); assert.equal(upgradedRequest.headers.authorization, authorization)
+      completed.push(`${filename} ${mode} safe-log-websocket`)
+      await request(port, `/api/v1/log-test-failure?access_token=${marker}-UPSTREAM`, { headers: sensitiveHeaders, jsonResponse: false, expectedStatus: 502 })
+      completed.push(`${filename} ${mode} safe-log-upstream-error`)
+      for (const [target, header] of [[`/reset-password?token=${marker}-BADHEADER`, `Host: ${marker}-DUPLICATE`], [`/bad%ZZ?token=${marker}-BADURI`, `Referer: https://fixture.test/?token=${marker}-REFERER`]]) {
+        assert.match(await malformedRequest(port, target, header), /^HTTP\/1\.1 400/)
+        completed.push(`${filename} ${mode} safe-log-parser-error`)
+      }
       await stop(prefix)
+      const logs = fs.readdirSync(path.join(directory, 'logs')).filter(name => name.endsWith('.log')).map(name => fs.readFileSync(path.join(directory, 'logs', name), 'utf8'))
+      for (const log of logs) assert.ok(!log.includes(marker), 'Synthetic query/header/path secrets must not appear in any retained log')
+      const access = fs.readFileSync(path.join(directory, 'logs', 'access.log'), 'utf8').trim().split('\n').map(line => JSON.parse(line))
+      assert.ok(access.some(row => row.path === '/reset-password' && row.status === 200), 'Keep original path, not rewritten /index.html')
+      assert.ok(access.some(row => row.path === '/api/v1/log-test-failure' && row.status === 502), 'Keep safe upstream failure telemetry')
+      assert.ok(access.some(row => row.path === '/hubs/user-events' && row.status === 101), 'Keep safe WebSocket telemetry')
+      for (const row of access) {
+        assert.deepEqual(Object.keys(row).sort(), ['time', 'method', 'path', 'status', 'bytes', 'duration', 'upstream_status'].sort())
+        assert.ok(!row.path.includes('?'))
+      }
     }
   }
-  console.log(`PASS ${completed.length} real nginx transport cases; both configurations pass nginx -t; missing trust fails closed`)
+  console.log(`PASS ${completed.length} real nginx transport/log cases; both configurations pass nginx -t; safe access/error logs, query/header preservation and missing trust fail closed`)
   if (process.env.NGINX_TEST_REPORT) fs.writeFileSync(process.env.NGINX_TEST_REPORT, JSON.stringify({ platform: process.platform, version: version.stderr, cases: completed }, null, 2))
 } finally {
   if (currentProcess) await stop(currentPrefix)

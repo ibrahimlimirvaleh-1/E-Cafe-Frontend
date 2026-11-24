@@ -1,4 +1,9 @@
 {
+  "ui.passwordLink.invalid": "Ссылка недействительна или токен отсутствует. Запросите новое письмо для пароля.",
+  "ui.passwordLink.resetComplete": "Пароль обновлён. Теперь вы можете войти с новым паролем.",
+  "ui.passwordLink.setComplete": "Пароль установлен. Теперь вы можете войти в аккаунт.",
+  "ui.passwordLink.resetFailed": "Не удалось обновить пароль.",
+  "ui.passwordLink.setFailed": "Не удалось установить пароль.",
   "ui.announcements.saveBeforePublish": "Сохраните изменения перед публикацией.",
   "ui.announcements.whatsNew": "Новое",
   "ui.announcements.dismiss": "Закрыть это обновление",

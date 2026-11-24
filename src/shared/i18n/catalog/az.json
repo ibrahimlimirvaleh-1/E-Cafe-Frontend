@@ -1,4 +1,9 @@
 {
+  "ui.passwordLink.invalid": "Link etibarsızdır və ya token tapılmadı. Yeni şifrə məktubu istəyin.",
+  "ui.passwordLink.resetComplete": "Şifrəniz yeniləndi. İndi yeni şifrə ilə daxil ola bilərsiniz.",
+  "ui.passwordLink.setComplete": "Şifrəniz təyin edildi. İndi hesabınıza daxil ola bilərsiniz.",
+  "ui.passwordLink.resetFailed": "Şifrə yenilənmədi.",
+  "ui.passwordLink.setFailed": "Şifrə təyin edilmədi.",
   "ui.announcements.saveBeforePublish": "Yayımdan əvvəl dəyişiklikləri saxlayın.",
   "ui.announcements.whatsNew": "Yenilik",
   "ui.announcements.dismiss": "Bu yeniliyi bağla",
