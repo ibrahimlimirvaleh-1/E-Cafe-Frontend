@@ -2,6 +2,12 @@
 
 ## Current Correction: Original Logo Restored
 
+### Visible Size Follow-up
+
+The original PNG has substantial internal padding. Its image layer is now scaled uniformly by 1.75 inside the existing clipped 32/28px slot, making the actual mark larger without changing the logo geometry, header height or text spacing. Both themes use the same scale. The focused browser test additionally measures the visible ink bounds, requiring at least 75% slot width and 60% slot height. This size follow-up remains uncommitted until separately requested.
+
+Verification: 44 brand scenarios and 24 notification-pagination browser scenarios passed against the enlarged-logo build. TypeScript, production Vite build and diff whitespace checks passed. Desktop collapsed-sidebar and 320px dark-mode screenshots were visually checked; no clipping or overflow was observed. Existing bundle-size/SignalR annotation warnings remain.
+
 The user rejected the library-mug substitution. Brand now renders the unchanged `/ecafe-icon.png` again in light mode and the same PNG through a dark-only SVG color/alpha filter in dark mode. The original shallow bowl, handle and curled E-shaped steam are preserved; no substitute Coffee icon or redrawn path is rendered. The filter converts the original ink to white, removes its slightly off-white paper background, and adds a thin black contour. The original bowl interior stays transparent in dark mode.32/28px layout sizing is unchanged.
 
 The source PNG and favicon remain byte-identical. An image-generation preview was not selected because a generated redraw is inappropriate for exact identity preservation; no generated bitmap is used by the application. The final correction is code-native rendering of the original asset, not raster editing.

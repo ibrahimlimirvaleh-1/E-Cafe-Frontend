@@ -79,11 +79,15 @@ async function pixels(brand, theme) {
     const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0)
     const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
     const corners = [0, image.width - 1, image.width * (image.height - 1), image.width * image.height - 1].map(i => [...data.slice(i * 4, i * 4 + 3)])
-    let changed = 0
-    for (let i = 0; i < data.length; i += 4) if (Math.abs(data[i] - data[0]) + Math.abs(data[i + 1] - data[1]) + Math.abs(data[i + 2] - data[2]) > 80) changed++
-    return { corners, changed }
+    let changed = 0, minX = image.width, minY = image.height, maxX = -1, maxY = -1
+    for (let i = 0; i < data.length; i += 4) if (Math.abs(data[i] - data[0]) + Math.abs(data[i + 1] - data[1]) + Math.abs(data[i + 2] - data[2]) > 80) {
+      changed++; const x = i / 4 % image.width, y = Math.floor(i / 4 / image.width)
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y)
+    }
+    return { corners, changed, inkWidthRatio: (maxX - minX + 1) / image.width, inkHeightRatio: (maxY - minY + 1) / image.height }
   }, png.toString('base64'))
   assert.ok(rendered.changed > 20, 'Rendered icon is not blank')
+  assert.ok(rendered.inkWidthRatio >= .75 && rendered.inkHeightRatio >= .6, 'Visible logo fills its slot instead of retaining oversized PNG padding')
   if (theme === 'dark') assert.ok(rendered.corners.every(pixel => Math.max(...pixel) < 150), 'No white square behind the icon in dark mode')
   return { vector, rendered }
 }
