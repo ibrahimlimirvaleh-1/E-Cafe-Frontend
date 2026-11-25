@@ -1,4 +1,12 @@
 {
+  "ui.notifications.pagination": "Страницы уведомлений",
+  "ui.notifications.loadFailed": "Не удалось загрузить уведомления. Попробуйте ещё раз.",
+  "ui.notifications.refresh": "Обновить уведомления",
+  "ui.notifications.retry": "Повторить",
+  "ui.notifications.unread_one": "{{count}} непрочитанное уведомление",
+  "ui.notifications.unread_few": "{{count}} непрочитанных уведомления",
+  "ui.notifications.unread_many": "{{count}} непрочитанных уведомлений",
+  "ui.notifications.unread_other": "{{count}} непрочитанных уведомления",
   "ui.passwordLink.invalid": "Ссылка недействительна или токен отсутствует. Запросите новое письмо для пароля.",
   "ui.passwordLink.resetComplete": "Пароль обновлён. Теперь вы можете войти с новым паролем.",
   "ui.passwordLink.setComplete": "Пароль установлен. Теперь вы можете войти в аккаунт.",

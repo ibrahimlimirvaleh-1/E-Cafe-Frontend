@@ -124,6 +124,7 @@ async function setup(server, { selected = 1, language = 'en', actor = '42', widt
       if (p === '/api/v1/restaurants/1/staff/7/deactivate') { server.targetActive = false; return route.fulfill({ status: 204 }) }
       if (p === '/api/v1/restaurants/1/staff/7' && request.method() === 'PUT') { server.targetActive = /name="IsActive"\r?\n\r?\ntrue/.test(request.postData()); return route.fulfill({ status: 204 }) }
       if (p.endsWith('/unread-count')) return json(route, { count: 0 })
+      if (p.includes('/notifications/paged')) return json(route, { items: [], pageIndex: 1, totalPages: 0, totalCount: 0, hasPreviousPage: false, hasNextPage: false })
       if (p.includes('/notifications')) return json(route, { items: [], totalCount: 0 })
       return json(route, {})
     }

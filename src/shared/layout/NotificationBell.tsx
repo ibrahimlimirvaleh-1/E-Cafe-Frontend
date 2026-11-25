@@ -1,10 +1,10 @@
 import { i18n } from '../i18n/i18n'
-import { Bell, CheckCheck, FileText, WifiOff } from 'lucide-react'
+import { Bell, CheckCheck, FileText, RefreshCw, WifiOff } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { NotificationItem } from '../../entities/types'
 import { ecafeApi } from '../api/ecafeApi'
-import { ApiError } from '../api/httpClient'
+import { ApiError, normalizeCaughtApiError } from '../api/httpClient'
 import { useAuth } from '../auth/AuthContext'
 import { useNotificationActions } from '../notifications/useNotificationActions'
 import { StatusMessage } from '../ui/StatusMessage'
@@ -43,6 +43,7 @@ function ScopedNotificationBell() {
   const retryCountRef = useRef(0)
   const authBlockedRef = useRef(false)
   const refreshTimerRef = useRef<number | undefined>(undefined)
+  const controllerRef = useRef<AbortController | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -73,18 +74,20 @@ function ScopedNotificationBell() {
     requestIdRef.current = requestId
     let succeeded = false
     let canRetry = true
+    const controller = new AbortController(); controllerRef.current = controller
     setIsLoading(!hasLoadedRef.current)
     setLoadError('')
     try {
-      const [items, count] = await Promise.all([ecafeApi.notifications.list(), ecafeApi.notifications.unreadCount()])
+      const [page, count] = await Promise.all([ecafeApi.notifications.page({ pageNumber: 1, pageSize: 6 }, controller.signal), ecafeApi.notifications.unreadCount(controller.signal)])
       if (requestIdRef.current === requestId) {
-        setNotifications(items)
+        setNotifications(page.items)
         setUnreadCount(count)
         hasLoadedRef.current = true
         retryCountRef.current = 0
         succeeded = true
       }
     } catch (error) {
+      if (requestIdRef.current === requestId && !controller.signal.aborted) setLoadError(normalizeCaughtApiError(error, i18n.t('ui.notifications.loadFailed')).message)
       if (requestIdRef.current === requestId && error instanceof ApiError && [401, 403].includes(error.statusCode)) {
         authBlockedRef.current = true
         canRetry = false
@@ -120,6 +123,7 @@ function ScopedNotificationBell() {
     void loadNotifications()
     return () => {
       requestIdRef.current += 1
+      controllerRef.current?.abort()
       window.clearTimeout(refreshTimerRef.current)
       inFlightRef.current = false
       pendingRef.current = false
@@ -195,6 +199,7 @@ function ScopedNotificationBell() {
     if (!notification.isRead) {
       setNotifications((items) => items.map((item) => (item.id === notification.id ? { ...item, isRead: true } : item)))
       setUnreadCount((count) => Math.max(0, count - 1))
+      window.dispatchEvent(new Event('ecafe:notifications-refresh'))
     }
     setIsOpen(false)
   })
@@ -202,6 +207,7 @@ function ScopedNotificationBell() {
   const onMarkAllAsRead = () => actions.markAllAsRead(() => {
     setNotifications((items) => items.map((item) => ({ ...item, isRead: true })))
     setUnreadCount(0)
+    window.dispatchEvent(new Event('ecafe:notifications-refresh'))
   })
   const visibleNotifications = actions.accessDenied ? [] : notifications
 
@@ -226,7 +232,7 @@ function ScopedNotificationBell() {
           <header>
             <div>
               <strong>{i18n.t('ui.shared.layout.notification_bell.bildirisler_1f9d3f')}</strong>
-              <small>{!actions.accessDenied && unreadCount > 0 ? `${unreadCount} oxunmamış` :i18n.t('ui.shared.layout.notification_bell.hamisi_oxunub_0d609a')}</small>
+              <small>{!actions.accessDenied && unreadCount > 0 ? i18n.t('ui.notifications.unread', { count: unreadCount }) :i18n.t('ui.shared.layout.notification_bell.hamisi_oxunub_0d609a')}</small>
             </div>
             <button disabled={unreadCount === 0 || actions.isUpdating || actions.accessDenied || Boolean(loadError)} onClick={() => void onMarkAllAsRead()} title={i18n.t('ui.shared.layout.notification_bell.hamisini_oxunmus_et_cacc2d')} type="button">
               <CheckCheck size={17} />
@@ -235,6 +241,7 @@ function ScopedNotificationBell() {
 
           <div className="notification-list">
             {loadError || actions.error ? <StatusMessage tone="danger" autoHideMs={false}>{loadError || actions.error}</StatusMessage> : null}
+            {loadError && !authBlockedRef.current ? <button type="button" disabled={isLoading} onClick={() => void loadNotifications()}><RefreshCw size={16} />{i18n.t('ui.notifications.retry')}</button> : null}
             {isLoading ? <p>{i18n.t('ui.shared.layout.notification_bell.yuklenir_e038b0')}</p> : null}
             {!isLoading && !loadError && !actions.error && visibleNotifications.length === 0 ? (
               <div className="notification-empty">

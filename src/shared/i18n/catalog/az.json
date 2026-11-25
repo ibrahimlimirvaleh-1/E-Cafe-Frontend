@@ -1,4 +1,12 @@
 {
+  "ui.notifications.pagination": "Bildirişlərin səhifələnməsi",
+  "ui.notifications.loadFailed": "Bildirişlər yüklənmədi. Yenidən cəhd edin.",
+  "ui.notifications.refresh": "Bildirişləri yenilə",
+  "ui.notifications.retry": "Yenidən cəhd et",
+  "ui.notifications.unread_one": "{{count}} oxunmamış bildiriş",
+  "ui.notifications.unread_few": "{{count}} oxunmamış bildiriş",
+  "ui.notifications.unread_many": "{{count}} oxunmamış bildiriş",
+  "ui.notifications.unread_other": "{{count}} oxunmamış bildiriş",
   "ui.passwordLink.invalid": "Link etibarsızdır və ya token tapılmadı. Yeni şifrə məktubu istəyin.",
   "ui.passwordLink.resetComplete": "Şifrəniz yeniləndi. İndi yeni şifrə ilə daxil ola bilərsiniz.",
   "ui.passwordLink.setComplete": "Şifrəniz təyin edildi. İndi hesabınıza daxil ola bilərsiniz.",

@@ -1,0 +1,32 @@
+{
+  "az": {
+    "ui.notifications.pagination": "Bildirişlərin səhifələnməsi",
+    "ui.notifications.loadFailed": "Bildirişlər yüklənmədi. Yenidən cəhd edin.",
+    "ui.notifications.refresh": "Bildirişləri yenilə",
+    "ui.notifications.retry": "Yenidən cəhd et",
+    "ui.notifications.unread_one": "{{count}} oxunmamış bildiriş",
+    "ui.notifications.unread_few": "{{count}} oxunmamış bildiriş",
+    "ui.notifications.unread_many": "{{count}} oxunmamış bildiriş",
+    "ui.notifications.unread_other": "{{count}} oxunmamış bildiriş"
+  },
+  "en": {
+    "ui.notifications.pagination": "Notification pages",
+    "ui.notifications.loadFailed": "Notifications could not be loaded. Please try again.",
+    "ui.notifications.refresh": "Refresh notifications",
+    "ui.notifications.retry": "Try again",
+    "ui.notifications.unread_one": "{{count}} unread notification",
+    "ui.notifications.unread_few": "{{count}} unread notifications",
+    "ui.notifications.unread_many": "{{count}} unread notifications",
+    "ui.notifications.unread_other": "{{count}} unread notifications"
+  },
+  "ru": {
+    "ui.notifications.pagination": "Страницы уведомлений",
+    "ui.notifications.loadFailed": "Не удалось загрузить уведомления. Попробуйте ещё раз.",
+    "ui.notifications.refresh": "Обновить уведомления",
+    "ui.notifications.retry": "Повторить",
+    "ui.notifications.unread_one": "{{count}} непрочитанное уведомление",
+    "ui.notifications.unread_few": "{{count}} непрочитанных уведомления",
+    "ui.notifications.unread_many": "{{count}} непрочитанных уведомлений",
+    "ui.notifications.unread_other": "{{count}} непрочитанных уведомления"
+  }
+}

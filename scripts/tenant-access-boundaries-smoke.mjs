@@ -61,6 +61,7 @@ async function setup({ role = 3, language = 'en' } = {}) {
           return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ code: 'SessionExpired', message: 'Expired token' }) })
         }
         if (p.endsWith('/unread-count')) return json(route, { count: items.filter(n => !n.isRead).length })
+        if (p.endsWith('/paged')) return json(route, { items, pageIndex: Number(url.searchParams.get('PageNumber')), totalPages: 1, totalCount: items.length, hasPreviousPage: false, hasNextPage: false })
         if (req.method() === 'POST') {
           if (p.endsWith('/read-all')) for (const item of items) state.read.add(String(item.restaurantId))
           else state.read.add(String(Math.floor(Number(p.split('/').at(-2)) / 100)))
@@ -172,15 +173,14 @@ try {
   }
   for (const surface of ['bell', 'page']) {
     const c = await setup(); await c.open(); await ready(c, surface)
-    const held = c.hold(r => r.path === '/api/v1/notifications' && r.scope === '1')
+    const held = c.hold(r => r.path === '/api/v1/notifications/paged' && r.scope === '1')
     await c.page.evaluate(() => window.dispatchEvent(new Event('ecafe:notifications-refresh')))
     await held.started.promise
     await switchB(c)
     await c.go('/notifications')
     if (surface === 'bell') await showBell(c)
     await c.page.getByText('Private B', { exact: true }).first().waitFor()
-    const response = c.page.waitForResponse(r => r.url() === origin + '/api/v1/notifications' && r.request().headers()['x-active-restaurant-id'] === '1')
-    held.release.resolve(); await response
+    held.release.resolve(); await held.released.promise
     await c.page.evaluate(() => new Promise(requestAnimationFrame))
     assert.equal(await c.page.getByText('Private A', { exact: true }).count(), 0)
     await c.close(); cases += 1
@@ -189,7 +189,7 @@ try {
     const c = await setup(); await c.open(); await ready(c, surface)
     const held = c.hold(r => post(r) && r.scope === '1')
     if (operation === 'read') await c.page.locator(surface === 'bell' ? '.notification-list button' : '.notification-page-list button').filter({ hasText: 'Private A' }).click()
-    else await c.page.locator(surface === 'bell' ? '.notification-popover header button' : '.page-header button').click()
+    else await (surface === 'bell' ? c.page.locator('.notification-popover header button') : c.page.getByRole('button', { name: catalogs.en['ui.pages.customer.notifications_page.hamisini_oxunmus_et_cacc2d'], exact: true })).click()
     await held.started.promise
     await switchB(c); await c.go('/notifications'); await c.page.getByText('Private B', { exact: true }).waitFor()
     const expectedUrl = c.page.url()
@@ -207,8 +207,8 @@ try {
     const currentUrl = c.page.url()
     if (operation === 'list') await c.page.evaluate(() => window.dispatchEvent(new Event('ecafe:notifications-refresh')))
     else if (operation === 'read') await c.page.locator(surface === 'bell' ? '.notification-list button' : '.notification-page-list button').filter({ hasText: 'Private A' }).click()
-    else await c.page.locator(surface === 'bell' ? '.notification-popover header button' : '.page-header button').click()
-    await c.page.locator(surface === 'bell' ? '.notification-popover .form-message-danger' : '.notification-page-list .form-message-danger').filter({ hasText: c.t('notificationsDenied') }).waitFor()
+    else await (surface === 'bell' ? c.page.locator('.notification-popover header button') : c.page.getByRole('button', { name: catalogs.en['ui.pages.customer.notifications_page.hamisini_oxunmus_et_cacc2d'], exact: true })).click()
+    await c.page.locator(surface === 'bell' ? '.notification-popover .form-message-danger' : '.notification-page-feedback .form-message-danger').filter({ hasText: c.t('notificationsDenied') }).waitFor()
     assert.equal(await c.page.locator(surface === 'bell' ? '.notification-list button.unread' : '.notification-page-list > button').count(), 0)
     assert.equal(c.page.url(), currentUrl, 'Tenant 403 does not log out an active account or navigate')
     assert.ok(await c.page.locator('.logout-action').count())
@@ -225,8 +225,8 @@ try {
     const c = await setup({ role }); await c.open()
     await c.page.locator('.notification-page-list').getByText('Private A', { exact: true }).waitFor()
     await c.page.locator('.notification-page-list').getByText('Private B', { exact: true }).waitFor()
-    assert.ok(c.state.requests.filter(r => r.path === '/api/v1/notifications').every(r => !r.scope), 'Global/customer notification scope remains unrestricted by a restaurant header')
-    await c.page.locator('.page-header button').click()
+    assert.ok(c.state.requests.filter(r => r.path === '/api/v1/notifications/paged').every(r => !r.scope), 'Global/customer notification scope remains unrestricted by a restaurant header')
+    await c.page.getByRole('button', { name: catalogs.en['ui.pages.customer.notifications_page.hamisini_oxunmus_et_cacc2d'], exact: true }).click()
     await waitFor(() => c.state.read.has('1') && c.state.read.has('2'))
     await c.close(); cases += 1
   }
@@ -253,7 +253,7 @@ try {
     const held = c.hold(r => r.path === '/api/v1/user/refresh')
     c.state.expireNextMutation = true
     if (operation === 'read') await c.page.locator('.notification-page-list button').filter({ hasText: 'Private A' }).click()
-    else await c.page.locator('.page-header button').click()
+    else await c.page.getByRole('button', { name: catalogs.en['ui.pages.customer.notifications_page.hamisini_oxunmus_et_cacc2d'], exact: true }).click()
     await held.started.promise
     await switchB(c); await c.go('/notifications'); await c.page.getByText('Private B', { exact: true }).waitFor()
     const refreshed = c.page.waitForResponse(r => r.url().endsWith('/api/v1/user/refresh'))
