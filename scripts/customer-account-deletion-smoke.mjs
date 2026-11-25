@@ -72,6 +72,7 @@ async function setup({ language = 'en', role = 5, tokenRole = role, profiles = [
       }
       if (p.includes('localization/dictionaries')) return json(route, { language, version: 'test', fallbackLanguage: 'az', messages: {} })
       if (p.includes('localization/preference')) return json(route, { language })
+      if (p.endsWith('/notifications/paged')) return json(route, { items: [], pageIndex: 1, totalPages: 0, totalCount: 0, hasPreviousPage: false, hasNextPage: false })
       if (p === '/api/v1/notifications' || p.endsWith('/unread-count')) {
         if (state.expireNotifications) return problem(route, 'SessionExpired', 401)
         return json(route, p.endsWith('/unread-count') ? { count: 0 } : [])

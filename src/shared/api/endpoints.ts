@@ -257,6 +257,7 @@ export const endpoints = {
   },
   notifications: {
     list: '/notifications',
+    paged: '/notifications/paged',
     unreadCount: '/notifications/unread-count',
     markAsRead: (notificationId: string) => `/notifications/${notificationId}/read`,
     markAllAsRead: '/notifications/read-all',

@@ -1747,8 +1747,25 @@ export const ecafeApi = {
       const result = await httpClient<unknown>(endpoints.notifications.list)
       return asArray<AnyRecord>(result.data).map(mapNotification)
     },
-    unreadCount: async () => {
-      const result = await httpClient<unknown>(endpoints.notifications.unreadCount)
+    page: async (query: { pageNumber?: number; pageSize?: number } = {}, signal?: AbortSignal): Promise<PaginatedResponse<NotificationItem>> => {
+      const pageNumber = Number.isSafeInteger(query.pageNumber) && query.pageNumber! > 0 ? query.pageNumber! : 1
+      const pageSize = Number.isSafeInteger(query.pageSize) && query.pageSize! > 0 ? Math.min(query.pageSize!, 100) : 20
+      const params = new URLSearchParams({ PageNumber: String(pageNumber), PageSize: String(pageSize) })
+      const result = await httpClient<unknown>(`${endpoints.notifications.paged}?${params}`, { signal })
+      const record = result.data as AnyRecord | null
+      if (!record || !Array.isArray(record.items) || record.pageIndex !== pageNumber
+        || !Number.isSafeInteger(record.totalPages) || Number(record.totalPages) < 0
+        || !Number.isSafeInteger(record.totalCount) || Number(record.totalCount) < 0
+        || typeof record.hasPreviousPage !== 'boolean' || typeof record.hasNextPage !== 'boolean'
+        || record.items.length > pageSize || record.items.some(item => !item || typeof item !== 'object' || !(item.id || item.notificationId))) {
+        throw new Error(i18n.t('ui.notifications.loadFailed'))
+      }
+      const page = asPaginated(record, mapNotification)
+      const seen = new Set<string>()
+      return { ...page, items: page.items.filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true }) }
+    },
+    unreadCount: async (signal?: AbortSignal) => {
+      const result = await httpClient<unknown>(endpoints.notifications.unreadCount, { signal })
       const record = (result.data && typeof result.data === 'object' ? result.data : {}) as AnyRecord
       return num(record.count)
     },

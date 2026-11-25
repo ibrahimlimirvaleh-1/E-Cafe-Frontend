@@ -1,0 +1,13 @@
+.notification-page-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.notification-page-feedback { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.notification-page-feedback .form-message { flex: 1; position: static; transform: none; margin: 0; }
+.notifications-page .notification-page-list > button { border-radius: 8px; padding: 16px 18px; }
+.notifications-page .pagination-row { margin-top: 24px; }
+@media (max-width: 600px) {
+  .notification-page-actions { width: 100%; }
+  .notification-page-actions .ui-button:first-child { width: 44px; min-width: 44px; height: 44px; padding: 0; flex: 0 0 44px; }
+  .notification-page-actions .ui-button:last-child { width: auto; min-width: 0; flex: 1; white-space: normal; }
+  .notification-page-feedback { align-items: stretch; flex-direction: column; }
+  .notifications-page .notification-page-list > button { padding: 14px; gap: 10px; }
+  .notifications-page .notification-page-meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+}

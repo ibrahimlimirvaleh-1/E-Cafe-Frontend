@@ -38,3 +38,6 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+
+      - name: Verify notification pagination API contract
+        run: node scripts/notification-pagination-api-smoke.mjs

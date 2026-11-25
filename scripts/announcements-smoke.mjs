@@ -90,6 +90,7 @@ async function setup({ role = 5, language = 'en', profiles = [1, 5].includes(rol
       if (p.includes('localization/dictionaries')) return json(route, { language, version: 'test', fallbackLanguage: 'az', messages: {} })
       if (p.includes('localization/preference')) return json(route, { language })
       if (p.endsWith('/unread-count')) return json(route, { count: 0 })
+      if (p.includes('/notifications/paged')) return json(route, { items: [], pageIndex: 1, totalPages: 0, totalCount: 0, hasPreviousPage: false, hasNextPage: false })
       if (p.includes('/notifications')) return json(route, [])
       if (/\/dashboard\/(owner|manager|platform)$/.test(p)) return json(route, { view: p.split('/').at(-1), paymentMode: 'real', generatedAtUtc: now, from: now, to: now, timeZone: 'Asia/Baku', restaurants: [], metrics: [], financials: null, chart: { key: 'orders', unit: 'count', granularity: 'hour', points: [] }, alerts: [], branchRows: [], sessionRows: [], pageIndex: 1, pageSize: 20, totalRows: 0 })
       return json(route, {})

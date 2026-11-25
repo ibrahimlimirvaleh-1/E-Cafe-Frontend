@@ -60,6 +60,7 @@ async function setup(language = 'en', options = {}) {
       if (p.includes('localization/dictionaries')) return json(route, { language, version: 'test', fallbackLanguage: 'az', messages: {} })
       if (p.includes('localization/preference')) return json(route, { language })
       if (p.endsWith('/unread-count')) return json(route, { count: 0 })
+      if (p.includes('/notifications/paged')) return json(route, { items: [], pageIndex: 1, totalPages: 0, totalCount: 0, hasPreviousPage: false, hasNextPage: false })
       if (p.includes('/notifications')) return json(route, { items: [], totalCount: 0 })
       if (p.includes('/lookups/roles')) return json(route, [{ id: 4, name: 'Waiter', isStaffAssignable: true }])
       if (p === '/api/v1/staff/1/detail/7') return json(route, member)
