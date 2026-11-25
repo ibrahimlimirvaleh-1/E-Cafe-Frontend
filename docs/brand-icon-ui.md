@@ -1,5 +1,17 @@
 # Brand Icon UI
 
+## Current Correction: Original Logo Restored
+
+The user rejected the library-mug substitution. Brand now renders the unchanged `/ecafe-icon.png` again in light mode and the same PNG through a dark-only SVG color/alpha filter in dark mode. The original shallow bowl, handle and curled E-shaped steam are preserved; no substitute Coffee icon or redrawn path is rendered. The filter converts the original ink to white, removes its slightly off-white paper background, and adds a thin black contour. The original bowl interior stays transparent in dark mode.32/28px layout sizing is unchanged.
+
+The source PNG and favicon remain byte-identical. An image-generation preview was not selected because a generated redraw is inappropriate for exact identity preservation; no generated bitmap is used by the application. The final correction is code-native rendering of the original asset, not raster editing.
+
+The updated44-scenario test now checks actual source-PNG references, absence of the library Coffee icon, over90% pixel-mask overlap with the original ink, transparent corners/bowl interior, and dark-mode nonblank pixels across shared surfaces. TypeScript and production build pass. The correction remains local unless separately authorized for commit/push. Only Brand.tsx, brand.css, its focused test and this report are changed; pagination code is untouched.
+
+## Superseded Implementation Notes
+
+The earlier library-icon implementation and publication notes below are historical, not the current intended logo. Its prior pixel tests checked colors/layout but did not enforce the original brand identity; the new source/shape assertions close that gap.
+
 Date: November25,2026 (Asia/Baku).
 Publication update: the user subsequently requested pushing the latest icon work only. Exactly these5 brand files are staged/committed on the existing branch; the18 pagination files remain uncommitted. Earlier no-commit/index-empty statements below describe the implementation phase. No merge, deployment, PR creation or backend changes are authorized by this update.
 Worktree: `C:\Users\mirvaleh.ibrahimli\Documents\Codex\2026-07-20\dem\frontend-notifications-pagination`.

@@ -44,23 +44,33 @@ async function setup(role, width, theme, collapsed) {
 }
 async function pixels(brand, theme) {
   const vector = await brand.locator('.brand-icon').evaluate(async node => {
-    const svgs = [...node.querySelectorAll('svg')]
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="96" height="96">${svgs.map(s => `<g fill="${s.getAttribute('fill')}" stroke="${s.getAttribute('stroke')}" stroke-width="${s.getAttribute('stroke-width')}" stroke-linecap="round" stroke-linejoin="round">${s.innerHTML}</g>`).join('')}</svg>`
-    const image = new Image(); image.src = 'data:image/svg+xml;base64,' + btoa(svg); await image.decode()
-    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 96
-    const ctx = canvas.getContext('2d'); ctx.drawImage(image, 0, 0)
-    const data = ctx.getImageData(0, 0, 96, 96).data
-    let transparent = 0, black = 0, white = 0, steamWhite = 0, steamBlack = 0
+    const bytes = new Uint8Array(await (await fetch('/ecafe-icon.png')).arrayBuffer())
+    const sourceUrl = 'data:image/png;base64,' + btoa(String.fromCharCode(...bytes))
+    const original = new Image(); original.src = sourceUrl; await original.decode()
+    const svg = node.querySelector('.brand-icon-dark').cloneNode(true)
+    svg.setAttribute('width', '512'); svg.setAttribute('height', '512'); svg.querySelector('image').setAttribute('href', sourceUrl)
+    const image = new Image(); image.src = 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(svg)); await image.decode()
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 512
+    const ctx = canvas.getContext('2d'); ctx.drawImage(original, 0, 0)
+    const source = ctx.getImageData(0, 0, 512, 512).data
+    ctx.clearRect(0, 0, 512, 512); ctx.drawImage(image, 0, 0)
+    const data = ctx.getImageData(0, 0, 512, 512).data
+    let transparent = 0, black = 0, white = 0, intersection = 0, union = 0
     for (let i = 0; i < data.length; i += 4) {
       if (!data[i + 3]) transparent++
-      if (data[i + 3] > 200 && Math.max(data[i], data[i + 1], data[i + 2]) < 40) { black++; if (i < 96 * 24 * 4) steamBlack++ }
-      if (data[i + 3] > 200 && Math.min(data[i], data[i + 1], data[i + 2]) > 240) { white++; if (i < 96 * 24 * 4) steamWhite++ }
+      if (data[i + 3] > 200 && Math.max(data[i], data[i + 1], data[i + 2]) < 40) black++
+      const wasInk = source[i + 3] > 200 && Math.max(source[i], source[i + 1], source[i + 2]) < 40
+      const isInk = data[i + 3] > 200 && Math.min(data[i], data[i + 1], data[i + 2]) > 220
+      if (isInk) white++
+      if (wasInk && isInk) intersection++
+      if (wasInk || isInk) union++
     }
-    const corners = [0, 95, 96 * 95, 96 * 96 - 1].map(index => data[index * 4 + 3])
-    return { transparent, black, white, steamWhite, steamBlack, corners, background: getComputedStyle(node).backgroundColor }
+    const corners = [0, 511, 512 * 511, 512 * 512 - 1].map(index => data[index * 4 + 3])
+    return { transparent, black, white, shapeIoU: intersection / union, corners, cupInteriorAlpha: data[(300 * 512 + 256) * 4 + 3], background: getComputedStyle(node).backgroundColor }
   })
-  assert.ok(vector.transparent > 96 * 96 * .35); assert.ok(vector.black > 100); assert.ok(vector.white > 100)
-  assert.ok(vector.steamBlack > 10 && vector.steamWhite > 10, 'Steam has a white center with black contour')
+  assert.ok(vector.transparent > 512 * 512 * .7); assert.ok(vector.black > 100); assert.ok(vector.white > 1000)
+  assert.ok(vector.shapeIoU > .9, `Original logo shape must be retained, not a replacement icon: ${vector.shapeIoU}`)
+  assert.equal(vector.cupInteriorAlpha, 0, 'The original bowl negative space stays transparent')
   assert.deepEqual(vector.corners, [0, 0, 0, 0]); assert.equal(vector.background, 'rgba(0, 0, 0, 0)')
   const png = await brand.locator('.brand-icon').screenshot({ animations: 'disabled' })
   const rendered = await brand.evaluate(async (_, encoded) => {
@@ -91,7 +101,8 @@ try {
     if (surface.name === 'admin' && width < 1081) await page.locator('.admin-sidebar-menu').click()
     const brand = page.locator('.brand').filter({ visible: true }).first(); await brand.waitFor()
     await page.evaluate(theme => document.documentElement.setAttribute('data-theme', theme), theme)
-    assert.equal(await brand.locator('img').count(), 0); assert.equal(await brand.locator('svg.lucide-coffee').count(), 2)
+    assert.equal(await brand.locator('img').getAttribute('src'), '/ecafe-icon.png'); assert.equal(await brand.locator('svg.lucide-coffee').count(), 0)
+    assert.equal(await brand.locator('svg image').getAttribute('href'), '/ecafe-icon.png')
     assert.equal(await brand.getAttribute('aria-label'), surface.name === 'admin' ? 'ECafe Admin' : 'ECafe')
     const box = await brand.locator('.brand-icon').boundingBox(); assert.equal(box.width, width > 1080 ? 32 : 28); assert.equal(box.height, box.width)
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
@@ -118,5 +129,5 @@ try {
   }
   assert.deepEqual(errors, [])
   fs.writeFileSync(path.join(dist, 'brand-icon-pixel-report.json'), JSON.stringify(checks, null, 2))
-  console.log(`PASS ${checks.length} brand scenarios: public/customer/staff/admin/drawer/collapsed/auth, 32/28px geometry, transparent corners, white body/steam with black contour, nonblank actual pixels and unchanged PNG/favicon`)
+  console.log(`PASS ${checks.length} original-logo scenarios: unchanged source PNG, original-shape pixel overlap, transparent dark-mode corners/interior, white ink/black contour, 32/28px geometry across all shared surfaces`)
 } finally { await browser.close() }
