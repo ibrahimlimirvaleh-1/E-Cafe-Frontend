@@ -27,6 +27,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Verify deploy SSH fingerprint guards
+        run: |
+          python3 -m pip install --disable-pip-version-check PyYAML==6.0.3
+          python3 -m unittest discover -s scripts -p 'test_deploy_ssh_fingerprint.py' -v
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
